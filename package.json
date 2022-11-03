@@ -43,6 +43,13 @@
     "deploy:matic_test:RECRetire": "hardhat --network matic_test deploy --tags RECRetire",
     "deploy:matic_test:RECRetireU": "hardhat --network matic_test deploy --tags RECRetireU",
         
+    "deploy:matic_test:gAKRE": "hardhat --network matic_test deploy --tags gAKRE",
+    "deploy:matic_test:gAKREV2": "hardhat --network matic_test deploy --tags gAKREV2",
+    "deploy:matic_test:gAKRE2U": "hardhat --network matic_test deploy --tags gAKRE2U",
+
+    "deploy:matic_test:arkReward": "hardhat --network matic_test deploy --tags arkReward",
+
+
     "verify:matic_test": "npx hardhat verify --network matic_test <ADDRESS> <PARAMS>",
 
     "deploy:matic_test:all": "hardhat --network matic_test deploy",
