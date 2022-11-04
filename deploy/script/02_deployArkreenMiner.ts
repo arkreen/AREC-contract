@@ -25,6 +25,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       AKREToken_ADDRESS = "0x54e1c534f59343c56549c76d1bdccc8717129832"
       MANAGER_ADDRESS   = "0x364a71ee7a1c9eb295a4f4850971a1861e9d3c7d"
       REGISTER_ADDRESS  = "0x364a71ee7a1c9eb295a4f4850971a1861e9d3c7d"
+  } else if(hre.network.name === 'matic')  {
+      AKREToken_ADDRESS = "0x960c67b8526e6328b30ed2c2faea0355beb62a83"
+      MANAGER_ADDRESS   = "0x12ba3311431C0f29Ae8B1a57401342373C807D9B"
+      REGISTER_ADDRESS  = "0x12ba3311431C0f29Ae8B1a57401342373C807D9B" 
   }    
 
   console.log("Deploying ArkreenMiner...");  

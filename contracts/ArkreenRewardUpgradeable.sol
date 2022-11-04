@@ -35,7 +35,7 @@ contract ArkreenRewardUpgradeable is
         _disableInitializers();
     }
 
-    function initialize(address tokenAKRE)
+    function initialize(address tokenAKRE, address validationAddr)
         external
         virtual
         initializer
@@ -46,8 +46,9 @@ contract ArkreenRewardUpgradeable is
         __UUPSUpgradeable_init();
 
         ERC20Contract = ArkreenTokenUpgradeable(tokenAKRE);
+        validationAddress = validationAddr;
         
-        //address owner = _msgSender();
+        // address owner = _msgSender();
         // assembly {
         //     sstore(0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103, owner)
         // }

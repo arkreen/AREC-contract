@@ -59,6 +59,15 @@
    
     "deploy:matic_test": "hardhat --network matic_test deploy --no-compile --reset --tags ARKE",
     "deploy:matic_test_all": "hardhat --network matic_test deploy",
+
+    "deploy:matic:gAKRE": "hardhat --network matic deploy --tags gAKRE",
+    "deploy:matic:arkReward": "hardhat --network matic deploy --tags arkReward",
+    "deploy:matic:AMiner": "hardhat --network matic deploy --tags AMiner",
+    "deploy:matic:gAKREV2": "hardhat --network matic deploy --tags gAKREV2",
+    "deploy:matic:gAKRE2U": "hardhat --network matic deploy --tags gAKRE2U",
+
+    "etherscan:matic": "hardhat --network matic etherscan-verify <--api-key>",
+
     "test": "hardhat test",
     "gas": "set REPORT_GAS=true && hardhat test",
     "coverage": "HARDHAT_DEPLOY_FIXTURE=true hardhat coverage",

@@ -66,7 +66,7 @@ const config: HardhatUserConfig = {
     matic: {
       url: getURL("matic"),
       chainId: 137,
-      accounts: [process.env.MATIC_MAINNET_PRIVATE_KEY as string],
+      accounts: [process.env.MATIC_PRIVATE_KEY as string],
     },
     BSC_TEST: {
       url: "https://data-seed-prebsc-2-s1.binance.org:8545/",

@@ -7,7 +7,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const arkReward = "ArkreenRewardUpgradeable"
 
      // Need to check and update !!!!!
-    const AKRE_TOKEN_ADDRESS   = "0x047eb5205251c5fc8a21ba8f8d46f57df62013c8"  
+    const AKRE_TOKEN_ADDRESS    = "0x960c67b8526e6328b30ed2c2faea0355beb62a83"  
+    const VALIDATOR_ADDRESS     = "0x25C3f0Ea82E318b3488adfB3f4cbE76b49508B1c"  
 
     const { deployments, getNamedAccounts } = hre;
     const { deploy } = deployments;
@@ -21,7 +22,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
           execute: {
             init: {
               methodName: "initialize",   // Function to call when deployed first time.
-              args: [AKRE_TOKEN_ADDRESS]
+              args: [AKRE_TOKEN_ADDRESS, VALIDATOR_ADDRESS]
             },
           },
         },

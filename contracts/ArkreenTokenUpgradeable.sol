@@ -37,7 +37,7 @@ contract ArkreenTokenUpgradeable is
     }
 
 
-    function initialize(uint256 amount)
+    function initialize(uint256 amount, address foundationAddr)
         external
         virtual
         initializer
@@ -51,7 +51,7 @@ contract ArkreenTokenUpgradeable is
         __Ownable_init_unchained();
         __Pausable_init_unchained();
 
-        address owner = _msgSender();
+        // address owner = _msgSender();
         // assembly {
         //     sstore(0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103, owner)
         // }
@@ -66,7 +66,7 @@ contract ArkreenTokenUpgradeable is
             )
         );  
 
-        _mint(owner, amount * 10 ** decimals());
+        _mint(foundationAddr, amount * 10 ** decimals());
 
     }
 

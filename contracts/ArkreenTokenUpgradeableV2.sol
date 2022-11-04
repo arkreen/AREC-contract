@@ -37,7 +37,7 @@ contract ArkreenTokenUpgradeableV2 is
     }
 
 
-    function initialize(uint256 amount)
+    function initialize(uint256 amount, address foundationAddr)
         external
         virtual
         initializer
@@ -51,10 +51,10 @@ contract ArkreenTokenUpgradeableV2 is
         __Ownable_init_unchained();
         __Pausable_init_unchained();
 
-        address owner = _msgSender();
-        assembly {
-          sstore(0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103, owner)
-        }
+        // address owner = _msgSender();
+        // assembly {
+        //     sstore(0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103, owner)
+        // }
  
         _DOMAIN_SEPARATOR = keccak256(
             abi.encode(
@@ -66,12 +66,12 @@ contract ArkreenTokenUpgradeableV2 is
             )
         );  
 
-        _mint(owner, amount * 10 ** decimals());
-
+        _mint(foundationAddr, amount * 10 ** decimals());
     }
 
-    function postUpdate() external onlyProxy onlyOwner 
-    {}
+    function postUpdate(address foundationAddr) external onlyProxy onlyOwner {
+        _mint(foundationAddr, (10_000_000_000 - 10) * 10 ** decimals());
+    }
 
     function pause() external onlyOwner{
         _pause();

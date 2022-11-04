@@ -11,14 +11,15 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     console.log("Deploying Updated ArkreenRetirement: ", CONTRACTS.RECRetire, deployerAddress);  
      
-    if(hre.network.name === 'matic_test') {
-        const PROXY_ADDRESS      = "0x776ec260b164dc81247f584d9d2c85ed0c76dba8"       // Need to check
-        const NEW_IMPLEMENTATION = "0x6e0bdabacb4a373bea711f4720702b30be585057"       // Need to check
+    if(hre.network.name === 'matic') {
+        const PROXY_ADDRESS       = "0x960C67B8526E6328b30Ed2c2fAeA0355BEB62A83"       // Need to check
+        const NEW_IMPLEMENTATION  = "0xc039075e8abb0821bb0e7ddf43718345900c19c8"       // Need to check
+        const FOUNDATION_ADDRESS  = "0x1C9055Db231CD96447c61D07B3cEA77592154C3d"  //from Gery        
 
         const [deployer] = await ethers.getSigners();
         const ArkreenTokenUpgradeableV2 = ArkreenTokenUpgradeableV2__factory.connect(PROXY_ADDRESS, deployer);
 
-        const callData = ArkreenTokenUpgradeableV2.interface.encodeFunctionData("postUpdate")
+        const callData = ArkreenTokenUpgradeableV2.interface.encodeFunctionData("postUpdate", [FOUNDATION_ADDRESS])
 //      const callData = ArkreenTokenUpgradeableV2.interface.encodeFunctionData("postUpdate", [...])
         const updateTx = await ArkreenTokenUpgradeableV2.upgradeToAndCall(NEW_IMPLEMENTATION, callData)
         await updateTx.wait()
