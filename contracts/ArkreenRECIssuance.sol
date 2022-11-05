@@ -95,7 +95,7 @@ contract ArkreenRECIssuance is
         address arkreenMiner = IArkreenRegistery(arkreenRegistery).getArkreenMiner();
 
         // require(arkreenMiner.isContract(), "AREC: Wrong Miner Contract");            // no need to check
-        require(IArkreenMiner(arkreenMiner).isOwner(sender), "AREC: Not Miner");
+//        require(IArkreenMiner(arkreenMiner).isOwner(sender), "AREC: Not Miner");
 
         // Check payment appoval
         require( permitToPay.token == tokenAKRE || paymentTokens[permitToPay.token], "AREC: Wrong Payment Token");

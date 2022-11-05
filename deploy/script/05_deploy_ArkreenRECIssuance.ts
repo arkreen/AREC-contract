@@ -33,6 +33,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
               methodName: "initialize",   // Function to call when deployed first time.
               args: [AKREToken_ADDRESS, REGISTERY_ADDRESS]
             },
+            onUpgrade: {
+              methodName: "postUpdate", // method to be executed when the proxy is upgraded (not first deployment)
+              args: [],
+            },             
           },
         },
         log: true,

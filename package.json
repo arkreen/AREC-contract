@@ -39,6 +39,7 @@
     "deploy:matic_test:gRegistryU": "hardhat --network matic_test deploy --tags gRegistryU",
 
     "deploy:matic_test:RECIssue": "hardhat --network matic_test deploy --tags RECIssue",
+    "deploy:matic_test:RECIssueU": "hardhat --network matic_test deploy --tags RECIssueU",
     "deploy:matic_test:RECToken": "hardhat --network matic_test deploy --tags RECToken",
     "deploy:matic_test:RECRetire": "hardhat --network matic_test deploy --tags RECRetire",
     "deploy:matic_test:RECRetireU": "hardhat --network matic_test deploy --tags RECRetireU",
