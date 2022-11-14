@@ -25,13 +25,17 @@ function getAPIKey(network: string): string {
   return apiKey
 }
 
+//  url = `https://polygon-mainnet.infura.io/v3/` + projectID
+//  url = `https://polygon-mumbai.infura.io/v3/` + projectID
+// https://rpc-mumbai.maticvigil.com
+
 function getURL(network:string): string {
   let url: string
   let projectID = process.env.PROJECT_ID
   if(network === 'matic') {
     url = `https://polygon-mainnet.infura.io/v3/` + projectID
   } else if(network === 'matic_test') {
-    url = `https://polygon-mumbai.infura.io/v3/` + projectID
+    url = `https://rpc-mumbai.maticvigil.com`
   } else if(network === 'goerli') {
     url = `https://goerli.infura.io/v3/`+ projectID
   } else if(network === 'rinkeby') {
@@ -61,7 +65,7 @@ const config: HardhatUserConfig = {
     },    
     matic_test: {
       url: getURL("matic_test"),
-      accounts: [process.env.MATIC_TESTNET_PRIVATE_KEY as string],
+      accounts: [process.env.MATIC_TESTNET_PRIVATE_KEY as string, process.env.MATIC_TESTNET_CONFIRME_KEY as string],
     },
     matic: {
       url: getURL("matic"),

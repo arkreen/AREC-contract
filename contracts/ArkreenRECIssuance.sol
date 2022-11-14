@@ -355,6 +355,40 @@ contract ArkreenRECIssuance is
     }
 
     /**
+     * @dev Add/update/remove AREC isssaunce payment token/price. 
+     * If the token existed, and if price is not zero, update the price, 
+     *                           if the price is zero, remove the token/price.
+     * If the token not existed, add the price
+     * @param token address of the token to add/update/remove
+     * @param price the price to pay AREC issuance, or, =0, remove the token/price.
+     */
+    function updateARECMintPrice(address token, uint256 price) external virtual onlyOwner {
+      for(uint256 index; index < ARECMintPrice.length; index++) {
+        if(ARECMintPrice[index].token == token) {
+          if(price == 0) {
+            // Zero price means remove the token/price
+            if(index != (ARECMintPrice.length-1)) {
+              // replace by the last token/price
+              ARECMintPrice[index] = ARECMintPrice[ARECMintPrice.length-1];     
+            }
+            ARECMintPrice.pop();                  // pop the last price as it is moved to the deleted position  
+          } else {
+            ARECMintPrice[index].value = price;         // update the price
+          } 
+          return; 
+        }
+      }
+      require(price != 0, 'AREC: Zero Price');
+      RECMintPrice memory tempPrice = RECMintPrice({token: token, value: price});
+      ARECMintPrice.push(tempPrice);
+    }
+
+    /// @dev return all the AREC issaunce token/price list
+    function allARECMintPrice() external view virtual returns (RECMintPrice[] memory) {
+        return ARECMintPrice;
+    }
+
+    /**
      * @dev Withdraw all the REC certification fee
      * @param token address of the token to withdraw, USDC/ARKE
      */

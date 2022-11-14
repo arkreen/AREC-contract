@@ -48,3 +48,8 @@ struct RECData {
     string    url;
     string    memo;
 }
+
+struct RECMintPrice {
+    address   token;
+    uint256   value;
+}

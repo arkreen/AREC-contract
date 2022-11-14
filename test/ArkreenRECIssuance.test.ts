@@ -145,7 +145,57 @@ describe("ArkreenRECIssuance", () => {
       expect(await arkreenRECIssuance.supportsInterface("0x780e9d63")).to.equal(true);    // ERC721Enumerable
       expect(await arkreenRECIssuance.supportsInterface("0x5b5e139f")).to.equal(true);    // ERC721Metadata
       expect(await arkreenRECIssuance.supportsInterface("0x150b7a02")).to.equal(false);   // ERC721TokenReceiver
-    });    
+    });   
+
+    describe("ARECMintPrice Test", () => {
+      let signature: SignatureStruct
+      let recMintRequest: RECRequestStruct 
+      const startTime = 1564888526
+      const endTime   = 1654888526
+      const mintFee = expandTo18Decimals(100)      
+
+      beforeEach(async () => {
+        recMintRequest = { 
+          issuer: manager.address, startTime, endTime,
+          amountREC: BigNumber.from(1000), 
+          cID: "bafybeihepmxz4ytc4ht67j73nzurkvsiuxhsmxk27utnopzptpo7wuigte", 
+          region: 'Beijing',
+          url:"", memo:""
+        } 
+        const nonce1 = await AKREToken.nonces(owner1.address)
+        const digest1 = await getApprovalDigest(
+                                AKREToken,
+                                { owner: owner1.address, spender: arkreenRECIssuance.address, value: mintFee },
+                                nonce1,
+                                constants.MaxUint256
+                              )
+        const { v,r,s } = ecsign(Buffer.from(digest1.slice(2), 'hex'), Buffer.from(privateKeyOwner.slice(2), 'hex'))
+        signature = { v, r, s, token: AKREToken.address, value:mintFee, deadline: constants.MaxUint256 } 
+      })
+
+      it("ArkreenRECIssuance: mintRECRequest Normal", async () => {
+        // Normal
+        await arkreenRegistery.setArkreenMiner(arkreenMiner.address)        
+        const balanceArkreenRECIssuance = await AKREToken.balanceOf(arkreenRECIssuance.address)
+        await arkreenRECIssuance.managePaymentToken(AKREToken.address, true)
+        await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
+
+        let recData = [ manager.address,  "",  owner1.address,
+                        startTime,  endTime,
+                        BigNumber.from(1000), 
+                        BigNumber.from(RECStatus.Pending),
+                        "bafybeihepmxz4ytc4ht67j73nzurkvsiuxhsmxk27utnopzptpo7wuigte", 
+                        'Beijing',
+                        "", "" ]
+
+        expect(await arkreenRECIssuance.allRECData(1)).to.deep.eq(recData);
+
+        let payInfo = [AKREToken.address, mintFee]
+        expect(await arkreenRECIssuance.allPayInfo(1)).to.deep.eq(payInfo);
+        
+        expect(await AKREToken.balanceOf(arkreenRECIssuance.address)).to.equal(balanceArkreenRECIssuance.add(mintFee))
+      })
+    })
 
     describe("mintRECRequest", () => {
       let signature: SignatureStruct
