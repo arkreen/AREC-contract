@@ -147,53 +147,94 @@ describe("ArkreenRECIssuance", () => {
       expect(await arkreenRECIssuance.supportsInterface("0x150b7a02")).to.equal(false);   // ERC721TokenReceiver
     });   
 
-    describe("ARECMintPrice Test", () => {
-      let signature: SignatureStruct
-      let recMintRequest: RECRequestStruct 
-      const startTime = 1564888526
-      const endTime   = 1654888526
-      const mintFee = expandTo18Decimals(100)      
+   
+    describe("ARECMintPrice related", () => {
+
+      let TokenA: ArkreenToken
+      let TokenB: ArkreenToken
+      let TokenC: ArkreenToken
+      let TokenD: ArkreenToken
 
       beforeEach(async () => {
-        recMintRequest = { 
-          issuer: manager.address, startTime, endTime,
-          amountREC: BigNumber.from(1000), 
-          cID: "bafybeihepmxz4ytc4ht67j73nzurkvsiuxhsmxk27utnopzptpo7wuigte", 
-          region: 'Beijing',
-          url:"", memo:""
-        } 
-        const nonce1 = await AKREToken.nonces(owner1.address)
-        const digest1 = await getApprovalDigest(
-                                AKREToken,
-                                { owner: owner1.address, spender: arkreenRECIssuance.address, value: mintFee },
-                                nonce1,
-                                constants.MaxUint256
-                              )
-        const { v,r,s } = ecsign(Buffer.from(digest1.slice(2), 'hex'), Buffer.from(privateKeyOwner.slice(2), 'hex'))
-        signature = { v, r, s, token: AKREToken.address, value:mintFee, deadline: constants.MaxUint256 } 
+        const ERC20Factory = await ethers.getContractFactory("ArkreenToken");
+        TokenA = await ERC20Factory.deploy(10_000_000_000);
+        await TokenA.deployed();
+        TokenB = await ERC20Factory.deploy(10_000_000_000);
+        await TokenB.deployed();
+        TokenC = await ERC20Factory.deploy(10_000_000_000);
+        await TokenC.deployed();  
+        TokenD = await ERC20Factory.deploy(10_000_000_000);
+        await TokenD.deployed();            
+        
       })
 
-      it("ArkreenRECIssuance: mintRECRequest Normal", async () => {
+      it("ArkreenRECIssuance: updateARECMintPrice Normal", async () => {
         // Normal
-        await arkreenRegistery.setArkreenMiner(arkreenMiner.address)        
-        const balanceArkreenRECIssuance = await AKREToken.balanceOf(arkreenRECIssuance.address)
-        await arkreenRECIssuance.managePaymentToken(AKREToken.address, true)
-        await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
+        const price0:BigNumber = expandTo18Decimals(50)
+        const price1:BigNumber = expandTo18Decimals(60)
+        const price2:BigNumber = expandTo18Decimals(70)
+        const price3:BigNumber = expandTo18Decimals(80)
+        const price4:BigNumber = expandTo18Decimals(90)
 
-        let recData = [ manager.address,  "",  owner1.address,
-                        startTime,  endTime,
-                        BigNumber.from(1000), 
-                        BigNumber.from(RECStatus.Pending),
-                        "bafybeihepmxz4ytc4ht67j73nzurkvsiuxhsmxk27utnopzptpo7wuigte", 
-                        'Beijing',
-                        "", "" ]
+        await arkreenRECIssuance.updateARECMintPrice(AKREToken.address, price0)
+        await arkreenRECIssuance.updateARECMintPrice(TokenA.address, price1)
+        await arkreenRECIssuance.updateARECMintPrice(TokenB.address, price2)
+        await arkreenRECIssuance.updateARECMintPrice(TokenC.address, price3)
+        await arkreenRECIssuance.updateARECMintPrice(TokenD.address, price4)
 
-        expect(await arkreenRECIssuance.allRECData(1)).to.deep.eq(recData);
+        const priceList0 = [ [AKREToken.address, price0],
+                            [TokenA.address, price1],
+                            [TokenB.address, price2],
+                            [TokenC.address, price3],
+                            [TokenD.address, price4] ]
 
-        let payInfo = [AKREToken.address, mintFee]
-        expect(await arkreenRECIssuance.allPayInfo(1)).to.deep.eq(payInfo);
+        let allARECMintPrice
+        allARECMintPrice = await arkreenRECIssuance.allARECMintPrice()
+        expect(allARECMintPrice).to.deep.eq(priceList0);
+
+        //  Remove TokenA
+        await arkreenRECIssuance.updateARECMintPrice(TokenA.address, 0)
+        const priceList1 = [ [AKREToken.address, price0],
+                              [TokenD.address, price4],
+                              [TokenB.address, price2],
+                              [TokenC.address, price3] ]
+        allARECMintPrice = await arkreenRECIssuance.allARECMintPrice()                            
+        expect(allARECMintPrice).to.deep.eq(priceList1);   
         
-        expect(await AKREToken.balanceOf(arkreenRECIssuance.address)).to.equal(balanceArkreenRECIssuance.add(mintFee))
+//        console.log('allARECMintPrice', allARECMintPrice, priceList1)
+
+        //  Update TokenB
+        await arkreenRECIssuance.updateARECMintPrice(TokenB.address, price4)
+        const priceList2 = [ [AKREToken.address, price0],
+                              [TokenD.address, price4],
+                              [TokenB.address, price4],
+                              [TokenC.address, price3] ]
+        allARECMintPrice = await arkreenRECIssuance.allARECMintPrice()                            
+        expect(allARECMintPrice).to.deep.eq(priceList2);   
+
+        //  add TokenA
+        await arkreenRECIssuance.updateARECMintPrice(TokenA.address, price2)
+        const priceList3 = [ [AKREToken.address, price0],
+                              [TokenD.address, price4],
+                              [TokenB.address, price4],
+                              [TokenC.address, price3],
+                              [TokenA.address, price2],
+                             ]
+        allARECMintPrice = await arkreenRECIssuance.allARECMintPrice()                            
+        expect(allARECMintPrice).to.deep.eq(priceList3);
+        
+        // Not Owner
+        await expect(arkreenRECIssuance.connect(owner1).updateARECMintPrice(TokenA.address, price2))
+                .to.be.revertedWith("Ownable: caller is not the owner") 
+
+        // Not contract                              
+        await expect(arkreenRECIssuance.updateARECMintPrice(owner1.address, price2))
+                .to.be.revertedWith("AREC: Wrong token") 
+
+        // Zero price      
+        await arkreenRECIssuance.updateARECMintPrice(TokenA.address, 0)                        
+        await expect(arkreenRECIssuance.updateARECMintPrice(TokenA.address, 0))
+                .to.be.revertedWith("AREC: Zero Price") 
       })
     })
 
@@ -241,8 +282,10 @@ describe("ArkreenRECIssuance", () => {
         await arkreenRegistery.setArkreenMiner(arkreenMiner.address)
 
         // Not Miner
-        await expect(arkreenRECIssuance.connect(owner2).mintRECRequest(recMintRequest, signature))
-                .to.be.revertedWith("AREC: Not Miner")                 
+        /////////////////////////////////////////////////////////
+//        await expect(arkreenRECIssuance.connect(owner2).mintRECRequest(recMintRequest, signature))
+//                .to.be.revertedWith("AREC: Not Miner")                 
+        /////////////////////////////////////////////////////////
 
         // Payment token not set  
         signature.token = maker1.address              
@@ -250,7 +293,6 @@ describe("ArkreenRECIssuance", () => {
                 .to.be.revertedWith("AREC: Wrong Payment Token") 
         signature.token = AKREToken.address  
 
-        await arkreenRECIssuance.managePaymentToken(AKREToken.address, true)                
         signature.value = expandTo18Decimals(50)
         await expect(arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature))
                 .to.be.revertedWith("ERC20Permit: invalid signature") 
@@ -269,7 +311,6 @@ describe("ArkreenRECIssuance", () => {
         // Normal
         await arkreenRegistery.setArkreenMiner(arkreenMiner.address)        
         const balanceArkreenRECIssuance = await AKREToken.balanceOf(arkreenRECIssuance.address)
-        await arkreenRECIssuance.managePaymentToken(AKREToken.address, true)
         await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
 
         let recData = [ manager.address,  "",  owner1.address,
@@ -317,7 +358,6 @@ describe("ArkreenRECIssuance", () => {
 
         // Normal
         await arkreenRegistery.setArkreenMiner(arkreenMiner.address)        
-        await arkreenRECIssuance.managePaymentToken(AKREToken.address, true)
         await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
         tokenID = await arkreenRECIssuance.totalSupply()
       })
@@ -376,7 +416,6 @@ describe("ArkreenRECIssuance", () => {
 
         // Normal
         await arkreenRegistery.setArkreenMiner(arkreenMiner.address)        
-        await arkreenRECIssuance.managePaymentToken(AKREToken.address, true)
         await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
         tokenID = await arkreenRECIssuance.totalSupply()
       })
@@ -438,7 +477,6 @@ describe("ArkreenRECIssuance", () => {
 
         // Normal
         await arkreenRegistery.setArkreenMiner(arkreenMiner.address)        
-        await arkreenRECIssuance.managePaymentToken(AKREToken.address, true)
         await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
         tokenID = await arkreenRECIssuance.totalSupply()
       })
@@ -501,7 +539,6 @@ describe("ArkreenRECIssuance", () => {
 
         // Normal
         await arkreenRegistery.setArkreenMiner(arkreenMiner.address)        
-        await arkreenRECIssuance.managePaymentToken(AKREToken.address, true)
         await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
         tokenID = await arkreenRECIssuance.totalSupply()
       })
@@ -573,7 +610,6 @@ describe("ArkreenRECIssuance", () => {
         
         // Mint
         await arkreenRegistery.setArkreenMiner(arkreenMiner.address)
-        await arkreenRECIssuance.managePaymentToken(AKREToken.address, true)
         await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
         const tokenID = await arkreenRECIssuance.totalSupply()
 
@@ -641,7 +677,6 @@ describe("ArkreenRECIssuance", () => {
         
         // Mint
         await arkreenRegistery.setArkreenMiner(arkreenMiner.address)
-        await arkreenRECIssuance.managePaymentToken(AKREToken.address, true)
         await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
         tokenID = await arkreenRECIssuance.totalSupply()
 
@@ -740,7 +775,6 @@ describe("ArkreenRECIssuance", () => {
         
         // Mint
         await arkreenRegistery.setArkreenMiner(arkreenMiner.address)
-        await arkreenRECIssuance.managePaymentToken(AKREToken.address, true)
         await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
         tokenID = await arkreenRECIssuance.totalSupply()
 
@@ -822,7 +856,6 @@ describe("ArkreenRECIssuance", () => {
         
         // Mint
         await arkreenRegistery.setArkreenMiner(arkreenMiner.address)
-        await arkreenRECIssuance.managePaymentToken(AKREToken.address, true)
         await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
         const tokenID = await arkreenRECIssuance.totalSupply()
 
@@ -882,7 +915,6 @@ describe("ArkreenRECIssuance", () => {
       
       // Mint
       await arkreenRegistery.setArkreenMiner(arkreenMiner.address)
-      await arkreenRECIssuance.managePaymentToken(AKREToken.address, true)
     })
 
     it("ArkreenRECIssuance: tokenURI, No given URI", async () => {
@@ -931,7 +963,6 @@ describe("ArkreenRECIssuance", () => {
       
       // Mint
       await arkreenRegistery.setArkreenMiner(arkreenMiner.address)
-      await arkreenRECIssuance.managePaymentToken(AKREToken.address, true)
       await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
       tokenID = await arkreenRECIssuance.totalSupply()
       await arkreenRECIssuance.connect(manager).certifyRECRequest(tokenID, "Serial12345678")
@@ -982,7 +1013,6 @@ describe("ArkreenRECIssuance", () => {
       
       // Mint
       await arkreenRegistery.setArkreenMiner(arkreenMiner.address)
-      await arkreenRECIssuance.managePaymentToken(AKREToken.address, true)
       await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
       tokenID = await arkreenRECIssuance.totalSupply()
     })

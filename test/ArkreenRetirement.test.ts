@@ -152,7 +152,10 @@ describe("ArkreenRetirement", () => {
         
         // Mint
         await arkreenRegistery.setArkreenMiner(arkreenMiner.address)
-        await arkreenRECIssuance.managePaymentToken(AKREToken.address, true)
+//        await arkreenRECIssuance.managePaymentToken(AKREToken.address, true)
+        const price0:BigNumber = expandTo18Decimals(50)
+        await arkreenRECIssuance.updateARECMintPrice(AKREToken.address, price0)
+
         await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
   
         const tokenID = await arkreenRECIssuance.totalSupply()
@@ -211,7 +214,10 @@ describe("ArkreenRetirement", () => {
         
         // Mint
         await arkreenRegistery.setArkreenMiner(arkreenMiner.address)
-        await arkreenRECIssuance.managePaymentToken(AKREToken.address, true)
+//      await arkreenRECIssuance.managePaymentToken(AKREToken.address, true)
+        const price0:BigNumber = expandTo18Decimals(50)
+        await arkreenRECIssuance.updateARECMintPrice(AKREToken.address, price0)
+
         await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
         tokenID = await arkreenRECIssuance.totalSupply()
         await arkreenRECIssuance.connect(manager).certifyRECRequest(tokenID, "Serial12345678")
@@ -291,7 +297,9 @@ describe("ArkreenRetirement", () => {
         
         // Mint
         await arkreenRegistery.setArkreenMiner(arkreenMiner.address)
-        await arkreenRECIssuance.managePaymentToken(AKREToken.address, true)
+//      await arkreenRECIssuance.managePaymentToken(AKREToken.address, true)
+        const price0:BigNumber = expandTo18Decimals(50)
+        await arkreenRECIssuance.updateARECMintPrice(AKREToken.address, price0)        
         await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
         tokenID = await arkreenRECIssuance.totalSupply()
       })

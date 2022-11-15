@@ -21,12 +21,11 @@ contract ArkreenRECIssuanceStorage {
     // The total payment paid to specific issuer with specific payment token
     mapping(address => mapping(address => uint256)) public paymentByIssuer;
 
-    // All payment tokens acceptable
-    mapping(address => bool) public paymentTokens;
-
-    // AREC mint/issance price, payment token amount per AREC (Decimal=9)
-    // Ex: 1AREC -> 0.2USDT,  ARECMintPrice = 0.2 * 10**6
-    RECMintPrice[] ARECMintPrice;
+    // All payment tokens acceptable and their price
+    // AREC mint/issance price, payment token amount per AREC (Decimal = 9)
+    // Ex: 1AREC -> 0.2USDT,  ARECMintPrice = 0.2 * 10**6    
+    mapping(address => uint256) public paymentTokenPrice;
+    address[] public paymentTokens;
 
     // keccak256("RECIssuance(address owner,uint256 startTime,uint256 endTime,
     //                        uint256 amountREC,uint256 merkelRoot,string url,

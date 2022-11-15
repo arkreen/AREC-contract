@@ -4,7 +4,7 @@ pragma solidity ^0.8.9;
 import "../ArkreenMiner.sol";
 
 // For testing of contract upgrading 
-contract ArkreenMinerV2 is ArkreenMiner
+contract ArkreenMinerV01U is ArkreenMiner
 {
     struct MinerMore {
         string         attribute;

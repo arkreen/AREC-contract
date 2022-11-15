@@ -17,6 +17,11 @@ const REGISTER_TYPEHASH = utils.keccak256(
   utils.toUtf8Bytes('GameMinerOnboard(address owner,address miners,bool bAirDrop,uint256 deadline)')
 )
 
+// keccak256("RemoteMinerOnboard(address owner,address miners,address token,uint256 price,uint256 deadline)");
+const REMOTE_REGISTER_TYPEHASH = utils.keccak256(
+  utils.toUtf8Bytes('RemoteMinerOnboard(address owner,address miners,address token,uint256 price,uint256 deadline)')
+)
+
 export function expandTo9Decimals(n: number): BigNumber {
   return BigNumber.from(n).mul(BigNumber.from(10).pow(9))
 }
@@ -70,12 +75,21 @@ export const randomAddresses = (amount: number): string[] => {
   return addresses
 }
 
+/*
 export enum MinerType {
   GameMiner,          // 0
   LiteMiner,          // 1
   StandardMiner,      // 2
   virtualMiner,       // 3
   APIMiner            // 4
+}
+*/
+
+export enum MinerType {
+  Empty,              // 0
+  GameMiner,          // 1
+  RemoteMiner,        // 2
+  StandardMiner       // 3
 }
 
 export enum MinerStatus {
@@ -203,6 +217,49 @@ export function getOnboardingGameMinerDigest(
           utils.defaultAbiCoder.encode(
             ['bytes32', 'address', 'address', 'bool', 'uint256'],
             [REGISTER_TYPEHASH, approve.owner, approve.miner, approve.bAirDrop, deadline]
+          )
+        )
+      ]
+    )
+  )
+}
+
+export function getOnboardingRemoteMinerDigest(
+  contractName: string,
+  contracAddress: string,
+  approve: {
+    owner: string
+    miner: string
+    token: string
+    price: BigNumber
+    deadline: BigNumber
+  }
+): string {
+  const DOMAIN_SEPARATOR = getDomainSeparator(contractName, contracAddress)
+
+  ///////////////////////////
+  /*
+  const dataToHash =  utils.defaultAbiCoder.encode(
+    ['bytes32', 'address', 'address', 'bool', 'uint256', 'uint256', 'uint256'],
+    [MINER_TYPEHASH, approve.owner, approve.miner, approve.bAirDrop, nonce, feeRegister, deadline]
+  )
+  console.log('dataToHash:',  dataToHash)
+  console.log('HashOfData:',  utils.keccak256(dataToHash))
+  console.log('DOMAIN_SEPARATOR:', DOMAIN_SEPARATOR)
+  console.log('contracAddress, chainId:', contracAddress, hre.network.config.chainId)
+  */
+
+  return utils.keccak256(
+    utils.solidityPack(
+      ['bytes1', 'bytes1', 'bytes32', 'bytes32'],
+      [
+        '0x19',
+        '0x01',
+        DOMAIN_SEPARATOR,
+        utils.keccak256(
+          utils.defaultAbiCoder.encode(
+            ['bytes32', 'address', 'address', 'address', 'uint256', 'uint256'],
+            [REMOTE_REGISTER_TYPEHASH, approve.owner, approve.miner, approve.token, approve.price, approve.deadline]
           )
         )
       ]

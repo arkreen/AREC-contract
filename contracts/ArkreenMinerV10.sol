@@ -361,6 +361,7 @@ contract ArkreenMinerV10 is
 
         // Check miner is white listed  
         require( (whiteListMiner[miner] == uint8(MinerType.RemoteMiner) ), 'Arkreen Miner: Wrong Miner');
+        require(AllMinersToken[miner] == 0, "Arkreen Miner: Miner Repeated");
 
         // Check signature
         // keccak256("RemoteMinerOnboard(address owner,address miners,address token,uint256 price,uint256 deadline)");
@@ -579,12 +580,12 @@ contract ArkreenMinerV10 is
      * @param typeMiner Type of the miners to add, MinerType.Empty(=0) means to remove the miners
      * @param addressMiners List of the miners
      */
-    function UpdateMinerWhiteList(MinerType typeMiner, address[] calldata addressMiners) external onlyOwner {
+    function UpdateMinerWhiteList(MinerType typeMiner, address[] calldata addressMiners) external onlyMinerManager {
       address tempAddress;
       for(uint256 index; index < addressMiners.length; index++) {
         tempAddress = addressMiners[index];
         // Removing miners not checking the existence, adding miners is checked for non-existence
-        require( tempAddress != address(0), 'Arkreen Miner: Zero Miners');     
+        require( tempAddress != address(0) && !tempAddress.isContract(), 'Arkreen Miner: Wrong Address');     
         require( (typeMiner == MinerType.Empty) || 
                   (whiteListMiner[tempAddress] == 0), 'Arkreen Miner: Wrong Miners');      
         whiteListMiner[tempAddress] = uint8(typeMiner);

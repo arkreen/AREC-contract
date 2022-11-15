@@ -95,10 +95,10 @@ contract ArkreenRECIssuance is
         address arkreenMiner = IArkreenRegistery(arkreenRegistery).getArkreenMiner();
 
         // require(arkreenMiner.isContract(), "AREC: Wrong Miner Contract");            // no need to check
-//        require(IArkreenMiner(arkreenMiner).isOwner(sender), "AREC: Not Miner");
+        require(IArkreenMiner(arkreenMiner).isOwner(sender), "AREC: Not Miner");        /// May Removed for testing ///
 
         // Check payment appoval
-        require( permitToPay.token == tokenAKRE || paymentTokens[permitToPay.token], "AREC: Wrong Payment Token");
+        require( (permitToPay.token == tokenAKRE) || (paymentTokenPrice[permitToPay.token] != 0), "AREC: Wrong Payment Token");
         IERC20Permit(permitToPay.token).permit(sender, address(this), 
                         permitToPay.value, permitToPay.deadline, permitToPay.v, permitToPay.r, permitToPay.s);
 
@@ -349,11 +349,6 @@ contract ArkreenRECIssuance is
         return (allRECData[tokenId]);
     }
 
-    /// @dev add or remove the acceptable payment token
-    function managePaymentToken(address token, bool yesOrNo) external virtual onlyOwner {
-        paymentTokens[token] = yesOrNo;
-    }
-
     /**
      * @dev Add/update/remove AREC isssaunce payment token/price. 
      * If the token existed, and if price is not zero, update the price, 
@@ -363,28 +358,39 @@ contract ArkreenRECIssuance is
      * @param price the price to pay AREC issuance, or, =0, remove the token/price.
      */
     function updateARECMintPrice(address token, uint256 price) external virtual onlyOwner {
-      for(uint256 index; index < ARECMintPrice.length; index++) {
-        if(ARECMintPrice[index].token == token) {
+      require(token.isContract(), 'AREC: Wrong token');
+
+      for(uint256 index; index < paymentTokens.length; index++) {
+        if(paymentTokens[index] == token) {
           if(price == 0) {
             // Zero price means remove the token/price
-            if(index != (ARECMintPrice.length-1)) {
+            if(index != (paymentTokens.length-1)) {
               // replace by the last token/price
-              ARECMintPrice[index] = ARECMintPrice[ARECMintPrice.length-1];     
+              paymentTokens[index] = paymentTokens[paymentTokens.length-1];     
             }
-            ARECMintPrice.pop();                  // pop the last price as it is moved to the deleted position  
+            paymentTokens.pop();                  // pop the last price as it is moved to the deleted position  
+            delete paymentTokenPrice[token];
           } else {
-            ARECMintPrice[index].value = price;         // update the price
+            paymentTokenPrice[token] = price;         // update the price
           } 
           return; 
         }
       }
       require(price != 0, 'AREC: Zero Price');
-      RECMintPrice memory tempPrice = RECMintPrice({token: token, value: price});
-      ARECMintPrice.push(tempPrice);
+      paymentTokens.push(token);
+      paymentTokenPrice[token] = price;
     }
 
     /// @dev return all the AREC issaunce token/price list
     function allARECMintPrice() external view virtual returns (RECMintPrice[] memory) {
+        uint256 sizePrice = paymentTokens.length;
+        RECMintPrice[] memory ARECMintPrice = new RECMintPrice[](sizePrice);
+
+        for(uint256 index; index < sizePrice; index++) {
+          address token = paymentTokens[index];
+          ARECMintPrice[index].token = paymentTokens[index];
+          ARECMintPrice[index].value = paymentTokenPrice[token];
+        }          
         return ARECMintPrice;
     }
 
