@@ -10,8 +10,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     }  else if(hre.network.name === 'goerli')  {
       REGISTERY_ADDRESS   = "0xc99b92e8d827aa21cd3ff8fb9576316d90120191"
     }    
+//    else if(hre.network.name === 'matic_test')  {
+//      REGISTERY_ADDRESS   = "0x047eb5205251c5fc8a21ba8f8d46f57df62013c8"
+//    } 
     else if(hre.network.name === 'matic_test')  {
-      REGISTERY_ADDRESS   = "0x047eb5205251c5fc8a21ba8f8d46f57df62013c8"
+      REGISTERY_ADDRESS   = "0x61a914363ef99aabca69504cee5ccfd5523c845d"
     } 
 
     const { deployments, getNamedAccounts } = hre;

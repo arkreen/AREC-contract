@@ -295,8 +295,6 @@ export function getOnboardingGameMinerMessage(
     )
 }
 
-
-
 export function getOnboardingDTUMinerDigest(
   contractName: string,
   contracAddress: string,

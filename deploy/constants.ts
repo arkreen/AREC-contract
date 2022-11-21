@@ -7,6 +7,8 @@ export const CONTRACTS: Record<string, string> = {
     RECIssuance:  "ArkreenRECIssuance",
     RECToken:     "ArkreenRECToken",
     RECRetire:    "ArkreenRetirement",
+    AMinerV10:    "ArkreenMinerV10",
+    
   };
 
 // Constructor Arguments

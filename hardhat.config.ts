@@ -65,7 +65,7 @@ const config: HardhatUserConfig = {
     },    
     matic_test: {
       url: getURL("matic_test"),
-      accounts: [process.env.MATIC_TESTNET_PRIVATE_KEY as string, process.env.MATIC_TESTNET_CONFIRME_KEY as string],
+      accounts: [process.env.MATIC_TESTNET_PRIVATE_KEY as string, process.env.MATIC_TESTNET_CONFIRM_KEY as string],
     },
     matic: {
       url: getURL("matic"),

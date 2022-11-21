@@ -30,8 +30,6 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     });
 
     console.log("ArkreenToken deployed to %s: ", hre.network.name, ArkreenToken.address);
-
-    
   
 };
 
