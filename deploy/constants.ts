@@ -8,6 +8,7 @@ export const CONTRACTS: Record<string, string> = {
     RECToken:     "ArkreenRECToken",
     RECRetire:    "ArkreenRetirement",
     AMinerV10:    "ArkreenMinerV10",
+    AMinerV10X:    "ArkreenMinerV10X",
     
   };
 

@@ -20,7 +20,7 @@ import {
 import { deploy } from "@openzeppelin/hardhat-upgrades/dist/utils";
 
 
-describe("ArkreenMinerV10", () => {
+describe("ArkreenMinerV10X", () => {
   let deployer:               SignerWithAddress
   let manager:                SignerWithAddress
   let register_authority:     SignerWithAddress
@@ -52,7 +52,7 @@ describe("ArkreenMinerV10", () => {
     AKREToken = await AKRETokenFactory.deploy(10_000_000_000);
     await AKREToken.deployed();
 
-    const ArkreenMinerFactory = await ethers.getContractFactory("ArkreenMinerV10")
+    const ArkreenMinerFactory = await ethers.getContractFactory("ArkreenMinerV10X")
     ArkreenMiner = await upgrades.deployProxy(ArkreenMinerFactory,[AKREToken.address, manager.address, register_authority.address])
     await ArkreenMiner.deployed()
 
@@ -852,20 +852,20 @@ describe("ArkreenMinerV10", () => {
   })
   describe("ArkreenMiner: Upgrading test", () => {
     async function deployArkreenMinerFixture() {
-      const ArkreenMinerFactoryV10U = await ethers.getContractFactory("ArkreenMinerV10U");
-      const ArkreenMinerV10U = await upgrades.upgradeProxy(ArkreenMiner.address, ArkreenMinerFactoryV10U)
-      await ArkreenMinerV10U.deployed()    
-      return { ArkreenMinerV10U }
+      const ArkreenMinerFactoryV10U = await ethers.getContractFactory("ArkreenMinerV10XU");
+      const ArkreenMinerV10XU = await upgrades.upgradeProxy(ArkreenMiner.address, ArkreenMinerFactoryV10U)
+      await ArkreenMinerV10XU.deployed()    
+      return { ArkreenMinerV10XU }
     }
     it("ArkreenMiner Upgrading: Basic check", async () => {
-      const { ArkreenMinerV10U } = await loadFixture(deployArkreenMinerFixture);
-      expect(await ArkreenMinerV10U.version()).to.equal('1.0.1');
+      const { ArkreenMinerV10XU } = await loadFixture(deployArkreenMinerFixture);
+      expect(await ArkreenMinerV10XU.version()).to.equal('1.0.1');
       const receivers = randomAddresses(10)
       const miners = randomAddresses(10)
-      await ArkreenMinerV10U.connect(deployer).AirdropMiners(receivers, miners)
-      expect(await ArkreenMinerV10U.tokenURI(9)).to.equal('https://www.arkreen.com/miners/9');
-      await ArkreenMinerV10U.connect(deployer).updateMineMore(9, "Miner 9 more testing info")
-      expect(await ArkreenMinerV10U.getMineMore(9)).to.equal('Miner 9 more testing info');
+      await ArkreenMinerV10XU.connect(deployer).AirdropMiners(receivers, miners)
+      expect(await ArkreenMinerV10XU.tokenURI(9)).to.equal('https://www.arkreen.com/miners/9');
+      await ArkreenMinerV10XU.connect(deployer).updateMineMore(9, "Miner 9 more testing info")
+      expect(await ArkreenMinerV10XU.getMineMore(9)).to.equal('Miner 9 more testing info');
     })
   })
 });

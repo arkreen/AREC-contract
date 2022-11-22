@@ -75,22 +75,23 @@ export const randomAddresses = (amount: number): string[] => {
   return addresses
 }
 
-/*
+
 export enum MinerType {
   GameMiner,          // 0
   LiteMiner,          // 1
   StandardMiner,      // 2
-  virtualMiner,       // 3
+  RemoteMiner,       // 3
   APIMiner            // 4
 }
-*/
 
+/*
 export enum MinerType {
   Empty,              // 0
   GameMiner,          // 1
   RemoteMiner,        // 2
   StandardMiner       // 3
 }
+*/
 
 export enum MinerStatus {
   Pending,            // 0

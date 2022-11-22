@@ -49,29 +49,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  /*
-  const ArkreenMiner = await deploy(CONTRACTS.AMinerV10, {
-      from: deployer,
-      proxy: {
-        proxyContract: "UUPSProxy",
-        execute: {
-          init: {
-            methodName: "initialize",   // Function to call when deployed first time.
-            args: [AKREToken_ADDRESS, MANAGER_ADDRESS, REGISTER_ADDRESS]
-          },
-          onUpgrade: {
-            methodName: "postUpdate", // method to be executed when the proxy is upgraded (not first deployment)
-            args: [AKREToken_ADDRESS, MANAGER_ADDRESS],
-          },           
-        },
-      },
-      log: true,
-      skipIfAlreadyDeployed: false,     // do not change
-  });
-*/
-
-
-  console.log("Deploying: ", CONTRACTS.AMinerV10, deployer);  
+  console.log("Deploying: ", CONTRACTS.AMinerV10X, deployer);  
 
   /* // Verification is difficult in this deplyment mode 
   const ArkreenMinerV10Factory = await ethers.getContractFactory("ArkreenMinerV10");
@@ -79,16 +57,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   await ArkreenMinerV10.deployed();
   */
 
-  const ArkreenMinerV10 = await deploy(CONTRACTS.AMinerV10, {
+  const ArkreenMinerV10X = await deploy(CONTRACTS.AMinerV10X, {
       from: deployer,
       args: [],
       log: true,
       skipIfAlreadyDeployed: false,
   });
 
-  console.log("ArkreenMiner deployed to %s: ", hre.network.name, ArkreenMinerV10.address);
+  console.log("ArkreenMiner deployed to %s: ", hre.network.name, ArkreenMinerV10X.address);
 
 };
 
 export default func;
-func.tags = ["AMinerV10"];
+func.tags = ["AMinerV10X"];

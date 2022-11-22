@@ -35,6 +35,8 @@
     "deploy:matic_test:AMiner": "hardhat --network matic_test deploy --tags AMiner",
     "deploy:matic_test:AMinerV10": "hardhat --network matic_test deploy --tags AMinerV10",
     "deploy:matic_test:AMinerUV10": "hardhat --network matic_test deploy --tags AMinerUV10",
+    "deploy:matic_test:AMinerV10X": "hardhat --network matic_test deploy --tags AMinerV10X",
+    "deploy:matic_test:AMinerUV10X": "hardhat --network matic_test deploy --tags AMinerUV10X",
     
     "deploy:matic_test:AMinerU": "hardhat --network matic_test deploy --tags AMinerU",
     "deploy:matic_test:gMinerU:reset": "npx hardhat --network matic_test deploy --reset --tags gMinerU",

@@ -5,7 +5,7 @@ enum MinerType {
     GameMiner,          // 0
     LiteMiner,          // 1
     StandardMiner,      // 2
-    RemoteMiner,        // 3
+    virtualMiner,       // 3
     APIMiner            // 4
 }
 
@@ -38,7 +38,7 @@ struct Signature {
     bytes32     s;              
 }
 
-struct Sig {
+struct SigRegister {
     uint8       v;
     bytes32     r;
     bytes32     s;              

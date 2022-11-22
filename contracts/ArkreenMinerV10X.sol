@@ -12,14 +12,17 @@ import "./libraries/TransferHelper.sol";
 import "./interfaces/IERC20.sol";
 import "./interfaces/IERC20Permit.sol";
 import "./ArkreenMinerTypesV10.sol";
+import "hardhat-deploy/solc_0.8/proxy/Proxied.sol";
 
 // Import this file to use console.log
 // import "hardhat/console.sol";
 
-contract ArkreenMinerV10 is 
+contract ArkreenMinerV10X is 
     OwnableUpgradeable,
-    UUPSUpgradeable,
-    ERC721EnumerableUpgradeable
+    ERC721EnumerableUpgradeable,
+//    ERC721URIStorageUpgradeable,
+    Proxied,
+    UUPSUpgradeable 
 {
     using AddressUpgradeable for address;
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.UintSet;
@@ -98,22 +101,25 @@ contract ArkreenMinerV10 is
         external
         virtual
         initializer
+        proxied
     {
+        __Context_init_unchained();
+        __ERC721_init_unchained(NAME, SYMBOL);
         __Ownable_init_unchained();
         __UUPSUpgradeable_init();
-        __ERC721_init_unchained(NAME, SYMBOL);
         tokenAKRE = _tokenAKRE;
         AllManagers[uint256(MinerManagerType.Miner_Manager)] = _minerManager;
         AllManagers[uint256(MinerManagerType.Register_Authority)] = _minerAuthority;
         timestampFormalLaunch = type(uint64).max;    // To flag in gaming phase
         capGameMinerAirdrop = INIT_CAP_AIRDROP;
-        baseURI = 'https://www.arkreen.com/miners/';
+        baseURI = 'https://www.arkreen.com/miners/' ;
 
-//        address owner = _msgSender();
-//        assembly {
-//            sstore(0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103, owner)
-//        }        
 
+        address owner = _msgSender();
+        assembly {
+            sstore(0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103, owner)
+        }
+ 
         DOMAIN_SEPARATOR = keccak256(
             abi.encode(
                 keccak256('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)'),
@@ -137,6 +143,7 @@ contract ArkreenMinerV10 is
         internal
         virtual
         override
+        proxied
         onlyOwner
     {}
 
@@ -328,7 +335,7 @@ contract ArkreenMinerV10 is
 
         } else {
             // Boading a new applied game miner
-            require(bAllowedToMintGameMiner(owner), 'Game Miner: Holding Game Miner');
+//          require(bAllowedToMintGameMiner(owner), 'Game Miner: Holding Game Miner');    // Remove for testing
             require(AllMinersToken[miner] == 0, "Game Miner: Miner Repeated");
             uint256 gMinerID = totalSupply() + 1;
             _safeMint(owner, gMinerID);
