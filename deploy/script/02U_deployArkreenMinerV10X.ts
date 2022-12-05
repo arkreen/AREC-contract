@@ -47,11 +47,13 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //  await ArkreenMiner_Upgrade.deployed();
 
   if(hre.network.name === 'matic_test') {
-    const MINER_PROXY_ADDRESS = "0xC4f795514586275c799729aF5AE7113Bdb7ccc86"       // game miner in matic test net
+    const MINER_PROXY_ADDRESS = "0xC4f795514586275c799729aF5AE7113Bdb7ccc86"        // game miner in matic test net
 //  const NEW_IMPLEMENTATION =  "0x4EDe87d416e872376583E793ac26526c535267C5"        // Wrong
-//    const NEW_IMPLEMENTATION =  "0x7693ad7e3a69b241322094b14fcaec233afb3e56"      // original 
+//  const NEW_IMPLEMENTATION =  "0x7693ad7e3a69b241322094b14fcaec233afb3e56"        // original 
 //  const NEW_IMPLEMENTATION =  "0x16a427a1a2012fdde0ccad2664d5f2981d52a2d2"        // restored Wrong
-    const NEW_IMPLEMENTATION =  "0x544dc72e13904bda9719c3511b7c2f1e616488d1"        // V10X
+//  const NEW_IMPLEMENTATION =  "0x544dc72e13904bda9719c3511b7c2f1e616488d1"        // V10X // adding remote miner
+    const NEW_IMPLEMENTATION =  "0x6ca97ce7fb9d77f2eb961957791acdab5484f936"        // V10X // adding GetMinerInfo
+   
 
     const [deployer] = await ethers.getSigners();
     const ArkreenMinerFactory = ArkreenMinerV10__factory.connect(MINER_PROXY_ADDRESS, deployer);

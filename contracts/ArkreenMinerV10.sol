@@ -513,6 +513,7 @@ contract ArkreenMinerV10 is
      * @param owner owner address
      * @param miner miner address to find, if it is zero, return the fisrt found running game miner
      */
+/*    
     function getMinerTokenID(address owner, address miner) external view returns (uint256 tokenID) {
         uint256 totalMiners = balanceOf(owner);
         for(uint256 index; index < totalMiners; index++) {     
@@ -524,7 +525,7 @@ contract ArkreenMinerV10 is
         }
         return type(uint256).max;
     } 
-
+*/
     /**
      * @dev Get all the miner info of the owner
      * @param owner owner address
@@ -538,14 +539,12 @@ contract ArkreenMinerV10 is
             miners[index] = AllMinerInfo[minerID];
         }
     }
-
+*/
     function GetMinerInfo(address addrMiner) external view returns (address owner, Miner memory miner) {
         uint256 minerID = AllMinersToken[addrMiner];
         owner = ownerOf(minerID);
         miner = AllMinerInfo[minerID];
     }
-*/
-
 
     /**
      * @dev Get all the miner address of the owner

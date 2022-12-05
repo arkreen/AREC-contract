@@ -457,7 +457,7 @@ contract ArkreenMiner is
         uint256 tokenId
     ) internal virtual override (ERC721EnumerableUpgradeable) {
         // Game miner cannot be transferred, not including mint and burn
-        // But contract owner can withdram and re-airdrop game miner 
+        // But contract owner can withdraw and re-airdrop game miner
         if(_msgSender() != owner()) {
           if (from != address(0) && to != address(0)){
               Miner memory miner = AllMinerInfo[tokenId];
