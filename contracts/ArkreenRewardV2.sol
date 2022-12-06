@@ -5,7 +5,7 @@ import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol';
-import "./ArkreenTokenUpgradeable.sol";
+import "./ArkreenToken.sol";
 
 import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
@@ -25,7 +25,7 @@ contract ArkreenRewardUpgradeableV2 is
     
     bytes32                     private _DOMAIN_SEPARATOR;
     address                     public validationAddress;
-    ArkreenTokenUpgradeable     public ERC20Contract;
+    ArkreenToken                public ERC20Contract;
     mapping(address => uint256) public nonces;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -43,7 +43,7 @@ contract ArkreenRewardUpgradeableV2 is
         __Pausable_init_unchained();
         __UUPSUpgradeable_init();
 
-        ERC20Contract = ArkreenTokenUpgradeable(tokenAKRE);
+        ERC20Contract = ArkreenToken(tokenAKRE);
         
         //address owner = _msgSender();
         // assembly {
@@ -73,7 +73,7 @@ contract ArkreenRewardUpgradeableV2 is
     function setERC20ContractAddress(address addr)public onlyOwner{
         require(addr != address(0), "zero address is not allowed");
         require(addr.isContract(), "is not a contract address");
-        ERC20Contract = ArkreenTokenUpgradeable(addr);
+        ERC20Contract = ArkreenToken(addr);
     }
 
     function setValidationAddress(address addr)public onlyOwner{

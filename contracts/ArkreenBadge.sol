@@ -8,7 +8,7 @@ import '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721Enumer
 import '@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol';
 import '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
 
-import './ArkreenRetirementStorage.sol';
+import './ArkreenBadgeStorage.sol';
 import "./interfaces/IPausable.sol";
 import "./interfaces/IArkreenRegistery.sol";
 import "./interfaces/IArkreenRECIssuance.sol";
@@ -16,18 +16,18 @@ import "./interfaces/IArkreenRECIssuance.sol";
 // Import this file to use console.log
 import "hardhat/console.sol";
 
-contract ArkreenRetirement is
+contract ArkreenBadge is
     OwnableUpgradeable,
     UUPSUpgradeable,
     ERC721EnumerableUpgradeable,
     IERC721Receiver,
-    ArkreenRetirementStorage
+    ArkreenBadgeStorage
 {
     using AddressUpgradeable for address;
 
     // Public variables
-    string public constant NAME = 'Arkreen REC OFFSET Certificate';
-    string public constant SYMBOL = 'AROC';
+    string public constant NAME = 'Arkreen REC Badge';
+    string public constant SYMBOL = 'ARB';
 
      // Events
     event ArkreenRegisteryUpdated(address newArkreenRegistery);
@@ -36,12 +36,12 @@ contract ArkreenRetirement is
 
     // Modifiers
     modifier ensure(uint deadline) {
-        require(deadline >= block.timestamp, 'AROC: EXPIRED');
+        require(deadline >= block.timestamp, 'ARB: EXPIRED');
         _;
     }
   
     modifier whenNotPaused() {
-        require(!IPausable(arkreenRegistery).paused(), 'AROC: Paused');
+        require(!IPausable(arkreenRegistery).paused(), 'ARB: Paused');
         _;
     }
 
@@ -55,7 +55,7 @@ contract ArkreenRetirement is
         __UUPSUpgradeable_init();        
         __ERC721_init_unchained(NAME, SYMBOL);
         arkreenRegistery = arkRegistry;
-        baseURI = 'https://www.arkreen.com/retirement/' ;
+        baseURI = 'https://www.arkreen.com/badge/' ;
 
         address owner = _msgSender();
         assembly {
@@ -102,13 +102,13 @@ contract ArkreenRetirement is
 
         // Check called from the REC token contract, or from the REC issuance contrarct
         require( isRECIssuance || msg.sender == IArkreenRegistery(arkreenRegistery).getRECToken(issuerREC), 
-                    'AROC: Wrong Issuer');
+                    'ARB: Wrong Issuer');
 
         // TokenId should not be zero for RECIssuance, and should be zero for RECToken
-        require(isRECIssuance != isZeroTokenId, 'AROC: Wrong TokenId');      
+        require(isRECIssuance != isZeroTokenId, 'ARB: Wrong TokenId');      
 
         // Check the minimum offset amount
-        require( amount >= minOffsetAmount, 'AROC: Less Amount');
+        require( amount >= minOffsetAmount, 'ARB: Less Amount');
 
         uint256 offsetId = offsetCounter + 1;
         offsetCounter = offsetId;
@@ -134,8 +134,8 @@ contract ArkreenRetirement is
         uint256[] calldata offsetIds
     ) external {
         address tokenOwner = ownerOf(tokenId);
-        require(msg.sender == tokenOwner, 'AROC: Not Owner');
-        require(block.timestamp < (certificates[tokenId].creationTime + 3 days), 'AROC: Time Elapsed');        
+        require(msg.sender == tokenOwner, 'ARB: Not Owner');
+        require(block.timestamp < (certificates[tokenId].creationTime + 3 days), 'ARB: Time Elapsed');        
 
         uint256 offsetAmount =_attachOffsetEvents(tokenId, tokenOwner, offsetIds);
         certificates[tokenId].offsetTotalAmount += offsetAmount;
@@ -156,7 +156,7 @@ contract ArkreenRetirement is
         uint256[] calldata offsetIds
     ) internal returns(uint256) {
         // List should not be empty
-        require(offsetIds.length != 0, 'AROC Empty List');
+        require(offsetIds.length != 0, 'ARB Empty List');
 
         //slither-disable-next-line uninitialized-local
         uint256 offsetAmount;
@@ -166,10 +166,10 @@ contract ArkreenRetirement is
             uint256 offsetId = offsetIds[i];
 
             // Check entity is identical
-            require(offsetActions[offsetId].offsetEntity == offsetEntity, 'AROC: Wrong Enity');
+            require(offsetActions[offsetId].offsetEntity == offsetEntity, 'ARB: Wrong Enity');
 
             // Should not be attached
-            require(!offsetActions[offsetId].bClaimed, 'AROC: Already Claimed');
+            require(!offsetActions[offsetId].bClaimed, 'ARB: Already Claimed');
             offsetActions[offsetId].bClaimed = true;
 
             certificates[tokenId].offsetIds.push(offsetId);
@@ -200,7 +200,7 @@ contract ArkreenRetirement is
         require(_msgSender() == offsetEntity ||
                 IArkreenRegistery(arkreenRegistery).getRECIssuance() == msg.sender ||
                 IArkreenRegistery(arkreenRegistery).tokenRECs(msg.sender) != address(0),
-                'AROC: Caller Not Allowed');
+                'ARB: Caller Not Allowed');
 
         uint256 offsetId = totalSupply() + 1;
         _safeMint(offsetEntity, offsetId);
@@ -238,8 +238,8 @@ contract ArkreenRetirement is
         string calldata beneficiaryID,
         string calldata offsetMessage
     ) external virtual {
-        require(msg.sender == ownerOf(tokenId), 'AROC: Not Owner');
-        require(block.timestamp < (certificates[tokenId].creationTime + 3 days), 'AROC: Time Elapsed');
+        require(msg.sender == ownerOf(tokenId), 'ARB: Not Owner');
+        require(block.timestamp < (certificates[tokenId].creationTime + 3 days), 'ARB: Time Elapsed');
 
         if (beneficiary != address(0)) {
             certificates[tokenId].beneficiary = beneficiary;
@@ -267,11 +267,11 @@ contract ArkreenRetirement is
     ) external virtual override whenNotPaused returns (bytes4) {
 
         // Check calling from REC Manager
-        require( IArkreenRegistery(arkreenRegistery).getRECIssuance() == msg.sender, 'AROC: Not From REC Issuance');
-        require( keccak256(data) == keccak256("Redeem"), 'AROC: Refused');
+        require( IArkreenRegistery(arkreenRegistery).getRECIssuance() == msg.sender, 'ARB: Not From REC Issuance');
+        require( keccak256(data) == keccak256("Redeem"), 'ARB: Refused');
 
         RECData memory recData = IArkreenRECIssuance(msg.sender).getRECData(tokenId);
-        require(recData.status == uint256(RECStatus.Certified), 'AROC: Wrong Status');  // Checking may be removed
+        require(recData.status == uint256(RECStatus.Certified), 'ARB: Wrong Status');  // Checking may be removed
 
         totalRedeemed = totalRedeemed + recData.amountREC;
         return this.onERC721Received.selector;

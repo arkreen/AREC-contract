@@ -4,12 +4,12 @@ import { constants, BigNumber, Contract } from 'ethers'
 import { ethers, network, upgrades } from "hardhat";
 
 import {
-    ArkreenToken,
+    ArkreenTokenTest,
     ArkreenMiner,
     ArkreenRECIssuance,
     ArkreenRegistery,
     ArkreenRECToken,
-    ArkreenRetirement
+    ArkreenBadge
 } from "../typechain";
 
 import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
@@ -35,18 +35,18 @@ describe("ArkreenRECIssuance", () => {
     let privateKeyOwner:        string
     let privateKeyMaker:        string
 
-    let AKREToken:                    ArkreenToken
+    let AKREToken:                    ArkreenTokenTest
     let arkreenMiner:                 ArkreenMiner
     let arkreenRegistery:             ArkreenRegistery
     let arkreenRECIssuance:           ArkreenRECIssuance
     let arkreenRECToken:              ArkreenRECToken
-    let arkreenRetirement:            ArkreenRetirement
+    let arkreenRetirement:            ArkreenBadge
 
     const FORMAL_LAUNCH       = 1682913600;         // 2023-05-01, 12:00:00
     const Miner_Manager       = 0         
 
     async function deployFixture() {
-      const AKRETokenFactory = await ethers.getContractFactory("ArkreenToken");
+      const AKRETokenFactory = await ethers.getContractFactory("ArkreenTokenTest");
       const AKREToken = await AKRETokenFactory.deploy(10_000_000_000);
       await AKREToken.deployed();
 
@@ -69,8 +69,8 @@ describe("ArkreenRECIssuance", () => {
       arkreenRECToken = await upgrades.deployProxy(ArkreenRECTokenFactory,[arkreenRegistery.address, manager.address]) as ArkreenRECToken
       await arkreenRECToken.deployed()     
       
-      const ArkreenRetirementFactory = await ethers.getContractFactory("ArkreenRetirement")
-      arkreenRetirement = await upgrades.deployProxy(ArkreenRetirementFactory,[arkreenRegistery.address]) as ArkreenRetirement
+      const ArkreenRetirementFactory = await ethers.getContractFactory("ArkreenBadge")
+      arkreenRetirement = await upgrades.deployProxy(ArkreenRetirementFactory,[arkreenRegistery.address]) as ArkreenBadge
       await arkreenRetirement.deployed()           
   
       await AKREToken.transfer(owner1.address, expandTo18Decimals(10000))
@@ -129,14 +129,14 @@ describe("ArkreenRECIssuance", () => {
     });
 
     it("ArkreenRECIssuance: Basics", async () => {
-        expect(await arkreenRECIssuance.NAME()).to.equal("Arkreen REC");
-        expect(await arkreenRECIssuance.SYMBOL()).to.equal("A-REC");
+        expect(await arkreenRECIssuance.NAME()).to.equal("Arkreen RE Certificate");
+        expect(await arkreenRECIssuance.SYMBOL()).to.equal("AREC");
     });
 
     it("ArkreenRECIssuance: setBaseURI", async () => {
-      expect(await arkreenRECIssuance.baseURI()).to.equal("https://www.arkreen.com/A-REC/");
-      await arkreenRECIssuance.setBaseURI("https://www.arkreen.com/AREC/")
       expect(await arkreenRECIssuance.baseURI()).to.equal("https://www.arkreen.com/AREC/");
+      await arkreenRECIssuance.setBaseURI("https://www.arkreen.com/A-REC/")
+      expect(await arkreenRECIssuance.baseURI()).to.equal("https://www.arkreen.com/A-REC/");
     });
 
     it("ArkreenRECIssuance: supportsInterface", async () => {      
@@ -150,13 +150,13 @@ describe("ArkreenRECIssuance", () => {
    
     describe("ARECMintPrice related", () => {
 
-      let TokenA: ArkreenToken
-      let TokenB: ArkreenToken
-      let TokenC: ArkreenToken
-      let TokenD: ArkreenToken
+      let TokenA: ArkreenTokenTest
+      let TokenB: ArkreenTokenTest
+      let TokenC: ArkreenTokenTest
+      let TokenD: ArkreenTokenTest
 
       beforeEach(async () => {
-        const ERC20Factory = await ethers.getContractFactory("ArkreenToken");
+        const ERC20Factory = await ethers.getContractFactory("ArkreenTokenTest");
         TokenA = await ERC20Factory.deploy(10_000_000_000);
         await TokenA.deployed();
         TokenB = await ERC20Factory.deploy(10_000_000_000);
@@ -921,7 +921,7 @@ describe("ArkreenRECIssuance", () => {
       await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
       tokenID = await arkreenRECIssuance.totalSupply()
       await arkreenRECIssuance.connect(manager).certifyRECRequest(tokenID, "Serial12345678")
-      expect( await arkreenRECIssuance.tokenURI(tokenID)).to.equal("https://www.arkreen.com/A-REC/1");
+      expect( await arkreenRECIssuance.tokenURI(tokenID)).to.equal("https://www.arkreen.com/AREC/1");
     })
 
     it("ArkreenRECIssuance: tokenURI, given URI", async () => {
@@ -929,7 +929,7 @@ describe("ArkreenRECIssuance", () => {
       await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
       tokenID = await arkreenRECIssuance.totalSupply()
       await arkreenRECIssuance.connect(manager).certifyRECRequest(tokenID, "Serial12345678")
-      expect( await arkreenRECIssuance.tokenURI(tokenID)).to.equal("https://www.arkreen.com/A-REC/Shangxi");
+      expect( await arkreenRECIssuance.tokenURI(tokenID)).to.equal("https://www.arkreen.com/AREC/Shangxi");
 
     })
   })

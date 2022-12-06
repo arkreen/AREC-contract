@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-abstract contract ArkreenRetirementStorage {
+abstract contract ArkreenBadgeStorage {
     struct OffsetRecord {
         address   offsetEntity;
         address   beneficiary;

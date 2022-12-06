@@ -26,8 +26,8 @@ contract ArkreenRECToken is
     using AddressUpgradeable for address;
 
     // Public constant variables
-    string public constant NAME = 'Arkreen Renewable Energy Token';
-    string public constant SYMBOL = 'ARET';
+    string public constant NAME = 'Arkreen REC Token';
+    string public constant SYMBOL = 'ART';
 
     // Public variables
     address public arkreenRegistery;    // Registery contract storing Arkreen contracts   
@@ -43,12 +43,12 @@ contract ArkreenRECToken is
 
     // Modifiers
     modifier ensure(uint deadline) {
-        require(deadline >= block.timestamp, 'ARET: EXPIRED');
+        require(deadline >= block.timestamp, 'ART: EXPIRED');
         _;
     }
 
     modifier whenNotPaused() {
-        require(!IPausable(arkreenRegistery).paused(), 'ARET: Paused');
+        require(!IPausable(arkreenRegistery).paused(), 'ART: Paused');
         _;
     }
   
@@ -142,10 +142,10 @@ contract ArkreenRECToken is
     ) external virtual override whenNotPaused returns (bytes4) {
 
         // Check calling from REC Manager
-        require( IArkreenRegistery(arkreenRegistery).getRECIssuance() == msg.sender, 'ARET: Not From REC Issuance');
+        require( IArkreenRegistery(arkreenRegistery).getRECIssuance() == msg.sender, 'ART: Not From REC Issuance');
 
         RECData memory recData = IArkreenRECIssuance(msg.sender).getRECData(tokenId);
-        require(recData.status == uint256(RECStatus.Certified), 'ARET: Wrong Status');
+        require(recData.status == uint256(RECStatus.Certified), 'ART: Wrong Status');
 
         totalLiquidized += recData.amountREC;
 
@@ -165,7 +165,7 @@ contract ArkreenRECToken is
      * @dev set the ratio of liquidization fee
      */     
     function setRatioFee(uint256 ratio) external onlyOwner {
-        require(ratio <10000, 'ARET: Wrong Data');
+        require(ratio <10000, 'ART: Wrong Data');
         ratioLiquidizedFee = ratio;
     }  
 
@@ -173,7 +173,7 @@ contract ArkreenRECToken is
      * @dev set the receiver of liquidization fee
      */     
     function setReceiverFee(address receiver) external onlyOwner {
-        require(receiver != address(0), 'ARET: Wrong Address');
+        require(receiver != address(0), 'ART: Wrong Address');
         receiverFee = receiver;
     }  
 

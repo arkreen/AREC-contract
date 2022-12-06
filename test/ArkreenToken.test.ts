@@ -3,20 +3,20 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 
 import {
-    ArkreenToken,
-    ArkreenToken__factory,
+    ArkreenTokenTest,
+    ArkreenTokenTest__factory,
 } from "../typechain";
 
 describe("ArkreenToken", () => {
     let deployer: SignerWithAddress;
     let bob: SignerWithAddress;
     let alice: SignerWithAddress;
-    let AKREToken: ArkreenToken;
+    let AKREToken: ArkreenTokenTest;
 
     beforeEach(async () => {
         [deployer, bob, alice] = await ethers.getSigners();
 
-        AKREToken = await new ArkreenToken__factory(deployer).deploy(10_000_000_000);
+        AKREToken = await new ArkreenTokenTest__factory(deployer).deploy(10_000_000_000);
         await AKREToken.deployed();
     });
 

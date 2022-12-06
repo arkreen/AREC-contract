@@ -26,7 +26,7 @@ contract ArkreenMinerV10 is
 
     // Public variables
     string public constant NAME = 'Arkreen Miner';
-    string public constant SYMBOL = 'AKREN';
+    string public constant SYMBOL = 'AKREM';
 
     address public tokenAKRE;                       // Token adddress of AKRE
     uint256 public totalGameMiner;                  // Total amount of game miner

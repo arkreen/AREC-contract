@@ -30,8 +30,8 @@ contract ArkreenRECIssuance is
     using AddressUpgradeable for address;
 
     // Public variables
-    string public constant NAME = 'Arkreen REC';
-    string public constant SYMBOL = 'A-REC';
+    string public constant NAME = 'Arkreen RE Certificate';
+    string public constant SYMBOL = 'AREC';
 
     // Events
     event RECRequested(address owner, uint256 tokenId);
@@ -64,7 +64,7 @@ contract ArkreenRECIssuance is
         __ERC721_init_unchained(NAME, SYMBOL);
         tokenAKRE = _tokenAKRE;
         arkreenRegistery = arkRegistry;
-        baseURI = 'https://www.arkreen.com/A-REC/' ;
+        baseURI = 'https://www.arkreen.com/AREC/' ;
     }
 
     function postUpdate() external onlyProxy onlyOwner 
@@ -92,10 +92,10 @@ contract ArkreenRECIssuance is
 
         // Check the caller be acceptable miner
         address sender = _msgSender();
-//      address arkreenMiner = IArkreenRegistery(arkreenRegistery).getArkreenMiner();   /// for testing ///
+        address arkreenMiner = IArkreenRegistery(arkreenRegistery).getArkreenMiner();   /// for testing ///
 
         // require(arkreenMiner.isContract(), "AREC: Wrong Miner Contract");            // no need to check
-//      require(IArkreenMiner(arkreenMiner).isOwner(sender), "AREC: Not Miner");        /// May Removed for testing ///
+        require(IArkreenMiner(arkreenMiner).isOwner(sender), "AREC: Not Miner");        /// May Removed for testing ///
 
         // Check payment appoval
         require( (permitToPay.token == tokenAKRE) || (paymentTokenPrice[permitToPay.token] != 0), "AREC: Wrong Payment Token");

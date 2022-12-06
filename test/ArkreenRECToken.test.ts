@@ -4,12 +4,12 @@ import { constants, BigNumber, Contract } from 'ethers'
 import { ethers, network, upgrades } from "hardhat";
 
 import {
-    ArkreenToken,
+    ArkreenTokenTest,
     ArkreenMiner,
     ArkreenRECIssuance,
     ArkreenRegistery,
     ArkreenRECToken,
-    ArkreenRetirement,
+    ArkreenBadge,
 } from "../typechain";
 
 
@@ -36,17 +36,17 @@ describe("ArkreenRECToken", () => {
     let privateKeyOwner:        string
     let privateKeyMaker:        string
 
-    let AKREToken:                    ArkreenToken
+    let AKREToken:                    ArkreenTokenTest
     let arkreenMiner:                 ArkreenMiner
     let arkreenRegistery:             ArkreenRegistery
     let arkreenRECIssuance:           ArkreenRECIssuance
     let arkreenRECToken:              ArkreenRECToken
-    let arkreenRetirement:            ArkreenRetirement
+    let arkreenRetirement:            ArkreenBadge
 
     const Miner_Manager       = 0         
 
     async function deployFixture() {
-      const AKRETokenFactory = await ethers.getContractFactory("ArkreenToken");
+      const AKRETokenFactory = await ethers.getContractFactory("ArkreenTokenTest");
       const AKREToken = await AKRETokenFactory.deploy(10_000_000_000);
       await AKREToken.deployed();
 
@@ -69,8 +69,8 @@ describe("ArkreenRECToken", () => {
       arkreenRECToken = await upgrades.deployProxy(ArkreenRECTokenFactory,[arkreenRegistery.address, manager.address]) as ArkreenRECToken
       await arkreenRECToken.deployed()
       
-      const ArkreenRetirementFactory = await ethers.getContractFactory("ArkreenRetirement")
-      arkreenRetirement = await upgrades.deployProxy(ArkreenRetirementFactory,[arkreenRegistery.address]) as ArkreenRetirement
+      const ArkreenRetirementFactory = await ethers.getContractFactory("ArkreenBadge")
+      arkreenRetirement = await upgrades.deployProxy(ArkreenRetirementFactory,[arkreenRegistery.address]) as ArkreenBadge
       await arkreenRetirement.deployed()           
   
       await AKREToken.transfer(owner1.address, expandTo18Decimals(10000))
@@ -164,8 +164,8 @@ describe("ArkreenRECToken", () => {
     });
 
     it("ArkreenRECToken: Basics", async () => {
-        expect(await arkreenRECToken.NAME()).to.equal("Arkreen Renewable Energy Token");
-        expect(await arkreenRECToken.SYMBOL()).to.equal("ARET");
+        expect(await arkreenRECToken.NAME()).to.equal("Arkreen REC Token");
+        expect(await arkreenRECToken.SYMBOL()).to.equal("ART");
     });
 
     it("ArkreenRECToken: commitOffset", async () => {
@@ -307,7 +307,7 @@ describe("ArkreenRECToken", () => {
 
     it("ArkreenRECIssuance: liquidizeREC (Liquidation no fee)", async () => {
       await expect(arkreenRECToken.setRatioFee(20000))
-            .to.be.revertedWith("ARET: Wrong Data")
+            .to.be.revertedWith("ART: Wrong Data")
 
       await expect(arkreenRECToken.connect(owner1).setRatioFee(1000))
             .to.be.revertedWith("Ownable: caller is not the owner")
@@ -321,7 +321,7 @@ describe("ArkreenRECToken", () => {
 
     it("ArkreenRECIssuance: liquidizeREC (Liquidation fee)", async () => {
       await expect(arkreenRECToken.setReceiverFee(constants.AddressZero))
-            .to.be.revertedWith("ARET: Wrong Address")
+            .to.be.revertedWith("ART: Wrong Address")
 
       await expect(arkreenRECToken.connect(owner1).setReceiverFee(owner2.address))
             .to.be.revertedWith("Ownable: caller is not the owner")

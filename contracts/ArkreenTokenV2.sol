@@ -11,7 +11,7 @@ import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import '@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol';
 
 
-contract ArkreenTokenUpgradeable is 
+contract ArkreenTokenV2 is 
     ContextUpgradeable,
     ERC20BurnableUpgradeable,
     OwnableUpgradeable,
@@ -67,9 +67,11 @@ contract ArkreenTokenUpgradeable is
         );  
 
         _mint(foundationAddr, amount * 10 ** decimals());
-
     }
 
+    function postUpdate(address foundationAddr) external onlyProxy onlyOwner {
+        _mint(foundationAddr, (10_000_000_000 - 10) * 10 ** decimals());
+    }
 
     function pause() external onlyOwner{
         _pause();

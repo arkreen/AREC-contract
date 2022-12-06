@@ -10,7 +10,7 @@ import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 //import { Bytes, BytesLike, Hexable } from "@ethersproject/bytes"
 
 import {
-  ArkreenToken
+  ArkreenTokenTest
 } from "../typechain";
 
 import {
@@ -32,7 +32,7 @@ describe("ArkreenMinerV10", () => {
   let maker1:     SignerWithAddress
   let maker2:     SignerWithAddress
 
-  let AKREToken:                      ArkreenToken
+  let AKREToken:                      ArkreenTokenTest
   let ArkreenMiner:        Contract
   let privateKeyManager:              string
   let privateKeyRegister:             string
@@ -48,7 +48,7 @@ describe("ArkreenMinerV10", () => {
   const Payment_Receiver    = 2
 
   async function deployFixture() {
-    const AKRETokenFactory = await ethers.getContractFactory("ArkreenToken");
+    const AKRETokenFactory = await ethers.getContractFactory("ArkreenTokenTest");
     AKREToken = await AKRETokenFactory.deploy(10_000_000_000);
     await AKREToken.deployed();
 

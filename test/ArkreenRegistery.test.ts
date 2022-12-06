@@ -4,8 +4,8 @@ import { constants, utils, BigNumber, Contract } from 'ethers'
 import { ethers, network, upgrades } from "hardhat";
 
 import {
-    ArkreenToken,
-    ArkreenToken__factory,
+    ArkreenTokenTest,
+    ArkreenTokenTest__factory,
     ArkreenRegistery,
     ArkreenRECToken,
 } from "../typechain";
@@ -14,14 +14,14 @@ describe("ArkreenRegistery", () => {
     let deployer:           SignerWithAddress
     let bob:                SignerWithAddress
     let alice:              SignerWithAddress
-    let AKREToken:          ArkreenToken
+    let AKREToken:          ArkreenTokenTest
     let arkreenRegistery:   ArkreenRegistery
     let arkreenRECToken:    ArkreenRECToken
 
     beforeEach(async () => {
         [deployer, bob, alice] = await ethers.getSigners();
 
-        AKREToken = await new ArkreenToken__factory(deployer).deploy(10_000_000_000);
+        AKREToken = await new ArkreenTokenTest__factory(deployer).deploy(10_000_000_000);
         await AKREToken.deployed();
 
         const ArkreenRegisteryFactory = await ethers.getContractFactory("ArkreenRegistery")
