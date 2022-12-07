@@ -16,7 +16,8 @@ import "./ArkreenMinerTypesV10.sol";
 // Import this file to use console.log
 // import "hardhat/console.sol";
 
-contract ArkreenMinerV10 is 
+// This is to Upgrade ArkreenMiner to ArkreenMinerV10
+contract ArkreenMinerV10V is 
     OwnableUpgradeable,
     UUPSUpgradeable,
     ERC721EnumerableUpgradeable
@@ -125,12 +126,9 @@ contract ArkreenMinerV10 is
         );  
     }
 
-    function postUpdate(
-        address _tokenAKRE, 
-        address _minerManager
-    ) external onlyProxy onlyOwner {
-        tokenAKRE = _tokenAKRE;
-        AllManagers[uint256(MinerManagerType.Miner_Manager)] = _minerManager;
+    function postUpdate() 
+      external onlyProxy onlyOwner reinitializer(2) {
+        __ERC721_init_unchained(NAME, SYMBOL);
     }
 
     function _authorizeUpgrade(address newImplementation)

@@ -2,7 +2,7 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { CONTRACTS } from "../constants";
 import { ethers } from "hardhat";
-import { ArkreenRetirement__factory } from "../../typechain";
+import { ArkreenBadge__factory } from "../../typechain";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const { deployments, getNamedAccounts } = hre;
@@ -26,7 +26,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         const NEW_IMPLEMENTATION = '0x6f4fff7faa238cd68f03de75b8906e23dbd95f30'   // Need to check
 
         const [deployer] = await ethers.getSigners();
-        const ArkreenRetirementFactory = ArkreenRetirement__factory.connect(PROXY_ADDRESS, deployer);
+        const ArkreenRetirementFactory = ArkreenBadge__factory.connect(PROXY_ADDRESS, deployer);
 
         const callData = ArkreenRetirementFactory.interface.encodeFunctionData("postUpdate")
 //      const updateTx = ArkreenRECManagerFactory.interface.encodeFunctionData("upgradeToAndCall", [NEW_IMPLEMENTATION, callData])

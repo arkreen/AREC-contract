@@ -9,7 +9,7 @@ export const CONTRACTS: Record<string, string> = {
     RECRetire:    "ArkreenRetirement",
     AMinerV10:    "ArkreenMinerV10",
     AMinerV10X:    "ArkreenMinerV10X",
-    
+    AMinerV10V:    "ArkreenMinerV10V",
   };
 
 // Constructor Arguments

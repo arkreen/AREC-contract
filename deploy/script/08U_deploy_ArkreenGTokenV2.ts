@@ -2,7 +2,7 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { CONTRACTS } from "../constants";
 import { ethers } from "hardhat";
-import { ArkreenTokenUpgradeableV2__factory } from "../../typechain";
+import { ArkreenTokenV2__factory } from "../../typechain";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const { deployments, getNamedAccounts } = hre;
@@ -17,7 +17,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         const FOUNDATION_ADDRESS  = "0x1C9055Db231CD96447c61D07B3cEA77592154C3d"  //from Gery        
 
         const [deployer] = await ethers.getSigners();
-        const ArkreenTokenUpgradeableV2 = ArkreenTokenUpgradeableV2__factory.connect(PROXY_ADDRESS, deployer);
+        const ArkreenTokenUpgradeableV2 = ArkreenTokenV2__factory.connect(PROXY_ADDRESS, deployer);
 
         const callData = ArkreenTokenUpgradeableV2.interface.encodeFunctionData("postUpdate", [FOUNDATION_ADDRESS])
 //      const callData = ArkreenTokenUpgradeableV2.interface.encodeFunctionData("postUpdate", [...])
