@@ -26,8 +26,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       AKREToken_ADDRESS   = "0x6c28fF02d3A132FE52D022db1f25a33d91caeCA2"
       REGISTERY_ADDRESS   = "0x61a914363ef99aabca69504cee5ccfd5523c845d"
       ISSUER_ADDRESS      = "0x0AF6Fad1e63De91d5C53Af1dD2e55BB1b278b131"
+    }
+    else if(hre.network.name === 'matic')  {        // Matic Mainnet for test
+      AKREToken_ADDRESS   = "0x960C67B8526E6328b30Ed2c2fAeA0355BEB62A83"
+      REGISTERY_ADDRESS   = "0x3E8A27dA0BF241f588141659cBb6Bd39717527F1"
+      ISSUER_ADDRESS      = "0xec9254677d252df0dCaEb067dFC8b4ea5F6edAfC"
     } 
-
 
     const { deployments, getNamedAccounts } = hre;
     const { deploy } = deployments;

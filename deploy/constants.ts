@@ -1,15 +1,19 @@
 export const CONTRACTS: Record<string, string> = {
-    AKRE:         "ArkreenToken",
-    AMiner:       "ArkreenMiner",
-    gMinerU:      "ArkreenMinerUpgradeable",
-    gAKRE:        "gameArkreen",
-    gRegistry:    "ArkreenRegistery",
-    RECIssuance:  "ArkreenRECIssuance",
-    RECToken:     "ArkreenRECToken",
-    RECRetire:    "ArkreenRetirement",
-    AMinerV10:    "ArkreenMinerV10",
-    AMinerV10X:    "ArkreenMinerV10X",
-    AMinerV10V:    "ArkreenMinerV10V",
+    AKRE:           "ArkreenToken",
+    AMiner:         "ArkreenMiner",
+    gMinerU:        "ArkreenMinerUpgradeable",
+    gAKRE:          "gameArkreen",
+    gRegistry:      "ArkreenRegistery",
+    RECIssuance:    "ArkreenRECIssuance",
+    RECToken:       "ArkreenRECToken",
+    RECRetire:      "ArkreenRetirement",
+    AMinerV10:      "ArkreenMinerV10",
+    AMinerV10X:     "ArkreenMinerV10X",
+    AMinerV10V:     "ArkreenMinerV10V",
+    UUPSProxy:      "UUPSProxy",
+    RECBadge:       "ArkreenBadge",
+    Notary:         "ArkreenNotary",
+
   };
 
 // Constructor Arguments

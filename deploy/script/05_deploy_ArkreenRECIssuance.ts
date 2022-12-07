@@ -22,7 +22,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //      AKREToken_ADDRESS   = "0x6c28fF02d3A132FE52D022db1f25a33d91caeCA2"
 //      REGISTERY_ADDRESS   = "0x61a914363ef99aabca69504cee5ccfd5523c845d"
 //  } 
-
+    else if(hre.network.name === 'matic')  {              // MATIC Mainnet
+      AKREToken_ADDRESS   = "0x960C67B8526E6328b30Ed2c2fAeA0355BEB62A83"
+      REGISTERY_ADDRESS   = "0x3E8A27dA0BF241f588141659cBb6Bd39717527F1"
+    } 
 
     const { deployments, getNamedAccounts } = hre;
     const { deploy } = deployments;

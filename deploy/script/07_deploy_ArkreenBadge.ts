@@ -16,13 +16,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     else if(hre.network.name === 'matic_test')  {
       REGISTERY_ADDRESS   = "0x61a914363ef99aabca69504cee5ccfd5523c845d"
     } 
+    else if(hre.network.name === 'matic')  {                           // Matic Mainnet for test
+      REGISTERY_ADDRESS   = "0x3E8A27dA0BF241f588141659cBb6Bd39717527F1"
+    }     
 
     const { deployments, getNamedAccounts } = hre;
     const { deploy } = deployments;
     const { deployer } = await getNamedAccounts();
 
-    console.log("Deploying: ", CONTRACTS.RECRetire, deployer);  
-    const ArkreenRetirement = await deploy(CONTRACTS.RECRetire, {
+    console.log("Deploying: ", CONTRACTS.RECBadge, deployer);  
+    const ArkreenBadge = await deploy(CONTRACTS.RECBadge, {
         from: deployer,
         proxy: {
           proxyContract: "UUPSProxy",
@@ -41,9 +44,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         skipIfAlreadyDeployed: false,
     });
 
-    console.log("ArkreenRetirement deployed to %s: ", hre.network.name, ArkreenRetirement.address);
+    console.log("ArkreenBadge deployed to %s: ", hre.network.name, ArkreenBadge.address);
 };
 
-func.tags = ["RECRetire"];
+func.tags = ["RECBadge"];
 
 export default func;

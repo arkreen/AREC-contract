@@ -77,6 +77,13 @@
 
     "deploy:matic:AMinerV10V": "hardhat --network matic deploy --tags AMinerV10V",
     "deploy:matic:AMinerUV10V": "hardhat --network matic deploy --tags AMinerUV10V",
+    "deploy:matic:gRegistry": "hardhat --network matic deploy --tags gRegistry",
+    "deploy:matic:UUPSProxy": "hardhat --network matic deploy --tags UUPSProxy",
+    "deploy:matic:RECIssue": "hardhat --network matic deploy --tags RECIssue",
+    "deploy:matic:RECToken": "hardhat --network matic deploy --tags RECToken",
+    "deploy:matic:RECBadge": "hardhat --network matic deploy --tags RECBadge",
+    "deploy:matic:gRegistryI": "hardhat --network matic deploy --tags gRegistryI",
+    "deploy:matic:Notary": "hardhat --network matic deploy --tags Notary",
 
     "etherscan:matic": "hardhat --network matic etherscan-verify <--api-key>",
 
