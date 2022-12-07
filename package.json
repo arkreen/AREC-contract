@@ -75,6 +75,9 @@
     "deploy:matic:gAKREV2": "hardhat --network matic deploy --tags gAKREV2",
     "deploy:matic:gAKRE2U": "hardhat --network matic deploy --tags gAKRE2U",
 
+    "deploy:matic:AMinerV10V": "hardhat --network matic deploy --tags AMinerV10V",
+    "deploy:matic:AMinerUV10V": "hardhat --network matic deploy --tags AMinerUV10V",
+
     "etherscan:matic": "hardhat --network matic etherscan-verify <--api-key>",
 
     "test": "hardhat test",
