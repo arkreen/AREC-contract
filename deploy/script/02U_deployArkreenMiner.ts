@@ -61,7 +61,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     await updateTx.wait()
 
 //    console.log("callData, update", callData, updateTx)
-//    console.log("ArkreenRegistery deployed to %s: ", hre.network.name, ArkreenMinerFactory.address);
+//    console.log("ArkreenRegistry deployed to %s: ", hre.network.name, ArkreenMinerFactory.address);
   } 
 
   if(hre.network.name === 'matic_test') {
@@ -77,7 +77,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     await updateTx.wait()
 
 //    console.log("callData, update", callData, updateTx)
-//    console.log("ArkreenRegistery deployed to %s: ", hre.network.name, ArkreenMinerFactory.address);
+//    console.log("ArkreenRegistry deployed to %s: ", hre.network.name, ArkreenMinerFactory.address);
  } 
 };
 

@@ -25,7 +25,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //    REGISTER_ADDRESS = "0x58aCE9F0f042bC3DDb1f3d929f32C7931FFdA215"
 //////////////////////////////////////////////////////////////
 
-////// These address are for minulation test ////////////////
+////// These address are for simulation test ////////////////
 //    AKREToken_ADDRESS = "0x54e1c534f59343c56549c76d1bdccc8717129832"
 //    MANAGER_ADDRESS   = "0x364a71ee7a1c9eb295a4f4850971a1861e9d3c7d"
 //    REGISTER_ADDRESS  = "0x364a71ee7a1c9eb295a4f4850971a1861e9d3c7d"
@@ -73,7 +73,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
   console.log("Deploying: ", CONTRACTS.AMinerV10, deployer);  
 
-  /* // Verification is difficult in this deplyment mode 
+  /* // Verification is difficult in this deployment mode 
   const ArkreenMinerV10Factory = await ethers.getContractFactory("ArkreenMinerV10");
   const ArkreenMinerV10 = await ArkreenMinerV10Factory.deploy();
   await ArkreenMinerV10.deployed();

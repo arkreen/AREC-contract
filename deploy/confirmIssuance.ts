@@ -3,7 +3,7 @@ import * as fs from "fs"
 import { ArkreenRECIssuance__factory } from "../typechain";
 import { RECDataStructOutput } from "../typechain/contracts/ArkreenRECIssuance";
 
-export enum REC_STARUS {
+export enum REC_STATUS {
   Pending,            // 0
   Rejected,           // 1
   Cancelled,          // 2
@@ -52,7 +52,7 @@ async function main() {
       try {
         const ARECNftInfo: RECDataStructOutput = await arkreenRECIssuance.getRECData(index)
         
-        if(ARECNftInfo.status == REC_STARUS.Pending) {
+        if(ARECNftInfo.status == REC_STATUS.Pending) {
           NewSerialNo = NewSerialNo +1
           const NewSerialNoString = NewSerialNo.toString().padStart(8,'0')
           await arkreenRECIssuance.certifyRECRequest(index, NewSerialNoString)

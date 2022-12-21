@@ -9,9 +9,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const { deploy } = deployments;
     const { deployerAddress } = await getNamedAccounts();
 
-    console.log("Deploying Updated ArkreenRegistery: ", CONTRACTS.gRegistry, deployerAddress);  
+    console.log("Deploying Updated ArkreenRegistry: ", CONTRACTS.gRegistry, deployerAddress);  
     
-    const ArkreenRegistery_Upgrade = await deploy(CONTRACTS.gRegistry, {
+    const ArkreenRegistry_Upgrade = await deploy(CONTRACTS.gRegistry, {
         from: deployerAddress,
         args: [123],
         log: true,
@@ -20,7 +20,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     if(hre.network.name === 'matic_test') {
         const REGISTRY_ADDRESS = "0xa299b0e5e55988b07dea7eccfb23bfdd14b1b2b0"       // Need to check
-        const NEW_IMPLEMENTATION = ArkreenRegistery_Upgrade.address
+        const NEW_IMPLEMENTATION = ArkreenRegistry_Upgrade.address
 
         const [deployer] = await ethers.getSigners();
         const ArkreenRECIssuanceFactory = ArkreenRECIssuance__factory.connect(REGISTRY_ADDRESS, deployer);
@@ -31,7 +31,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         await updateTx.wait()
 
         console.log("callData, update", callData, updateTx)
-        console.log("ArkreenRegistery deployed to %s: ", hre.network.name, ArkreenRECIssuanceFactory.address);
+        console.log("ArkreenRegistry deployed to %s: ", hre.network.name, ArkreenRECIssuanceFactory.address);
     } 
 };
 

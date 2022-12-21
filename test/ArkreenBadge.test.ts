@@ -8,7 +8,7 @@ import {
     ArkreenMiner,
     ArkreenRECIssuance,
     ArkreenRegistry,
-    ArkreenRECToken,_
+    ArkreenRECToken,
     ArkreenBadge,
 } from "../typechain";
 

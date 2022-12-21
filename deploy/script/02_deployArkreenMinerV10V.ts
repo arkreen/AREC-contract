@@ -13,7 +13,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
   console.log("Deploying: ", CONTRACTS.AMinerV10V, deployer);  
 
-  /* // Verification is difficult in this deplyment mode 
+  /* // Verification is difficult in this deployment mode 
   const ArkreenMinerV10Factory = await ethers.getContractFactory("ArkreenMinerV10");
   const ArkreenMinerV10 = await ArkreenMinerV10Factory.deploy();
   await ArkreenMinerV10.deployed();

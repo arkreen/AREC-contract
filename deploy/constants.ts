@@ -3,7 +3,7 @@ export const CONTRACTS: Record<string, string> = {
     AMiner:         "ArkreenMiner",
     gMinerU:        "ArkreenMinerUpgradeable",
     gAKRE:          "gameArkreen",
-    gRegistry:      "ArkreenRegistery",
+    gRegistry:      "ArkreenRegistry",
     RECIssuance:    "ArkreenRECIssuance",
     RECToken:       "ArkreenRECToken",
     RECRetire:      "ArkreenRetirement",

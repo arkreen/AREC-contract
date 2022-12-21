@@ -8,7 +8,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const { deployer } = await getNamedAccounts();
 
     console.log("Deploying: ", CONTRACTS.gRegistry, deployer);  
-    const ArkreenRegistery = await deploy(CONTRACTS.gRegistry, {
+    const ArkreenRegistry = await deploy(CONTRACTS.gRegistry, {
         from: deployer,
         proxy: {
           proxyContract: "UUPSProxy",
@@ -23,7 +23,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         skipIfAlreadyDeployed: false,
     });
 
-    console.log("ArkreenRegistery deployed to %s: ", hre.network.name, ArkreenRegistery.address);
+    console.log("ArkreenRegistry deployed to %s: ", hre.network.name, ArkreenRegistry.address);
 };
 
 func.tags = ["gRegistry"];

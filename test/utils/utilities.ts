@@ -142,7 +142,7 @@ export function getCreate2AddressFeSwap(
 
 export async function getMinerRegisterDigest(
   contractName: string,
-  contracAddress: string,
+  contractAddress: string,
   approve: {
     owner: string
     miners: string[]
@@ -151,7 +151,7 @@ export async function getMinerRegisterDigest(
   feeRegister: BigNumber,
   deadline: BigNumber
 ): Promise<string> {
-  const DOMAIN_SEPARATOR = getDomainSeparator(contractName, contracAddress)
+  const DOMAIN_SEPARATOR = getDomainSeparator(contractName, contractAddress)
 
   ///////////////////////////
 /*
@@ -185,7 +185,7 @@ export async function getMinerRegisterDigest(
 
 export function getOnboardingGameMinerDigest(
   contractName: string,
-  contracAddress: string,
+  contractAddress: string,
   approve: {
     owner: string
     miner: string
@@ -193,7 +193,7 @@ export function getOnboardingGameMinerDigest(
   },
   deadline: BigNumber
 ): string {
-  const DOMAIN_SEPARATOR = getDomainSeparator(contractName, contracAddress)
+  const DOMAIN_SEPARATOR = getDomainSeparator(contractName, contractAddress)
 
   ///////////////////////////
   /*
@@ -204,7 +204,7 @@ export function getOnboardingGameMinerDigest(
   console.log('dataToHash:',  dataToHash)
   console.log('HashOfData:',  utils.keccak256(dataToHash))
   console.log('DOMAIN_SEPARATOR:', DOMAIN_SEPARATOR)
-  console.log('contracAddress, chainId:', contracAddress, hre.network.config.chainId)
+  console.log('contractAddress, chainId:', contractAddress, hre.network.config.chainId)
   */
 
   return utils.keccak256(
@@ -227,7 +227,7 @@ export function getOnboardingGameMinerDigest(
 
 export function getOnboardingRemoteMinerDigest(
   contractName: string,
-  contracAddress: string,
+  contractAddress: string,
   approve: {
     owner: string
     miner: string
@@ -236,7 +236,7 @@ export function getOnboardingRemoteMinerDigest(
     deadline: BigNumber
   }
 ): string {
-  const DOMAIN_SEPARATOR = getDomainSeparator(contractName, contracAddress)
+  const DOMAIN_SEPARATOR = getDomainSeparator(contractName, contractAddress)
 
   ///////////////////////////
   /*
@@ -247,7 +247,7 @@ export function getOnboardingRemoteMinerDigest(
   console.log('dataToHash:',  dataToHash)
   console.log('HashOfData:',  utils.keccak256(dataToHash))
   console.log('DOMAIN_SEPARATOR:', DOMAIN_SEPARATOR)
-  console.log('contracAddress, chainId:', contracAddress, hre.network.config.chainId)
+  console.log('contractAddress, chainId:', contractAddress, hre.network.config.chainId)
   */
 
   return utils.keccak256(
@@ -270,7 +270,7 @@ export function getOnboardingRemoteMinerDigest(
 
 export function getOnboardingGameMinerMessage(
   contractName: string,
-  contracAddress: string,
+  contractAddress: string,
   approve: {
     owner: string
     miner: string
@@ -278,7 +278,7 @@ export function getOnboardingGameMinerMessage(
   },
   deadline: BigNumber
 ): string {
-  const DOMAIN_SEPARATOR = getDomainSeparator(contractName, contracAddress)
+  const DOMAIN_SEPARATOR = getDomainSeparator(contractName, contractAddress)
 
   return utils.solidityPack(
       ['bytes1', 'bytes1', 'bytes32', 'bytes32'],
@@ -298,7 +298,7 @@ export function getOnboardingGameMinerMessage(
 
 export function getOnboardingDTUMinerDigest(
   contractName: string,
-  contracAddress: string,
+  contractAddress: string,
   approve: {
     owner:      string
     gameMiner:  string
@@ -309,7 +309,7 @@ export function getOnboardingDTUMinerDigest(
   feeRegister: BigNumber,
   deadline: BigNumber
 ): string {
-  const DOMAIN_SEPARATOR = getDomainSeparator(contractName, contracAddress)
+  const DOMAIN_SEPARATOR = getDomainSeparator(contractName, contractAddress)
   return utils.keccak256(
     utils.solidityPack(
       ['bytes1', 'bytes1', 'bytes32', 'bytes32'],
