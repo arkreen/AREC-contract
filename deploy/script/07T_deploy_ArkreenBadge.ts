@@ -34,39 +34,24 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     if(hre.network.name === 'matic') {
       const PROXY_ADDRESS = "0x3d5531cF0bC2e8d0658fEc0D1a9995211Ac1f337"       // Need to check
-      const NEW_IMPLEMENTATION = '0x504fb898a5dc3cf99f237e62228d09f52ee64a7f'   // Update to support SBT
+      const NEW_IMPLEMENTATION = '0xA82E33A80f8c6A0dC66678956F8dC3b27928F036'   // Update to support SBT
       
       const [deployer] = await ethers.getSigners();
 
       const feeData = await deployer.getFeeData()
       const gasPrice = await deployer.getGasPrice()  
-
-/*
-      const overrides = feeData.lastBaseFeePerGas ?
-                          { maxFeePerGas: feeData.lastBaseFeePerGas.mul(140).div(100).gt(gasPrice) ?
-                            feeData.lastBaseFeePerGas.mul(125).div(100) : gasPrice,
-                            maxPriorityFeePerGas: feeData.lastBaseFeePerGas.mul(20).div(100) 
-                          } : {gasPrice: gasPrice.mul(110).div(100)}
-*/                                
-
-      const overrides = feeData.lastBaseFeePerGas ?
-                          { maxFeePerGas: feeData.lastBaseFeePerGas.mul(2).add(
-                                            feeData.lastBaseFeePerGas.mul(20).div(100)),
-                            maxPriorityFeePerGas: feeData.lastBaseFeePerGas.mul(20).div(100) 
-                          } : {gasPrice: gasPrice.mul(110).div(100)}
-
-      console.log('feeData, gasPrice', feeData, gasPrice, overrides)
-
-      const  ArkreenBadgeFactory = ArkreenBadge__factory.connect(PROXY_ADDRESS, deployer);
       
-      const updateTx = await  ArkreenBadgeFactory.upgradeTo(NEW_IMPLEMENTATION)
-      await updateTx.wait()
+      console.log('feeData, gasPrice', feeData, gasPrice)
+
+//      const  ArkreenBadgeFactory = ArkreenBadge__factory.connect(PROXY_ADDRESS, deployer);
+//      const updateTx = await  ArkreenBadgeFactory.upgradeTo(NEW_IMPLEMENTATION)
+//      await updateTx.wait()
       
-      console.log("callData, update", updateTx)
-      console.log(" ArkreenBadge deployed to %s: ", hre.network.name,  ArkreenBadgeFactory.address);
+//      console.log("callData, update", updateTx)
+//      console.log(" ArkreenBadge deployed to %s: ", hre.network.name,  ArkreenBadgeFactory.address);
     } 
 };
 
-func.tags = ["RECBadgeU"];
+func.tags = ["RECBadgeT"];
 
 export default func;
