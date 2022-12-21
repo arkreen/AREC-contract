@@ -7,7 +7,7 @@ import '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721Enumer
 import '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
 
 import "./interfaces/IMinerRegister.sol";
-import "./interfaces/IArkreenRegistery.sol";
+import "./interfaces/IArkreenRegistry.sol";
 import "./interfaces/IArkreenMiner.sol";
 import "./interfaces/IArkreenRetirement.sol";
 
@@ -49,7 +49,7 @@ contract ArkreenRECIssuance is
     }
 
     modifier whenNotPaused() {
-        require(!IPausable(arkreenRegistery).paused(), 'AREC: Paused');
+        require(!IPausable(arkreenRegistry).paused(), 'AREC: Paused');
         _;
     }    
   
@@ -63,7 +63,7 @@ contract ArkreenRECIssuance is
         __UUPSUpgradeable_init();
         __ERC721_init_unchained(NAME, SYMBOL);
         tokenAKRE = _tokenAKRE;
-        arkreenRegistery = arkRegistry;
+        arkreenRegistry = arkRegistry;
         baseURI = 'https://www.arkreen.com/AREC/' ;
     }
 
@@ -85,14 +85,14 @@ contract ArkreenRECIssuance is
     ) external ensure(permitToPay.deadline) whenNotPaused returns (uint256 tokenId) {
 
         // Check issuer address
-        require(IArkreenRegistery(arkreenRegistery).isRECIssuer(recRequest.issuer), 'AREC: Wrong Issuer');
+        require(IArkreenRegistry(arkreenRegistry).isRECIssuer(recRequest.issuer), 'AREC: Wrong Issuer');
 
         // Check REC time period
         require(recRequest.startTime < recRequest.endTime && recRequest.endTime < block.timestamp, 'AREC: Wrong Period');
 
         // Check the caller be acceptable miner
         address sender = _msgSender();
-        address arkreenMiner = IArkreenRegistery(arkreenRegistery).getArkreenMiner();   /// for testing ///
+        address arkreenMiner = IArkreenRegistry(arkreenRegistry).getArkreenMiner();   /// for testing ///
 
         // require(arkreenMiner.isContract(), "AREC: Wrong Miner Contract");            // no need to check
         require(IArkreenMiner(arkreenMiner).isOwner(sender), "AREC: Not Miner");        /// May Removed for testing ///
@@ -139,7 +139,7 @@ contract ArkreenRECIssuance is
     {
         // Check that the call is the issuer of the token
         address issuer = _msgSender();
-        require(IArkreenRegistery(arkreenRegistery).isRECIssuer(issuer), 'AREC: Not Issuer');
+        require(IArkreenRegistry(arkreenRegistry).isRECIssuer(issuer), 'AREC: Not Issuer');
         require(issuer == allRECData[tokenId].issuer, 'AREC: Wrong Issuer');
 
        // Only pending REC can be cancelled
@@ -168,7 +168,7 @@ contract ArkreenRECIssuance is
         require(allRECData[tokenID].status == uint8(RECStatus.Rejected), 'AREC: Wrong Status');  
 
         // Check issuer address
-        require(IArkreenRegistery(arkreenRegistery).isRECIssuer(issuer), 'AREC: Wrong Issuer');
+        require(IArkreenRegistry(arkreenRegistry).isRECIssuer(issuer), 'AREC: Wrong Issuer');
 
         allRECData[tokenID].issuer = issuer;                              
         allRECData[tokenID].region = region;                    // Null string is not checked, as it could be set to null
@@ -212,7 +212,7 @@ contract ArkreenRECIssuance is
     {
         // Check the issuer
         address issuer = _msgSender();
-        require(IArkreenRegistery(arkreenRegistery).isRECIssuer(issuer), 'AREC: Not Issuer');
+        require(IArkreenRegistry(arkreenRegistry).isRECIssuer(issuer), 'AREC: Not Issuer');
 
         // Check if the caller is the specified issuer
         require(issuer == allRECData[tokenID].issuer, 'AREC: Wrong Issuer');
@@ -269,7 +269,7 @@ contract ArkreenRECIssuance is
         require( allRECData[tokenId].status == uint8(RECStatus.Certified), 'AREC: Not Certified');
 
         // Register the offset event
-        address retirementContract = IArkreenRegistery(arkreenRegistery).getArkreenRetirement();
+        address retirementContract = IArkreenRegistry(arkreenRegistry).getArkreenRetirement();
         address issuerREC = allRECData[tokenId].issuer;
         uint256 amount = allRECData[tokenId].amountREC;
         offsetActionId = IArkreenRetirement(retirementContract).registerOffset(owner, issuerREC, amount, tokenId);
@@ -309,7 +309,7 @@ contract ArkreenRECIssuance is
         offsetActionIds[0] = offsetActionId;
 
         // Issue the offset certificate NFT
-        address retirementContract = IArkreenRegistery(arkreenRegistery).getArkreenRetirement();
+        address retirementContract = IArkreenRegistry(arkreenRegistry).getArkreenRetirement();
         IArkreenRetirement(retirementContract)
                 .mintCertificate(owner, beneficiary, offsetEntityID, beneficiaryID, offsetMessage, offsetActionIds);
    
@@ -329,7 +329,7 @@ contract ArkreenRECIssuance is
 
         address issuerREC = allRECData[tokenId].issuer;
         uint256 amountREC = allRECData[tokenId].amountREC;
-        address tokenREC = IArkreenRegistery(arkreenRegistery).getRECToken(issuerREC) ;
+        address tokenREC = IArkreenRegistry(arkreenRegistry).getRECToken(issuerREC) ;
 
         // Transfer the REC NFT to the ERC20 token contract to be liquidized
         address owner = ownerOf(tokenId);        

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-/// @dev  ArkreenRegisteryStorage is to store system critical information
-contract ArkreenRegisteryStorage {
+/// @dev  ArkreenRegistryStorage is to store system critical information
+contract ArkreenRegistryStorage {
 
     struct IssuerStatus {
         bool      added;

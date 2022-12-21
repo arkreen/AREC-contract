@@ -7,8 +7,8 @@ import {
     ArkreenTokenTest,
     ArkreenMiner,
     ArkreenRECIssuance,
-    ArkreenRegistery,
-    ArkreenRECToken,
+    ArkreenRegistry,
+    ArkreenRECToken,_
     ArkreenBadge,
 } from "../typechain";
 
@@ -38,7 +38,7 @@ describe("ArkreenBadge", () => {
 
     let AKREToken:                    ArkreenTokenTest
     let arkreenMiner:      ArkreenMiner
-    let arkreenRegistery:             ArkreenRegistery
+    let arkreenRegistry:             ArkreenRegistry
     let arkreenRECIssuance:           ArkreenRECIssuance
     let arkreenRECToken:              ArkreenRECToken
     let arkreenBadge:            ArkreenBadge
@@ -56,21 +56,21 @@ describe("ArkreenBadge", () => {
 
       await arkreenMiner.deployed()
  
-      const ArkreenRegisteryFactory = await ethers.getContractFactory("ArkreenRegistery")
-      const arkreenRegistery = await upgrades.deployProxy(ArkreenRegisteryFactory,[]) as ArkreenRegistery
-      await arkreenRegistery.deployed()
+      const ArkreenRegistryFactory = await ethers.getContractFactory("ArkreenRegistry")
+      const arkreenRegistry = await upgrades.deployProxy(ArkreenRegistryFactory,[]) as ArkreenRegistry
+      await arkreenRegistry.deployed()
 
       const ArkreenRECIssuanceFactory = await ethers.getContractFactory("ArkreenRECIssuance")
       const arkreenRECIssuance = await upgrades.deployProxy(ArkreenRECIssuanceFactory, 
-                                  [AKREToken.address, arkreenRegistery.address]) as ArkreenRECIssuance
+                                  [AKREToken.address, arkreenRegistry.address]) as ArkreenRECIssuance
       await arkreenRECIssuance.deployed()
 
       const ArkreenRECTokenFactory = await ethers.getContractFactory("ArkreenRECToken")
-      arkreenRECToken = await upgrades.deployProxy(ArkreenRECTokenFactory,[arkreenRegistery.address, manager.address]) as ArkreenRECToken
+      arkreenRECToken = await upgrades.deployProxy(ArkreenRECTokenFactory,[arkreenRegistry.address, manager.address]) as ArkreenRECToken
       await arkreenRECToken.deployed()     
       
       const ArkreenRetirementFactory = await ethers.getContractFactory("ArkreenBadge")
-      arkreenBadge = await upgrades.deployProxy(ArkreenRetirementFactory,[arkreenRegistery.address]) as ArkreenBadge
+      arkreenBadge = await upgrades.deployProxy(ArkreenRetirementFactory,[arkreenRegistry.address]) as ArkreenBadge
       await arkreenBadge.deployed()           
   
       await AKREToken.transfer(owner1.address, expandTo18Decimals(10000))
@@ -107,11 +107,11 @@ describe("ArkreenBadge", () => {
       await arkreenMiner.connect(manager).MinerOnboard(
                 owner1.address, DTUMiner, gameMiner, MinerType.StandardMiner, payer, signature)
 
-      await arkreenRegistery.addRECIssuer(manager.address, arkreenRECToken.address, "Arkreen Issuer")
-      await arkreenRegistery.setRECIssuance(arkreenRECIssuance.address)
-      await arkreenRegistery.setArkreenRetirement(arkreenBadge.address)
+      await arkreenRegistry.addRECIssuer(manager.address, arkreenRECToken.address, "Arkreen Issuer")
+      await arkreenRegistry.setRECIssuance(arkreenRECIssuance.address)
+      await arkreenRegistry.setArkreenRetirement(arkreenBadge.address)
 
-      return {AKREToken, arkreenMiner, arkreenRegistery, arkreenRECIssuance, arkreenRECToken, arkreenBadge}
+      return {AKREToken, arkreenMiner, arkreenRegistry, arkreenRECIssuance, arkreenRECToken, arkreenBadge}
     }
 
     beforeEach(async () => {
@@ -125,7 +125,7 @@ describe("ArkreenBadge", () => {
         const fixture = await loadFixture(deployFixture)
         AKREToken = fixture.AKREToken
         arkreenMiner = fixture.arkreenMiner        
-        arkreenRegistery = fixture.arkreenRegistery
+        arkreenRegistry = fixture.arkreenRegistry
         arkreenRECIssuance = fixture.arkreenRECIssuance
         arkreenBadge = fixture.arkreenBadge
 
@@ -151,7 +151,7 @@ describe("ArkreenBadge", () => {
         const signature: SignatureStruct = { v, r, s, token: AKREToken.address, value:mintFee, deadline: constants.MaxUint256 } 
         
         // Mint
-        await arkreenRegistery.setArkreenMiner(arkreenMiner.address)
+        await arkreenRegistry.setArkreenMiner(arkreenMiner.address)
 //        await arkreenRECIssuance.managePaymentToken(AKREToken.address, true)
         const price0:BigNumber = expandTo18Decimals(50)
         await arkreenRECIssuance.updateARECMintPrice(AKREToken.address, price0)
@@ -213,7 +213,7 @@ describe("ArkreenBadge", () => {
         const signature: SignatureStruct = { v, r, s, token: AKREToken.address, value:mintFee, deadline: constants.MaxUint256 } 
         
         // Mint
-        await arkreenRegistery.setArkreenMiner(arkreenMiner.address)
+        await arkreenRegistry.setArkreenMiner(arkreenMiner.address)
 //      await arkreenRECIssuance.managePaymentToken(AKREToken.address, true)
         const price0:BigNumber = expandTo18Decimals(50)
         await arkreenRECIssuance.updateARECMintPrice(AKREToken.address, price0)
@@ -296,7 +296,7 @@ describe("ArkreenBadge", () => {
         const signature: SignatureStruct = { v, r, s, token: AKREToken.address, value:mintFee, deadline: constants.MaxUint256 } 
         
         // Mint
-        await arkreenRegistery.setArkreenMiner(arkreenMiner.address)
+        await arkreenRegistry.setArkreenMiner(arkreenMiner.address)
 //      await arkreenRECIssuance.managePaymentToken(AKREToken.address, true)
         const price0:BigNumber = expandTo18Decimals(50)
         await arkreenRECIssuance.updateARECMintPrice(AKREToken.address, price0)        

@@ -28,7 +28,7 @@ abstract contract ArkreenBadgeStorage {
     string public baseURI;
     uint256 public minOffsetAmount;
 
-    address public arkreenRegistery;                // contracts storing all miner's ownership        
+    address public arkreenRegistry;                // contracts storing all miner's ownership        
 
     /// @dev Counter of total offset action, also the id tracks the offset action
     uint256 public offsetCounter;

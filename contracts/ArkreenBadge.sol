@@ -10,8 +10,9 @@ import '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
 
 import './ArkreenBadgeStorage.sol';
 import "./interfaces/IPausable.sol";
-import "./interfaces/IArkreenRegistery.sol";
+import "./interfaces/IArkreenRegistry.sol";
 import "./interfaces/IArkreenRECIssuance.sol";
+import "./interfaces/IERC5192.sol";
 
 // Import this file to use console.log
 import "hardhat/console.sol";
@@ -21,7 +22,8 @@ contract ArkreenBadge is
     UUPSUpgradeable,
     ERC721EnumerableUpgradeable,
     IERC721Receiver,
-    ArkreenBadgeStorage
+    ArkreenBadgeStorage,
+    IERC5192
 {
     using AddressUpgradeable for address;
 
@@ -30,7 +32,7 @@ contract ArkreenBadge is
     string public constant SYMBOL = 'ARB';
 
      // Events
-    event ArkreenRegisteryUpdated(address newArkreenRegistery);
+    event ArkreenRegistryUpdated(address newArkreenRegistry);
     event OffsetCertificateMinted(uint256 tokenId);
     event OffsetCertificateUpdated(uint256 tokenId);
 
@@ -41,7 +43,7 @@ contract ArkreenBadge is
     }
   
     modifier whenNotPaused() {
-        require(!IPausable(arkreenRegistery).paused(), 'ARB: Paused');
+        require(!IPausable(arkreenRegistry).paused(), 'ARB: Paused');
         _;
     }
 
@@ -54,7 +56,7 @@ contract ArkreenBadge is
         __Ownable_init_unchained();
         __UUPSUpgradeable_init();        
         __ERC721_init_unchained(NAME, SYMBOL);
-        arkreenRegistery = arkRegistry;
+        arkreenRegistry = arkRegistry;
         baseURI = 'https://www.arkreen.com/badge/' ;
 
         address owner = _msgSender();
@@ -70,11 +72,11 @@ contract ArkreenBadge is
     {}
 
     /** 
-     * @dev Update the arkreenRegistery contract address.
+     * @dev Update the arkreenRegistry contract address.
      */
-    function updateArkreenRegistery(address _address) external virtual onlyOwner {
-        arkreenRegistery = _address;
-        emit ArkreenRegisteryUpdated(_address);
+    function updateArkreenRegistry(address _address) external virtual onlyOwner {
+        arkreenRegistry = _address;
+        emit ArkreenRegistryUpdated(_address);
     }
 
     /** 
@@ -97,11 +99,11 @@ contract ArkreenBadge is
         uint256 amount,
         uint256 tokenId
     ) external returns (uint256) {
-        bool isRECIssuance = (msg.sender == IArkreenRegistery(arkreenRegistery).getRECIssuance());
+        bool isRECIssuance = (msg.sender == IArkreenRegistry(arkreenRegistry).getRECIssuance());
         bool isZeroTokenId = (tokenId == 0);
 
         // Check called from the REC token contract, or from the REC issuance contrarct
-        require( isRECIssuance || msg.sender == IArkreenRegistery(arkreenRegistery).getRECToken(issuerREC), 
+        require( isRECIssuance || msg.sender == IArkreenRegistry(arkreenRegistry).getRECToken(issuerREC), 
                     'ARB: Wrong Issuer');
 
         // TokenId should not be zero for RECIssuance, and should be zero for RECToken
@@ -198,8 +200,8 @@ contract ArkreenBadge is
     ) external virtual {
         // The caller is either the offseting enity, or the REC token contract, or the REC issuance contract
         require(_msgSender() == offsetEntity ||
-                IArkreenRegistery(arkreenRegistery).getRECIssuance() == msg.sender ||
-                IArkreenRegistery(arkreenRegistery).tokenRECs(msg.sender) != address(0),
+                IArkreenRegistry(arkreenRegistry).getRECIssuance() == msg.sender ||
+                IArkreenRegistry(arkreenRegistry).tokenRECs(msg.sender) != address(0),
                 'ARB: Caller Not Allowed');
 
         uint256 offsetId = totalSupply() + 1;
@@ -267,7 +269,7 @@ contract ArkreenBadge is
     ) external virtual override whenNotPaused returns (bytes4) {
 
         // Check calling from REC Manager
-        require( IArkreenRegistery(arkreenRegistery).getRECIssuance() == msg.sender, 'ARB: Not From REC Issuance');
+        require( IArkreenRegistry(arkreenRegistry).getRECIssuance() == msg.sender, 'ARB: Not From REC Issuance');
         require( keccak256(data) == keccak256("Redeem"), 'ARB: Refused');
 
         RECData memory recData = IArkreenRECIssuance(msg.sender).getRECData(tokenId);
@@ -318,5 +320,29 @@ contract ArkreenBadge is
 
     function _baseURI() internal view virtual override returns (string memory) {
         return baseURI;
+    }
+
+    /**
+     * @dev Hook that is called before any token transfer. Miner Info is checked as the following rules:  
+     * A) Game miner cannot be transferred
+     * B) Only miner in Normal state can be transferred
+     */
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal virtual override (ERC721EnumerableUpgradeable) {
+        require(from == address(0), 'ARB: Transfer Not Allowed');
+        super._beforeTokenTransfer(from, to, tokenId);
+    }
+
+    function locked(uint256 tokenId) external view returns (bool){
+        require((tokenId > 0) && (tokenId < totalSupply()), 'ARB: Wrong tokenId');
+        return true;  
+    }
+
+    // Add SBT interface
+    function getVersion() external pure virtual returns (string memory) {
+        return "0.1.1";
     }
 }

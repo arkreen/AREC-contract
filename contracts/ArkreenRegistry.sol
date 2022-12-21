@@ -8,17 +8,17 @@ import '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol';
 
 import "./interfaces/IMinerRegister.sol";
-import "./interfaces/IArkreenRegistery.sol";
+import "./interfaces/IArkreenRegistry.sol";
 import "./interfaces/IERC20.sol";
 import "./libraries/TransferHelper.sol";
-import "./ArkreenRegisteryStorage.sol";
+import "./ArkreenRegistryStorage.sol";
 
-contract ArkreenRegistery is
+contract ArkreenRegistry is
     OwnableUpgradeable,
     PausableUpgradeable,
     AccessControlUpgradeable,
     UUPSUpgradeable,
-    ArkreenRegisteryStorage
+    ArkreenRegistryStorage
 {    
     using AddressUpgradeable for address;
 

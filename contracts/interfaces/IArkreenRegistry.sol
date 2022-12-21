@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-interface IArkreenRegistery {
+interface IArkreenRegistry {
     function getArkreenMiner() external view returns (address);
     function recIssuers(address) external view returns (uint256);
     function getRECIssuance() external view returns (address);

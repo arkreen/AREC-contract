@@ -5,7 +5,7 @@ import "./ArkreenRECIssuanceType.sol";
 
 contract ArkreenRECIssuanceStorage {
     address public tokenAKRE;                       // token adddress of AKRE
-    address public arkreenRegistery;                // contracts storing all miner's ownership    
+    address public arkreenRegistry;                // contracts storing all miner's ownership    
     string  public baseURI;
 
     mapping(uint256 => RECData) public allRECData;

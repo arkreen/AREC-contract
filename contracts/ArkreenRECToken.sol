@@ -9,7 +9,7 @@ import '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
 //import '@openzeppelin/contracts/access/AccessControl.sol';
 
 import "./interfaces/IArkreenRECIssuance.sol";
-import "./interfaces/IArkreenRegistery.sol";
+import "./interfaces/IArkreenRegistry.sol";
 import "./interfaces/IArkreenRetirement.sol";
 import "./interfaces/IPausable.sol";
 
@@ -30,7 +30,7 @@ contract ArkreenRECToken is
     string public constant SYMBOL = 'ART';
 
     // Public variables
-    address public arkreenRegistery;    // Registery contract storing Arkreen contracts   
+    address public arkreenRegistry;    // Registry contract storing Arkreen contracts   
     address public issuerREC;           // Address of issuer of the original REC pre-liquidized    
     uint256 public totalLiquidized;     // Total amount of REC that is liquidized
     uint256 public totalOffset;         // Total amount of REC that is offset 
@@ -48,7 +48,7 @@ contract ArkreenRECToken is
     }
 
     modifier whenNotPaused() {
-        require(!IPausable(arkreenRegistery).paused(), 'ART: Paused');
+        require(!IPausable(arkreenRegistry).paused(), 'ART: Paused');
         _;
     }
   
@@ -61,7 +61,7 @@ contract ArkreenRECToken is
         __Ownable_init_unchained();
         __UUPSUpgradeable_init();        
         __ERC20_init_unchained(NAME, SYMBOL);
-        arkreenRegistery = arkRegistry;
+        arkreenRegistry = arkRegistry;
         issuerREC = issuer;
     }
 
@@ -99,7 +99,7 @@ contract ArkreenRECToken is
         _burn(account, amount);
 
         // Track total retirement amount in TCO2 factory
-        address retirementContract = IArkreenRegistery(arkreenRegistery).getArkreenRetirement();
+        address retirementContract = IArkreenRegistry(arkreenRegistry).getArkreenRetirement();
         offsetActionId = IArkreenRetirement(retirementContract).registerOffset(account, issuerREC, amount, 0);
         totalOffset += amount;
 
@@ -128,7 +128,7 @@ contract ArkreenRECToken is
         offsetActionIds[0] = offsetActionId;
 
         // Issue the offset certificate NFT
-        address retirementContract = IArkreenRegistery(arkreenRegistery).getArkreenRetirement();
+        address retirementContract = IArkreenRegistry(arkreenRegistry).getArkreenRetirement();
         IArkreenRetirement(retirementContract).mintCertificate(
                         _msgSender(), beneficiary, offsetEntityID, beneficiaryID, offsetMessage, offsetActionIds);
     }
@@ -142,7 +142,7 @@ contract ArkreenRECToken is
     ) external virtual override whenNotPaused returns (bytes4) {
 
         // Check calling from REC Manager
-        require( IArkreenRegistery(arkreenRegistery).getRECIssuance() == msg.sender, 'ART: Not From REC Issuance');
+        require( IArkreenRegistry(arkreenRegistry).getRECIssuance() == msg.sender, 'ART: Not From REC Issuance');
 
         RECData memory recData = IArkreenRECIssuance(msg.sender).getRECData(tokenId);
         require(recData.status == uint256(RECStatus.Certified), 'ART: Wrong Status');
