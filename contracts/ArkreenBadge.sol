@@ -222,6 +222,7 @@ contract ArkreenBadge is
         totalOffsetRetired += offsetAmount;
 
         emit OffsetCertificateMinted(offsetId);
+        emit Locked(offsetId);
     }
 
     /**
@@ -282,7 +283,9 @@ contract ArkreenBadge is
     function supportsInterface(bytes4 interfaceId)
         public view override( ERC721EnumerableUpgradeable) returns (bool)
     {
-        return  interfaceId == type(IERC721Receiver).interfaceId || super.supportsInterface(interfaceId);
+        return  interfaceId == type(IERC721Receiver).interfaceId || 
+                interfaceId == type(IERC5192).interfaceId || 
+                super.supportsInterface(interfaceId);
     }  
 
     /**
@@ -337,7 +340,7 @@ contract ArkreenBadge is
     }
 
     function locked(uint256 tokenId) external view returns (bool){
-        require((tokenId > 0) && (tokenId < totalSupply()), 'ARB: Wrong tokenId');
+        require((tokenId > 0) && (tokenId <= totalSupply()), 'ARB: Wrong tokenId');
         return true;  
     }
 

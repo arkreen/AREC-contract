@@ -187,7 +187,7 @@ describe("ArkreenRECToken", () => {
       
       expect(await arkreenRECToken.totalOffset()).to.equal(expandTo18Decimals(30))
       await arkreenRetirement.connect(owner1).mintCertificate(
-                              owner1.address, owner1.address, "Owner","","Save Earcth",[offsetID1,offsetID2])
+                              owner1.address, owner1.address, "Owner","","Save Earth",[offsetID1,offsetID2])
             
     })
 
@@ -218,14 +218,14 @@ describe("ArkreenRECToken", () => {
       const offsetID3 = await arkreenRetirement.offsetCounter()              
      
       await arkreenRetirement.connect(owner1).mintCertificate(
-                             owner1.address, owner1.address, "Owner","","Save Earcth",[offsetID1, offsetID2, offsetID3])
+                             owner1.address, owner1.address, "Owner","","Save Earth",[offsetID1, offsetID2, offsetID3])
            
    })
 
     it("ArkreenRECToken: mintCertificate: By REC token", async () => {
       // offsetAndMintCertificate
       await arkreenRECToken.connect(owner1).offsetAndMintCertificate(
-                                              owner1.address, "Owner","Alice","Save Earcth",expandTo18Decimals(10)) 
+                                              owner1.address, "Owner","Alice","Save Earth",expandTo18Decimals(10)) 
 
        // commitOffset
       await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(10))
@@ -238,7 +238,7 @@ describe("ArkreenRECToken", () => {
       const offsetID3 = await arkreenRetirement.offsetCounter()
 
       // mintCertificate
-      await arkreenRetirement.connect(owner1).mintCertificate(owner1.address, owner1.address, "Owner","","Save Earcth",[offsetID1,offsetID2]) 
+      await arkreenRetirement.connect(owner1).mintCertificate(owner1.address, owner1.address, "Owner","","Save Earth",[offsetID1,offsetID2]) 
       const certId = await arkreenRetirement.totalSupply()
       const lastBlock = await ethers.provider.getBlock('latest')
 
@@ -248,7 +248,7 @@ describe("ArkreenRECToken", () => {
       // updateCertificate
       await arkreenRetirement.connect(owner1).updateCertificate(certId, owner1.address, "Kitty","Alice","")
 
-      const offsetRecord = [owner1.address, owner1.address, "Kitty", "Alice", "Save Earcth", 
+      const offsetRecord = [owner1.address, owner1.address, "Kitty", "Alice", "Save Earth", 
                             BigNumber.from(lastBlock.timestamp), expandTo18Decimals(30), [offsetID1,offsetID2,offsetID3]]
       expect(await arkreenRetirement.getCertificate(certId)).to.deep.equal(offsetRecord)
 

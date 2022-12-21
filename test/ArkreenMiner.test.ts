@@ -238,12 +238,12 @@ describe("ArkreenMiner", () => {
               .to.be.revertedWith("Arkreen Miner: Gaming Phase Ended")
     })       
     it("ArkreenMiner Basics: Manage Manufactures", async () => {
-      const manufactuers = randomAddresses(10)
-      await expect(ArkreenMiner.connect(owner1).ManageManufactures(manufactuers, true))
+      const manufacturers = randomAddresses(10)
+      await expect(ArkreenMiner.connect(owner1).ManageManufactures(manufacturers, true))
               .to.be.revertedWith("Ownable: caller is not the owner")        
-      await ArkreenMiner.connect(deployer).ManageManufactures(manufactuers, true)
-      expect(await ArkreenMiner.AllManufactures(manufactuers[0])).to.equal(true)
-      expect(await ArkreenMiner.AllManufactures(manufactuers[9])).to.equal(true)        
+      await ArkreenMiner.connect(deployer).ManageManufactures(manufacturers, true)
+      expect(await ArkreenMiner.AllManufactures(manufacturers[0])).to.equal(true)
+      expect(await ArkreenMiner.AllManufactures(manufacturers[9])).to.equal(true)        
       expect(await ArkreenMiner.AllManufactures(maker1.address)).to.equal(false)        
      })     
     
