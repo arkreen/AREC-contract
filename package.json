@@ -17,18 +17,15 @@
     "deploy:local:ARKE": "hardhat --network localhost deploy --tags ARKE",
     "deploy:local:gMiner": "hardhat --network localhost deploy --tags gMiner",
     "deploy:localhost:gMinerU": "hardhat --network localhost deploy --tags gMinerU",
-
     "deploy:goerli:ARKE": "hardhat --network goerli deploy --tags ARKE",
     "deploy:goerli:AMiner": "hardhat --network goerli deploy --tags AMiner",
     "deploy:goerli:AMinerU": "hardhat --network goerli deploy --tags AMinerU",
     "etherscan:goerli": "hardhat --network goerli etherscan-verify <--api-key>",
     "verify:goerli": "npx hardhat verify --network goerli <ADDRESS> <PARAMS>",
-
     "deploy:rinkeby:ARKE": "hardhat --network rinkeby deploy --tags ARKE",
     "deploy:rinkeby:gMiner": "hardhat --network rinkeby deploy --tags gMiner",
     "deploy:rinkeby:gMinerU": "hardhat --network rinkeby deploy --tags gMinerU",
     "verify:rinkeby": "npx hardhat verify --network rinkeby <ADDRESS> <PARAMS>",
-
     "deploy:matic_test:ARKE": "hardhat --network matic_test deploy --tags ARKE",
     "deploy:matic_test:gMiner": "hardhat --network matic_test deploy --tags gMiner",
     "deploy:matic_test:gMinerU": "hardhat --network matic_test deploy --tags gMinerU",
@@ -37,62 +34,47 @@
     "deploy:matic_test:AMinerUV10": "hardhat --network matic_test deploy --tags AMinerUV10",
     "deploy:matic_test:AMinerV10X": "hardhat --network matic_test deploy --tags AMinerV10X",
     "deploy:matic_test:AMinerUV10X": "hardhat --network matic_test deploy --tags AMinerUV10X",
-
     "deploy:matic_test:AMinerV10V": "hardhat --network matic_test deploy --tags AMinerV10V",
     "deploy:matic_test:AMinerUV10V": "hardhat --network matic_test deploy --tags AMinerUV10V",
-    
     "deploy:matic_test:AMinerU": "hardhat --network matic_test deploy --tags AMinerU",
     "deploy:matic_test:gMinerU:reset": "npx hardhat --network matic_test deploy --reset --tags gMinerU",
     "deploy:matic_test:gRegistry": "hardhat --network matic_test deploy --tags gRegistry",
     "deploy:matic_test:gRegistryU": "hardhat --network matic_test deploy --tags gRegistryU",
-
     "deploy:matic_test:RECIssue": "hardhat --network matic_test deploy --tags RECIssue",
     "deploy:matic_test:RECIssueU": "hardhat --network matic_test deploy --tags RECIssueU",
     "deploy:matic_test:RECToken": "hardhat --network matic_test deploy --tags RECToken",
     "deploy:matic_test:RECRetire": "hardhat --network matic_test deploy --tags RECRetire",
     "deploy:matic_test:RECBadgeU": "hardhat --network matic_test deploy --tags RECBadgeU",
-        
     "deploy:matic_test:gAKRE": "hardhat --network matic_test deploy --tags gAKRE",
     "deploy:matic_test:gAKREV2": "hardhat --network matic_test deploy --tags gAKREV2",
     "deploy:matic_test:gAKRE2U": "hardhat --network matic_test deploy --tags gAKRE2U",
-
     "deploy:matic_test:RECBadgeD": "hardhat --network matic_test deploy --tags RECBadgeD",
-
     "deploy:matic_test:arkReward": "hardhat --network matic_test deploy --tags arkReward",
     "verify:matic_test": "npx hardhat verify --network matic_test <ADDRESS> <PARAMS>",
-
     "confirmAuto:matic_test": "npx hardhat run --network matic_test ./deploy/confirmIssuance.ts",
-    
     "deploy:matic_test:all": "hardhat --network matic_test deploy",
     "etherscan:matic_test": "hardhat --network matic_test etherscan-verify <--api-key>",
     "deploy_ARKE_test": "hardhat run --network matic_test scripts/deployArkreenToken.ts",
     "deploy_ARKE_matic": "hardhat run --network matic scripts/deployArkreenToken.ts",
-   
     "deploy:matic_test": "hardhat --network matic_test deploy --no-compile --reset --tags ARKE",
     "deploy:matic_test_all": "hardhat --network matic_test deploy",
-
     "deploy:matic:gAKRE": "hardhat --network matic deploy --tags gAKRE",
     "deploy:matic:arkReward": "hardhat --network matic deploy --tags arkReward",
     "deploy:matic:AMiner": "hardhat --network matic deploy --tags AMiner",
     "deploy:matic:gAKREV2": "hardhat --network matic deploy --tags gAKREV2",
     "deploy:matic:gAKRE2U": "hardhat --network matic deploy --tags gAKRE2U",
-
     "deploy:matic:AMinerV10V": "hardhat --network matic deploy --tags AMinerV10V",
     "deploy:matic:AMinerUV10V": "hardhat --network matic deploy --tags AMinerUV10V",
     "deploy:matic:gRegistry": "hardhat --network matic deploy --tags gRegistry",
     "deploy:matic:UUPSProxy": "hardhat --network matic deploy --tags UUPSProxy",
-
     "deploy:matic:RECIssue": "hardhat --network matic deploy --tags RECIssue",
     "deploy:matic:RECToken": "hardhat --network matic deploy --tags RECToken",
     "deploy:matic:RECBadge": "hardhat --network matic deploy --tags RECBadge",
     "deploy:matic:gRegistryI": "hardhat --network matic deploy --tags gRegistryI",
     "deploy:matic:Notary": "hardhat --network matic deploy --tags Notary",
-
-    "deploy:matic:RECBadgeD": "hardhat --network matic deploy --tags RECBadgeD",    
-    "deploy:matic:RECBadgeU": "hardhat --network matic deploy --tags RECBadgeU",      
-
+    "deploy:matic:RECBadgeD": "hardhat --network matic deploy --tags RECBadgeD",
+    "deploy:matic:RECBadgeU": "hardhat --network matic deploy --tags RECBadgeU",
     "etherscan:matic": "hardhat --network matic etherscan-verify <--api-key>",
-
     "test": "hardhat test",
     "gas": "set REPORT_GAS=true && hardhat test",
     "coverage": "HARDHAT_DEPLOY_FIXTURE=true hardhat coverage",
@@ -132,6 +114,7 @@
     "dotenv": "^16.0.2",
     "ethers": "^5.7.0",
     "hardhat": "^2.10.2",
+    "hardhat-contract-sizer": "^2.6.1",
     "hardhat-deploy": "^0.11.15",
     "hardhat-gas-reporter": "^1.0.8",
     "hardhat-storage-layout": "^0.1.7",

@@ -315,7 +315,6 @@ contract ArkreenRECIssuance is
    
     }   
 
-
    /**
      * @dev liquidize the REC NFT and mint the corresponding ERC20 token
      * @param tokenId Id of the REC NFT to liquidize
@@ -336,12 +335,35 @@ contract ArkreenRECIssuance is
         _safeTransfer(owner, tokenREC, tokenId, "");
 
         // Set the AREC status to be Liquidized
-        allRECData[tokenId].status = uint8(RECStatus.Liquidized);  
+        allRECData[tokenId].status = uint8(RECStatus.Liquidized);
 
         // Accumulate the Liquidized REC amount
         allRECLiquidized += amountREC;
         emit RECLiquidized(owner, tokenId, amountREC);
 
+    }
+
+    /**
+     * @dev restore the AREC NFT from Liquidized state to Certified state, called only by ART token contract
+     * @param tokenId Id of the AREC NFT to restore 
+     */
+    function restore( uint256 tokenId ) external whenNotPaused returns (bool){
+        // Check if the REC status
+        require(allRECData[tokenId].status == uint8(RECStatus.Liquidized), 'AREC: Not Liquidized');
+
+        address issuerREC = allRECData[tokenId].issuer;
+        uint256 amountREC = allRECData[tokenId].amountREC;
+        address tokenREC = IArkreenRegistry(arkreenRegistry).getRECToken(issuerREC) ;
+
+        // Only the ART contract can restore the AREC
+        require(msg.sender == tokenREC, 'AREC: Not Allowed');
+
+        // Modified the Liquidized REC amount
+        allRECLiquidized -= amountREC;
+
+        // Set the AREC status to be Liquidized
+        allRECData[tokenId].status = uint8(RECStatus.Certified);
+        return true;
     }
 
     /// @dev retrieve all data from VintageData struct

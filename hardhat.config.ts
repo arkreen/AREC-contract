@@ -1,15 +1,16 @@
 //import '@primitivefi/hardhat-dodoc';
-import { HardhatUserConfig } from "hardhat/config";
-import "@nomicfoundation/hardhat-toolbox";
+import { HardhatUserConfig } from "hardhat/config"
+import "@nomicfoundation/hardhat-toolbox"
 import '@typechain/hardhat'
 import '@nomiclabs/hardhat-ethers'
-import "hardhat-deploy";
-import "@nomiclabs/hardhat-etherscan";
-import "hardhat-storage-layout";
+import "hardhat-deploy"
+import "@nomiclabs/hardhat-etherscan"
+import "hardhat-storage-layout"
 //import '@nomiclabs/hardhat-waffle'
-import "hardhat-gas-reporter";
-import "solidity-coverage";
-import "@openzeppelin/hardhat-upgrades";
+import "hardhat-contract-sizer"
+import "hardhat-gas-reporter"
+import "solidity-coverage"
+import "@openzeppelin/hardhat-upgrades"
 import { NetworkUserConfig } from "hardhat/types";
 
 import { config as dotEnvConfig } from "dotenv";
@@ -140,6 +141,11 @@ const config: HardhatUserConfig = {
   namedAccounts: {
     deployer: 0,
     tokenOwner: 1,
+  },
+  contractSizer: {
+    alphaSort:          false,
+    runOnCompile:       false,
+    disambiguatePaths:  false,
   },
   paths: {
     artifacts: "./artifacts",
