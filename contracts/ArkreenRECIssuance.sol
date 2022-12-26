@@ -344,10 +344,11 @@ contract ArkreenRECIssuance is
     }
 
     /**
-     * @dev restore the AREC NFT from Liquidized state to Certified state, called only by ART token contract
+     * @dev Outflow the AREC NFT from Liquidized state either back to Certified state 
+     *      or to Retired state, called only by ART token contract
      * @param tokenId Id of the AREC NFT to restore 
      */
-    function restore( uint256 tokenId ) external whenNotPaused returns (bool){
+    function outflow( uint256 tokenId ) external whenNotPaused returns (bool){
         // Check if the REC status
         require(allRECData[tokenId].status == uint8(RECStatus.Liquidized), 'AREC: Not Liquidized');
 

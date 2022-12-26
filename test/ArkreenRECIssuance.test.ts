@@ -321,7 +321,7 @@ describe("ArkreenRECIssuance", () => {
                         'Beijing',
                         "", "" ]
 
-        expect(await arkreenRECIssuance.allRECData(1)).to.deep.eq(recData);
+        expect(await arkreenRECIssuance.getRECData(1)).to.deep.eq(recData);
 
         let payInfo = [AKREToken.address, mintFee]
         expect(await arkreenRECIssuance.allPayInfo(1)).to.deep.eq(payInfo);

@@ -14,7 +14,7 @@ import "./interfaces/IArkreenRetirement.sol";
 import "./interfaces/IPausable.sol";
 
 // Import this file to use console.log
-import "hardhat/console.sol";
+// import "hardhat/console.sol";
 
 contract ArkreenRECToken is
     OwnableUpgradeable,
@@ -29,6 +29,8 @@ contract ArkreenRECToken is
     string public constant NAME = 'Arkreen REC Token';
     string public constant SYMBOL = 'ART';
 
+    uint256 public constant MAX_SKIP = 20;
+
     // Public variables
     address public arkreenRegistry;    // Registry contract storing Arkreen contracts   
     address public issuerREC;           // Address of issuer of the original REC pre-liquidized    
@@ -41,7 +43,6 @@ contract ArkreenRECToken is
     mapping(uint256 => uint256) public allARECLiquidized;   // Loop of all AREC ID: 1st-> 2nd-> ..-> last-> 1st
     uint256 public latestARECID;                            // NFT ID of the latest AREC added to the loop 
     uint256 ratioFeeToMerge;                                // Percentage in basis point (10000) to charge for merging ART to AREC NFT
-
 
     // Events
     event OffsetFinished(address offsetEntity, uint256 amount, uint256 offsetId);
@@ -143,9 +144,13 @@ contract ArkreenRECToken is
      * @dev Merge the ART token to AREC NFT.
      * @param amount The amount requesting to merge
      */
-    function merge(uint256 amount) external virtual whenNotPaused returns (uint256 mergedAmount,uint256 feeMerge) {
+    function merge(uint256 amount) external virtual whenNotPaused 
+                returns (uint256 mergedAmount,uint256 feeMerge) {
 
         require(latestARECID != 0, 'ART: No Liquidized AREC');
+        bool chargeOn = (receiverFee != address(0)) && (ratioFeeToMerge != 0);           // To save gas
+        if(chargeOn) amount = (amount * 10000) / (10000 + ratioFeeToMerge);             // Substract the merge fee 
+        
         address merger = _msgSender();
         address issuanceAREC = IArkreenRegistry(arkreenRegistry).getRECIssuance();
 
@@ -154,7 +159,7 @@ contract ArkreenRECToken is
         uint256 curAREC = allARECLiquidized[latestARECID];
         uint256 preAREC = latestARECID;
 
-        while (skips <= 20) {
+        while (skips <= MAX_SKIP) {
             recData = IArkreenRECIssuance(issuanceAREC).getRECData(curAREC);
             uint256 amountAREC = recData.amountREC;
 
@@ -162,50 +167,48 @@ contract ArkreenRECToken is
                 require(mergedAmount != 0, 'ART: Amount Too Less');                // Must merge the oldest AREC first
                 if(curAREC == latestARECID) break;
                 skips++;
-//              console.log(curAREC, latestARECID, amount, allARECLiquidized[curAREC]);
-
                 preAREC = curAREC;
                 curAREC = allARECLiquidized[curAREC];
             } else {
-//              console.log(curAREC, latestARECID, amount, allARECLiquidized[curAREC]);
-
                 require(IArkreenRECIssuance(issuanceAREC).restore(curAREC), 'ART: Not Allowed');
                 IArkreenRECIssuance(issuanceAREC).transferFrom(address(this), merger, curAREC);
                 amount -= amountAREC;
                 mergedAmount += amountAREC;
                 curAREC = _remove(preAREC, curAREC);
-//              console.log(curAREC, latestARECID, amount, allARECLiquidized[curAREC]);
                 if(curAREC == 0) break;
             }
         }
 
         _burn(merger, mergedAmount);                    // mergedAmount must be more than 0 here, burn once to save gas
 
-        if (receiverFee != address(0)) {
+        if(chargeOn) {
             feeMerge = mergedAmount * ratioFeeToMerge / 10000;
             _transfer(merger, receiverFee, feeMerge);
         }
+
         emit Merge(merger, mergedAmount, feeMerge);      
-        return (mergedAmount, feeMerge);   
     }
 
-    function _remove(uint256 preAREC, uint256 curAREC) internal returns (uint256) {
-        uint256 lastAREC = latestARECID;
-        uint256 nextAREC = allARECLiquidized[curAREC];
+    /**
+     * @dev Remove the AREC NFT specified by curAREC from the liquidized list.
+     * @param preAREC The AREC NFT just previous in the list
+     * @param curAREC The AREC NFT to remove
+     * @return nextAREC the next AREC NFT ID if curAREC is not the last in the list
+     *         otherwise, returns 0 while curAREC is the last in the list
+     */
+    function _remove(uint256 preAREC, uint256 curAREC) internal returns (uint256 nextAREC) {
+        nextAREC = allARECLiquidized[curAREC];
+        allARECLiquidized[preAREC] = nextAREC;
 
-        if(curAREC == lastAREC) {                           // if remove last AREC
-            if(preAREC == lastAREC) {                       // if the last AREC is the only AREC
+        if(curAREC == latestARECID) {                           // if remove last AREC
+            if(preAREC == latestARECID) {                       // if the last AREC is the only AREC
                 latestARECID = 0;
             } else {
-                allARECLiquidized[preAREC] = nextAREC;
                 latestARECID = preAREC;
             }
             nextAREC = 0;
-        } else {
-            allARECLiquidized[preAREC] = nextAREC;
-        }
-        delete allARECLiquidized[curAREC];                  // delete the last AREC
-        return nextAREC;
+        } 
+        delete allARECLiquidized[curAREC];                      // delete the current AREC
     }
 
      /// @dev Receive hook to liquidize Arkreen RE Certificate into RE ERC20 Token
@@ -223,14 +226,12 @@ contract ArkreenRECToken is
         require(recData.status == uint256(RECStatus.Certified), 'ART: Wrong Status');
 
         if(latestARECID == 0) {
-            allARECLiquidized[tokenId] = tokenId;
+            allARECLiquidized[tokenId] = tokenId;                           // build the loop list
             latestARECID = tokenId;
-//          console.log("tokenId, allARECLiquidized[tokenId],AAAA", tokenId, allARECLiquidized[tokenId]);
         } else {
             allARECLiquidized[tokenId] = allARECLiquidized[latestARECID];   // Point to loop head
             allARECLiquidized[latestARECID] = tokenId;                      // Add to the loop
             latestARECID = tokenId;                                         // refresh the newest AREC
-//          console.log("tokenId, allARECLiquidized[tokenId],BBBBBBBB", tokenId, allARECLiquidized[tokenId]);
         }
 
         totalLiquidized += recData.amountREC;
@@ -253,6 +254,14 @@ contract ArkreenRECToken is
     function setRatioFee(uint256 ratio) external onlyOwner {
         require(ratio <10000, 'ART: Wrong Data');
         ratioLiquidizedFee = ratio;
+    }  
+
+    /**
+     * @dev set the ratio of merge fee to Merge from ART to AREC
+     */     
+    function setRatioFeeToMerge(uint256 ratio) external onlyOwner {
+        require(ratio <10000, 'ART: Wrong Data');
+        ratioFeeToMerge = ratio;
     }  
 
     /**
