@@ -17,6 +17,10 @@ import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { getApprovalDigest, expandTo18Decimals, randomAddresses, RECStatus, MinerType } from "./utils/utilities";
 import { ecsign, fromRpcSig, ecrecover } from 'ethereumjs-util'
 import { RECRequestStruct, SignatureStruct, RECDataStruct } from "../typechain/contracts/ArkreenRECIssuance";
+import { OffsetActionStruct }  from "../typechain/contracts/ArkreenBadge";
+
+const MASK_OFFSET = BigNumber.from('0x8000000000000000')
+const MASK_DETAILS = BigNumber.from('0xC000000000000000')
 
 describe("ArkreenRECToken", () => {
     let deployer: SignerWithAddress;
@@ -153,23 +157,85 @@ describe("ArkreenRECToken", () => {
         expect(await arkreenRECToken.SYMBOL()).to.equal("ART");
     });
 
-    it("ArkreenRECToken: commitOffset", async () => {
-       // commitOffset
+    it("ArkreenRECToken: commitOffset basics", async () => {
+
+      async function mintARECMaker(amountREC: number) {
+        const startTime = 1564888526
+        const endTime   = 1654888526
+        
+        let recMintRequest: RECRequestStruct = { 
+          issuer: manager.address, startTime, endTime,
+          amountREC: expandTo18Decimals(amountREC), 
+          cID: "bafybeihepmxz4ytc4ht67j73nzurkvsiuxhsmxk27utnopzptpo7wuigte",
+          region: 'Beijing',
+          url:"", memo:""
+        } 
+  
+        const mintFee = expandTo18Decimals(100)
+        const nonce1 = await AKREToken.nonces(maker1.address)
+        const digest1 = await getApprovalDigest(
+                                AKREToken,
+                                { owner: maker1.address, spender: arkreenRECIssuance.address, value: mintFee },
+                                nonce1,
+                                constants.MaxUint256
+                              )
+        const { v,r,s } = ecsign(Buffer.from(digest1.slice(2), 'hex'), Buffer.from(privateKeyMaker.slice(2), 'hex'))
+        const signature: SignatureStruct = { v, r, s, token: AKREToken.address, value:mintFee, deadline: constants.MaxUint256 } 
+        
+        await arkreenRECIssuance.connect(maker1).mintRECRequest(recMintRequest, signature)
+        const tokenID = await arkreenRECIssuance.totalSupply()
+  
+        await arkreenRECIssuance.connect(manager).certifyRECRequest(tokenID, "Serial12345678")
+        await arkreenRECIssuance.connect(maker1).liquidizeREC(tokenID)
+      }
+  
+      // commitOffset
+      await mintARECMaker(5000)       
+      await expect(arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(0)))
+              .to.be.revertedWith("ART: Zero Offset")
+
+      await expect(arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(2000)))
+              .to.be.revertedWith("ERC20: burn amount exceeds balance")
+
+      let lastBlock
+      const tokenID = BigNumber.from(1)
       const balance_1 = await arkreenRECToken.balanceOf(owner1.address)
       const totalSupply = await arkreenRECToken.totalSupply()
       await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(10))
       expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(balance_1.sub(expandTo18Decimals(10)))
       expect(await arkreenRECToken.totalSupply()).to.equal(totalSupply.sub(expandTo18Decimals(10)))
       const offsetID1 = await arkreenRetirement.offsetCounter()
+      lastBlock = await ethers.provider.getBlock('latest')
+      const action_1 = [  owner1.address, manager.address, expandTo18Decimals(10),    // Manger is the issuer address
+                          tokenID.add(MASK_OFFSET), lastBlock.timestamp, false ]
 
+      expect(await arkreenRetirement.getOffsetActions(offsetID1)).to.deep.equal(action_1)
+
+      expect(await arkreenRetirement.partialARECID()).to.equal(1)
+      expect(await arkreenRetirement.partialAvailableAmount()).to.equal(balance_1.sub(expandTo18Decimals(10)))
+      
       await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(10))
       expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(balance_1.sub(expandTo18Decimals(20)))
       const offsetID2 = await arkreenRetirement.offsetCounter()
+      lastBlock = await ethers.provider.getBlock('latest')
+      const action_2 = [  owner1.address, manager.address, expandTo18Decimals(10),
+                          tokenID.add(MASK_OFFSET), lastBlock.timestamp, false ]
+
+      expect(await arkreenRetirement.partialARECID()).to.equal(1)
+      expect(await arkreenRetirement.partialAvailableAmount()).to.equal(balance_1.sub(expandTo18Decimals(20)))                          
+
+      expect(await arkreenRetirement.getOffsetActions(offsetID2)).to.deep.equal(action_2)
 
       await expect(arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(10)))
               .to.emit(arkreenRECToken, "OffsetFinished")
               .withArgs(owner1.address, expandTo18Decimals(10), offsetID2.add(1)) 
+
+      expect(await arkreenRetirement.partialARECID()).to.equal(1)
+      expect(await arkreenRetirement.partialAvailableAmount()).to.equal(balance_1.sub(expandTo18Decimals(30)))     
       
+      const recData: RECDataStruct = await arkreenRECIssuance.getRECData(tokenID)
+      expect(recData.status).to.equal(BigNumber.from(RECStatus.Retired));      
+
       expect(await arkreenRECToken.totalOffset()).to.equal(expandTo18Decimals(30))
       await arkreenRetirement.connect(owner1).mintCertificate(
                               owner1.address, owner1.address, "Owner","","Save Earth",[offsetID1,offsetID2])
@@ -243,6 +309,269 @@ describe("ArkreenRECToken", () => {
       await arkreenRetirement.connect(owner1).attachOffsetEvents(certId, [offsetID4])        
 
   });
+
+
+  describe("commitOffset: Details", () => {
+    let tokenID: BigNumber
+
+    async function mintAREC(amountREC: number) {
+      const startTime = 1564888526
+      const endTime   = 1654888526
+
+      let recMintRequest: RECRequestStruct = { 
+        issuer: manager.address, startTime, endTime,
+        amountREC: expandTo18Decimals(amountREC), 
+        cID: "bafybeihepmxz4ytc4ht67j73nzurkvsiuxhsmxk27utnopzptpo7wuigte",
+        region: 'Beijing',
+        url:"", memo:""
+      } 
+
+      const mintFee = expandTo18Decimals(100)
+      const nonce1 = await AKREToken.nonces(owner1.address)
+      const digest1 = await getApprovalDigest(
+                              AKREToken,
+                              { owner: owner1.address, spender: arkreenRECIssuance.address, value: mintFee },
+                              nonce1,
+                              constants.MaxUint256
+                            )
+      const { v,r,s } = ecsign(Buffer.from(digest1.slice(2), 'hex'), Buffer.from(privateKeyOwner.slice(2), 'hex'))
+      const signature: SignatureStruct = { v, r, s, token: AKREToken.address, value:mintFee, deadline: constants.MaxUint256 } 
+      
+      await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
+      tokenID = await arkreenRECIssuance.totalSupply()
+
+      await arkreenRECIssuance.connect(manager).certifyRECRequest(tokenID, "Serial12345678")
+      await arkreenRECIssuance.connect(owner1).liquidizeREC(tokenID)
+    }
+
+    async function mintARECMaker(amountREC: number) {
+      const startTime = 1564888526
+      const endTime   = 1654888526
+      
+      let recMintRequest: RECRequestStruct = { 
+        issuer: manager.address, startTime, endTime,
+        amountREC: expandTo18Decimals(amountREC), 
+        cID: "bafybeihepmxz4ytc4ht67j73nzurkvsiuxhsmxk27utnopzptpo7wuigte",
+        region: 'Beijing',
+        url:"", memo:""
+      } 
+
+      const mintFee = expandTo18Decimals(100)
+      const nonce1 = await AKREToken.nonces(maker1.address)
+      const digest1 = await getApprovalDigest(
+                              AKREToken,
+                              { owner: maker1.address, spender: arkreenRECIssuance.address, value: mintFee },
+                              nonce1,
+                              constants.MaxUint256
+                            )
+      const { v,r,s } = ecsign(Buffer.from(digest1.slice(2), 'hex'), Buffer.from(privateKeyMaker.slice(2), 'hex'))
+      const signature: SignatureStruct = { v, r, s, token: AKREToken.address, value:mintFee, deadline: constants.MaxUint256 } 
+      
+      await arkreenRECIssuance.connect(maker1).mintRECRequest(recMintRequest, signature)
+      tokenID = await arkreenRECIssuance.totalSupply()
+
+      await arkreenRECIssuance.connect(manager).certifyRECRequest(tokenID, "Serial12345678")
+      await arkreenRECIssuance.connect(maker1).liquidizeREC(tokenID)
+    }
+
+    async function getAREC(): Promise<number[]> {
+
+      const latestARECID = await arkreenRECToken.latestARECID()
+      const arec_1 = await arkreenRECToken.allARECLiquidized(latestARECID)
+      const arec_2 = await arkreenRECToken.allARECLiquidized(arec_1)
+      const arec_3 = await arkreenRECToken.allARECLiquidized(arec_2)
+      return [arec_1.toNumber(), arec_2.toNumber(), arec_3.toNumber(), latestARECID.toNumber()]
+    }
+
+    beforeEach(async () => {
+      // Mint
+      await arkreenRegistry.setArkreenMiner(arkreenMiner.address)
+      const price0:BigNumber = expandTo18Decimals(50)
+      await arkreenRECIssuance.updateARECMintPrice(AKREToken.address, price0)
+    })
+
+    it("Offset Details: 1 AREC", async () => {
+      const balance_1 = await arkreenRECToken.balanceOf(owner1.address)
+      await expect(arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(1000)))
+              .to.emit(arkreenRECToken, "OffsetFinished")
+              .withArgs(owner1.address, expandTo18Decimals(1000), 1) 
+
+      const balance_2 = await arkreenRECToken.balanceOf(owner1.address)
+      expect(balance_2).to.equal(balance_1.sub(expandTo18Decimals(1000)))
+
+      expect(await arkreenRECToken.latestARECID()).to.equal(0)
+
+      expect(await arkreenRECIssuance.balanceOf(arkreenRetirement.address)).to.equal(1)
+      expect(await arkreenRECIssuance.balanceOf(arkreenRetirement.address)).to.equal(1)
+
+      expect(await arkreenRetirement.detailsCounter()).to.equal(0)
+    });
+
+    it("Offset Details: 2 AREC", async () => {
+      await mintAREC(5000)          // 2
+
+      const balance_1 = await arkreenRECToken.balanceOf(owner1.address)
+      await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(500))
+
+      await expect(arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(1500)))
+              .to.emit(arkreenRECToken, "OffsetFinished")
+              .withArgs(owner1.address, expandTo18Decimals(1500), 2) 
+
+      const balance_2 = await arkreenRECToken.balanceOf(owner1.address)
+      expect(balance_2).to.equal(balance_1.sub(expandTo18Decimals(2000)))
+
+      expect(await arkreenRECToken.latestARECID()).to.equal(0)
+
+      expect(await arkreenRECIssuance.balanceOf(arkreenRetirement.address)).to.equal(2)
+      expect(await arkreenRetirement.detailsCounter()).to.equal(1)
+
+      const detail_0 = [1, expandTo18Decimals(500)]
+      const detail_1 = [2, expandTo18Decimals(1000)]
+
+      expect(await arkreenRetirement.OffsetDetails(1,0)).to.deep.equal(detail_0)
+      expect(await arkreenRetirement.OffsetDetails(1,1)).to.deep.equal(detail_1)
+
+      await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(1500))
+      await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(2500))
+    });
+
+    it("Offset Details: 20 AREC", async () => {     // Offset 17 NFT in one offset transaction
+      await mintAREC(5000)        // 2 :  45
+      await mintAREC(600)         // 3:   51
+      await mintAREC(8000)        // 4:  131
+      await mintAREC(900)         // 5
+      await mintAREC(1000)        // 6
+      await mintAREC(2000)        // 7
+      await mintAREC(9000)        // 8
+      await mintAREC(800)         // 9
+      await mintAREC(3000)        // 10:  298
+
+      await mintAREC(5000)        // 11
+      await mintAREC(600)         // 12
+      await mintAREC(8000)        // 13
+      await mintAREC(500)         // 14
+      await mintAREC(1000)        // 15
+      await mintAREC(2000)        // 16:  469
+      await mintAREC(9000)        // 17:  559
+      await mintAREC(800)         // 18
+      await mintAREC(3000)        // 19： 597
+      await mintAREC(500)         // 20:  602
+
+      const balance_1 = await arkreenRECToken.balanceOf(owner1.address)
+      await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(1500))
+
+      await expect(arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(50000)))
+              .to.emit(arkreenRECToken, "OffsetFinished")
+              .withArgs(owner1.address, expandTo18Decimals(50000), 2) 
+
+      const balance_2 = await arkreenRECToken.balanceOf(owner1.address)
+      expect(balance_2).to.equal(balance_1.sub(expandTo18Decimals(1500 +50000)))
+
+      expect(await arkreenRECToken.latestARECID()).to.equal(20)  // 18, 19, 20
+
+      expect(await arkreenRECIssuance.balanceOf(arkreenRetirement.address)).to.equal(17)
+      expect(await arkreenRetirement.detailsCounter()).to.equal(2)
+
+      const detail_0 = [4, expandTo18Decimals(8000)]
+      const detail_1 = [11, expandTo18Decimals(5000)]
+      const detail_2 = [17, expandTo18Decimals(3100)]
+
+      expect(await arkreenRetirement.partialARECID()).to.equal(17)
+      expect(await arkreenRetirement.partialAvailableAmount()).to.equal(expandTo18Decimals(9000-3100))
+
+      expect(await arkreenRetirement.OffsetDetails(2,2)).to.deep.equal(detail_0)
+      expect(await arkreenRetirement.OffsetDetails(2,9)).to.deep.equal(detail_1)
+      expect(await arkreenRetirement.OffsetDetails(2,15)).to.deep.equal(detail_2)
+    });
+
+    it("Offset Details: 20 AREC", async () => {     // Maximum 20 NFT in one offset transaction
+      await mintAREC(5000)        // 2 :  45
+      await mintAREC(600)         // 3:   51
+      await mintAREC(8000)        // 4:  131
+      await mintAREC(900)         // 5
+      await mintAREC(1000)        // 6
+      await mintAREC(2000)        // 7
+      await mintAREC(9000)        // 8
+      await mintAREC(800)         // 9
+      await mintAREC(3000)        // 10:  298
+
+      await mintAREC(5000)        // 11
+      await mintAREC(600)         // 12
+      await mintAREC(8000)        // 13
+      await mintAREC(500)         // 14
+      await mintAREC(1000)        // 15
+      await mintAREC(2000)        // 16:  469
+      await mintAREC(9000)        // 17:  559
+      await mintAREC(800)         // 18
+      await mintAREC(3000)        // 19： 597
+      await mintAREC(500)         // 20:  602
+
+      await mintAREC(400)         // 21:  606
+      await mintAREC(300)         // 22:  609
+      await mintAREC(8000)        // 23:  689
+      await mintAREC(200)         // 24:  691
+
+      const balance_1 = await arkreenRECToken.balanceOf(owner1.address)
+      await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(1500))
+
+      const balance_1_A = await arkreenRECToken.balanceOf(owner1.address)
+      expect(balance_1_A).to.equal(balance_1.sub(expandTo18Decimals(1500)))
+
+      await expect(arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(66000)))
+              .to.emit(arkreenRECToken, "OffsetFinished")
+              .withArgs(owner1.address, expandTo18Decimals(60600), 2) 
+
+      const balance_2 = await arkreenRECToken.balanceOf(owner1.address)
+      expect(balance_2).to.equal(balance_1.sub(expandTo18Decimals(1500 +60600)))
+
+      expect(await arkreenRECToken.latestARECID()).to.equal(24)  // 22,23,24
+
+      expect(await arkreenRECIssuance.balanceOf(arkreenRetirement.address)).to.equal(21)
+      expect(await arkreenRetirement.detailsCounter()).to.equal(2)
+
+      const detail_0 = [2, expandTo18Decimals(4500)]
+      const detail_1 = [10, expandTo18Decimals(3000)]
+      const detail_2 = [21, expandTo18Decimals(400)]
+
+      expect(await arkreenRetirement.OffsetDetails(2,0)).to.deep.equal(detail_0)
+      expect(await arkreenRetirement.OffsetDetails(2,8)).to.deep.equal(detail_1)
+      expect(await arkreenRetirement.OffsetDetails(2,19)).to.deep.equal(detail_2)
+    });
+
+    it("Offset Details: 20 AREC gas used ", async () => {     // Maximum 20 NFT in one offset transaction
+      await mintAREC(5000)        // 2 :  45
+      await mintAREC(600)         // 3:   51
+      await mintAREC(8000)        // 4:  131
+      await mintAREC(900)         // 5
+      await mintAREC(1000)        // 6
+      await mintAREC(2000)        // 7
+      await mintAREC(9000)        // 8
+      await mintAREC(800)         // 9
+      await mintAREC(3000)        // 10:  298
+
+      await mintAREC(5000)        // 11
+      await mintAREC(600)         // 12
+      await mintAREC(8000)        // 13
+      await mintAREC(500)         // 14
+      await mintAREC(1000)        // 15
+      await mintAREC(2000)        // 16:  469
+      await mintAREC(9000)        // 17:  559
+      await mintAREC(800)         // 18
+      await mintAREC(3000)        // 19： 597
+      await mintAREC(500)         // 20:  602
+
+      await mintAREC(400)         // 21:  606
+      await mintAREC(300)         // 22:  609
+      await mintAREC(8000)        // 23:  689
+      await mintAREC(200)         // 24:  691
+
+      await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(1500))
+      const tx = await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(66000))
+      const receipt = await tx.wait()
+      expect(receipt.gasUsed).to.eq("2756125")  //4
+    });
+  })
+
 
   describe("liquidizeREC", () => {
     let tokenID: BigNumber
@@ -325,6 +654,7 @@ describe("ArkreenRECToken", () => {
   })
 
 
+/*  
   describe("Merge", () => {
     let tokenID: BigNumber
 
@@ -448,7 +778,7 @@ describe("ArkreenRECToken", () => {
     });
 
     it("Merge: 6AREC: 6000", async () => {
-//    await mintAREC(1000)      
+    // await mintAREC(1000)      
       await mintAREC(5000)
       await mintAREC(600)
       await mintAREC(8000)
@@ -667,4 +997,8 @@ describe("ArkreenRECToken", () => {
       expect(await arkreenRECToken.latestARECID()).to.equals(12)                      
     })
   })
+
+*/
+
+
 });

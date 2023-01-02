@@ -13,9 +13,10 @@ import "./interfaces/IPausable.sol";
 import "./interfaces/IArkreenRegistry.sol";
 import "./interfaces/IArkreenRECIssuance.sol";
 import "./interfaces/IERC5192.sol";
+import "./ArkreenBadgeType.sol";  
 
 // Import this file to use console.log
-import "hardhat/console.sol";
+//import "hardhat/console.sol";
 
 contract ArkreenBadge is
     OwnableUpgradeable,
@@ -86,6 +87,30 @@ contract ArkreenBadge is
         minOffsetAmount = uint128(amount);
     }
 
+    function registerDetail(uint256 amount, uint256 tokenId, bool bNew) external returns (uint256, uint256) {
+        require(tokenId == partialARECID, 'ARB: Error TokenId');
+
+        if(bNew) {
+            require(amount == partialAvailableAmount, 'ARB: Wrong New');
+            detailsCounter += 1;
+        } else {
+            require(amount <= partialAvailableAmount, 'ARB: Wrong Amount');
+        }
+
+        OffsetDetail memory offsetDetail;
+        offsetDetail.amount = uint128(amount);
+        offsetDetail.tokenId = uint64(tokenId);
+
+        OffsetDetails[detailsCounter].push(offsetDetail);            
+        partialAvailableAmount -= amount;                    // if bNew is true, partialAvailableAmount will be 0
+        
+        return (detailsCounter, partialAvailableAmount);
+    }
+
+    function getDetailStatus() external view returns (uint256, uint256) {
+        return (partialAvailableAmount, partialARECID);
+    }
+
     /** 
      * @dev To register offset actions so that they can be linked to an offset certificate NFT.
      * Can only be called from the REC token contract, or from the REC issuance contrarct
@@ -100,14 +125,14 @@ contract ArkreenBadge is
         uint256 tokenId
     ) external returns (uint256) {
         bool isRECIssuance = (msg.sender == IArkreenRegistry(arkreenRegistry).getRECIssuance());
-        bool isZeroTokenId = (tokenId == 0);
+        bool isOffsetTokenId = (tokenId >> 64) != 0;
 
         // Check called from the REC token contract, or from the REC issuance contrarct
         require( isRECIssuance || msg.sender == IArkreenRegistry(arkreenRegistry).getRECToken(issuerREC), 
                     'ARB: Wrong Issuer');
 
-        // TokenId should not be zero for RECIssuance, and should be zero for RECToken
-        require(isRECIssuance != isZeroTokenId, 'ARB: Wrong TokenId');      
+        // TokenId should not be zero for RECIssuance, and should be offset type for RECToken
+        require(isRECIssuance != isOffsetTokenId, 'ARB: Wrong TokenId');      
 
         // Check the minimum offset amount
         require( amount >= minOffsetAmount, 'ARB: Less Amount');
@@ -115,6 +140,20 @@ contract ArkreenBadge is
         uint256 offsetId = offsetCounter + 1;
         offsetCounter = offsetId;
 
+//        console.log("Badge_0", partialAvailableAmount, tokenId, isOffsetTokenId);
+
+        if(isOffsetTokenId) {
+            tokenId = uint64(tokenId);
+            if(tokenId ==0) {
+                tokenId = partialARECID + (1<<63);
+                partialAvailableAmount -= amount;
+            } else {
+                tokenId = uint64(detailsCounter) + (3<< 62);
+            }
+        }
+
+//        console.log("Badge_1", partialAvailableAmount, isOffsetTokenId);
+//        console.log("Badge_2", amount, tokenId, isOffsetTokenId);
         OffsetAction memory offsetAction = OffsetAction(offsetEntity, issuerREC, uint128(amount), uint64(tokenId),
                                                         uint56(block.timestamp), false);
         offsetActions[offsetId] = offsetAction;
@@ -264,16 +303,27 @@ contract ArkreenBadge is
     /// @dev Receive hook to liquidize Arkreen RE Certificate into RE ERC20 Token
     function onERC721Received(
         address,  /* operator */
-        address,  /*from */
+        address from,
         uint256 tokenId,
         bytes calldata data
     ) external virtual override whenNotPaused returns (bytes4) {
 
         // Check calling from REC Manager
-        require( IArkreenRegistry(arkreenRegistry).getRECIssuance() == msg.sender, 'ARB: Not From REC Issuance');
-        require( keccak256(data) == keccak256("Redeem"), 'ARB: Refused');
+        address issuerREC = IArkreenRegistry(arkreenRegistry).getRECIssuance();
+        require( issuerREC == msg.sender, 'ARB: Not From REC Issuance');
 
         RECData memory recData = IArkreenRECIssuance(msg.sender).getRECData(tokenId);
+//        console.log("Badge_A", msg.sender, from, tokenId);
+        if(from == IArkreenRegistry(arkreenRegistry).getRECToken(recData.issuer)) {
+            require(recData.status == uint256(RECStatus.Retired), 'ARB: Wrong Status'); 
+            require(partialAvailableAmount == 0, 'ARB: Partial Left');
+            partialARECID = tokenId;
+            partialAvailableAmount = recData.amountREC;
+//            console.log("Badge_B", from, tokenId, partialAvailableAmount);
+            return this.onERC721Received.selector;
+        }
+
+        require( keccak256(data) == keccak256("Redeem"), 'ARB: Refused');
         require(recData.status == uint256(RECStatus.Certified), 'ARB: Wrong Status');  // Checking may be removed
 
         totalRedeemed = totalRedeemed + recData.amountREC;

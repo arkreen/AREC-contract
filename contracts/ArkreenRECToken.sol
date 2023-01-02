@@ -10,11 +10,11 @@ import '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
 
 import "./interfaces/IArkreenRECIssuance.sol";
 import "./interfaces/IArkreenRegistry.sol";
-import "./interfaces/IArkreenRetirement.sol";
+import "./interfaces/IArkreenBadge.sol";
 import "./interfaces/IPausable.sol";
 
 // Import this file to use console.log
-// import "hardhat/console.sol";
+import "hardhat/console.sol";
 
 contract ArkreenRECToken is
     OwnableUpgradeable,
@@ -22,7 +22,7 @@ contract ArkreenRECToken is
     ERC20Upgradeable,
     IERC721Receiver
 {
-    // using SafeMath for uint256;	// seems not necessary
+    // using SafeMath for uint256;    // seems not necessary
     using AddressUpgradeable for address;
 
     // Public constant variables
@@ -30,6 +30,7 @@ contract ArkreenRECToken is
     string public constant SYMBOL = 'ART';
 
     uint256 public constant MAX_SKIP = 20;
+    uint256 public constant FLAG_OFFSET = 1<<64;
 
     // Public variables
     address public arkreenRegistry;    // Registry contract storing Arkreen contracts   
@@ -43,6 +44,9 @@ contract ArkreenRECToken is
     mapping(uint256 => uint256) public allARECLiquidized;   // Loop of all AREC ID: 1st-> 2nd-> ..-> last-> 1st
     uint256 public latestARECID;                            // NFT ID of the latest AREC added to the loop 
     uint256 ratioFeeToMerge;                                // Percentage in basis point (10000) to charge for merging ART to AREC NFT
+
+//    uint256 partialARECID;                        // AREC NFT ID partialy offset
+//    uint256 partialAvailableAmount;               // Amount available for partial offset
 
     // Events
     event OffsetFinished(address offsetEntity, uint256 amount, uint256 offsetId);
@@ -103,14 +107,69 @@ contract ArkreenRECToken is
      * @dev Internal offset function of the RE token, the RE tokens are burned
      */
     function _offset(address account, uint256 amount) internal virtual returns (uint256 offsetActionId) {
-        _burn(account, amount);
+        require(amount != 0, 'ART: Zero Offset');
+
+        address issuanceAREC = IArkreenRegistry(arkreenRegistry).getRECIssuance();
+        address badgeContract = IArkreenRegistry(arkreenRegistry).getArkreenRetirement();
 
         // Track total retirement amount in TCO2 factory
-        address retirementContract = IArkreenRegistry(arkreenRegistry).getArkreenRetirement();
-        offsetActionId = IArkreenRetirement(retirementContract).registerOffset(account, issuerREC, amount, 0);
-        totalOffset += amount;
+        uint256 steps = 0;
+        uint256 curAREC; 
+        RECData memory recData;
+        uint256 amountFilled = 0; 
+        uint256 amountRegister;
 
-        emit OffsetFinished(account, amount, offsetActionId);
+        uint256 partialAvailableAmount;
+        uint256 partialARECID;
+
+        uint256 amountOffset;
+        uint256 detailsCounter;
+
+        (partialAvailableAmount, partialARECID) = IArkreenBadge(badgeContract).getDetailStatus();
+//      console.log("Token_0", partialAvailableAmount, partialARECID);
+
+        if(amount > partialAvailableAmount) {
+            while(steps < MAX_SKIP) {
+                if(partialAvailableAmount == 0) {
+                    curAREC = allARECLiquidized[latestARECID];
+                    _remove(latestARECID, curAREC);
+//                  console.log("Token_A", address(this), badgeContract, curAREC);
+
+                    IArkreenRECIssuance(issuanceAREC).safeTransferFrom(address(this), badgeContract, curAREC);
+                    
+                    recData = IArkreenRECIssuance(issuanceAREC).getRECData(curAREC);
+                    partialAvailableAmount = recData.amountREC;
+                    partialARECID = curAREC;
+                }
+
+                if(amount <= partialAvailableAmount) {
+                    if (steps==0) break;   
+                    amountRegister = amount;
+                } else {
+                    amountRegister = partialAvailableAmount;
+                }
+                
+                (detailsCounter, partialAvailableAmount) = 
+                                IArkreenBadge(badgeContract).registerDetail(amountRegister, partialARECID, (steps==0));
+                steps++;
+                amountFilled += amountRegister;
+                amount -= amountRegister;
+
+//                console.log( detailsCounter, partialAvailableAmount);
+//                console.log("ART", steps, amountFilled, partialAvailableAmount);
+                if(amount==0) break;
+            }
+        }
+
+        amountOffset = (steps==0) ? amount: amountFilled;
+        _burn(account, amountOffset);
+
+//      console.log("Token_B", amountOffset, detailsCounter, partialAvailableAmount);
+        offsetActionId = IArkreenBadge(badgeContract).registerOffset(account, issuerREC, amountOffset, FLAG_OFFSET+detailsCounter);
+        totalOffset += amountOffset;
+//      console.log("Token_C", detailsCounter, partialAvailableAmount, offsetActionId);
+
+        emit OffsetFinished(account, amountOffset, offsetActionId);
     }
 
     /**
@@ -135,8 +194,8 @@ contract ArkreenRECToken is
         offsetActionIds[0] = offsetActionId;
 
         // Issue the offset certificate NFT
-        address retirementContract = IArkreenRegistry(arkreenRegistry).getArkreenRetirement();
-        IArkreenRetirement(retirementContract).mintCertificate(
+        address badgeContract = IArkreenRegistry(arkreenRegistry).getArkreenRetirement();
+        IArkreenBadge(badgeContract).mintCertificate(
                         _msgSender(), beneficiary, offsetEntityID, beneficiaryID, offsetMessage, offsetActionIds);
     }
 
@@ -171,7 +230,7 @@ contract ArkreenRECToken is
                 curAREC = allARECLiquidized[curAREC];
             } else {
                 require(IArkreenRECIssuance(issuanceAREC).restore(curAREC), 'ART: Not Allowed');
-                IArkreenRECIssuance(issuanceAREC).transferFrom(address(this), merger, curAREC);
+                IArkreenRECIssuance(issuanceAREC).safeTransferFrom(address(this), merger, curAREC);
                 amount -= amountAREC;
                 mergedAmount += amountAREC;
                 curAREC = _remove(preAREC, curAREC);
@@ -200,12 +259,8 @@ contract ArkreenRECToken is
         nextAREC = allARECLiquidized[curAREC];
         allARECLiquidized[preAREC] = nextAREC;
 
-        if(curAREC == latestARECID) {                           // if remove last AREC
-            if(preAREC == latestARECID) {                       // if the last AREC is the only AREC
-                latestARECID = 0;
-            } else {
-                latestARECID = preAREC;
-            }
+        if(curAREC == latestARECID) {                                   // if remove last AREC
+            latestARECID = (preAREC == latestARECID) ? 0 : preAREC;     // if the last AREC is the only AREC
             nextAREC = 0;
         } 
         delete allARECLiquidized[curAREC];                      // delete the current AREC

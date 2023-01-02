@@ -9,7 +9,7 @@ import '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
 import "./interfaces/IMinerRegister.sol";
 import "./interfaces/IArkreenRegistry.sol";
 import "./interfaces/IArkreenMiner.sol";
-import "./interfaces/IArkreenRetirement.sol";
+import "./interfaces/IArkreenBadge.sol";
 
 import "./interfaces/IERC20.sol";
 import "./libraries/TransferHelper.sol";
@@ -26,7 +26,7 @@ contract ArkreenRECIssuance is
     ERC721EnumerableUpgradeable,
     ArkreenRECIssuanceStorage
 {
-    // using SafeMath for uint256;	// seems not necessary
+    // using SafeMath for uint256;    // seems not necessary
     using AddressUpgradeable for address;
 
     // Public variables
@@ -269,13 +269,13 @@ contract ArkreenRECIssuance is
         require( allRECData[tokenId].status == uint8(RECStatus.Certified), 'AREC: Not Certified');
 
         // Register the offset event
-        address retirementContract = IArkreenRegistry(arkreenRegistry).getArkreenRetirement();
+        address badgeContract = IArkreenRegistry(arkreenRegistry).getArkreenRetirement();
         address issuerREC = allRECData[tokenId].issuer;
         uint256 amount = allRECData[tokenId].amountREC;
-        offsetActionId = IArkreenRetirement(retirementContract).registerOffset(owner, issuerREC, amount, tokenId);
+        offsetActionId = IArkreenBadge(badgeContract).registerOffset(owner, issuerREC, amount, tokenId);
 
         // Send the REC NFT to the retirement contract and set the REC NFT status to be Retired
-        _safeTransfer(owner, retirementContract, tokenId, "Redeem");
+        _safeTransfer(owner, badgeContract, tokenId, "Redeem");
         allRECData[tokenId].status = uint8(RECStatus.Retired);
         allRECRedeemed += amount;
 
@@ -309,8 +309,8 @@ contract ArkreenRECIssuance is
         offsetActionIds[0] = offsetActionId;
 
         // Issue the offset certificate NFT
-        address retirementContract = IArkreenRegistry(arkreenRegistry).getArkreenRetirement();
-        IArkreenRetirement(retirementContract)
+        address badgeContract = IArkreenRegistry(arkreenRegistry).getArkreenRetirement();
+        IArkreenBadge(badgeContract)
                 .mintCertificate(owner, beneficiary, offsetEntityID, beneficiaryID, offsetMessage, offsetActionIds);
    
     }   
@@ -439,7 +439,29 @@ contract ArkreenRECIssuance is
 
         // Only certified REC can be transferred
         if(from != address(0)) {
-          require(allRECData[tokenId].status == uint8(RECStatus.Certified), 'AREC: Wrong Status');
+            if(allRECData[tokenId].status == uint8(RECStatus.Liquidized)) {
+                address issuerREC = allRECData[tokenId].issuer;
+                uint256 amountREC = allRECData[tokenId].amountREC;
+                address tokenREC = IArkreenRegistry(arkreenRegistry).getRECToken(issuerREC);
+                address arkreenBadge = IArkreenRegistry(arkreenRegistry).getArkreenRetirement();
+
+                // Only the ART contract can restore the AREC
+                require(msg.sender == tokenREC, 'AREC: Not Allowed');
+
+                if(to == arkreenBadge) {
+                    allRECData[tokenId].status = uint8(RECStatus.Retired);
+//                  console.log("AREC", from, to, tokenId);
+                } else {
+                    // Modified the Liquidized REC amount
+                    allRECLiquidized -= amountREC;
+
+                    // Set the AREC status to be Liquidized
+                    allRECData[tokenId].status = uint8(RECStatus.Certified);
+                }
+            }
+            else {
+                require(allRECData[tokenId].status == uint8(RECStatus.Certified), 'AREC: Wrong Status');
+            }
         }
 
         super._beforeTokenTransfer(from, to, tokenId);
