@@ -435,7 +435,7 @@ describe("ArkreenRECToken", () => {
       await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(2500))
     });
 
-    it("Offset Details: 20 AREC", async () => {     // Offset 17 NFT in one offset transaction
+    it("Offset Details: 17 AREC", async () => {     // Offset 17 NFT in one offset transaction
       await mintAREC(5000)        // 2 :  45
       await mintAREC(600)         // 3:   51
       await mintAREC(8000)        // 4:  131
@@ -565,10 +565,21 @@ describe("ArkreenRECToken", () => {
       await mintAREC(8000)        // 23:  689
       await mintAREC(200)         // 24:  691
 
-      await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(1500))
+      const tx_1 = await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(500))
+      const receipt_1 = await tx_1.wait()
+      expect(receipt_1.gasUsed).to.eq("460991")  // 461138
+
+      const tx_2 = await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(800))
+      const receipt_2 = await tx_2.wait()
+      expect(receipt_2.gasUsed).to.eq("442460")  // 442607
+
+      const tx_3 = await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(200))
+      const receipt_3 = await tx_3.wait()
+      expect(receipt_3.gasUsed).to.eq("204554")  // 204554      
+
       const tx = await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(66000))
       const receipt = await tx.wait()
-      expect(receipt.gasUsed).to.eq("2756125")  //4
+      expect(receipt.gasUsed).to.eq("2753332")  // 2756125 
     });
   })
 

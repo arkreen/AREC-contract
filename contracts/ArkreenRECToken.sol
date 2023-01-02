@@ -14,7 +14,7 @@ import "./interfaces/IArkreenBadge.sol";
 import "./interfaces/IPausable.sol";
 
 // Import this file to use console.log
-import "hardhat/console.sol";
+//import "hardhat/console.sol";
 
 contract ArkreenRECToken is
     OwnableUpgradeable,
@@ -126,15 +126,12 @@ contract ArkreenRECToken is
         uint256 detailsCounter;
 
         (partialAvailableAmount, partialARECID) = IArkreenBadge(badgeContract).getDetailStatus();
-//      console.log("Token_0", partialAvailableAmount, partialARECID);
 
         if(amount > partialAvailableAmount) {
             while(steps < MAX_SKIP) {
                 if(partialAvailableAmount == 0) {
                     curAREC = allARECLiquidized[latestARECID];
                     _remove(latestARECID, curAREC);
-//                  console.log("Token_A", address(this), badgeContract, curAREC);
-
                     IArkreenRECIssuance(issuanceAREC).safeTransferFrom(address(this), badgeContract, curAREC);
                     
                     recData = IArkreenRECIssuance(issuanceAREC).getRECData(curAREC);
@@ -155,8 +152,6 @@ contract ArkreenRECToken is
                 amountFilled += amountRegister;
                 amount -= amountRegister;
 
-//                console.log( detailsCounter, partialAvailableAmount);
-//                console.log("ART", steps, amountFilled, partialAvailableAmount);
                 if(amount==0) break;
             }
         }
@@ -164,10 +159,8 @@ contract ArkreenRECToken is
         amountOffset = (steps==0) ? amount: amountFilled;
         _burn(account, amountOffset);
 
-//      console.log("Token_B", amountOffset, detailsCounter, partialAvailableAmount);
         offsetActionId = IArkreenBadge(badgeContract).registerOffset(account, issuerREC, amountOffset, FLAG_OFFSET+detailsCounter);
         totalOffset += amountOffset;
-//      console.log("Token_C", detailsCounter, partialAvailableAmount, offsetActionId);
 
         emit OffsetFinished(account, amountOffset, offsetActionId);
     }

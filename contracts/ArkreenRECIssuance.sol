@@ -441,7 +441,6 @@ contract ArkreenRECIssuance is
         if(from != address(0)) {
             if(allRECData[tokenId].status == uint8(RECStatus.Liquidized)) {
                 address issuerREC = allRECData[tokenId].issuer;
-                uint256 amountREC = allRECData[tokenId].amountREC;
                 address tokenREC = IArkreenRegistry(arkreenRegistry).getRECToken(issuerREC);
                 address arkreenBadge = IArkreenRegistry(arkreenRegistry).getArkreenRetirement();
 
@@ -450,8 +449,9 @@ contract ArkreenRECIssuance is
 
                 if(to == arkreenBadge) {
                     allRECData[tokenId].status = uint8(RECStatus.Retired);
-//                  console.log("AREC", from, to, tokenId);
                 } else {
+                    uint256 amountREC = allRECData[tokenId].amountREC;
+                    
                     // Modified the Liquidized REC amount
                     allRECLiquidized -= amountREC;
 

@@ -16,7 +16,7 @@ import "./interfaces/IERC5192.sol";
 import "./ArkreenBadgeType.sol";  
 
 // Import this file to use console.log
-//import "hardhat/console.sol";
+import "hardhat/console.sol";
 
 contract ArkreenBadge is
     OwnableUpgradeable,
@@ -140,8 +140,6 @@ contract ArkreenBadge is
         uint256 offsetId = offsetCounter + 1;
         offsetCounter = offsetId;
 
-//        console.log("Badge_0", partialAvailableAmount, tokenId, isOffsetTokenId);
-
         if(isOffsetTokenId) {
             tokenId = uint64(tokenId);
             if(tokenId ==0) {
@@ -152,8 +150,6 @@ contract ArkreenBadge is
             }
         }
 
-//        console.log("Badge_1", partialAvailableAmount, isOffsetTokenId);
-//        console.log("Badge_2", amount, tokenId, isOffsetTokenId);
         OffsetAction memory offsetAction = OffsetAction(offsetEntity, issuerREC, uint128(amount), uint64(tokenId),
                                                         uint56(block.timestamp), false);
         offsetActions[offsetId] = offsetAction;
@@ -313,13 +309,11 @@ contract ArkreenBadge is
         require( issuerREC == msg.sender, 'ARB: Not From REC Issuance');
 
         RECData memory recData = IArkreenRECIssuance(msg.sender).getRECData(tokenId);
-//        console.log("Badge_A", msg.sender, from, tokenId);
         if(from == IArkreenRegistry(arkreenRegistry).getRECToken(recData.issuer)) {
             require(recData.status == uint256(RECStatus.Retired), 'ARB: Wrong Status'); 
             require(partialAvailableAmount == 0, 'ARB: Partial Left');
             partialARECID = tokenId;
             partialAvailableAmount = recData.amountREC;
-//            console.log("Badge_B", from, tokenId, partialAvailableAmount);
             return this.onERC721Received.selector;
         }
 
