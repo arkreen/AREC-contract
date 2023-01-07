@@ -664,9 +664,7 @@ describe("ArkreenRECToken", () => {
     });    
   })
 
-
-/*  
-  describe("Merge", () => {
+  describe("Solidify", () => {
     let tokenID: BigNumber
 
     async function mintAREC(amountREC: number) {
@@ -745,14 +743,14 @@ describe("ArkreenRECToken", () => {
       await arkreenRECIssuance.updateARECMintPrice(AKREToken.address, price0)
     })
 
-    it("Merge: 1 AREC", async () => {
-      await expect(arkreenRECToken.connect(owner1).merge(expandTo18Decimals(900)))
+    it("Solidify: 1 AREC", async () => {
+      await expect(arkreenRECToken.connect(owner1).solidify(expandTo18Decimals(900)))
               .to.be.revertedWith("ART: Amount Too Less")
 
       const balance_1 = await arkreenRECToken.balanceOf(owner1.address)
 
-      await expect(arkreenRECToken.connect(owner1).merge(expandTo18Decimals(1000)))
-              .to.emit(arkreenRECToken, "Merge")
+      await expect(arkreenRECToken.connect(owner1).solidify(expandTo18Decimals(1000)))
+              .to.emit(arkreenRECToken, "Solidify")
               .withArgs(owner1.address, expandTo18Decimals(1000), 0) 
 
       const balance_2 = await arkreenRECToken.balanceOf(owner1.address)
@@ -764,31 +762,31 @@ describe("ArkreenRECToken", () => {
 
     });
 
-    it("Merge: 2AREC: 1000", async () => {
+    it("Solidify: 2AREC: 1000", async () => {
       await mintAREC(1000)
 
       const arecData1: RECDataStruct = await arkreenRECIssuance.getRECData(1)
       const arecData2: RECDataStruct = await arkreenRECIssuance.getRECData(2)
       expect(arecData1.status).to.equal(RECStatus.Liquidized)
       expect(arecData2.status).to.equal(RECStatus.Liquidized)
-      await arkreenRECToken.connect(owner1).merge(expandTo18Decimals(1000))
+      await arkreenRECToken.connect(owner1).solidify(expandTo18Decimals(1000))
     });
 
-    it("Merge: 2AREC: 1500", async () => {
+    it("Solidify: 2AREC: 1500", async () => {
       await mintAREC(1000)
-      await expect(arkreenRECToken.connect(owner1).merge(expandTo18Decimals(1500)))
-              .to.emit(arkreenRECToken, "Merge")
+      await expect(arkreenRECToken.connect(owner1).solidify(expandTo18Decimals(1500)))
+              .to.emit(arkreenRECToken, "Solidify")
               .withArgs(owner1.address, expandTo18Decimals(1000), 0) 
     });
 
-    it("Merge: 2AREC: 2000", async () => {
+    it("Solidify: 2AREC: 2000", async () => {
       await mintAREC(1000)
-      await expect(arkreenRECToken.connect(owner1).merge(expandTo18Decimals(2000)))
-              .to.emit(arkreenRECToken, "Merge")
+      await expect(arkreenRECToken.connect(owner1).solidify(expandTo18Decimals(2000)))
+              .to.emit(arkreenRECToken, "Solidify")
               .withArgs(owner1.address, expandTo18Decimals(2000), 0) 
     });
 
-    it("Merge: 6AREC: 6000", async () => {
+    it("Solidify: 6AREC: 6000", async () => {
     // await mintAREC(1000)      
       await mintAREC(5000)
       await mintAREC(600)
@@ -800,27 +798,27 @@ describe("ArkreenRECToken", () => {
 
       expect(await getAREC()).to.deep.equals([1,2,3,6])   
 
-      await expect(arkreenRECToken.connect(owner1).merge(expandTo18Decimals(1900)))   // 1000+600+200
-              .to.emit(arkreenRECToken, "Merge")
+      await expect(arkreenRECToken.connect(owner1).solidify(expandTo18Decimals(1900)))   // 1000+600+200
+              .to.emit(arkreenRECToken, "Solidify")
               .withArgs(owner1.address, expandTo18Decimals(1800), 0) 
       expect(await getAREC()).to.deep.equals([2,4,6,6])         
 
       expect(await arkreenRECIssuance.balanceOf(owner1.address)).to.equal(3)   
 
-      await expect(arkreenRECToken.connect(owner1).merge(expandTo18Decimals(8000)))   // 5000+ 1000
-              .to.emit(arkreenRECToken, "Merge")
+      await expect(arkreenRECToken.connect(owner1).solidify(expandTo18Decimals(8000)))   // 5000+ 1000
+              .to.emit(arkreenRECToken, "Solidify")
               .withArgs(owner1.address, expandTo18Decimals(6000), 0) 
       expect(await getAREC()).to.deep.equals([4,4,4,4])                
 
-      await expect(arkreenRECToken.connect(owner1).merge(expandTo18Decimals(8500)))   // 8000
-              .to.emit(arkreenRECToken, "Merge")
+      await expect(arkreenRECToken.connect(owner1).solidify(expandTo18Decimals(8500)))   // 8000
+              .to.emit(arkreenRECToken, "Solidify")
               .withArgs(owner1.address, expandTo18Decimals(8000), 0)   
       expect(await arkreenRECToken.latestARECID()).to.equals(0)     
       expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(expandTo18Decimals(0))
       expect(await arkreenRECIssuance.balanceOf(owner1.address)).to.equal(6)          
     });
 
-    it("Merge: 10AREC", async () => {
+    it("Solidify: 10AREC", async () => {
       // await mintAREC(1000)     // 1
       await mintAREC(5000)        // 2
       await mintAREC(600)         // 3
@@ -835,28 +833,28 @@ describe("ArkreenRECToken", () => {
       expect(await arkreenRECIssuance.allRECLiquidized()).to.equal(
                       expandTo18Decimals(1000+5000+600+8000+200+1000+2000+9000+800+3000))
 
-      await expect(arkreenRECToken.connect(owner1).merge(expandTo18Decimals(1600)))   // 1000+600
-              .to.emit(arkreenRECToken, "Merge")
+      await expect(arkreenRECToken.connect(owner1).solidify(expandTo18Decimals(1600)))   // 1000+600
+              .to.emit(arkreenRECToken, "Solidify")
               .withArgs(owner1.address, expandTo18Decimals(1600), 0) 
       expect(await getAREC()).to.deep.equals([2,4,5,10])                   
 
-      await expect(arkreenRECToken.connect(owner1).merge(expandTo18Decimals(6500)))   // 5000+200+1000
-              .to.emit(arkreenRECToken, "Merge")
+      await expect(arkreenRECToken.connect(owner1).solidify(expandTo18Decimals(6500)))   // 5000+200+1000
+              .to.emit(arkreenRECToken, "Solidify")
               .withArgs(owner1.address, expandTo18Decimals(6200), 0) 
       expect(await getAREC()).to.deep.equals([4,7,8,10])   
 
-      await expect(arkreenRECToken.connect(owner1).merge(expandTo18Decimals(9000)))   // 8000+800
-              .to.emit(arkreenRECToken, "Merge")
+      await expect(arkreenRECToken.connect(owner1).solidify(expandTo18Decimals(9000)))   // 8000+800
+              .to.emit(arkreenRECToken, "Solidify")
               .withArgs(owner1.address, expandTo18Decimals(8800), 0) 
       expect(await getAREC()).to.deep.equals([7,8,10,10])     
 
-      await expect(arkreenRECToken.connect(owner1).merge(expandTo18Decimals(6000)))   // 2000+3000
-              .to.emit(arkreenRECToken, "Merge")
+      await expect(arkreenRECToken.connect(owner1).solidify(expandTo18Decimals(6000)))   // 2000+3000
+              .to.emit(arkreenRECToken, "Solidify")
               .withArgs(owner1.address, expandTo18Decimals(5000), 0) 
       expect(await getAREC()).to.deep.equals([8,8,8,8])    
 
-      await expect(arkreenRECToken.connect(owner1).merge(expandTo18Decimals(9000)))   // 9000
-              .to.emit(arkreenRECToken, "Merge")
+      await expect(arkreenRECToken.connect(owner1).solidify(expandTo18Decimals(9000)))   // 9000
+              .to.emit(arkreenRECToken, "Solidify")
               .withArgs(owner1.address, expandTo18Decimals(9000), 0) 
       expect(await arkreenRECToken.latestARECID()).to.equals(0) 
       expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(expandTo18Decimals(0))
@@ -864,7 +862,7 @@ describe("ArkreenRECToken", () => {
       expect(await arkreenRECIssuance.allRECLiquidized()).to.equal(0)
     })      
 
-    it("Merge: 30AREC", async () => {
+    it("Solidify: 30AREC", async () => {
       // await mintAREC(1000)     // 1
       await mintAREC(5000)        // 2
       await mintAREC(600)         // 3
@@ -898,48 +896,48 @@ describe("ArkreenRECToken", () => {
       await mintAREC(800)         // 29
       await mintAREC(600)         // 30
 
-      await expect(arkreenRECToken.connect(owner1).merge(expandTo18Decimals(1400)))   // 1000+400
-              .to.emit(arkreenRECToken, "Merge")
+      await expect(arkreenRECToken.connect(owner1).solidify(expandTo18Decimals(1400)))   // 1000+400
+              .to.emit(arkreenRECToken, "Solidify")
               .withArgs(owner1.address, expandTo18Decimals(1400), 0) 
 
       expect(await getAREC()).to.deep.equals([2,3,4,30])                
-      await expect(arkreenRECToken.connect(owner1).merge(expandTo18Decimals(7600)))   // 5000+600+900+1000
-              .to.emit(arkreenRECToken, "Merge")
+      await expect(arkreenRECToken.connect(owner1).solidify(expandTo18Decimals(7600)))   // 5000+600+900+1000
+              .to.emit(arkreenRECToken, "Solidify")
               .withArgs(owner1.address, expandTo18Decimals(7500), 0) 
       expect(await getAREC()).to.deep.equals([4,7,8,30])                
 
-      await expect(arkreenRECToken.connect(owner1).merge(expandTo18Decimals(8300)))   // 8000+300
-              .to.emit(arkreenRECToken, "Merge")
+      await expect(arkreenRECToken.connect(owner1).solidify(expandTo18Decimals(8300)))   // 8000+300
+              .to.emit(arkreenRECToken, "Solidify")
               .withArgs(owner1.address, expandTo18Decimals(8300), 0) 
       expect(await getAREC()).to.deep.equals([7,8,9,30])                
 
-      await expect(arkreenRECToken.connect(owner1).merge(expandTo18Decimals(3600)))   // 2000+9000
-              .to.emit(arkreenRECToken, "Merge")
+      await expect(arkreenRECToken.connect(owner1).solidify(expandTo18Decimals(3600)))   // 2000+9000
+              .to.emit(arkreenRECToken, "Solidify")
               .withArgs(owner1.address, expandTo18Decimals(3600), 0) 
       expect(await getAREC()).to.deep.equals([8,10,11,30])                
 
-      await expect(arkreenRECToken.connect(owner1).merge(expandTo18Decimals(20500)))   // 9000
-              .to.emit(arkreenRECToken, "Merge")
+      await expect(arkreenRECToken.connect(owner1).solidify(expandTo18Decimals(20500)))   // 9000
+              .to.emit(arkreenRECToken, "Solidify")
               .withArgs(owner1.address, expandTo18Decimals(20500), 0) 
       expect(await getAREC()).to.deep.equals([13,17,18,30])                
 
-      await expect(arkreenRECToken.connect(owner1).merge(expandTo18Decimals(22000)))   // 9000
-              .to.emit(arkreenRECToken, "Merge")
+      await expect(arkreenRECToken.connect(owner1).solidify(expandTo18Decimals(22000)))   // 9000
+              .to.emit(arkreenRECToken, "Solidify")
               .withArgs(owner1.address, expandTo18Decimals(21900), 0) 
       expect(await getAREC()).to.deep.equals([23,25,26,29])                
 
-      await expect(arkreenRECToken.connect(owner1).merge(expandTo18Decimals(10000)))   // 9000
-              .to.emit(arkreenRECToken, "Merge")
+      await expect(arkreenRECToken.connect(owner1).solidify(expandTo18Decimals(10000)))   // 9000
+              .to.emit(arkreenRECToken, "Solidify")
               .withArgs(owner1.address, expandTo18Decimals(9800), 0) 
       expect(await getAREC()).to.deep.equals([26,27,28,28])              
 
-      await expect(arkreenRECToken.connect(owner1).merge(expandTo18Decimals(10000)))   // 9000
-              .to.emit(arkreenRECToken, "Merge")
+      await expect(arkreenRECToken.connect(owner1).solidify(expandTo18Decimals(10000)))   // 9000
+              .to.emit(arkreenRECToken, "Solidify")
               .withArgs(owner1.address, expandTo18Decimals(10000), 0) 
        expect(await getAREC()).to.deep.equals([27,27,27,27])              
 
-      await expect(arkreenRECToken.connect(owner1).merge(expandTo18Decimals(10000)))   // 9000
-              .to.emit(arkreenRECToken, "Merge")
+      await expect(arkreenRECToken.connect(owner1).solidify(expandTo18Decimals(10000)))   // 9000
+              .to.emit(arkreenRECToken, "Solidify")
               .withArgs(owner1.address, expandTo18Decimals(9000), 0) 
 
       expect(await arkreenRECToken.latestARECID()).to.equals(0)
@@ -948,9 +946,9 @@ describe("ArkreenRECToken", () => {
 
     })    
     
-    it("Merge: 10AREC with fee charged ", async () => {
+    it("Solidify: 10AREC with fee charged ", async () => {
       await arkreenRECToken.setReceiverFee(owner2.address)
-      await arkreenRECToken.setRatioFeeToMerge(1000)
+      await arkreenRECToken.setRatioFeeToSolidify(1000)
 
       // await mintAREC(1000)     // 1
       await mintAREC(5000)        // 2
@@ -963,21 +961,21 @@ describe("ArkreenRECToken", () => {
       await mintAREC(800)         // 9
       await mintAREC(300)         // 10
 
-      await expect(arkreenRECToken.connect(owner1).merge(expandTo18Decimals(1050)))   // Fee not enough
+      await expect(arkreenRECToken.connect(owner1).solidify(expandTo18Decimals(1050)))   // Fee not enough
               .to.be.revertedWith("ART: Amount Too Less")
 
-      await expect(arkreenRECToken.connect(owner1).merge(expandTo18Decimals(1100)))
-              .to.emit(arkreenRECToken, "Merge")
+      await expect(arkreenRECToken.connect(owner1).solidify(expandTo18Decimals(1100)))
+              .to.emit(arkreenRECToken, "Solidify")
               .withArgs(owner1.address, expandTo18Decimals(1000), expandTo18Decimals(100)) 
       expect(await getAREC()).to.deep.equals([2,3,4,10])  
 
-      await expect(arkreenRECToken.connect(owner1).merge(expandTo18Decimals(7050)))             // 5000+600+800
-              .to.emit(arkreenRECToken, "Merge")
+      await expect(arkreenRECToken.connect(owner1).solidify(expandTo18Decimals(7050)))             // 5000+600+800
+              .to.emit(arkreenRECToken, "Solidify")
               .withArgs(owner1.address, expandTo18Decimals(6400), expandTo18Decimals(640))       // 7040 
 
       expect(await getAREC()).to.deep.equals([4,5,6,10])                
-      await expect(arkreenRECToken.connect(owner1).merge(expandTo18Decimals(11220)))             // 8000+900+1000+300 
-              .to.emit(arkreenRECToken, "Merge")
+      await expect(arkreenRECToken.connect(owner1).solidify(expandTo18Decimals(11220)))             // 8000+900+1000+300 
+              .to.emit(arkreenRECToken, "Solidify")
               .withArgs(owner1.address, expandTo18Decimals(10200), expandTo18Decimals(1020))     //11220
       expect(await getAREC()).to.deep.equals([7,8,7,8])                
 
@@ -988,19 +986,19 @@ describe("ArkreenRECToken", () => {
 
       expect(await getAREC()).to.deep.equals([7,8,11,14])                 
 
-      await expect(arkreenRECToken.connect(owner1).merge(expandTo18Decimals(12100)))              // 2000+9000 
+      await expect(arkreenRECToken.connect(owner1).solidify(expandTo18Decimals(12100)))              // 2000+9000 
                 .to.be.revertedWith("ERC20: burn amount exceeds balance")
 
       await arkreenRECToken.connect(maker1).transfer(owner1.address, expandTo18Decimals(3740))    // 100+640+1020+1180 + 800: 3740
 
-      await expect(arkreenRECToken.connect(owner1).merge(expandTo18Decimals(12980)))              // 2000+9000+800
-              .to.emit(arkreenRECToken, "Merge")
+      await expect(arkreenRECToken.connect(owner1).solidify(expandTo18Decimals(12980)))              // 2000+9000+800
+              .to.emit(arkreenRECToken, "Solidify")
               .withArgs(owner1.address, expandTo18Decimals(11800), expandTo18Decimals(1180))      //12980
 
       expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(expandTo18Decimals(0))    
       
-      await expect(arkreenRECToken.connect(maker1).merge(expandTo18Decimals(2500)))               // 900+1200
-              .to.emit(arkreenRECToken, "Merge")
+      await expect(arkreenRECToken.connect(maker1).solidify(expandTo18Decimals(2500)))               // 900+1200
+              .to.emit(arkreenRECToken, "Solidify")
               .withArgs(maker1.address, expandTo18Decimals(2100), expandTo18Decimals(210))        // 2310       
 
       expect(await arkreenRECToken.balanceOf(maker1.address)).to.equal(expandTo18Decimals(5000+800-3740-210))    
@@ -1008,8 +1006,5 @@ describe("ArkreenRECToken", () => {
       expect(await arkreenRECToken.latestARECID()).to.equals(12)                      
     })
   })
-
-*/
-
 
 });

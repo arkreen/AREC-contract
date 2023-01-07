@@ -253,6 +253,7 @@ describe("ArkreenBadge", () => {
       })
 
       it("registerOffset: Normal (offset) ", async () => {
+        const MASK_OFFSET = BigNumber.from('0x8000000000000000')
         await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(10))
 
         const offsetID1 = await arkreenBadge.offsetCounter()
@@ -261,7 +262,7 @@ describe("ArkreenBadge", () => {
 
         const lastBlock = await ethers.provider.getBlock('latest')
         const offsetAction = [owner1.address, manager.address, expandTo18Decimals(10),
-                              BigNumber.from(0), BigNumber.from(lastBlock.timestamp), false]                // TokenId must be zero
+                                MASK_OFFSET.add(1), BigNumber.from(lastBlock.timestamp), false]      // TokenId must be zero
         
         expect(await arkreenBadge.offsetActions(userActions[userActions.length-1])).to.deep.equal(offsetAction)
         expect(await arkreenBadge.totalOffsetRegistered()).to.deep.eq(expandTo18Decimals(10));                

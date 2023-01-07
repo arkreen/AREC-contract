@@ -43,14 +43,14 @@ contract ArkreenRECToken is
 
     mapping(uint256 => uint256) public allARECLiquidized;   // Loop of all AREC ID: 1st-> 2nd-> ..-> last-> 1st
     uint256 public latestARECID;                            // NFT ID of the latest AREC added to the loop 
-    uint256 ratioFeeToMerge;                                // Percentage in basis point (10000) to charge for merging ART to AREC NFT
+    uint256 ratioFeeToSolidify;                             // Percentage in basis point (10000) to charge for solidifying ART to AREC NFT
 
 //    uint256 partialARECID;                        // AREC NFT ID partialy offset
 //    uint256 partialAvailableAmount;               // Amount available for partial offset
 
     // Events
     event OffsetFinished(address offsetEntity, uint256 amount, uint256 offsetId);
-    event Merge(address account, uint256 amount, uint256 feeMerge);    
+    event Solidify(address account, uint256 amount, uint256 feeSolidify);    
 
     // Modifiers
     modifier ensure(uint deadline) {
@@ -193,17 +193,17 @@ contract ArkreenRECToken is
     }
 
     /**
-     * @dev Merge the ART token to AREC NFT.
-     * @param amount The amount requesting to merge
+     * @dev Solidify the ART token to AREC NFT.
+     * @param amount The amount requesting to solidify
      */
-    function merge(uint256 amount) external virtual whenNotPaused 
-                returns (uint256 mergedAmount,uint256 feeMerge) {
+    function solidify(uint256 amount) external virtual whenNotPaused 
+                returns (uint256 solidifiedAmount,uint256 feeSolidify) {
 
         require(latestARECID != 0, 'ART: No Liquidized AREC');
-        bool chargeOn = (receiverFee != address(0)) && (ratioFeeToMerge != 0);           // To save gas
-        if(chargeOn) amount = (amount * 10000) / (10000 + ratioFeeToMerge);             // Substract the merge fee 
+        bool chargeOn = (receiverFee != address(0)) && (ratioFeeToSolidify != 0);           // To save gas
+        if(chargeOn) amount = (amount * 10000) / (10000 + ratioFeeToSolidify);             // Substract the solidify fee 
         
-        address merger = _msgSender();
+        address solidifier = _msgSender();
         address issuanceAREC = IArkreenRegistry(arkreenRegistry).getRECIssuance();
 
         RECData memory recData;
@@ -216,29 +216,29 @@ contract ArkreenRECToken is
             uint256 amountAREC = recData.amountREC;
 
             if(amount < amountAREC) {
-                require(mergedAmount != 0, 'ART: Amount Too Less');                // Must merge the oldest AREC first
+                require(solidifiedAmount != 0, 'ART: Amount Too Less');                // Must solidify the oldest AREC first
                 if(curAREC == latestARECID) break;
                 skips++;
                 preAREC = curAREC;
                 curAREC = allARECLiquidized[curAREC];
             } else {
                 require(IArkreenRECIssuance(issuanceAREC).restore(curAREC), 'ART: Not Allowed');
-                IArkreenRECIssuance(issuanceAREC).safeTransferFrom(address(this), merger, curAREC);
+                IArkreenRECIssuance(issuanceAREC).safeTransferFrom(address(this), solidifier, curAREC);
                 amount -= amountAREC;
-                mergedAmount += amountAREC;
+                solidifiedAmount += amountAREC;
                 curAREC = _remove(preAREC, curAREC);
                 if(curAREC == 0) break;
             }
         }
 
-        _burn(merger, mergedAmount);                    // mergedAmount must be more than 0 here, burn once to save gas
+        _burn(solidifier, solidifiedAmount);                    // solidifiedAmount must be more than 0 here, burn once to save gas
 
         if(chargeOn) {
-            feeMerge = mergedAmount * ratioFeeToMerge / 10000;
-            _transfer(merger, receiverFee, feeMerge);
+            feeSolidify = solidifiedAmount * ratioFeeToSolidify / 10000;
+            _transfer(solidifier, receiverFee, feeSolidify);
         }
 
-        emit Merge(merger, mergedAmount, feeMerge);      
+        emit Solidify(solidifier, solidifiedAmount, feeSolidify);      
     }
 
     /**
@@ -305,11 +305,11 @@ contract ArkreenRECToken is
     }  
 
     /**
-     * @dev set the ratio of merge fee to Merge from ART to AREC
+     * @dev set the ratio of solidify fee to Solidify from ART to AREC
      */     
-    function setRatioFeeToMerge(uint256 ratio) external onlyOwner {
+    function setRatioFeeToSolidify(uint256 ratio) external onlyOwner {
         require(ratio <10000, 'ART: Wrong Data');
-        ratioFeeToMerge = ratio;
+        ratioFeeToSolidify = ratio;
     }  
 
     /**
