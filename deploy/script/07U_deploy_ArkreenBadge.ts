@@ -5,20 +5,21 @@ import { ethers } from "hardhat";
 import { ArkreenBadge__factory } from "../../typechain";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
-    const { deployments, getNamedAccounts } = hre;
-    const { deploy } = deployments;
-    const { deployerAddress } = await getNamedAccounts();
+    const [deployer] = await ethers.getSigners();
 
-    console.log("Deploying Updated  ArkreenBadge: ", CONTRACTS.RECRetire, deployerAddress);  
+    console.log("Update ArkreenBadge: ", CONTRACTS.RECBadge, deployer.address);  
   
     if(hre.network.name === 'matic_test') {
-//      const PROXY_ADDRESS = "0x5C653b445BE2bdEB6f8f3CD099FC801865Cab835"       // Need to check
-//      const NEW_IMPLEMENTATION = '0x6f4fff7faa238cd68f03de75b8906e23dbd95f30'   // Need to check
-
+//      Simulation test      
         const PROXY_ADDRESS = "0x5C653b445BE2bdEB6f8f3CD099FC801865Cab835"       // Need to check
-        const NEW_IMPLEMENTATION = '0xA82E33A80f8c6A0dC66678956F8dC3b27928F036'   // Update to support SBT
+//      const NEW_IMPLEMENTATION = '0x6f4fff7faa238cd68f03de75b8906e23dbd95f30'   // Need to check
+//      const NEW_IMPLEMENTATION = '0xA82E33A80f8c6A0dC66678956F8dC3b27928F036'   // Update to support SBT
+        const NEW_IMPLEMENTATION = '0x8d58d9C7a2cB1A68F7F14BCd08CC735E3f12D267'   // Upgrade to support Offet traceback
 
-        const [deployer] = await ethers.getSigners();
+//      MATIC Test
+//      const PROXY_ADDRESS = "0x5C653b445BE2bdEB6f8f3CD099FC801865Cab835"       // Need to check
+//      const NEW_IMPLEMENTATION = '0xA82E33A80f8c6A0dC66678956F8dC3b27928F036'   // Update to support SBT
+
         const  ArkreenBadgeFactory = ArkreenBadge__factory.connect(PROXY_ADDRESS, deployer);
 
 //      const callData =  ArkreenBadgeFactory.interface.encodeFunctionData("postUpdate")
@@ -29,7 +30,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         await updateTx.wait()
 
         console.log("callData, update", updateTx)
-        console.log(" ArkreenBadge deployed to %s: ", hre.network.name,  ArkreenBadgeFactory.address);
+        console.log(" ArkreenBadge updated to %s: ", hre.network.name,  ArkreenBadgeFactory.address);
     } 
 
     if(hre.network.name === 'matic') {

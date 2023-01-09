@@ -125,7 +125,7 @@ contract ArkreenBadge is
         uint256 tokenId
     ) external returns (uint256) {
         bool isRECIssuance = (msg.sender == IArkreenRegistry(arkreenRegistry).getRECIssuance());
-        bool isOffsetTokenId = (tokenId >> 64) != 0;
+        bool isOffsetTokenId = (tokenId == 0) || ((tokenId >> 64) != 0);        // FLAG_OFFSET = 1<<64, to compliant with old design 
 
         // Check called from the REC token contract, or from the REC issuance contrarct
         require( isRECIssuance || msg.sender == IArkreenRegistry(arkreenRegistry).getRECToken(issuerREC), 
@@ -141,12 +141,14 @@ contract ArkreenBadge is
         offsetCounter = offsetId;
 
         if(isOffsetTokenId) {
-            tokenId = uint64(tokenId);
-            if(tokenId ==0) {
-                tokenId = partialARECID + (1<<63);
-                partialAvailableAmount -= amount;
-            } else {
-                tokenId = uint64(detailsCounter) + (3<< 62);
+            if(tokenId != 0) {                          // to be compliant with old design
+                tokenId = uint64(tokenId);
+                if(tokenId ==0) {
+                    tokenId = partialARECID + (1<<63);
+                    partialAvailableAmount -= amount;
+                } else {
+                    tokenId = uint64(detailsCounter) + (3<< 62);
+                }
             }
         }
 
@@ -388,8 +390,9 @@ contract ArkreenBadge is
         return true;  
     }
 
-    // Add SBT interface
+    // Add SBT interface(0.1.1)
+    // Add offset trace function (0.2.0)
     function getVersion() external pure virtual returns (string memory) {
-        return "0.1.1";
+        return "0.2.0";
     }
 }

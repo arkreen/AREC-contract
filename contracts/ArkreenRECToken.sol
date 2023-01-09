@@ -43,10 +43,11 @@ contract ArkreenRECToken is
 
     mapping(uint256 => uint256) public allARECLiquidized;   // Loop of all AREC ID: 1st-> 2nd-> ..-> last-> 1st
     uint256 public latestARECID;                            // NFT ID of the latest AREC added to the loop 
-    uint256 ratioFeeToSolidify;                             // Percentage in basis point (10000) to charge for solidifying ART to AREC NFT
+    uint256 public ratioFeeToSolidify;                             // Percentage in basis point (10000) to charge for solidifying ART to AREC NFT
 
 //    uint256 partialARECID;                        // AREC NFT ID partialy offset
 //    uint256 partialAvailableAmount;               // Amount available for partial offset
+    uint256 public triggerUpgradeAmount;                   // The amount to trigger solidify upgrade
 
     // Events
     event OffsetFinished(address offsetEntity, uint256 amount, uint256 offsetId);
@@ -107,6 +108,24 @@ contract ArkreenRECToken is
      * @dev Internal offset function of the RE token, the RE tokens are burned
      */
     function _offset(address account, uint256 amount) internal virtual returns (uint256 offsetActionId) {
+
+        if(totalOffset < triggerUpgradeAmount) {                                // To check whether triggering upgrade
+            uint256 offsetAmount = triggerUpgradeAmount - totalOffset;
+            offsetAmount = (offsetAmount > amount) ? amount: offsetAmount;
+            amount -= offsetAmount;
+            _burn(account, offsetAmount);
+
+            // Track total retirement amount in TCO2 factory
+            address badgeContractU = IArkreenRegistry(arkreenRegistry).getArkreenRetirement();
+            offsetActionId = IArkreenBadge(badgeContractU).registerOffset(account, issuerREC, offsetAmount, 0);
+            totalOffset += offsetAmount;
+
+            emit OffsetFinished(account, offsetAmount, offsetActionId);
+            if(amount == 0) {
+                return offsetActionId;
+            }
+        }
+
         require(amount != 0, 'ART: Zero Offset');
 
         address issuanceAREC = IArkreenRegistry(arkreenRegistry).getRECIssuance();
@@ -222,7 +241,7 @@ contract ArkreenRECToken is
                 preAREC = curAREC;
                 curAREC = allARECLiquidized[curAREC];
             } else {
-                require(IArkreenRECIssuance(issuanceAREC).restore(curAREC), 'ART: Not Allowed');
+//              require(IArkreenRECIssuance(issuanceAREC).restore(curAREC), 'ART: Not Allowed');
                 IArkreenRECIssuance(issuanceAREC).safeTransferFrom(address(this), solidifier, curAREC);
                 amount -= amountAREC;
                 solidifiedAmount += amountAREC;
@@ -318,6 +337,9 @@ contract ArkreenRECToken is
     function setReceiverFee(address receiver) external onlyOwner {
         require(receiver != address(0), 'ART: Wrong Address');
         receiverFee = receiver;
-    }  
+    }
 
+    function setTriggerAmount(uint256 amount) external onlyOwner {
+        triggerUpgradeAmount = amount;
+    }
 }

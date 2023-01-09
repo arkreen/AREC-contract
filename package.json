@@ -40,15 +40,24 @@
     "deploy:matic_test:gMinerU:reset": "npx hardhat --network matic_test deploy --reset --tags gMinerU",
     "deploy:matic_test:gRegistry": "hardhat --network matic_test deploy --tags gRegistry",
     "deploy:matic_test:gRegistryU": "hardhat --network matic_test deploy --tags gRegistryU",
+    "deploy:matic_test:gRegistryP": "hardhat --network matic_test deploy --tags gRegistryP",
+
     "deploy:matic_test:RECIssue": "hardhat --network matic_test deploy --tags RECIssue",
+    "deploy:matic_test:RECIssueD": "hardhat --network matic_test deploy --tags RECIssueD",
     "deploy:matic_test:RECIssueU": "hardhat --network matic_test deploy --tags RECIssueU",
+
     "deploy:matic_test:RECToken": "hardhat --network matic_test deploy --tags RECToken",
+    "deploy:matic_test:RECTokenD": "hardhat --network matic_test deploy --tags RECTokenD",
+    "deploy:matic_test:RECTokenU": "hardhat --network matic_test deploy --tags RECTokenU",
+
     "deploy:matic_test:RECRetire": "hardhat --network matic_test deploy --tags RECRetire",
     "deploy:matic_test:RECBadgeU": "hardhat --network matic_test deploy --tags RECBadgeU",
+
     "deploy:matic_test:gAKRE": "hardhat --network matic_test deploy --tags gAKRE",
     "deploy:matic_test:gAKREV2": "hardhat --network matic_test deploy --tags gAKREV2",
     "deploy:matic_test:gAKRE2U": "hardhat --network matic_test deploy --tags gAKRE2U",
     "deploy:matic_test:RECBadgeD": "hardhat --network matic_test deploy --tags RECBadgeD",
+
     "deploy:matic_test:arkReward": "hardhat --network matic_test deploy --tags arkReward",
     "verify:matic_test": "npx hardhat verify --network matic_test <ADDRESS> <PARAMS>",
     "confirmAuto:matic_test": "npx hardhat run --network matic_test ./deploy/confirmIssuance.ts",
@@ -58,6 +67,7 @@
     "deploy_ARKE_matic": "hardhat run --network matic scripts/deployArkreenToken.ts",
     "deploy:matic_test": "hardhat --network matic_test deploy --no-compile --reset --tags ARKE",
     "deploy:matic_test_all": "hardhat --network matic_test deploy",
+
     "deploy:matic:gAKRE": "hardhat --network matic deploy --tags gAKRE",
     "deploy:matic:arkReward": "hardhat --network matic deploy --tags arkReward",
     "deploy:matic:AMiner": "hardhat --network matic deploy --tags AMiner",

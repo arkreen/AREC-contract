@@ -4,6 +4,7 @@ import { CONTRACTS } from "../constants";
 import { ethers } from "hardhat";
 import { ArkreenRegistry__factory } from "../../typechain";
 
+// Initialize 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const { getNamedAccounts } = hre;
     const { deployerAddress } = await getNamedAccounts();

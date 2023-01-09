@@ -33,7 +33,6 @@ abstract contract ArkreenBadgeStorage {
     uint256 public partialAvailableAmount;               // Amount available for partial offset
 
     uint256 public detailsCounter;
-    uint256 internal totalAmountDetails;                   // Amount available for partial offset
     mapping(uint256 => OffsetDetail[]) public OffsetDetails;
 
 
