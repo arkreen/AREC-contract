@@ -77,13 +77,22 @@
     "deploy:matic:AMinerUV10V": "hardhat --network matic deploy --tags AMinerUV10V",
     "deploy:matic:gRegistry": "hardhat --network matic deploy --tags gRegistry",
     "deploy:matic:UUPSProxy": "hardhat --network matic deploy --tags UUPSProxy",
+
     "deploy:matic:RECIssue": "hardhat --network matic deploy --tags RECIssue",
+    "deploy:matic:RECIssueD": "hardhat --network matic deploy --tags RECIssueD --reset",
+    "deploy:matic:RECIssueU": "hardhat --network matic deploy --tags RECIssueU",
+
     "deploy:matic:RECToken": "hardhat --network matic deploy --tags RECToken",
+    "deploy:matic:RECTokenD": "hardhat --network matic deploy --tags RECTokenD --reset",
+    "deploy:matic:RECTokenU": "hardhat --network matic deploy --tags RECTokenU",
+
     "deploy:matic:RECBadge": "hardhat --network matic deploy --tags RECBadge",
     "deploy:matic:gRegistryI": "hardhat --network matic deploy --tags gRegistryI",
     "deploy:matic:Notary": "hardhat --network matic deploy --tags Notary",
-    "deploy:matic:RECBadgeD": "hardhat --network matic deploy --tags RECBadgeD",
+
+    "deploy:matic:RECBadgeD": "hardhat --network matic deploy --tags RECBadgeD --reset",
     "deploy:matic:RECBadgeU": "hardhat --network matic deploy --tags RECBadgeU",
+
     "etherscan:matic": "hardhat --network matic etherscan-verify <--api-key>",
     "test": "hardhat test",
     "gas": "set REPORT_GAS=true && hardhat test",

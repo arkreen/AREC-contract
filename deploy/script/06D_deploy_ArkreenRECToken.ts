@@ -9,14 +9,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     console.log("Deploying: ", CONTRACTS.RECToken, deployer);  
 
-    const ArkreenBadge = await deploy(CONTRACTS.RECToken, {
+    const ArkreenRECToken = await deploy(CONTRACTS.RECToken, {
         from: deployer,
         args: [],
         log: true,
         skipIfAlreadyDeployed: false,
     });
 
-    console.log("ArkreenBadge deployed to %s: ", hre.network.name, ArkreenBadge.address);
+    console.log("ArkreenRECToken deployed to %s: ", hre.network.name, ArkreenRECToken.address);
 };
 
 func.tags = ["RECTokenD"];

@@ -7,7 +7,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  console.log("Deploying: ", CONTRACTS.RECToken, deployer);  
+  console.log("Deploying: ", CONTRACTS.RECIssuance, deployer);  
 
   // For Simulation mode, need to remove the checking if being miner
   const ArkreenRECIssuance = await deploy(CONTRACTS.RECIssuance, {

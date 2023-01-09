@@ -36,8 +36,28 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
         console.log("callData, update", updateTx)
         console.log("ArkreenRECIssuance Updated to %s: ", hre.network.name, 
-                      ArkreenRECIssuanceFactory.address, NEW_IMPLEMENTATION);
+                                  ArkreenRECIssuanceFactory.address, NEW_IMPLEMENTATION);
     } 
+
+    if(hre.network.name === 'matic') {
+      const REGISTRY_ADDRESS = "0x45D0c0E2480212A60F1a9f2A820F1d7d6472CA6B"       // Need to check
+     
+      // const NEW_IMPLEMENTATION = "0x0730A83F7a141BBea876C0fCfd2e9BED3e4C195F"  // 1. Original 
+      const NEW_IMPLEMENTATION = "0xEf06990Ee1c2F2694acd87b189d0EbA84DdB7124"     // 2. Upgrade to support solidify and offset traceback
+
+      const [deployer] = await ethers.getSigners();
+      const ArkreenRECIssuanceFactory = ArkreenRECIssuance__factory.connect(REGISTRY_ADDRESS, deployer);
+
+      //      const callData = ArkreenRECIssuanceFactory.interface.encodeFunctionData("postUpdate")
+      //      const callData = ArkreenRECIssuanceFactory.interface.encodeFunctionData("postUpdate", [])
+      //      const updateTx = await ArkreenRECIssuanceFactory.upgradeToAndCall(NEW_IMPLEMENTATION, callData)
+      const updateTx = await ArkreenRECIssuanceFactory.upgradeTo(NEW_IMPLEMENTATION)
+      await updateTx.wait()
+
+      console.log("callData, update", updateTx)
+      console.log("ArkreenRECIssuance Updated to %s: ", hre.network.name, 
+                            ArkreenRECIssuanceFactory.address, NEW_IMPLEMENTATION);
+  } 
 };
 
 func.tags = ["RECIssueU"];

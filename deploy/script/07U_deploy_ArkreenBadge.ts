@@ -34,8 +34,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     } 
 
     if(hre.network.name === 'matic') {
-      const PROXY_ADDRESS = "0x3d5531cF0bC2e8d0658fEc0D1a9995211Ac1f337"       // Need to check
-      const NEW_IMPLEMENTATION = '0x504fb898a5dc3cf99f237e62228d09f52ee64a7f'   // Update to support SBT
+      const PROXY_ADDRESS = "0x3d5531cF0bC2e8d0658fEc0D1a9995211Ac1f337"            // Need to check
+      //  const NEW_IMPLEMENTATION = '0x504fb898a5dc3cf99f237e62228d09f52ee64a7f'   // Update to support SBT
+      const NEW_IMPLEMENTATION = '0xc9fc3571e419d8d24826b9bb518a4420a89b30cf'       // Upgrade to support solidify and offset traceback
       
       const [deployer] = await ethers.getSigners();
 
@@ -54,7 +55,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
                           { maxFeePerGas: feeData.lastBaseFeePerGas.mul(2).add(
                                             feeData.lastBaseFeePerGas.mul(20).div(100)),
                             maxPriorityFeePerGas: feeData.lastBaseFeePerGas.mul(20).div(100) 
-                          } : {gasPrice: gasPrice.mul(110).div(100)}
+                          } : {gasPrice: gasPrice.mul(120).div(100)}
 
       console.log('feeData, gasPrice', feeData, gasPrice, overrides)
 
@@ -64,7 +65,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       await updateTx.wait()
       
       console.log("callData, update", updateTx)
-      console.log(" ArkreenBadge deployed to %s: ", hre.network.name,  ArkreenBadgeFactory.address);
+      console.log(" ArkreenBadge upgraded to %s: ", hre.network.name,  ArkreenBadgeFactory.address, NEW_IMPLEMENTATION);
     } 
 };
 

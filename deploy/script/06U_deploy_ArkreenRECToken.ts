@@ -25,6 +25,25 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       console.log("callData, update", callData, updateTx)
       console.log("ArkreenRECToken Updated to %s: ", hre.network.name, ArkreenRECTokenFactory.address);
   } 
+
+  if(hre.network.name === 'matic') {
+    const RECTOKEN_ADDRESS    = "0x815bFE3aaCF765c9E0A4DdEb98Ad710a4Fb860d3"        // Need to check
+    //  const NEW_IMPLEMENTATION  = "0xbdb320004dd108bd6bbba948db992f7b4b3bdbf4"    // 1. Old implemenation
+    const NEW_IMPLEMENTATION  = "0x1356Dc92E42a8fB17f2A5AE747543E4d3ADED899"        // 2. Add solidity and offset traceback
+  
+    const ArkreenRECTokenFactory = ArkreenRECToken__factory.connect(RECTOKEN_ADDRESS, deployer);
+
+    //   const callData = ArkreenRECTokenFactory.interface.encodeFunctionData("postUpdate")
+    //   const updateTx = ArkreenRECManagerFactory.interface.encodeFunctionData("upgradeToAndCall", [NEW_IMPLEMENTATION, callData])
+    //   const updateTx = await ArkreenRECTokenFactory.upgradeToAndCall(NEW_IMPLEMENTATION, callData)
+
+    const updateTx = await  ArkreenRECTokenFactory.upgradeTo(NEW_IMPLEMENTATION)
+    await updateTx.wait()
+
+    console.log("callData, update", updateTx)
+    console.log("ArkreenRECToken Updated to %s: ", hre.network.name, ArkreenRECTokenFactory.address);
+} 
+
 };
 
 func.tags = ["RECTokenU"];
