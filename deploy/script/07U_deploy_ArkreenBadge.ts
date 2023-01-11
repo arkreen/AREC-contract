@@ -11,7 +11,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   
     if(hre.network.name === 'matic_test') {
 //      Simulation test      
-        const PROXY_ADDRESS = "0x5C653b445BE2bdEB6f8f3CD099FC801865Cab835"       // Need to check
+//      const PROXY_ADDRESS = "0x5C653b445BE2bdEB6f8f3CD099FC801865Cab835"       // Need to check: Simu mode
+        const PROXY_ADDRESS = "0xe07968E3b0D64B99EA3653Dd925a850eBb9a3Bb9"       // Need to check: Matic testnet
+
 //      const NEW_IMPLEMENTATION = '0x6f4fff7faa238cd68f03de75b8906e23dbd95f30'   // Need to check
 //      const NEW_IMPLEMENTATION = '0xA82E33A80f8c6A0dC66678956F8dC3b27928F036'   // Update to support SBT
         const NEW_IMPLEMENTATION = '0x8d58d9C7a2cB1A68F7F14BCd08CC735E3f12D267'   // Upgrade to support Offet traceback

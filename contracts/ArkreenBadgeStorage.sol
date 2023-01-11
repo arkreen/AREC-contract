@@ -27,7 +27,7 @@ abstract contract ArkreenBadgeStorage {
     /// @dev List all the offset action ids belonging to user
     mapping(address => uint256[]) public userActions;
 
-    mapping(uint256 => OffsetRecord) public certificates;
+    mapping(uint256 => OffsetRecord) public certificates;       // Retirement Badges
 
     uint256 public partialARECID;                        // AREC NFT ID partialy offset
     uint256 public partialAvailableAmount;               // Amount available for partial offset
