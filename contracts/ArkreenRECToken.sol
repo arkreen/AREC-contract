@@ -43,15 +43,15 @@ contract ArkreenRECToken is
 
     mapping(uint256 => uint256) public allARECLiquidized;   // Loop of all AREC ID: 1st-> 2nd-> ..-> last-> 1st
     uint256 public latestARECID;                            // NFT ID of the latest AREC added to the loop 
-    uint256 public ratioFeeToSolidify;                             // Percentage in basis point (10000) to charge for solidifying ART to AREC NFT
+    uint256 public ratioFeeToSolidify;                      // Percentage in basis point (10000) to charge for solidifying ART to AREC NFT
 
-//    uint256 partialARECID;                        // AREC NFT ID partialy offset
-//    uint256 partialAvailableAmount;               // Amount available for partial offset
-    uint256 public triggerUpgradeAmount;                   // The amount to trigger solidify upgrade
+//    uint256 partialARECID;                                // AREC NFT ID partialy offset
+//    uint256 partialAvailableAmount;                       // Amount available for partial offset
+    uint256 public triggerUpgradeAmount;                    // The amount to trigger solidify upgrade
 
     // Events
-    event OffsetFinished(address offsetEntity, uint256 amount, uint256 offsetId);
-    event Solidify(address account, uint256 amount, uint256 feeSolidify);    
+    event OffsetFinished(address indexed offsetEntity, uint256 amount, uint256 offsetId);
+    event Solidify(address indexed account, uint256 amount, uint256 numberAREC, uint256 feeSolidify);    
 
     // Modifiers
     modifier ensure(uint deadline) {
@@ -216,7 +216,7 @@ contract ArkreenRECToken is
      * @param amount The amount requesting to solidify
      */
     function solidify(uint256 amount) external virtual whenNotPaused 
-                returns (uint256 solidifiedAmount,uint256 feeSolidify) {
+                returns (uint256 solidifiedAmount, uint256 numberAREC, uint256 feeSolidify) {
 
         require(latestARECID != 0, 'ART: No Liquidized AREC');
         bool chargeOn = (receiverFee != address(0)) && (ratioFeeToSolidify != 0);           // To save gas
@@ -241,10 +241,11 @@ contract ArkreenRECToken is
                 preAREC = curAREC;
                 curAREC = allARECLiquidized[curAREC];
             } else {
-//              require(IArkreenRECIssuance(issuanceAREC).restore(curAREC), 'ART: Not Allowed');
+//              require(IArkreenRECIssuance(issuanceAREC).restore(curAREC), 'ART: Not Allowed');  // No need, status is changed by hooks
                 IArkreenRECIssuance(issuanceAREC).safeTransferFrom(address(this), solidifier, curAREC);
                 amount -= amountAREC;
                 solidifiedAmount += amountAREC;
+                numberAREC++;
                 curAREC = _remove(preAREC, curAREC);
                 if(curAREC == 0) break;
             }
@@ -257,7 +258,7 @@ contract ArkreenRECToken is
             _transfer(solidifier, receiverFee, feeSolidify);
         }
 
-        emit Solidify(solidifier, solidifiedAmount, feeSolidify);      
+        emit Solidify(solidifier, solidifiedAmount, numberAREC, feeSolidify);      
     }
 
     /**

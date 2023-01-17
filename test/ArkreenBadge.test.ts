@@ -521,7 +521,7 @@ describe("ArkreenBadge", () => {
                     "Owner", "" , "Save Earth", [offsetID3])                                                                  
           const tokenID2 = await arkreenBadge.tokenOfOwnerByIndex(owner1.address, 0)
           expect(await arkreenBadge.locked(tokenID2)).to.equal(true)
-          expect(await arkreenBadge.getVersion()).to.equal('0.1.1')
+          expect(await arkreenBadge.getVersion()).to.equal('0.2.0')
       });        
 
     })
