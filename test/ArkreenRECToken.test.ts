@@ -567,19 +567,19 @@ describe("ArkreenRECToken", () => {
 
       const tx_1 = await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(500))
       const receipt_1 = await tx_1.wait()
-      expect(receipt_1.gasUsed).to.eq("463477")  //  460991 461138
+      expect(receipt_1.gasUsed).to.eq("463499")  //  460991 461138
 
       const tx_2 = await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(800))
       const receipt_2 = await tx_2.wait()
-      expect(receipt_2.gasUsed).to.eq("444946")  // 442460 442607
+      expect(receipt_2.gasUsed).to.eq("444968")  // 442460 442607
 
       const tx_3 = await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(200))
       const receipt_3 = await tx_3.wait()
-      expect(receipt_3.gasUsed).to.eq("207040")  // 204554 204554      
+      expect(receipt_3.gasUsed).to.eq("207062")  // 204554 204554      
 
       const tx = await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(66000))
       const receipt = await tx.wait()
-      expect(receipt.gasUsed).to.eq("2755818")  // 2753332 2756125 
+      expect(receipt.gasUsed).to.eq("2755840")  // 2753332 2756125 
     });
   })
 
@@ -765,6 +765,8 @@ describe("ArkreenRECToken", () => {
     it("Solidify: 2AREC: 1000", async () => {
       await mintAREC(1000)
 
+      expect(await arkreenRECToken.getARECInfo(3)).to.deep.equals([2,
+        [[1,expandTo18Decimals(1000)], [2,expandTo18Decimals(1000)], [0,expandTo18Decimals(0)]]])   
       const arecData1: RECDataStruct = await arkreenRECIssuance.getRECData(1)
       const arecData2: RECDataStruct = await arkreenRECIssuance.getRECData(2)
       expect(arecData1.status).to.equal(RECStatus.Liquidized)
@@ -892,19 +894,24 @@ describe("ArkreenRECToken", () => {
       await mintAREC(1000)        // 25 2G
       await mintAREC(2000)        // 26 3H
       await mintAREC(9000)        // 27 4I
-      await mintAREC(8000)        // 28 3H
+      await mintAREC(8000)        // 28 3HetAREC
       await mintAREC(800)         // 29 2G
       await mintAREC(600)         // 30 1F
 
       await expect(arkreenRECToken.connect(owner1).solidify(expandTo18Decimals(1400)))   // 1000+400, 1+21
               .to.emit(arkreenRECToken, "Solidify")
               .withArgs(owner1.address, expandTo18Decimals(1400), 2, 0)    
-      expect(await getAREC()).to.deep.equals([2,3,4,30])                
+      expect(await getAREC()).to.deep.equals([2,3,4,30])    
+      expect(await arkreenRECToken.getARECInfo(3)).to.deep.equals([3,
+          [[2,expandTo18Decimals(5000)], [3,expandTo18Decimals(600)], [4,expandTo18Decimals(8000)]]])    
 
       await expect(arkreenRECToken.connect(owner1).solidify(expandTo18Decimals(7600)))   // 5000+600+900+1000, 2+3+5+6
               .to.emit(arkreenRECToken, "Solidify")
               .withArgs(owner1.address, expandTo18Decimals(7500), 4, 0) 
-      expect(await getAREC()).to.deep.equals([4,7,8,30])                
+      expect(await getAREC()).to.deep.equals([4,7,8,30])  
+      expect(await arkreenRECToken.getARECInfo(3)).to.deep.equals([3,
+        [[4,expandTo18Decimals(8000)], [7,expandTo18Decimals(2000)], [8,expandTo18Decimals(9000)]]])    
+
 
       await expect(arkreenRECToken.connect(owner1).solidify(expandTo18Decimals(8300)))   // 8000+300, 4+22
               .to.emit(arkreenRECToken, "Solidify")
@@ -930,15 +937,22 @@ describe("ArkreenRECToken", () => {
               .to.emit(arkreenRECToken, "Solidify")                                       // 23+25+29
               .withArgs(owner1.address, expandTo18Decimals(9800), 3, 0) 
       expect(await getAREC()).to.deep.equals([26,27,28,28])       
+      expect(await arkreenRECToken.getARECInfo(3)).to.deep.equals([3,
+        [[26,expandTo18Decimals(2000)], [27,expandTo18Decimals(9000)], [28,expandTo18Decimals(8000)]]])         
       
       await expect(arkreenRECToken.connect(owner1).solidify(expandTo18Decimals(10000)))   // H: 2000+8000
               .to.emit(arkreenRECToken, "Solidify")                                       // 26+28
               .withArgs(owner1.address, expandTo18Decimals(10000), 2, 0) 
-       expect(await getAREC()).to.deep.equals([27,27,27,27])     
+       expect(await getAREC()).to.deep.equals([27,27,27,27]) 
+       expect(await arkreenRECToken.getARECInfo(3)).to.deep.equals([1,
+        [[27,expandTo18Decimals(9000)], [0,expandTo18Decimals(0)], [0,expandTo18Decimals(0)]]])             
        
       await expect(arkreenRECToken.connect(owner1).solidify(expandTo18Decimals(10000)))   // 4I: 9000
               .to.emit(arkreenRECToken, "Solidify")                                       // 27
               .withArgs(owner1.address, expandTo18Decimals(9000), 1, 0) 
+
+      expect(await arkreenRECToken.getARECInfo(3)).to.deep.equals([0,
+                [[0,expandTo18Decimals(0)], [0,expandTo18Decimals(0)], [0,expandTo18Decimals(0)]]])                 
 
       expect(await arkreenRECToken.latestARECID()).to.equals(0)
       expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(expandTo18Decimals(0))

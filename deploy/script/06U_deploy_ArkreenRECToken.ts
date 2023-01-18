@@ -17,8 +17,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //    const NEW_IMPLEMENTATION  = "0x67b31C71c4E438a04dDA41dBCf5d2F174d43d69B"      // 2. Add Solidify 
 //    const NEW_IMPLEMENTATION  = "0x6DAf30bF36379641E73Ebc6b4755E28bC97091D3"      // 3. make fields public //both simu and testnet
 //    const NEW_IMPLEMENTATION  = "0xc0e5543d8bb04dfa26e176dbb1418da923f3981d"      // 4. Add numberAREC to Solidify event
-      const NEW_IMPLEMENTATION  = "0xb2d9199071DC648c5F0D7F9e5c8e7c7e7d2e1e6B"      // 5. Return numberAREC in Solidify
-    
+//    const NEW_IMPLEMENTATION  = "0xb2d9199071DC648c5F0D7F9e5c8e7c7e7d2e1e6B"      // 5. Return numberAREC in Solidify
+      const NEW_IMPLEMENTATION  = "0x319334463C5d18D5bD45cC6d6eB27216F712906E"      // 6. Add getARECInfo(uint256 number)
+
       const ArkreenRECTokenFactory = ArkreenRECToken__factory.connect(RECTOKEN_ADDRESS, deployer);
 
 //    const callData = ArkreenRECTokenFactory.interface.encodeFunctionData("postUpdate")

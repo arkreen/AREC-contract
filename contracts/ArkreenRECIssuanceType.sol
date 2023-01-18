@@ -49,6 +49,11 @@ struct RECData {
     string    memo;
 }
 
+struct ARECAmount {
+    uint256   ARECID;
+    uint128   amountREC;
+}
+
 struct RECMintPrice {
     address   token;
     uint256   value;

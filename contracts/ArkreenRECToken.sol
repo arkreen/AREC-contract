@@ -8,6 +8,7 @@ import '@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol';
 import '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
 //import '@openzeppelin/contracts/access/AccessControl.sol';
 
+import "./ArkreenRECIssuanceType.sol";
 import "./interfaces/IArkreenRECIssuance.sol";
 import "./interfaces/IArkreenRegistry.sol";
 import "./interfaces/IArkreenBadge.sol";
@@ -315,6 +316,24 @@ contract ArkreenRECToken is
 
         return this.onERC721Received.selector;
     }
+
+    /**
+     * @dev set the ratio of liquidization fee
+     */     
+    function getARECInfo(uint256 number) external view returns (uint256 numAREC, ARECAmount[] memory amountAREC) {
+        amountAREC = new ARECAmount[](number);
+        if(latestARECID == 0) return (numAREC, amountAREC);
+
+        address issuanceAREC = IArkreenRegistry(arkreenRegistry).getRECIssuance();
+        uint256 curAREC = allARECLiquidized[latestARECID];
+        for(uint256 index; index < number; index++) {
+            amountAREC[index].ARECID = curAREC;
+            amountAREC[index].amountREC = IArkreenRECIssuance(issuanceAREC).getRECData(curAREC).amountREC;
+            numAREC ++;
+            if(curAREC == latestARECID) break;
+            curAREC = allARECLiquidized[curAREC];
+        }
+    }  
 
     /**
      * @dev set the ratio of liquidization fee
