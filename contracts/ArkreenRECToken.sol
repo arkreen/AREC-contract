@@ -34,13 +34,13 @@ contract ArkreenRECToken is
     uint256 public constant FLAG_OFFSET = 1<<64;
 
     // Public variables
-    address public arkreenRegistry;    // Registry contract storing Arkreen contracts   
-    address public issuerREC;           // Address of issuer of the original REC pre-liquidized    
-    uint256 public totalLiquidized;     // Total amount of REC that is liquidized
-    uint256 public totalOffset;         // Total amount of REC that is offset 
+    address public arkreenRegistry;           // Registry contract storing Arkreen contracts   
+    address public issuerREC;                 // Address of issuer of the original REC pre-liquidized    
+    uint256 public totalLiquidized;           // Total amount of REC that is liquidized
+    uint256 public totalOffset;               // Total amount of REC that is offset 
 
-    address receiverFee;                // Receiver address to receive the liquidization fee
-    uint256 ratioLiquidizedFee;         // Percentage in basis point (10000) of the liquidization fee
+    address public receiverFee;                // Receiver address to receive the liquidization fee
+    uint256 public ratioLiquidizedFee;         // Percentage in basis point (10000) of the liquidization fee
 
     mapping(uint256 => uint256) public allARECLiquidized;   // Loop of all AREC ID: 1st-> 2nd-> ..-> last-> 1st
     uint256 public latestARECID;                            // NFT ID of the latest AREC added to the loop 
