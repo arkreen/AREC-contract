@@ -88,6 +88,7 @@ contract ArkreenRegistry is
         IssuerStatus memory issuerStatus = IssuerStatus(true, uint64(block.timestamp), uint64(0), tokenREC, issuerId);
         recIssuers[issuer] = issuerStatus;
         tokenRECs[tokenREC] = issuer;
+        allIssuers[numIssuers] = issuer;
     }
 
     function removeRECIssuer(address issuer) external virtual onlyOwner {
