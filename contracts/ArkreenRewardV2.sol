@@ -28,6 +28,9 @@ contract ArkreenRewardUpgradeableV2 is
     ArkreenToken                public ERC20Contract;
     mapping(address => uint256) public nonces;
 
+    //events
+    event UserWithdraw(address indexed receiver, uint256 indexed value, uint256  indexed nonce);
+
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
@@ -101,6 +104,8 @@ contract ArkreenRewardUpgradeableV2 is
         require(recoveredAddress == validationAddress, "signer doesn't not match or singature error");
         nonces[_msgSender()] += 1;
         ERC20Contract.transfer(receiver, value);
+
+        emit UserWithdraw(receiver, value, nonce);
     }
 
 

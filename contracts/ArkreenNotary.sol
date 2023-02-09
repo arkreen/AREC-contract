@@ -14,6 +14,9 @@ contract ArkreenNotary is Ownable{
 
     uint256 public updateCount;
 
+    //events
+    event DataSaved(string indexed blockHash, string indexed cid, uint256 blockHeight, uint256 totalPowerGeneraton, uint256 circulatingSupply);
+
     function saveData(
         string calldata blockHash_,
         string calldata cid_,
@@ -35,5 +38,7 @@ contract ArkreenNotary is Ownable{
         circulatingSupply  = circulatingSupply_;
 
         updateCount += 1;
+
+        emit DataSaved(blockHash, cid, blockHeight, totalPowerGeneraton, circulatingSupply);
     }
 }
