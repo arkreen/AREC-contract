@@ -93,6 +93,9 @@
     "deploy:matic:RECBadgeD": "hardhat --network matic deploy --tags RECBadgeD --reset",
     "deploy:matic:RECBadgeU": "hardhat --network matic deploy --tags RECBadgeU",
 
+    "deploy:matic:ARewardD": "hardhat --network matic deploy --tags ARewardD --reset",
+    "deploy:matic:ARewardU": "hardhat --network matic deploy --tags ARewardU",
+
     "etherscan:matic": "hardhat --network matic etherscan-verify <--api-key>",
     "test": "hardhat test",
     "gas": "set REPORT_GAS=true && hardhat test",

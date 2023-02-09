@@ -28,6 +28,9 @@ contract ArkreenReward is
     ArkreenToken                public ERC20Contract;
     mapping(address => uint256) public nonces;
 
+    //events
+    event UserWithdraw(address indexed receiver, uint256 indexed value, uint256  indexed nonce);
+
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
@@ -62,7 +65,6 @@ contract ArkreenReward is
         );  
 
     }   
-
 
     function pause() external onlyOwner{
         _pause();
@@ -103,6 +105,8 @@ contract ArkreenReward is
         require(recoveredAddress == validationAddress, "signer doesn't not match or singature error");
         nonces[_msgSender()] += 1;
         ERC20Contract.transfer(receiver, value);
+
+        emit UserWithdraw(receiver, value, nonce);
     }
 
 

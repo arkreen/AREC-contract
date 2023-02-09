@@ -13,7 +13,7 @@ export const CONTRACTS: Record<string, string> = {
     UUPSProxy:      "UUPSProxy",
     RECBadge:       "ArkreenBadge",
     Notary:         "ArkreenNotary",
-
+    AReward:        "ArkreenReward",
   };
 
 // Constructor Arguments
