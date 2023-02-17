@@ -56,6 +56,17 @@ contract FeSwapPair is IFeSwapPair, FeSwapERC20 {
         return (price0CumulativeLast, price1CumulativeLast, kLast);
     }
 
+    event Mint(address indexed sender, uint amountIn, uint amountOut);
+    event Burn(address indexed sender, uint amountIn, uint amountOut, address indexed to);
+    event Swap(
+        address indexed sender,
+        uint amount0In,
+        uint amount1In,
+        uint amount1Out,
+        address indexed to
+    );
+    event Sync(uint112 reserveIn, uint112 reserveOut);
+
     constructor() {
         factory     = msg.sender;
         (tokenIn, tokenOut) = IFeSwapFactory(msg.sender).getPairTokens();

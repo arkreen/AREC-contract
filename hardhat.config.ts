@@ -6,7 +6,7 @@ import '@nomiclabs/hardhat-ethers'
 import "hardhat-deploy"
 import "@nomiclabs/hardhat-etherscan"
 import "hardhat-storage-layout"
-//import '@nomiclabs/hardhat-waffle'
+import '@nomiclabs/hardhat-waffle'
 import "hardhat-contract-sizer"
 import "hardhat-gas-reporter"
 import "solidity-coverage"
