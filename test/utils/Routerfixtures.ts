@@ -155,28 +155,6 @@ export async function v2Fixture(
   const MetamorphicFactory = await MetamorphicContractFactory.deploy();
   await MetamorphicFactory.deployed();
 
-/*
-  // deploy FeSwap Router Patch implementation 
-  const RouterPatchImplementation = await deployContract(wallet, RouterPatchTest1 )
-
-  const saltRouter = "0x14778F8FA4D701D0C55D72409750CFDAEBFD714E5181AC5D37257FDD3B040B3B"
-  await MetamorphicFactory.deployMetamorphicContract(saltRouter, RouterPatchImplementation.address, "0x", { ...overrides, value: 0 })
-
-  // deploy FeSwap Router Patch implementation 
-  const FcatoryPatchImplementation = await deployContract(wallet, RouterPatchTest1 )
-
-  const saltFactory = "0x86D6A05C3187DE7C8709A3A56C8008E64F3F81473B4627B405CC94B6E8A4EB27"
-  await MetamorphicFactory.deployMetamorphicContract(saltFactory, FcatoryPatchImplementation.address, "0x", { ...overrides, value: 0 })
-
-  const RouterPatchAddress = await MetamorphicFactory.findMetamorphicContractAddress(saltRouter)
-  const FactoryPatchAddress = await MetamorphicFactory.findMetamorphicContractAddress(saltFactory)
-  console.log( "RouterPatchAddress FactoryPatchAddress:", RouterPatchAddress, FactoryPatchAddress)
-*/
-
-//  console.log( "routerFeswa:", routerFeswa.address)
-//  console.log( "factoryFeswa:", factoryFeswa.address)
-//  console.log( "factoryFeswa:", feeTo.address, pairOwner.address)
-
   return {
     tokenA,
     tokenB,
