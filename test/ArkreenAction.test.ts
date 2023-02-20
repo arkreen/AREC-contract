@@ -12,10 +12,12 @@ import {
     ArkreenRegistry,
     ArkreenRECToken,
     ArkreenBadge,
+    ArkreenAction,
 } from "../typechain";
 
 import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { getApprovalDigest, expandTo18Decimals, randomAddresses, RECStatus, MinerType, BigNumberPercent } from "./utils/utilities";
+import { getApprovalDigest, expandTo18Decimals, randomAddresses, RECStatus, MinerType, 
+          BigNumberPercent, expandTo9Decimals } from "./utils/utilities";
 import { ecsign, fromRpcSig, ecrecover } from 'ethereumjs-util'
 import { RECRequestStruct, SignatureStruct, RECDataStruct } from "../typechain/contracts/ArkreenRECIssuance";
 import { OffsetActionStruct }  from "../typechain/contracts/ArkreenBadge";
@@ -26,7 +28,7 @@ import FeSwapPair from '../artifacts/contracts/Dex/FeSwapPair.sol/FeSwapPair.jso
 const MASK_OFFSET = BigNumber.from('0x8000000000000000')
 const MASK_DETAILS = BigNumber.from('0xC000000000000000')
 const initPoolPrice = expandTo18Decimals(1).div(5)
-const BidStartTime: number = 1676822400   // 2023/02/20 00/00/00
+const BidStartTime: number = 1687190400   // 2023/06/20 00/00/00
 const OPEN_BID_DURATION: number =  (3600 * 24 * 14)
 const rateTriggerArbitrage: number = 10
 
@@ -34,7 +36,7 @@ const overrides = {
   gasLimit: 30000000
 }
 
-describe("ArkreenRECToken", () => {
+describe("ArkreenAction", () => {
     let deployer: SignerWithAddress;
     let manager: SignerWithAddress;
     let register_authority: SignerWithAddress;
@@ -76,6 +78,12 @@ describe("ArkreenRECToken", () => {
     let WETHPairTEE: Contract    
     let routerEventEmitter: Contract
 
+    let pairTTArt: Contract
+    let pairTAArt: Contract
+    let pairEEArt: Contract
+    let pairEAArt: Contract
+    let arkreenAction: Contract
+      
     async function deployFixture() {
 
       const bytecode = `${FeSwapPair.bytecode}`
@@ -112,7 +120,7 @@ describe("ArkreenRECToken", () => {
 
       // const WETHPartner = await deployContract(wallet, ERC20, [expandTo18Decimals(10000),"WETH Partner"], overrides)
       const ERC20Factory = await ethers.getContractFactory("ERC20F");
-      const WETHPartner = await ERC20Factory.deploy(expandTo18Decimals(10000),"WETH Partner");
+      const WETHPartner = await ERC20Factory.deploy(expandTo18Decimals(3000000),"WETH Partner");
       await WETHPartner.deployed();
 
       // deploy FeSwap routers
@@ -208,14 +216,29 @@ describe("ArkreenRECToken", () => {
       
       const ArkreenRetirementFactory = await ethers.getContractFactory("ArkreenBadge")
       arkreenRetirement = await upgrades.deployProxy(ArkreenRetirementFactory,[arkreenRegistry.address]) as ArkreenBadge
-      await arkreenRetirement.deployed()           
+      await arkreenRetirement.deployed()     
+      
+      await factoryFeswa.createUpdatePair(WETHPartner.address, arkreenRECToken.address, pairOwner.address, rateTriggerArbitrage, 0, overrides)
+      const [pairAddressTTArt, pairAddressTAArt] = await factoryFeswa.getPair(WETHPartner.address, arkreenRECToken.address)
+      const pairTTArt = new Contract(pairAddressTTArt, JSON.stringify(FeSwapPair.abi), ethers.provider).connect(wallet)
+      const pairTAArt = new Contract(pairAddressTAArt, JSON.stringify(FeSwapPair.abi), ethers.provider).connect(wallet)
+
+      await factoryFeswa.createUpdatePair(WETH.address, arkreenRECToken.address, pairOwner.address, rateTriggerArbitrage, 0, overrides)
+      const [pairAddressEEArt, pairAddressEAArt] = await factoryFeswa.getPair(WETH.address, arkreenRECToken.address)
+      const pairEEArt = new Contract(pairAddressEEArt, JSON.stringify(FeSwapPair.abi), ethers.provider).connect(wallet)
+      const pairEAArt = new Contract(pairAddressEAArt, JSON.stringify(FeSwapPair.abi), ethers.provider).connect(wallet)
   
       await AKREToken.transfer(owner1.address, expandTo18Decimals(10000))
       await AKREToken.connect(owner1).approve(arkreenRECIssuance.address, expandTo18Decimals(10000))
+
       await AKREToken.transfer(maker1.address, expandTo18Decimals(10000))
       await AKREToken.connect(maker1).approve(arkreenRECIssuance.address, expandTo18Decimals(10000))
+      
       await AKREToken.connect(owner1).approve(arkreenMiner.address, expandTo18Decimals(10000))
       await AKREToken.connect(maker1).approve(arkreenMiner.address, expandTo18Decimals(10000))
+      
+      await WETHPartner.transfer(maker1.address, expandTo18Decimals(1000000))
+      await WETHPartner.transfer(owner1.address, expandTo18Decimals(1000000))
 
       const miners = randomAddresses(2)
       await arkreenMiner.connect(manager).VirtualMinerOnboardInBatch([owner1.address, maker1.address], miners)
@@ -233,22 +256,20 @@ describe("ArkreenRECToken", () => {
       await arkreenRegistry.setRECIssuance(arkreenRECIssuance.address)
       await arkreenRegistry.setArkreenRetirement(arkreenRetirement.address)
 
+      const ArkreenActionFactory = await ethers.getContractFactory("ArkreenAction");
+//    const arkreenAction = await ArkreenActionFactory.deploy(routerFeswa.address);
+      arkreenAction = await upgrades.deployProxy(ArkreenActionFactory,[routerFeswa.address]) as ArkreenAction
+      await arkreenAction.deployed();
+      await arkreenAction.approveRouter([WETHPartner.address])
+
       return {  tokenA,
-        tokenB,
-        WETH,
-        WETHPartner,
-        factoryFeswa,
-        routerFeswa,
-        routerEventEmitter,
-        pairAAB,
-        pairABB,
-        WETHPairTTE,
-        WETHPairTEE,
-        Feswa,
-        FeswaNFT,
-        tokenIDMatch,
-        MetamorphicFactory,
-        AKREToken, arkreenMiner, arkreenRegistry, arkreenRECIssuance, arkreenRECToken, arkreenRetirement}
+        tokenB, WETH, WETHPartner, factoryFeswa,
+        routerFeswa, routerEventEmitter, pairAAB, pairABB,
+        WETHPairTTE, WETHPairTEE, Feswa, FeswaNFT,
+        tokenIDMatch, MetamorphicFactory, 
+        pairTTArt, pairTAArt,  pairEEArt, pairEAArt,
+        AKREToken, arkreenMiner, arkreenRegistry, arkreenRECIssuance, 
+        arkreenRECToken, arkreenRetirement, arkreenAction }
     }
 
     beforeEach(async () => {
@@ -279,6 +300,11 @@ describe("ArkreenRECToken", () => {
         WETHPairTTE = fixture.WETHPairTTE
         WETHPairTEE = fixture.WETHPairTEE    
         routerEventEmitter = fixture.routerEventEmitter
+        pairTTArt = fixture.pairTTArt  
+        pairTAArt = fixture.pairTAArt  
+        pairEEArt = fixture.pairEEArt  
+        pairEAArt = fixture.pairEAArt  
+        arkreenAction = fixture.arkreenAction  
         
         const startTime = 1564888526
         const endTime   = 1654888526
@@ -317,6 +343,299 @@ describe("ArkreenRECToken", () => {
         expect(await arkreenRECToken.NAME()).to.equal("Arkreen REC Token");
         expect(await arkreenRECToken.SYMBOL()).to.equal("ART");
     });
+
+    describe( "Action Test: Buying ART with token", () => {
+
+      let tokenID: BigNumber
+
+      async function mintAREC(amountREC: number) {
+        const startTime = 1564888526
+        const endTime   = 1654888526
+  
+        let recMintRequest: RECRequestStruct = { 
+          issuer: manager.address, startTime, endTime,
+          amountREC: expandTo18Decimals(amountREC), 
+          cID: "bafybeihepmxz4ytc4ht67j73nzurkvsiuxhsmxk27utnopzptpo7wuigte",
+          region: 'Beijing',
+          url:"", memo:""
+        } 
+  
+        const mintFee = expandTo18Decimals(100)
+        const nonce1 = await AKREToken.nonces(owner1.address)
+        const digest1 = await getApprovalDigest(
+                                AKREToken,
+                                { owner: owner1.address, spender: arkreenRECIssuance.address, value: mintFee },
+                                nonce1,
+                                constants.MaxUint256
+                              )
+        const { v,r,s } = ecsign(Buffer.from(digest1.slice(2), 'hex'), Buffer.from(privateKeyOwner.slice(2), 'hex'))
+        const signature: SignatureStruct = { v, r, s, token: AKREToken.address, value:mintFee, deadline: constants.MaxUint256 } 
+        
+        await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
+        tokenID = await arkreenRECIssuance.totalSupply()
+  
+        await arkreenRECIssuance.connect(manager).certifyRECRequest(tokenID, "Serial12345678")
+        await arkreenRECIssuance.connect(owner1).liquidizeREC(tokenID)
+      }
+
+      async function mintARECMaker(amountREC: number) {
+        const startTime = 1564888526
+        const endTime   = 1654888526
+        
+        let recMintRequest: RECRequestStruct = { 
+          issuer: manager.address, startTime, endTime,
+          amountREC: expandTo18Decimals(amountREC), 
+          cID: "bafybeihepmxz4ytc4ht67j73nzurkvsiuxhsmxk27utnopzptpo7wuigte",
+          region: 'Beijing',
+          url:"", memo:""
+        } 
+  
+        const mintFee = expandTo18Decimals(100)
+        const nonce1 = await AKREToken.nonces(maker1.address)
+        const digest1 = await getApprovalDigest(
+                                AKREToken,
+                                { owner: maker1.address, spender: arkreenRECIssuance.address, value: mintFee },
+                                nonce1,
+                                constants.MaxUint256
+                              )
+        const { v,r,s } = ecsign(Buffer.from(digest1.slice(2), 'hex'), Buffer.from(privateKeyMaker.slice(2), 'hex'))
+        const signature: SignatureStruct = { v, r, s, token: AKREToken.address, value:mintFee, deadline: constants.MaxUint256 } 
+        
+        await arkreenRECIssuance.connect(maker1).mintRECRequest(recMintRequest, signature)
+        const tokenID = await arkreenRECIssuance.totalSupply()
+  
+        await arkreenRECIssuance.connect(manager).certifyRECRequest(tokenID, "Serial12345678")
+        await arkreenRECIssuance.connect(maker1).liquidizeREC(tokenID)
+      }
+
+      async function addLiquidityTTA(tokenTTAmount: BigNumber, tokenArtAmount: BigNumber, ratio: Number) {
+        await WETHPartner.connect(maker1).approve(router.address, constants.MaxUint256)
+        await arkreenRECToken.connect(maker1).approve(router.address, constants.MaxUint256)
+        await router.connect(maker1).addLiquidity(
+            {
+              tokenA:         WETHPartner.address,
+              tokenB:         arkreenRECToken.address,
+              amountADesired: tokenTTAmount,
+              amountBDesired: tokenArtAmount,
+              amountAMin:     0,
+              amountBMin:     0,
+              ratio:          ratio,
+            },
+            wallet.address,
+            constants.MaxUint256,
+            overrides
+          )
+      }
+
+      beforeEach(async () => {
+        // Mint
+        await arkreenRegistry.setArkreenMiner(arkreenMiner.address)
+        const price0:BigNumber = expandTo18Decimals(50)
+        await arkreenRECIssuance.updateARECMintPrice(AKREToken.address, price0)
+        await mintAREC(5000)        // 2 :  45      // 1:1000
+        await mintAREC(600)         // 3:   51
+        await mintAREC(8000)        // 4:  131
+        await mintAREC(900)         // 5
+        await mintAREC(1000)        // 6
+        await mintAREC(2000)        // 7
+        await mintAREC(9000)        // 8
+        await mintAREC(800)         // 9
+        await mintAREC(3000)        // 10:  298
+  
+        await mintAREC(5000)        // 11
+        await mintAREC(600)         // 12
+        await mintAREC(8000)        // 13
+        await mintAREC(500)         // 14
+        await mintAREC(1000)        // 15
+        await mintAREC(2000)        // 16:  469
+        await mintAREC(9000)        // 17:  559
+        await mintAREC(800)         // 18
+        await mintAREC(3000)        // 19： 597
+        await mintAREC(500)                   // 20:  602
+        await mintARECMaker(2000000)          // 21:  602        
+  
+      })
+
+      it("ActionOperatorWithPermit: Abnormal and Exact Payment Token", async () => {
+        await mintAREC(5000)          // 2
+
+        await arkreenRECToken.setClimateOperator(arkreenAction.address)
+  
+        const tokenTTAmount = expandTo18Decimals(10000)
+        const tokenArtAmount = expandTo9Decimals(1000000)
+        await addLiquidityTTA(tokenTTAmount, tokenArtAmount, 100)
+
+        const amountPay = expandTo18Decimals(10)
+        const amountART = expandTo9Decimals(0)
+        const badgeInfo =  {
+                  beneficiary:    owner1.address,
+                  offsetEntityID: 'Owner1',
+                  beneficiaryID:  'Tester',
+                  offsetMessage:  "Just Testing"
+                }
+
+        const nonce1 = await WETHPartner.nonces(owner1.address)
+        const digest1 = await getApprovalDigest( WETHPartner,
+                                { owner: owner1.address, spender: arkreenAction.address, value: amountPay },
+                                nonce1,
+                                constants.MaxUint256
+                              )
+        const { v,r,s } = ecsign(Buffer.from(digest1.slice(2), 'hex'), Buffer.from(privateKeyOwner.slice(2), 'hex'))
+        const permitToPay: SignatureStruct = { v, r, s, token: WETHPartner.address, value:amountPay, deadline: constants.MaxUint256 } 
+
+        // Abnormal Test
+        // Check value consistence
+        await expect(arkreenAction.connect(owner1).actionOperatorWithPermit( WETHPartner.address, arkreenRECToken.address,
+                            amountPay.sub(expandTo18Decimals(1)), amountART, true, badgeInfo, permitToPay ))
+                  .to.be.revertedWith("ACT: Wrong payment value")     
+
+        // Check signature
+        permitToPay.deadline = constants.MaxUint256.sub(1)
+        await expect(arkreenAction.connect(owner1).actionOperatorWithPermit( WETHPartner.address, arkreenRECToken.address,
+                            amountPay, amountART, true, badgeInfo, permitToPay ))
+                  .to.be.revertedWith("FeSwap: INVALID_SIGNATURE")  
+
+
+        // Normal transaction   
+        permitToPay.deadline = constants.MaxUint256   
+        const expectedOutputAmount  = amountPay.mul(tokenArtAmount).div(tokenTTAmount.add(amountPay))    
+        await expect(arkreenAction.connect(owner1).actionOperatorWithPermit( WETHPartner.address, arkreenRECToken.address,
+                            amountPay, amountART, true, badgeInfo, permitToPay))
+                            .to.emit(WETHPartner, 'Transfer')
+                            .withArgs(owner1.address, arkreenAction.address, amountPay)
+                            .to.emit(WETHPartner, 'Transfer')
+                            .withArgs(arkreenAction.address, pairTTArt.address, amountPay)
+                            .to.emit(arkreenRECToken, 'Transfer')
+                            .withArgs(pairTTArt.address, arkreenAction.address, expectedOutputAmount)
+                            .to.emit(pairTTArt, 'Sync')
+                            .withArgs(tokenTTAmount.add(amountPay), tokenArtAmount.sub(expectedOutputAmount))
+                            .to.emit(pairTTArt, 'Swap')
+                            .withArgs(router.address, amountPay, 0, expectedOutputAmount, arkreenAction.address)  
+                            .to.emit(arkreenRetirement, "OffsetCertificateMinted")
+                            .withArgs(1)           
+                            .to.emit(arkreenRetirement, "Locked")
+                            .withArgs(1)      
+
+        const actionID =1     
+        const lastBlock = await ethers.provider.getBlock('latest')     
+        
+        const tokenID = BigNumber.from(1)
+        const action = [  owner1.address, manager.address, expectedOutputAmount,    // Manger is the issuer address
+                          tokenID.add(MASK_OFFSET), lastBlock.timestamp, true ]     // Offset action is claimed
+        expect(await arkreenRetirement.getOffsetActions(actionID)).to.deep.equal(action)
+
+        const offsetRecord = [owner1.address, owner1.address, "Owner1", "Tester", "Just Testing", 
+                              BigNumber.from(lastBlock.timestamp), expectedOutputAmount, [actionID]]
+        const badgeID = 1                            
+        expect(await arkreenRetirement.getCertificate(badgeID)).to.deep.equal(offsetRecord)   
+      });      
+
+
+      it("ActionOperatorWithPermit: Exact ART Token", async () => {
+        await mintAREC(5000)          // 2
+
+        await arkreenRECToken.setClimateOperator(arkreenAction.address)
+  
+        const tokenTTAmount = expandTo18Decimals(10000)
+        const tokenArtAmount = expandTo9Decimals(1000000)
+        await addLiquidityTTA(tokenTTAmount, tokenArtAmount, 100)
+
+        const amountPay = expandTo18Decimals(20)
+        const amountART = expandTo9Decimals(1000)
+        const badgeInfo =  {
+                  beneficiary:    owner1.address,
+                  offsetEntityID: 'Owner1',
+                  beneficiaryID:  'Tester',
+                  offsetMessage:  "Just Testing"
+                }
+
+        const nonce1 = await WETHPartner.nonces(owner1.address)
+        const digest1 = await getApprovalDigest( WETHPartner,
+                                { owner: owner1.address, spender: arkreenAction.address, value: amountPay },
+                                nonce1,
+                                constants.MaxUint256
+                              )
+        const { v,r,s } = ecsign(Buffer.from(digest1.slice(2), 'hex'), Buffer.from(privateKeyOwner.slice(2), 'hex'))
+        const permitToPay: SignatureStruct = { v, r, s, token: WETHPartner.address, value:amountPay, deadline: constants.MaxUint256 } 
+
+        // Abnormal Test
+        // Check value consistence
+        await expect(arkreenAction.connect(owner1).actionOperatorWithPermit( WETHPartner.address, arkreenRECToken.address,
+                            amountPay.sub(expandTo18Decimals(1)), amountART, false, badgeInfo, permitToPay ))
+                  .to.be.revertedWith("ACT: Wrong payment value")     
+
+        // Check signature
+        permitToPay.deadline = constants.MaxUint256.sub(1)
+        await expect(arkreenAction.connect(owner1).actionOperatorWithPermit( WETHPartner.address, arkreenRECToken.address,
+                            amountPay, amountART, false, badgeInfo, permitToPay ))
+                  .to.be.revertedWith("FeSwap: INVALID_SIGNATURE")  
+
+
+        // Normal transaction   
+        permitToPay.deadline = constants.MaxUint256   
+        const expectedInputAmount  = amountART.mul(tokenTTAmount).div(tokenArtAmount.sub(amountART))  
+
+        await expect(arkreenAction.connect(owner1).actionOperatorWithPermit( WETHPartner.address, arkreenRECToken.address,
+                            amountPay, amountART, false, badgeInfo, permitToPay))
+                            .to.emit(WETHPartner, 'Transfer')
+                            .withArgs(owner1.address, arkreenAction.address, amountPay)
+                            .to.emit(WETHPartner, 'Transfer')
+                            .withArgs(arkreenAction.address, pairTTArt.address, expectedInputAmount)
+                            .to.emit(arkreenRECToken, 'Transfer')
+                            .withArgs(pairTTArt.address, arkreenAction.address, amountART)
+                            .to.emit(pairTTArt, 'Sync')
+                            .withArgs(tokenTTAmount.add(expectedInputAmount), tokenArtAmount.sub(amountART))
+                            .to.emit(pairTTArt, 'Swap')
+                            .withArgs(router.address, expectedInputAmount, 0, amountART, arkreenAction.address)  
+                            .to.emit(arkreenRetirement, "OffsetCertificateMinted")
+                            .withArgs(1)           
+                            .to.emit(arkreenRetirement, "Locked")
+                            .withArgs(1)      
+
+        const actionID =1     
+        const lastBlock = await ethers.provider.getBlock('latest')     
+        
+        const tokenID = BigNumber.from(1)
+        const action = [  owner1.address, manager.address, amountART,    // Manger is the issuer address
+                          tokenID.add(MASK_OFFSET), lastBlock.timestamp, true ]     // Offset action is claimed
+        expect(await arkreenRetirement.getOffsetActions(actionID)).to.deep.equal(action)
+
+        const offsetRecord = [owner1.address, owner1.address, "Owner1", "Tester", "Just Testing", 
+                              BigNumber.from(lastBlock.timestamp), amountART, [actionID]]
+        const badgeID = 1                            
+        expect(await arkreenRetirement.getCertificate(badgeID)).to.deep.equal(offsetRecord)   
+      });      
+
+      it("Offset Details: Normal check", async () => {
+        await mintAREC(5000)          // 22
+
+        const balance_1 = await arkreenRECToken.balanceOf(owner1.address)
+        await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(500))
+  
+        await expect(arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(1500)))
+                .to.emit(arkreenRECToken, "OffsetFinished")
+                .withArgs(owner1.address, expandTo18Decimals(1500), 2) 
+  
+        const balance_2 = await arkreenRECToken.balanceOf(owner1.address)
+        expect(balance_2).to.equal(balance_1.sub(expandTo18Decimals(2000)))
+  
+        expect(await arkreenRECToken.latestARECID()).to.equal(tokenID)      // tokenID is global 
+  
+        expect(await arkreenRECIssuance.balanceOf(arkreenRetirement.address)).to.equal(2)
+        expect(await arkreenRetirement.detailsCounter()).to.equal(1)
+  
+        const detail_0 = [1, expandTo18Decimals(500)]
+        const detail_1 = [2, expandTo18Decimals(1000)]
+  
+        expect(await arkreenRetirement.OffsetDetails(1,0)).to.deep.equal(detail_0)
+        expect(await arkreenRetirement.OffsetDetails(1,1)).to.deep.equal(detail_1)
+  
+        await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(1500))
+        await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(2500))
+
+      });            
+
+    })  
 
 
     describe( "FeSwap Swap Test", () => {
@@ -398,28 +717,6 @@ describe("ArkreenRECToken", () => {
             .to.emit(routerEventEmitter, 'Amounts')
             .withArgs([swapAmount, expectedOutputAmount])
         })
-
-        it('gas', async () => {
-          // ensure that setting price{0,1}CumulativeLast for the first time doesn't affect our gas math
-//        await mineBlock(provider, (await provider.getBlock('latest')).timestamp + 1)
-          await time.increaseTo((await ethers.provider.getBlock('latest')).timestamp + 1)
-          await pairAAB.sync(overrides)
-
-          await tokenA.approve(router.address, constants.MaxUint256)
-//        await mineBlock(provider, (await provider.getBlock('latest')).timestamp + 1)
-          await time.increaseTo((await ethers.provider.getBlock('latest')).timestamp + 1)
-          const tx = await router.swapExactTokensForTokens(
-            swapAmount,
-            0,
-            [tokenA.address, tokenB.address],
-            wallet.address,
-            constants.MaxUint256,
-            overrides
-          )
-          const receipt = await tx.wait()
-          expect(receipt.gasUsed).to.eq("94732")     // 92626 93268  92279 92330 92352 92373 105372 105560 106207 106174 106223 104547 192574 // 110796
-        })
-        
       })
 
       describe('swapTokensForExactTokens', () => {
@@ -477,21 +774,6 @@ describe("ArkreenRECToken", () => {
             .to.emit(routerEventEmitter, 'Amounts')
             .withArgs([expectedSwapAmount, outputAmount])
         })
-
-        it('gas', async () => {
-          await tokenA.approve(router.address, constants.MaxUint256)
-          const tx = await router.swapTokensForExactTokens(
-              outputAmount,
-              constants.MaxUint256,
-              [tokenA.address, tokenB.address],
-              wallet.address,
-              constants.MaxUint256,
-              overrides
-            )
-          const receipt = await tx.wait()
-          expect(receipt.gasUsed).to.eq("95686")     // 93847 92858 92909  92931 92952 135951 136095 136786 136775 136811 135091 192574 // 110796
-        })
-
       })
     })
 

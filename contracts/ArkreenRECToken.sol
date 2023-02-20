@@ -49,6 +49,7 @@ contract ArkreenRECToken is
 //    uint256 partialARECID;                                // AREC NFT ID partialy offset
 //    uint256 partialAvailableAmount;                       // Amount available for partial offset
     uint256 public triggerUpgradeAmount;                    // The amount to trigger solidify upgrade
+    address public climateOperator;
 
     // Events
     event OffsetFinished(address indexed offsetEntity, uint256 amount, uint256 offsetId);
@@ -92,7 +93,8 @@ contract ArkreenRECToken is
      * @dev Offset the RE token by burning the tokens
      */
     function commitOffset(uint256 amount) public virtual whenNotPaused returns (uint256 offsetActionId) {
-        offsetActionId = _offset(_msgSender(), amount);
+        address account = _msgSender();
+        offsetActionId = _offset(account, account, amount);
     }
 
     /**
@@ -102,13 +104,13 @@ contract ArkreenRECToken is
         external virtual whenNotPaused returns (uint256 offsetActionId) 
     {
         _spendAllowance(account, _msgSender(), amount);
-        offsetActionId = _offset(account, amount);
+        offsetActionId = _offset(account, account, amount);
     }
    
     /**
      * @dev Internal offset function of the RE token, the RE tokens are burned
      */
-    function _offset(address account, uint256 amount) internal virtual returns (uint256 offsetActionId) {
+    function _offset(address account, address owner, uint256 amount) internal virtual returns (uint256 offsetActionId) {
 
         if(totalOffset < triggerUpgradeAmount) {                                // To check whether triggering upgrade
             uint256 offsetAmount = triggerUpgradeAmount - totalOffset;
@@ -118,10 +120,10 @@ contract ArkreenRECToken is
 
             // Track total retirement amount in TCO2 factory
             address badgeContractU = IArkreenRegistry(arkreenRegistry).getArkreenRetirement();
-            offsetActionId = IArkreenBadge(badgeContractU).registerOffset(account, issuerREC, offsetAmount, 0);
+            offsetActionId = IArkreenBadge(badgeContractU).registerOffset(owner, issuerREC, offsetAmount, 0);
             totalOffset += offsetAmount;
 
-            emit OffsetFinished(account, offsetAmount, offsetActionId);
+            emit OffsetFinished(owner, offsetAmount, offsetActionId);
             if(amount == 0) {
                 return offsetActionId;
             }
@@ -179,10 +181,10 @@ contract ArkreenRECToken is
         amountOffset = (steps==0) ? amount: amountFilled;
         _burn(account, amountOffset);
 
-        offsetActionId = IArkreenBadge(badgeContract).registerOffset(account, issuerREC, amountOffset, FLAG_OFFSET+detailsCounter);
+        offsetActionId = IArkreenBadge(badgeContract).registerOffset(owner, issuerREC, amountOffset, FLAG_OFFSET+detailsCounter);
         totalOffset += amountOffset;
 
-        emit OffsetFinished(account, amountOffset, offsetActionId);
+        emit OffsetFinished(owner, amountOffset, offsetActionId);
     }
 
     /**
@@ -202,14 +204,15 @@ contract ArkreenRECToken is
     ) external virtual whenNotPaused {
         
         // Offset the specified amount
-        uint256 offsetActionId = commitOffset(amount);
+        address owner = _msgSender();
+        uint256 offsetActionId = _offset(msg.sender, owner, amount);     // maybe called from climate operator, so use msg.sender
         uint256[] memory offsetActionIds = new uint256[](1);
         offsetActionIds[0] = offsetActionId;
 
         // Issue the offset certificate NFT
         address badgeContract = IArkreenRegistry(arkreenRegistry).getArkreenRetirement();
         IArkreenBadge(badgeContract).mintCertificate(
-                        _msgSender(), beneficiary, offsetEntityID, beneficiaryID, offsetMessage, offsetActionIds);
+                        owner, beneficiary, offsetEntityID, beneficiaryID, offsetMessage, offsetActionIds);
     }
 
     /**
@@ -335,6 +338,15 @@ contract ArkreenRECToken is
         }
     }  
 
+    function _msgSender() internal override view returns (address signer) {
+        signer = msg.sender;
+        if (msg.data.length>=20 && (signer == climateOperator)) {
+            assembly {
+                signer := shr(96,calldataload(sub(calldatasize(),20)))
+            }
+        }    
+    }
+
     /**
      * @dev set the ratio of liquidization fee
      */     
@@ -361,5 +373,9 @@ contract ArkreenRECToken is
 
     function setTriggerAmount(uint256 amount) external onlyOwner {
         triggerUpgradeAmount = amount;
+    }
+
+    function setClimateOperator(address operator) external onlyOwner {
+        climateOperator = operator;
     }
 }
