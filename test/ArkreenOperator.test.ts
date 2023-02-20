@@ -487,7 +487,7 @@ describe("ArkreenOperator", () => {
 
         // Normal transaction
         const expectedOutputAmount  = amountPay.mul(tokenArtAmount).div(tokenETHAmount.add(amountPay))   
-        await expect(arkreenOperator.connect(owner1).actionOperatorNative(arkreenRECToken.address,
+        await expect(arkreenOperator.connect(owner1).actionOperatorBadgeNative(arkreenRECToken.address,
                             amountART, true, constants.MaxUint256 , badgeInfo, {value: amountPay}))
                             .to.emit(WETH, 'Deposit')
                             .withArgs(arkreenOperator.address, amountPay)
@@ -542,7 +542,7 @@ describe("ArkreenOperator", () => {
 
         const balanceBefore = await ethers.provider.getBalance(owner1.address)                                      
 
-        await expect(arkreenOperator.connect(owner1).actionOperatorNative(arkreenRECToken.address,
+        await expect(arkreenOperator.connect(owner1).actionOperatorBadgeNative(arkreenRECToken.address,
                             amountART, false, constants.MaxUint256, badgeInfo, {value: amountPay}))
                             .to.emit(WETH, 'Deposit')
                             .withArgs(arkreenOperator.address, amountPay)
@@ -601,13 +601,13 @@ describe("ArkreenOperator", () => {
         // Normal transaction   
         const expectedOutputAmount  = amountPay.mul(tokenArtAmount).div(tokenTTAmount.add(amountPay))   
 
-        await expect(arkreenOperator.connect(owner1).actionOperator( WETHPartner.address, arkreenRECToken.address,
+        await expect(arkreenOperator.connect(owner1).actionOperatorBadge( WETHPartner.address, arkreenRECToken.address,
                                               amountPay, amountART, true, constants.MaxUint256 , badgeInfo))   
                     .to.be.revertedWith("TransferHelper: TRANSFER_FROM_FAILED")     
 
         await WETHPartner.connect(owner1).approve(arkreenOperator.address, constants.MaxUint256)
 
-        await expect(arkreenOperator.connect(owner1).actionOperator( WETHPartner.address, arkreenRECToken.address,
+        await expect(arkreenOperator.connect(owner1).actionOperatorBadge( WETHPartner.address, arkreenRECToken.address,
                             amountPay, amountART, true, constants.MaxUint256 , badgeInfo))
                             .to.emit(WETHPartner, 'Transfer')
                             .withArgs(owner1.address, arkreenOperator.address, amountPay)
@@ -661,12 +661,12 @@ describe("ArkreenOperator", () => {
         const expectedInputAmount  = amountART.mul(tokenTTAmount).add(tokenArtAmount.sub(amountART))  // to solve the round problem
                                       .div(tokenArtAmount.sub(amountART))  
 
-        await expect(arkreenOperator.connect(owner1).actionOperator( WETHPartner.address, arkreenRECToken.address,
+        await expect(arkreenOperator.connect(owner1).actionOperatorBadge( WETHPartner.address, arkreenRECToken.address,
                                         amountPay, amountART, true, constants.MaxUint256 , badgeInfo))   
               .to.be.revertedWith("TransferHelper: TRANSFER_FROM_FAILED")     
 
         await WETHPartner.connect(owner1).approve(arkreenOperator.address, constants.MaxUint256)
-        await expect(arkreenOperator.connect(owner1).actionOperator( WETHPartner.address, arkreenRECToken.address,
+        await expect(arkreenOperator.connect(owner1).actionOperatorBadge( WETHPartner.address, arkreenRECToken.address,
                             amountPay, amountART, false, constants.MaxUint256, badgeInfo))
                             .to.emit(WETHPartner, 'Transfer')
                             .withArgs(owner1.address, arkreenOperator.address, amountPay)
@@ -728,13 +728,13 @@ describe("ArkreenOperator", () => {
 
         // Abnormal Test
         // Check value consistence
-        await expect(arkreenOperator.connect(owner1).actionOperatorWithPermit( WETHPartner.address, arkreenRECToken.address,
+        await expect(arkreenOperator.connect(owner1).actionOperatorBadgeWithPermit( WETHPartner.address, arkreenRECToken.address,
                             amountPay.sub(expandTo18Decimals(1)), amountART, true, badgeInfo, permitToPay ))
                   .to.be.revertedWith("ACT: Wrong payment value")     
 
         // Check signature
         permitToPay.deadline = constants.MaxUint256.sub(1)
-        await expect(arkreenOperator.connect(owner1).actionOperatorWithPermit( WETHPartner.address, arkreenRECToken.address,
+        await expect(arkreenOperator.connect(owner1).actionOperatorBadgeWithPermit( WETHPartner.address, arkreenRECToken.address,
                             amountPay, amountART, true, badgeInfo, permitToPay ))
                   .to.be.revertedWith("FeSwap: INVALID_SIGNATURE")  
 
@@ -742,7 +742,7 @@ describe("ArkreenOperator", () => {
         // Normal transaction   
         permitToPay.deadline = constants.MaxUint256   
         const expectedOutputAmount  = amountPay.mul(tokenArtAmount).div(tokenTTAmount.add(amountPay))    
-        await expect(arkreenOperator.connect(owner1).actionOperatorWithPermit( WETHPartner.address, arkreenRECToken.address,
+        await expect(arkreenOperator.connect(owner1).actionOperatorBadgeWithPermit( WETHPartner.address, arkreenRECToken.address,
                             amountPay, amountART, true, badgeInfo, permitToPay))
                             .to.emit(WETHPartner, 'Transfer')
                             .withArgs(owner1.address, arkreenOperator.address, amountPay)
@@ -803,13 +803,13 @@ describe("ArkreenOperator", () => {
 
         // Abnormal Test
         // Check value consistence
-        await expect(arkreenOperator.connect(owner1).actionOperatorWithPermit( WETHPartner.address, arkreenRECToken.address,
+        await expect(arkreenOperator.connect(owner1).actionOperatorBadgeWithPermit( WETHPartner.address, arkreenRECToken.address,
                             amountPay.sub(expandTo18Decimals(1)), amountART, false, badgeInfo, permitToPay ))
                   .to.be.revertedWith("ACT: Wrong payment value")     
 
         // Check signature
         permitToPay.deadline = constants.MaxUint256.sub(1)
-        await expect(arkreenOperator.connect(owner1).actionOperatorWithPermit( WETHPartner.address, arkreenRECToken.address,
+        await expect(arkreenOperator.connect(owner1).actionOperatorBadgeWithPermit( WETHPartner.address, arkreenRECToken.address,
                             amountPay, amountART, false, badgeInfo, permitToPay ))
                   .to.be.revertedWith("FeSwap: INVALID_SIGNATURE")  
 
@@ -818,7 +818,7 @@ describe("ArkreenOperator", () => {
         permitToPay.deadline = constants.MaxUint256   
         const expectedInputAmount  = amountART.mul(tokenTTAmount).add(tokenArtAmount.sub(amountART))  // to solve the round problem
                                       .div(tokenArtAmount.sub(amountART))  
-        await expect(arkreenOperator.connect(owner1).actionOperatorWithPermit( WETHPartner.address, arkreenRECToken.address,
+        await expect(arkreenOperator.connect(owner1).actionOperatorBadgeWithPermit( WETHPartner.address, arkreenRECToken.address,
                             amountPay, amountART, false, badgeInfo, permitToPay))
                             .to.emit(WETHPartner, 'Transfer')
                             .withArgs(owner1.address, arkreenOperator.address, amountPay)

@@ -77,7 +77,7 @@ contract ArkreenOperator is
      *                  = false, amountPay is the exact amount of the ART token to receive.
      * @param badgeInfo The information to be included for climate badge.
      */
-    function actionOperator(
+    function actionOperatorBadge(
         address             tokenPay,
         address             tokenART,
         uint256             amountPay,
@@ -89,7 +89,7 @@ contract ArkreenOperator is
 
         // Transfer payement 
         TransferHelper.safeTransferFrom(tokenPay, _msgSender(), address(this), amountPay);
-        _actionOperator (tokenPay, tokenART, amountPay, amountART, isExactPay, deadline, badgeInfo);
+        _actionOperatorBadge (tokenPay, tokenART, amountPay, amountART, isExactPay, deadline, badgeInfo);
     }
 
     /** 
@@ -103,7 +103,7 @@ contract ArkreenOperator is
      *                  = false, msg.value is the exact amount of the ART token to receive.
      * @param badgeInfo The information to be included for climate badge.
      */
-    function actionOperatorNative(
+    function actionOperatorBadgeNative(
         address             tokenART,
         uint256             amountART,
         bool                isExactPay,
@@ -113,10 +113,48 @@ contract ArkreenOperator is
 
         // Wrap MATIC to WMATIC  
         IWETH(tokenNative).deposit{value: msg.value}();
-        _actionOperator(tokenNative, tokenART, msg.value, amountART, isExactPay, deadline, badgeInfo);
+        _actionOperatorBadge(tokenNative, tokenART, msg.value, amountART, isExactPay, deadline, badgeInfo);
     }
 
-    function _actionOperator(
+   /** 
+     * @dev Buy the ART token, then offset the bought ART and mint a cliamte badge.
+     * @param tokenPay The address of the token to pay for the ART token.
+     * @param tokenART The address of the ART token. There may be serveral different ART tokens in AREC ecosystem.
+     * @param amountPay The amount of the payment token. 
+     *                  if isExactPay is true, amountPay should be same as the value in permitToPay.
+     *                  if isExactPay is false, amountPay means the maximum amount available to pay, if it not zero. 
+     * @param amountART The amount of the ART token.
+     *                  if isExactPay is true, amountART means the minumum ART token to receive, which may be zero for no checking.
+     *                  if isExactPay is false, amountART is the amount of ART token to receive.
+     * @param isExactPay Which amount is the exact amount
+     *                  = true, amountPay is the exact amount of the payment token to pay.
+     *                  = false, amountPay is the exact amount of the ART token to receive.
+     * @param badgeInfo The information to be included for climate badge.
+     * @param permitToPay The permit information to approve the payment token to swap for ART token 
+     */
+    function actionOperatorBadgeWithPermit(
+        address             tokenPay,
+        address             tokenART,
+        uint256             amountPay,
+        uint256             amountART,
+        bool                isExactPay,
+        BadgeInfo calldata  badgeInfo,
+        Signature calldata  permitToPay
+    ) external  {               // Deadline will be checked by router, no need to check here. //ensure(permitToPay.deadline)
+
+        require(amountPay == permitToPay.value, "ACT: Wrong payment value");
+
+        // Permit payment token
+        address payer = _msgSender();
+        IERC20Permit(permitToPay.token).permit(payer, address(this), 
+                        permitToPay.value, permitToPay.deadline, permitToPay.v, permitToPay.r, permitToPay.s);
+
+        // Transfer payement 
+        TransferHelper.safeTransferFrom(permitToPay.token, payer, address(this), permitToPay.value);
+        _actionOperatorBadge(tokenPay, tokenART, amountPay, amountART, isExactPay, permitToPay.deadline, badgeInfo);
+    }
+
+    function _actionOperatorBadge(
         address             tokenPay,
         address             tokenART,
         uint256             amountPay,
@@ -173,81 +211,7 @@ contract ArkreenOperator is
         }
     }
 
-    /** 
-     * @dev Buy the ART token, then offset the bought ART and mint a cliamte badge.
-     * @param tokenPay The address of the token to pay for the ART token.
-     * @param tokenART The address of the ART token. There may be serveral different ART tokens in AREC ecosystem.
-     * @param amountPay The amount of the payment token. 
-     *                  if isExactPay is true, amountPay should be same as the value in permitToPay.
-     *                  if isExactPay is false, amountPay means the maximum amount available to pay, if it not zero. 
-     * @param amountART The amount of the ART token.
-     *                  if isExactPay is true, amountART means the minumum ART token to receive, which may be zero for no checking.
-     *                  if isExactPay is false, amountART is the amount of ART token to receive.
-     * @param isExactPay Which amount is the exact amount
-     *                  = true, amountPay is the exact amount of the payment token to pay.
-     *                  = false, amountPay is the exact amount of the ART token to receive.
-     * @param badgeInfo The information to be included for climate badge.
-     * @param permitToPay The permit information to approve the payment token to swap for ART token 
-     */
-    function actionOperatorWithPermit(
-        address             tokenPay,
-        address             tokenART,
-        uint256             amountPay,
-        uint256             amountART,
-        bool                isExactPay,
-        BadgeInfo calldata  badgeInfo,
-        Signature calldata  permitToPay
-    ) external  {               // Deadline will be checked by router, no need to check here. //ensure(permitToPay.deadline)
-
-        require(amountPay == permitToPay.value, "ACT: Wrong payment value");
-
-        // Permit payment token
-        address payer = _msgSender();
-        IERC20Permit(permitToPay.token).permit(payer, address(this), 
-                        permitToPay.value, permitToPay.deadline, permitToPay.v, permitToPay.r, permitToPay.s);
-
-        // Transfer payement 
-        TransferHelper.safeTransferFrom(permitToPay.token, payer, address(this), permitToPay.value);
-        _actionOperator (tokenPay, tokenART, amountPay, amountART, isExactPay, permitToPay.deadline, badgeInfo);
-
-/*
-        address[] memory swapPath = new address[](2);
-        swapPath[0] = tokenPay;
-        swapPath[1] = tokenART;
-
-        uint256 amountOffset;
-        if(isExactPay) {
-            IFeSwapRouter(routerSwap).swapExactTokensForTokens(amountPay, amountART, swapPath, address(this), permitToPay.deadline);
-            amountOffset = IERC20(tokenART).balanceOf(address(this));
-        } else {
-            IFeSwapRouter(routerSwap).swapTokensForExactTokens(amountART, amountPay, swapPath, address(this), permitToPay.deadline);
-            amountOffset = amountART;
-        }
-
-        // offsetAndMintCertificate(address beneficiary,string offsetEntityID,string beneficiaryID,string offsetMessage,uint256 amount)
-        // offsetAndMintCertificate(address,string,string,string,uint256): signature = 0x0fba6a8d
-        bytes memory callData = abi.encodeWithSelector(0x0fba6a8d, badgeInfo.beneficiary, badgeInfo.offsetEntityID, 
-                                            badgeInfo.beneficiaryID, badgeInfo.offsetMessage, amountOffset);
-
-        (bool success, bytes memory returndata) = tokenART.call(abi.encodePacked(callData, payer));
-
-        if (!success) {
-            if (returndata.length > 0) {
-                // solhint-disable-next-line no-inline-assembly
-                assembly {
-                    let returndata_size := mload(returndata)
-                    revert(add(32, returndata), returndata_size)
-                }
-            } else {
-                revert("ACT: Error Call to offsetAndMintCertificate");
-            }
-        }
-  
-        uint256 amountPayLeft = IERC20(tokenART).balanceOf(address(this));
-        if(amountPayLeft > 0) TransferHelper.safeTransfer(tokenPay, payer, amountPayLeft);
-*/
-    }
-
+ 
     function approveRouter(address[] memory tokens) external onlyOwner {
         require(routerSwap != address(0), "ACT: No Router");
         for(uint256 i = 0; i < tokens.length; i++) {
