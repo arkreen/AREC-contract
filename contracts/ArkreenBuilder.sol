@@ -6,7 +6,7 @@ import '@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
 
-import './ArkreenOperatorStorage.sol';
+import './ArkreenBuilderStorage.sol';
 import "./interfaces/IPausable.sol";
 
 import "./libraries/TransferHelper.sol";
@@ -14,17 +14,17 @@ import "./interfaces/IERC20.sol";
 import "./interfaces/IWETH.sol";
 
 import "./interfaces/IERC20Permit.sol";
-import "./ArkreenOperatorTypes.sol";
+import "./ArkreenBuilderTypes.sol";
 import "./interfaces/IFeSwapRouter.sol";
 import "./interfaces/IArkreenRECToken.sol";
 
 // Import this file to use console.log
-import "hardhat/console.sol";
+// import "hardhat/console.sol";
 
-contract ArkreenOperator is
+contract ArkreenBuilder is
     OwnableUpgradeable,
     UUPSUpgradeable,
-    ArkreenOperatorStorage
+    ArkreenBuilderStorage
 {
     using AddressUpgradeable for address;
 
@@ -32,7 +32,6 @@ contract ArkreenOperator is
     string public constant NAME = 'Arkreen Climate Actor';
 
     // Events
-
 
     // Modifiers
     modifier ensure(uint deadline) {
@@ -60,7 +59,84 @@ contract ArkreenOperator is
 
     receive() external payable {
         assert(msg.sender == tokenNative); // only accept WMATIC via fallback from the WMATIC contract
-    }    
+    }  
+
+    /** 
+     * @dev Buy the ART token with specified token, then offset the bought ART to create a climate action.
+     * @param tokenPay The address of the token to pay for the ART token.
+     * @param tokenART The address of the ART token. There may be serveral different ART tokens in AREC ecosystem.
+     * @param amountPay The amount of the payment token. 
+     *                  if isExactPay is true, amountPay should be paid to swap tokenART.
+     *                  if isExactPay is false, amountPay means the maximum amount to pay. 
+     * @param amountART The amount of the ART token.
+     *                  if isExactPay is true, amountART means the minumum ART token to receive, which may be zero for no checking.
+     *                  if isExactPay is false, amountART is the amount of ART token to receive.
+     * @param isExactPay Which amount is the exact amount
+     *                  = true, amountPay is the exact amount of the payment token to pay.
+     *                  = false, amountART is the exact amount of the ART token to receive.
+     */
+    function actionBuilder(
+        address             tokenPay,
+        address             tokenART,
+        uint256             amountPay,
+        uint256             amountART,
+        bool                isExactPay,
+        uint256             deadline
+    ) external {               // Deadline will be checked by router, no need to check here. //ensure(permitToPay.deadline)
+
+        // Transfer payement 
+        TransferHelper.safeTransferFrom(tokenPay, _msgSender(), address(this), amountPay);
+        _actionBuilder (tokenPay, tokenART, amountPay, amountART, isExactPay, deadline);
+    }
+
+    /** 
+     * @dev Buy the ART token with Native token, then offset the bought ART.
+     * @param tokenART The address of the ART token. There may be serveral different ART tokens in the AREC ecosystem.
+     * @param amountART The amount of the ART token.
+     *                  if isExactPay is true, amountART means the minumum ART token to receive, which may be zero for no checking.
+     *                  if isExactPay is false, amountART is the amount of ART token to receive.
+     * @param isExactPay Which amount is the exact amount
+     *                  = true,  msg.value is the exact amount of the payment token to pay.
+     *                  = false, amountART is the exact amount of the ART token to receive.
+     */
+    function actionBuilderNative(
+        address             tokenART,
+        uint256             amountART,
+        bool                isExactPay,
+        uint256             deadline
+    ) external payable {               // Deadline will be checked by router, no need to check here.
+
+        // Wrap MATIC to WMATIC  
+        IWETH(tokenNative).deposit{value: msg.value}();
+        _actionBuilder(tokenNative, tokenART, msg.value, amountART, isExactPay, deadline);
+    }   
+
+   /** 
+     * @dev Buy the ART token with specified token, then offset the bought ART.
+     * @param tokenART The address of the ART token. There may be serveral different ART tokens in AREC ecosystem.
+     * @param amountART The amount of the ART token.
+     *                  if isExactPay is true, amountART means the minumum ART token to receive, which may be zero for no checking.
+     *                  if isExactPay is false, amountART is the amount of ART token to receive.
+     * @param isExactPay Which amount is the exact amount
+     *                  = true, amountPay is the exact amount of the payment token to pay.
+     *                  = false, tokenART is the exact amount of the ART token to receive.
+     * @param permitToPay The permit information to approve the payment token to swap for ART token 
+     */
+    function actionBuilderWithPermit(
+        address             tokenART,
+        uint256             amountART,
+        bool                isExactPay,
+        Signature calldata  permitToPay
+    ) external  {                       // Deadline will be checked by router, no need to check here.
+        // Permit payment token
+        address payer = _msgSender();
+        IERC20Permit(permitToPay.token).permit(payer, address(this), 
+                        permitToPay.value, permitToPay.deadline, permitToPay.v, permitToPay.r, permitToPay.s);
+
+        // Transfer payement 
+        TransferHelper.safeTransferFrom(permitToPay.token, payer, address(this), permitToPay.value);
+        _actionBuilder(permitToPay.token, tokenART, permitToPay.value, amountART, isExactPay, permitToPay.deadline);
+    }
 
     /** 
      * @dev Buy the ART token, then offset the bought ART and mint a cliamte badge.
@@ -74,10 +150,10 @@ contract ArkreenOperator is
      *                  if isExactPay is false, amountART is the amount of ART token to receive.
      * @param isExactPay Which amount is the exact amount
      *                  = true, amountPay is the exact amount of the payment token to pay.
-     *                  = false, amountPay is the exact amount of the ART token to receive.
+     *                  = false, amountART is the exact amount of the ART token to receive.
      * @param badgeInfo The information to be included for climate badge.
      */
-    function actionOperatorBadge(
+    function actionBuilderBadge(
         address             tokenPay,
         address             tokenART,
         uint256             amountPay,
@@ -89,7 +165,7 @@ contract ArkreenOperator is
 
         // Transfer payement 
         TransferHelper.safeTransferFrom(tokenPay, _msgSender(), address(this), amountPay);
-        _actionOperatorBadge (tokenPay, tokenART, amountPay, amountART, isExactPay, deadline, badgeInfo);
+        _actionBuilderBadge (tokenPay, tokenART, amountPay, amountART, isExactPay, deadline, badgeInfo);
     }
 
     /** 
@@ -100,10 +176,10 @@ contract ArkreenOperator is
      *                  if isExactPay is false, amountART is the amount of ART token to receive.
      * @param isExactPay Which amount is the exact amount
      *                  = true,  msg.value is the exact amount of the payment token to pay.
-     *                  = false, msg.value is the exact amount of the ART token to receive.
+     *                  = false, amountART is the exact amount of the ART token to receive.
      * @param badgeInfo The information to be included for climate badge.
      */
-    function actionOperatorBadgeNative(
+    function actionBuilderBadgeNative(
         address             tokenART,
         uint256             amountART,
         bool                isExactPay,
@@ -113,36 +189,28 @@ contract ArkreenOperator is
 
         // Wrap MATIC to WMATIC  
         IWETH(tokenNative).deposit{value: msg.value}();
-        _actionOperatorBadge(tokenNative, tokenART, msg.value, amountART, isExactPay, deadline, badgeInfo);
+        _actionBuilderBadge(tokenNative, tokenART, msg.value, amountART, isExactPay, deadline, badgeInfo);
     }
 
    /** 
      * @dev Buy the ART token, then offset the bought ART and mint a cliamte badge.
-     * @param tokenPay The address of the token to pay for the ART token.
      * @param tokenART The address of the ART token. There may be serveral different ART tokens in AREC ecosystem.
-     * @param amountPay The amount of the payment token. 
-     *                  if isExactPay is true, amountPay should be same as the value in permitToPay.
-     *                  if isExactPay is false, amountPay means the maximum amount available to pay, if it not zero. 
      * @param amountART The amount of the ART token.
      *                  if isExactPay is true, amountART means the minumum ART token to receive, which may be zero for no checking.
      *                  if isExactPay is false, amountART is the amount of ART token to receive.
      * @param isExactPay Which amount is the exact amount
      *                  = true, amountPay is the exact amount of the payment token to pay.
-     *                  = false, amountPay is the exact amount of the ART token to receive.
+     *                  = false, tokenART is the exact amount of the ART token to receive.
      * @param badgeInfo The information to be included for climate badge.
      * @param permitToPay The permit information to approve the payment token to swap for ART token 
      */
-    function actionOperatorBadgeWithPermit(
-        address             tokenPay,
+    function actionBuilderBadgeWithPermit(
         address             tokenART,
-        uint256             amountPay,
         uint256             amountART,
         bool                isExactPay,
         BadgeInfo calldata  badgeInfo,
         Signature calldata  permitToPay
     ) external  {               // Deadline will be checked by router, no need to check here. //ensure(permitToPay.deadline)
-
-        require(amountPay == permitToPay.value, "ACT: Wrong payment value");
 
         // Permit payment token
         address payer = _msgSender();
@@ -151,10 +219,64 @@ contract ArkreenOperator is
 
         // Transfer payement 
         TransferHelper.safeTransferFrom(permitToPay.token, payer, address(this), permitToPay.value);
-        _actionOperatorBadge(tokenPay, tokenART, amountPay, amountART, isExactPay, permitToPay.deadline, badgeInfo);
+        _actionBuilderBadge(permitToPay.token, tokenART, permitToPay.value, amountART, isExactPay, permitToPay.deadline, badgeInfo);
     }
 
-    function _actionOperatorBadge(
+    function _actionBuilder(
+        address             tokenPay,
+        address             tokenART,
+        uint256             amountPay,
+        uint256             amountART,
+        bool                isExactPay,
+        uint256             deadline
+    ) internal {
+
+        address[] memory swapPath = new address[](2);
+        swapPath[0] = tokenPay;
+        swapPath[1] = tokenART;
+
+        uint256 amountOffset;
+        if(isExactPay) {
+            IFeSwapRouter(routerSwap).swapExactTokensForTokens(amountPay, amountART, swapPath, address(this), deadline);
+            amountOffset = IERC20(tokenART).balanceOf(address(this));
+        } else {
+            IFeSwapRouter(routerSwap).swapTokensForExactTokens(amountART, amountPay, swapPath, address(this), deadline);
+            amountOffset = amountART;
+        }
+
+        // commitOffset(uint256 amount): 0xe8fef571
+        bytes memory callData = abi.encodeWithSelector(0xe8fef571, amountOffset);
+
+        address payer = _msgSender();
+        (bool success, bytes memory returndata) = tokenART.call(abi.encodePacked(callData, payer));
+
+        if (!success) {
+            if (returndata.length > 0) {
+                // solhint-disable-next-line no-inline-assembly
+                assembly {
+                    let returndata_size := mload(returndata)
+                    revert(add(32, returndata), returndata_size)
+                }
+            } else {
+                revert("ACT: Error Call to commitOffset");
+            }
+        }
+  
+        // Repay more payment back  
+        if(!isExactPay) {
+            uint256 amountPayLeft = IERC20(tokenPay).balanceOf(address(this));
+            if(amountPayLeft > 0) {
+                if(tokenPay == tokenNative) {
+                    IWETH(tokenNative).withdraw(amountPayLeft);
+                    TransferHelper.safeTransferETH(payer, amountPayLeft);               
+                } else {
+                    TransferHelper.safeTransfer(tokenPay, payer, amountPayLeft);
+                }
+            }
+        }
+    }
+
+    function _actionBuilderBadge(
         address             tokenPay,
         address             tokenART,
         uint256             amountPay,
@@ -210,7 +332,6 @@ contract ArkreenOperator is
             }
         }
     }
-
  
     function approveRouter(address[] memory tokens) external onlyOwner {
         require(routerSwap != address(0), "ACT: No Router");

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import "./ArkreenOperatorTypes.sol";  
+import "./ArkreenBuilderTypes.sol";  
 
-abstract contract ArkreenOperatorStorage {
+abstract contract ArkreenBuilderStorage {
 
     address public routerSwap;            // Address of the DEX router
     address public tokenNative;           // The wrapped token of the Native token, such as WETH, WMATIC

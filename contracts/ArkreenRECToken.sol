@@ -49,7 +49,7 @@ contract ArkreenRECToken is
 //    uint256 partialARECID;                                // AREC NFT ID partialy offset
 //    uint256 partialAvailableAmount;                       // Amount available for partial offset
     uint256 public triggerUpgradeAmount;                    // The amount to trigger solidify upgrade
-    address public climateOperator;
+    address public climateBuilder;
 
     // Events
     event OffsetFinished(address indexed offsetEntity, uint256 amount, uint256 offsetId);
@@ -93,8 +93,8 @@ contract ArkreenRECToken is
      * @dev Offset the RE token by burning the tokens
      */
     function commitOffset(uint256 amount) public virtual whenNotPaused returns (uint256 offsetActionId) {
-        address account = _msgSender();
-        offsetActionId = _offset(account, account, amount);
+//        address account = _msgSender();
+        offsetActionId = _offset(msg.sender, _msgSender(), amount);
     }
 
     /**
@@ -340,7 +340,7 @@ contract ArkreenRECToken is
 
     function _msgSender() internal override view returns (address signer) {
         signer = msg.sender;
-        if (msg.data.length>=20 && (signer == climateOperator)) {
+        if (msg.data.length>=20 && (signer == climateBuilder)) {
             assembly {
                 signer := shr(96,calldataload(sub(calldatasize(),20)))
             }
@@ -375,7 +375,7 @@ contract ArkreenRECToken is
         triggerUpgradeAmount = amount;
     }
 
-    function setClimateOperator(address operator) external onlyOwner {
-        climateOperator = operator;
+    function setClimateBuilder(address builder) external onlyOwner {
+        climateBuilder = builder;
     }
 }
