@@ -480,7 +480,9 @@ describe("ArkreenBuilder", () => {
         const amountART = expandTo9Decimals(0)
 
         // Normal transaction   
-        const expectedOutputAmount  = amountPay.mul(tokenArtAmount).div(tokenTTAmount.add(amountPay))   
+        const expectedOutputAmount  = amountPay.mul(tokenArtAmount).div(tokenTTAmount.add(amountPay))  
+        
+        const ARECBefore = await arkreenRECToken.balanceOf(owner1.address)
 
         await expect(arkreenBuilder.connect(owner1).actionBuilder( WETHPartner.address, arkreenRECToken.address,
                                               amountPay, amountART, true, constants.MaxUint256))   
@@ -510,6 +512,7 @@ describe("ArkreenBuilder", () => {
         const action = [  owner1.address, manager.address, expectedOutputAmount,    // Manger is the issuer address
                           tokenID.add(MASK_OFFSET), lastBlock.timestamp, false ]     // Offset action is claimed
         expect(await arkreenRetirement.getOffsetActions(actionID)).to.deep.equal(action)
+        expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(ARECBefore)
 
       });      
 
@@ -529,6 +532,7 @@ describe("ArkreenBuilder", () => {
         const expectedInputAmount  = amountART.mul(tokenTTAmount).add(tokenArtAmount.sub(amountART))  // to solve the round problem
                                       .div(tokenArtAmount.sub(amountART))  
 
+        const ARECBefore = await arkreenRECToken.balanceOf(owner1.address)                                      
         await expect(arkreenBuilder.connect(owner1).actionBuilder( WETHPartner.address, arkreenRECToken.address,
                                         amountPay, amountART, true, constants.MaxUint256 ))   
               .to.be.revertedWith("TransferHelper: TRANSFER_FROM_FAILED")     
@@ -558,6 +562,7 @@ describe("ArkreenBuilder", () => {
         const action = [  owner1.address, manager.address, amountART,    // Manger is the issuer address
                           tokenID.add(MASK_OFFSET), lastBlock.timestamp, false ]     // Offset action is claimed
         expect(await arkreenRetirement.getOffsetActions(actionID)).to.deep.equal(action)
+        expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(ARECBefore)
       });      
 
       it("ActionBuilderNative: Exact Payment MATIC", async () => {
@@ -573,6 +578,7 @@ describe("ArkreenBuilder", () => {
         const amountART = expandTo9Decimals(0)
 
         // Normal transaction
+        const ARECBefore = await arkreenRECToken.balanceOf(owner1.address)                                      
         const expectedOutputAmount  = amountPay.mul(tokenArtAmount).div(tokenETHAmount.add(amountPay))   
         await expect(arkreenBuilder.connect(owner1).actionBuilderNative(arkreenRECToken.address,
                             amountART, true, constants.MaxUint256, {value: amountPay}))
@@ -596,6 +602,7 @@ describe("ArkreenBuilder", () => {
         const action = [  owner1.address, manager.address, expectedOutputAmount,    // Manger is the issuer address
                           tokenID.add(MASK_OFFSET), lastBlock.timestamp, false ]     // Offset action is claimed
         expect(await arkreenRetirement.getOffsetActions(actionID)).to.deep.equal(action)
+        expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(ARECBefore)
 
       });    
   
@@ -612,9 +619,9 @@ describe("ArkreenBuilder", () => {
         const amountART = expandTo9Decimals(1000)
 
         // Normal transaction   
+        const ARECBefore = await arkreenRECToken.balanceOf(owner1.address)                                      
         const expectedInputAmount  = amountART.mul(tokenETHAmount).add(tokenArtAmount.sub(amountART))  // to solve the round problem
                                       .div(tokenArtAmount.sub(amountART))  
-
         const balanceBefore = await ethers.provider.getBalance(owner1.address)                                      
 
         await expect(arkreenBuilder.connect(owner1).actionBuilderNative(arkreenRECToken.address,
@@ -645,6 +652,7 @@ describe("ArkreenBuilder", () => {
         const balanceAfter = await ethers.provider.getBalance(owner1.address)  
         expect(balanceAfter).to.gt(balanceBefore.sub(amountPay))                // Pay back
         expect(balanceAfter).to.lt(balanceBefore.sub(expectedInputAmount))      // Some gas fee
+        expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(ARECBefore)
 
       });      
 
@@ -677,6 +685,7 @@ describe("ArkreenBuilder", () => {
 
         // Normal transaction   
         permitToPay.deadline = constants.MaxUint256   
+        const ARECBefore = await arkreenRECToken.balanceOf(owner1.address)                                      
         const expectedOutputAmount  = amountPay.mul(tokenArtAmount).div(tokenTTAmount.add(amountPay))    
         await expect(arkreenBuilder.connect(owner1).actionBuilderWithPermit( arkreenRECToken.address, amountART, true, permitToPay))
                             .to.emit(WETHPartner, 'Transfer')
@@ -699,6 +708,7 @@ describe("ArkreenBuilder", () => {
         const action = [  owner1.address, manager.address, expectedOutputAmount,    // Manger is the issuer address
                           tokenID.add(MASK_OFFSET), lastBlock.timestamp, false ]     // Offset action is claimed
         expect(await arkreenRetirement.getOffsetActions(actionID)).to.deep.equal(action)
+        expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(ARECBefore)
       });      
 
       it("ActionBuilderWithPermit: Exact ART Token", async () => {
@@ -732,6 +742,7 @@ describe("ArkreenBuilder", () => {
         permitToPay.deadline = constants.MaxUint256   
         const expectedInputAmount  = amountART.mul(tokenTTAmount).add(tokenArtAmount.sub(amountART))  // to solve the round problem
                                       .div(tokenArtAmount.sub(amountART))  
+        const ARECBefore = await arkreenRECToken.balanceOf(owner1.address)                                      
         await expect(arkreenBuilder.connect(owner1).actionBuilderWithPermit( arkreenRECToken.address, amountART, false, permitToPay))
                             .to.emit(WETHPartner, 'Transfer')
                             .withArgs(owner1.address, arkreenBuilder.address, amountPay)
@@ -755,6 +766,7 @@ describe("ArkreenBuilder", () => {
         const action = [  owner1.address, manager.address, amountART,    // Manger is the issuer address
                           tokenID.add(MASK_OFFSET), lastBlock.timestamp, false ]     // Offset action is claimed
         expect(await arkreenRetirement.getOffsetActions(actionID)).to.deep.equal(action)
+        expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(ARECBefore)
       });      
 
       ///////////////////////////////////////////
@@ -778,6 +790,7 @@ describe("ArkreenBuilder", () => {
                 }
 
         // Normal transaction
+        const ARECBefore = await arkreenRECToken.balanceOf(owner1.address)                                      
         const expectedOutputAmount  = amountPay.mul(tokenArtAmount).div(tokenETHAmount.add(amountPay))   
         await expect(arkreenBuilder.connect(owner1).actionBuilderBadgeNative(arkreenRECToken.address,
                             amountART, true, constants.MaxUint256 , badgeInfo, {value: amountPay}))
@@ -808,6 +821,7 @@ describe("ArkreenBuilder", () => {
                               BigNumber.from(lastBlock.timestamp), expectedOutputAmount, [actionID]]
         const badgeID = 1                            
         expect(await arkreenRetirement.getCertificate(badgeID)).to.deep.equal(offsetRecord)   
+        expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(ARECBefore)
       });    
   
       it("ActionBuilderBadgeNative: Exact ART Token", async () => {
@@ -833,7 +847,7 @@ describe("ArkreenBuilder", () => {
                                       .div(tokenArtAmount.sub(amountART))  
 
         const balanceBefore = await ethers.provider.getBalance(owner1.address)                                      
-
+        const ARECBefore = await arkreenRECToken.balanceOf(owner1.address)                                      
         await expect(arkreenBuilder.connect(owner1).actionBuilderBadgeNative(arkreenRECToken.address,
                             amountART, false, constants.MaxUint256, badgeInfo, {value: amountPay}))
                             .to.emit(WETH, 'Deposit')
@@ -869,7 +883,7 @@ describe("ArkreenBuilder", () => {
         const balanceAfter = await ethers.provider.getBalance(owner1.address)  
         expect(balanceAfter).to.gt(balanceBefore.sub(amountPay))                // Pay back
         expect(balanceAfter).to.lt(balanceBefore.sub(expectedInputAmount))      // Some gas fee
-
+        expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(ARECBefore)
       });      
 
       it("ActionBuilderBadge: Exact Payment Token", async () => {
@@ -898,7 +912,7 @@ describe("ArkreenBuilder", () => {
                     .to.be.revertedWith("TransferHelper: TRANSFER_FROM_FAILED")     
 
         await WETHPartner.connect(owner1).approve(arkreenBuilder.address, constants.MaxUint256)
-
+        const ARECBefore = await arkreenRECToken.balanceOf(owner1.address)                                      
         await expect(arkreenBuilder.connect(owner1).actionBuilderBadge( WETHPartner.address, arkreenRECToken.address,
                             amountPay, amountART, true, constants.MaxUint256 , badgeInfo))
                             .to.emit(WETHPartner, 'Transfer')
@@ -929,6 +943,7 @@ describe("ArkreenBuilder", () => {
                               BigNumber.from(lastBlock.timestamp), expectedOutputAmount, [actionID]]
         const badgeID = 1                            
         expect(await arkreenRetirement.getCertificate(badgeID)).to.deep.equal(offsetRecord)   
+        expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(ARECBefore)
       });      
 
       it("ActionBuilderBadge: Exact ART Token", async () => {
@@ -957,6 +972,7 @@ describe("ArkreenBuilder", () => {
                                         amountPay, amountART, true, constants.MaxUint256 , badgeInfo))   
               .to.be.revertedWith("TransferHelper: TRANSFER_FROM_FAILED")     
 
+        const ARECBefore = await arkreenRECToken.balanceOf(owner1.address)                                      
         await WETHPartner.connect(owner1).approve(arkreenBuilder.address, constants.MaxUint256)
         await expect(arkreenBuilder.connect(owner1).actionBuilderBadge( WETHPartner.address, arkreenRECToken.address,
                             amountPay, amountART, false, constants.MaxUint256, badgeInfo))
@@ -988,7 +1004,8 @@ describe("ArkreenBuilder", () => {
         const offsetRecord = [owner1.address, owner1.address, "Owner1", "Tester", "Just Testing", 
                               BigNumber.from(lastBlock.timestamp), amountART, [actionID]]
         const badgeID = 1                            
-        expect(await arkreenRetirement.getCertificate(badgeID)).to.deep.equal(offsetRecord)   
+        expect(await arkreenRetirement.getCertificate(badgeID)).to.deep.equal(offsetRecord)
+        expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(ARECBefore)   
       });      
 
       it("ActionBuilderBadgeWithPermit: Abnormal and Exact Payment Token", async () => {
@@ -1028,6 +1045,7 @@ describe("ArkreenBuilder", () => {
 
         // Normal transaction   
         permitToPay.deadline = constants.MaxUint256   
+        const ARECBefore = await arkreenRECToken.balanceOf(owner1.address)                                      
         const expectedOutputAmount  = amountPay.mul(tokenArtAmount).div(tokenTTAmount.add(amountPay))    
         await expect(arkreenBuilder.connect(owner1).actionBuilderBadgeWithPermit( arkreenRECToken.address,
                             amountART, true, badgeInfo, permitToPay))
@@ -1057,7 +1075,8 @@ describe("ArkreenBuilder", () => {
         const offsetRecord = [owner1.address, owner1.address, "Owner1", "Tester", "Just Testing", 
                               BigNumber.from(lastBlock.timestamp), expectedOutputAmount, [actionID]]
         const badgeID = 1                            
-        expect(await arkreenRetirement.getCertificate(badgeID)).to.deep.equal(offsetRecord)   
+        expect(await arkreenRetirement.getCertificate(badgeID)).to.deep.equal(offsetRecord)
+        expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(ARECBefore)   
       });      
 
 
@@ -1099,6 +1118,7 @@ describe("ArkreenBuilder", () => {
         permitToPay.deadline = constants.MaxUint256   
         const expectedInputAmount  = amountART.mul(tokenTTAmount).add(tokenArtAmount.sub(amountART))  // to solve the round problem
                                       .div(tokenArtAmount.sub(amountART))  
+        const ARECBefore = await arkreenRECToken.balanceOf(owner1.address)                                      
         await expect(arkreenBuilder.connect(owner1).actionBuilderBadgeWithPermit( arkreenRECToken.address,
                             amountART, false, badgeInfo, permitToPay))
                             .to.emit(WETHPartner, 'Transfer')
@@ -1129,35 +1149,9 @@ describe("ArkreenBuilder", () => {
         const offsetRecord = [owner1.address, owner1.address, "Owner1", "Tester", "Just Testing", 
                               BigNumber.from(lastBlock.timestamp), amountART, [actionID]]
         const badgeID = 1                            
-        expect(await arkreenRetirement.getCertificate(badgeID)).to.deep.equal(offsetRecord)   
+        expect(await arkreenRetirement.getCertificate(badgeID)).to.deep.equal(offsetRecord)
+        expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(ARECBefore)   
       });      
-
-      it("Offset Details: Normal check", async () => {
-        await mintAREC(5000)          // 22
-
-        const balance_1 = await arkreenRECToken.balanceOf(owner1.address)
-        await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(500))
-  
-        await expect(arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(1500)))
-                .to.emit(arkreenRECToken, "OffsetFinished")
-                .withArgs(owner1.address, expandTo18Decimals(1500), 2) 
-  
-        const balance_2 = await arkreenRECToken.balanceOf(owner1.address)
-        expect(balance_2).to.equal(balance_1.sub(expandTo18Decimals(2000)))
-  
-        expect(await arkreenRECToken.latestARECID()).to.equal(tokenID)      // tokenID is global 
-  
-        expect(await arkreenRECIssuance.balanceOf(arkreenRetirement.address)).to.equal(2)
-        expect(await arkreenRetirement.detailsCounter()).to.equal(1)
-  
-        const detail_0 = [1, expandTo18Decimals(500)]
-        const detail_1 = [2, expandTo18Decimals(1000)]
-  
-        expect(await arkreenRetirement.OffsetDetails(1,0)).to.deep.equal(detail_0)
-        expect(await arkreenRetirement.OffsetDetails(1,1)).to.deep.equal(detail_1)
-  
-        await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(1500))
-        await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(2500))
-      });            
+          
     })  
 });

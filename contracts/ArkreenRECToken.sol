@@ -93,7 +93,6 @@ contract ArkreenRECToken is
      * @dev Offset the RE token by burning the tokens
      */
     function commitOffset(uint256 amount) public virtual whenNotPaused returns (uint256 offsetActionId) {
-//        address account = _msgSender();
         offsetActionId = _offset(msg.sender, _msgSender(), amount);
     }
 
