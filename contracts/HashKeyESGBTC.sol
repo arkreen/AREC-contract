@@ -90,10 +90,10 @@ contract HashKeyESGBTC is
         uint256 brickID;
         address actorGreenBTC = _msgSender();
         
-        bricksToGreen = (bricksToGreen<<4) >> 4;                            // clear 4 msb
+        bricksToGreen = (bricksToGreen<<4) >> 4;                            // clear 4 msb, uint252
         uint256 greenId = totalSupply() + 1;
         _safeMint(actorGreenBTC, greenId);
-        bricksId[greenId] = bricksToGreen;
+        brickIds[greenId] = bricksToGreen;
 
         while( (brickID = (bricksToGreen & MASK_ID)) != 0) {
             amountART += 1;
@@ -109,27 +109,37 @@ contract HashKeyESGBTC is
         bytes memory callData = abi.encodeWithSelector(0x28a5e88d, tokenNative, tokenHART, msg.value,
                                                         amountART, false, deadline, badgeInfo);
 
-        _actionBuilderBadge(abi.encodePacked(callData, actorGreenBTC));
-
-
-
+        _actionBuilderBadge(abi.encodePacked(callData, actorGreenBTC));     // Pay back to msg.sender already
 
     }
 
     function greenizeBTC(
         address             tokenPay,
         uint256             amountPay,
-        uint256             bricksToGreen1,      
-        uint256             bricksToGreen2,
+        uint256             bricksToGreen,   
         uint256             deadline,        
         BadgeInfo calldata  badgeInfo
     ) external  {               // Deadline will be checked by router, no need to check here. //ensure(permitToPay.deadline)
 
-        // Transfer payement 
+        uint256 amountART;
+        uint256 brickID;
         address actorGreenBTC = _msgSender();
-        TransferHelper.safeTransferFrom(tokenPay, actorGreenBTC, address(this), amountPay);
-        uint256 amountART = ((bricksToGreen1 & MASK_ID) + (bricksToGreen2 & MASK_ID)) * (10**ART_DECIMAL);
 
+        bricksToGreen = (bricksToGreen<<4) >> 4;                            // clear 4 msb, uint252
+        uint256 greenId = totalSupply() + 1;
+        _safeMint(actorGreenBTC, greenId);
+        brickIds[greenId] = bricksToGreen;
+
+        while( (brickID = (bricksToGreen & MASK_ID)) != 0) {
+            amountART += 1;
+            setBrick(brickID, greenId);
+            bricksToGreen = bricksToGreen >> 12;
+        }
+
+        // Transfer payement 
+        TransferHelper.safeTransferFrom(tokenPay, actorGreenBTC, address(this), amountPay);
+        amountART = amountART * (10**ART_DECIMAL);
+        
         // actionBuilderBadge(address,address,uint256,uint256,bool,uint256,(address,string,string,string)): 0x28a5e88d
         bytes memory callData = abi.encodeWithSelector(0x28a5e88d, tokenPay, tokenHART, amountPay,
                                                         amountART, false, deadline, badgeInfo);
@@ -138,33 +148,49 @@ contract HashKeyESGBTC is
     }
 
     /** 
-     * @dev Greenize BTC with Approval payment signature.
-     * @param bricksToGreen1 The firts list of brick IDs in the format of ID1 || ID2 || .. || IDn || Length, each of which is 16 bits.
-     * @param bricksToGreen2 The second list of brick IDs. 
+     * @dev Greenize BTC with payment Approval.
+     * @param bricksToGreen The brick ID list in the format of IDn || ... || ID2 || ID1, each of which is 12 bits.
      * @param badgeInfo The information to be included for climate badge.
-     * @param permitToPay The permit information to approve the payment token to swap for ART token 
+     * @param permitToPay The Permit information to approve the payment token to swap for ART token 
      */
     function greenizeBTCPermit(
-        uint256             bricksToGreen1,      
-        uint256             bricksToGreen2,
+        uint256             bricksToGreen,      
         BadgeInfo calldata  badgeInfo,
         Signature calldata  permitToPay
-    ) external  {               // Deadline will be checked by router, no need to check here. //ensure(permitToPay.deadline)
+    ) external  {                                  // Deadline will be checked by router, no need to check here. 
+
+        address actorGreenBTC = _msgSender();
+        uint256 amountART = _mintESGBadge(actorGreenBTC, bricksToGreen);
 
         // Permit payment token
-        address actorGreenBTC = _msgSender();
         IERC20Permit(permitToPay.token).permit(actorGreenBTC, address(this), 
                         permitToPay.value, permitToPay.deadline, permitToPay.v, permitToPay.r, permitToPay.s);
 
         // Transfer payement 
         TransferHelper.safeTransferFrom(permitToPay.token, actorGreenBTC, address(this), permitToPay.value);
-        uint256 amountART = ((bricksToGreen1 & MASK_ID) + (bricksToGreen2 & MASK_ID)) * (10**ART_DECIMAL);
 
         // actionBuilderBadge(address,address,uint256,uint256,bool,uint256,(address,string,string,string)): 0x28a5e88d
         bytes memory callData = abi.encodeWithSelector(0x28a5e88d, permitToPay.token, tokenHART, permitToPay.value,
                                                         amountART, false, permitToPay.deadline, badgeInfo);
 
         _actionBuilderBadge(abi.encodePacked(callData, actorGreenBTC));
+    }
+
+    function _mintESGBadge(address actorGreenBTC, uint256 bricksToGreen) internal returns (uint256){
+        uint256 amountART;
+        uint256 brickID;
+
+        bricksToGreen = (bricksToGreen<<4) >> 4;                            // clear 4 msb, uint252
+        uint256 greenId = totalSupply() + 1;
+        _safeMint(actorGreenBTC, greenId);
+        brickIds[greenId] = bricksToGreen;
+
+        while( (brickID = (bricksToGreen & MASK_ID)) != 0) {
+            amountART += 1;
+            setBrick(brickID, greenId);
+            bricksToGreen = bricksToGreen >> 12;
+        }
+        return amountART * (10**ART_DECIMAL);
     }
 
     function _actionBuilderBadge(bytes memory callData) internal {
@@ -200,20 +226,22 @@ contract HashKeyESGBTC is
      }
 */
     function setBrick(uint256 brickId, uint256 greenId) internal {                           //  brickId starts from 1
-        require( (brickId == 0) || (brickId > MAX_BRICK_ID, "HSKESG: Wrong Brick ID");
+        require((brickId != 0) || (brickId <= MAX_BRICK_ID), "HSKESG: Wrong Brick ID");
         require( greenIdLoc[brickId] == 0,  "HSKESG: Brick Occupied");
         greenIdLoc[brickId] = greenId;
-
-        uint256 offset = brickId >> 4;
-        uint256 mask = greenId << (12 * (brickId & 0xF));
-        require( (bricksState[offset] & mask) == 0,  "HSKESG: Brick Occupied");
-        bricksState[offset] |= mask;
     }
 
-    function ownerBrick(uint256 brickId) external view returns (address owner, uint256 greenId) {
-        require( (brickId != 0) || (brickId <= MAX_BRICK_ID), "HSKESG: Wrong Brick ID");
-        return greenIdLoc[brickId];
-     }
+    function ownerBricks(uint256 brickId) external view returns (address owner, uint256 greenId, uint256 bricks) {
+        require((brickId != 0) || (brickId <= MAX_BRICK_ID), "HSKESG: Wrong Brick ID");
+        greenId = greenIdLoc[brickId];
+        owner = ownerOf(greenId);
+        bricks = brickIds[greenId];
+    }
+
+    function checkBrick(uint256 brickId) external view returns (bool) {         //  brickId starts from 1
+        require((brickId != 0) || (brickId <= MAX_BRICK_ID), "HSKESG: Wrong Brick ID");
+        return greenIdLoc[brickId] != 0;
+    }    
 
     /**
      * @dev update the maximum REC number to green BTC block

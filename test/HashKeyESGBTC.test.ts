@@ -19,7 +19,7 @@ import {
 import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { getApprovalDigest, expandTo18Decimals, randomAddresses, RECStatus, MinerType, 
           BigNumberPercent, expandTo9Decimals } from "./utils/utilities";
-import { ecsign, fromRpcSig, ecrecover } from 'ethereumjs-util'
+import { ecsign, fromRpcSig, ecrecover, zeroAddress } from 'ethereumjs-util'
 import { RECRequestStruct, SignatureStruct, RECDataStruct } from "../typechain/contracts/ArkreenRECIssuance";
 import { OffsetActionStruct }  from "../typechain/contracts/ArkreenBadge";
 import FeSwapPair from '../artifacts/contracts/Dex/FeSwapPair.sol/FeSwapPair.json'
@@ -483,7 +483,7 @@ describe("HashKeyESGBTC", () => {
 
         await arkreenRECToken.setClimateBuilder(arkreenBuilder.address)
   
-        const bricksToGreen1 = BigNumber.from('0x00700F01200D009002001')
+        const bricksToGreen = BigNumber.from('0x00700F01200D009002001')
         const tokenETHAmount = expandTo18Decimals(1000)
         const tokenArtAmount = expandTo9Decimals(1000000)
         await addLiquidityEEA(tokenETHAmount, tokenArtAmount, 0)      // should be 0 here
@@ -503,7 +503,9 @@ describe("HashKeyESGBTC", () => {
 
         const balanceBefore = await ethers.provider.getBalance(owner1.address)                                      
         const ARECBefore = await arkreenRECToken.balanceOf(owner1.address)                                      
-        await expect(hashKeyESGBTC.connect(owner1).greenizeBTCNative( bricksToGreen1, constants.MaxUint256, badgeInfo, {value: amountPay}))
+        await expect(hashKeyESGBTC.connect(owner1).greenizeBTCNative( bricksToGreen, constants.MaxUint256, badgeInfo, {value: amountPay}))
+                            .to.emit(hashKeyESGBTC, 'Transfer')
+                            .withArgs(zeroAddress, owner1.address, 1)
                             .to.emit(WETH, 'Deposit')
                             .withArgs(hashKeyESGBTC.address, amountPay)
                             .to.emit(WETH, 'Transfer')
@@ -548,6 +550,10 @@ describe("HashKeyESGBTC", () => {
         expect(await hashKeyESGBTC.checkBrick(18)).to.equal(true)
         expect(await hashKeyESGBTC.checkBrick(10)).to.equal(false)
 
+        const ownerInfo = [ owner1.address, 1, bricksToGreen]
+        expect(await hashKeyESGBTC.ownerBricks(1)).to.deep.equal(ownerInfo)
+        expect(await hashKeyESGBTC.ownerBricks(9)).to.deep.equal(ownerInfo)
+
       });      
 
       it("ActionBuilderBadge: Exact ART Token", async () => {
@@ -555,14 +561,13 @@ describe("HashKeyESGBTC", () => {
 
         await arkreenRECToken.setClimateBuilder(arkreenBuilder.address)
           
-        const bricksToGreen1 = BigNumber.from('0x100020003000400050005')
-        const bricksToGreen2 = BigNumber.from(0)    
+        const bricksToGreen = BigNumber.from('0x00700F01200D009002001')
         const tokenTTAmount = expandTo18Decimals(10000)
         const tokenArtAmount = expandTo9Decimals(1000000)
         await addLiquidityTTA(tokenTTAmount, tokenArtAmount, 100)
 
         const amountPay = expandTo18Decimals(20)
-        const amountART = expandTo9Decimals(5)
+        const amountART = expandTo9Decimals(7)
         const badgeInfo =  {
                   beneficiary:    owner1.address,
                   offsetEntityID: 'Owner1',
@@ -575,13 +580,15 @@ describe("HashKeyESGBTC", () => {
                                       .div(tokenArtAmount.sub(amountART))  
 
         await expect(hashKeyESGBTC.connect(owner1).greenizeBTC( WETHPartner.address, 
-                                        amountPay, bricksToGreen1, bricksToGreen2, constants.MaxUint256, badgeInfo))   
+                                        amountPay, bricksToGreen, constants.MaxUint256, badgeInfo))   
               .to.be.revertedWith("TransferHelper: TRANSFER_FROM_FAILED")     
 
         const ARECBefore = await arkreenRECToken.balanceOf(owner1.address)                                      
         await WETHPartner.connect(owner1).approve(hashKeyESGBTC.address, constants.MaxUint256)
         await expect(hashKeyESGBTC.connect(owner1).greenizeBTC( WETHPartner.address,
-                            amountPay, bricksToGreen1, bricksToGreen2, constants.MaxUint256, badgeInfo))
+                                                      amountPay, bricksToGreen, constants.MaxUint256, badgeInfo))
+                            .to.emit(hashKeyESGBTC, 'Transfer')
+                            .withArgs(zeroAddress, owner1.address, 1)
                             .to.emit(WETHPartner, 'Transfer')
                             .withArgs(owner1.address, hashKeyESGBTC.address, amountPay)
                             .to.emit(WETHPartner, 'Transfer')
@@ -614,6 +621,20 @@ describe("HashKeyESGBTC", () => {
         const badgeID = 1                            
         expect(await arkreenRetirement.getCertificate(badgeID)).to.deep.equal(offsetRecord)
         expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(ARECBefore)   
+
+        expect(await hashKeyESGBTC.checkBrick(1)).to.equal(true)
+        expect(await hashKeyESGBTC.checkBrick(2)).to.equal(true)
+        expect(await hashKeyESGBTC.checkBrick(7)).to.equal(true)
+        expect(await hashKeyESGBTC.checkBrick(9)).to.equal(true)
+        expect(await hashKeyESGBTC.checkBrick(13)).to.equal(true)
+        expect(await hashKeyESGBTC.checkBrick(15)).to.equal(true)
+        expect(await hashKeyESGBTC.checkBrick(18)).to.equal(true)
+        expect(await hashKeyESGBTC.checkBrick(10)).to.equal(false)
+
+        const ownerInfo = [ owner1.address, 1, bricksToGreen]
+        expect(await hashKeyESGBTC.ownerBricks(1)).to.deep.equal(ownerInfo)
+        expect(await hashKeyESGBTC.ownerBricks(9)).to.deep.equal(ownerInfo)
+
       });      
 
       it("HashKeyESGBTC with Permit 1: ", async () => {
@@ -625,10 +646,9 @@ describe("HashKeyESGBTC", () => {
         const tokenArtAmount = expandTo9Decimals(1000000)
         await addLiquidityTTA(tokenTTAmount, tokenArtAmount, 100)
 
-        const bricksToGreen1 = BigNumber.from('0x100020003000400050005')
-        const bricksToGreen2 = BigNumber.from(0)    
+        const bricksToGreen = BigNumber.from('0x00700F01200D009002001')
         const amountPay = expandTo18Decimals(20)
-        const amountART = expandTo9Decimals(5)
+        const amountART = expandTo9Decimals(7)
         const badgeInfo =  {
                   beneficiary:    owner1.address,
                   offsetEntityID: 'Owner1',
@@ -648,7 +668,7 @@ describe("HashKeyESGBTC", () => {
         // Abnormal Test
         // Check signature
         permitToPay.deadline = constants.MaxUint256.sub(1)
-        await expect(hashKeyESGBTC.connect(owner1).greenizeBTCPermit( bricksToGreen1, bricksToGreen2, badgeInfo, permitToPay ))
+        await expect(hashKeyESGBTC.connect(owner1).greenizeBTCPermit( bricksToGreen, badgeInfo, permitToPay ))
                                                     .to.be.revertedWith("FeSwap: INVALID_SIGNATURE")  
 
         // Normal transaction   
@@ -657,10 +677,9 @@ describe("HashKeyESGBTC", () => {
                                       .div(tokenArtAmount.sub(amountART))  
 
         const ARECBefore = await arkreenRECToken.balanceOf(owner1.address)   
-        
-        // await hashKeyESGBTC.connect(owner1).greenizeBTCPermit( bricksToGreen, badgeInfo, permitToPay)
-        
-        await expect(hashKeyESGBTC.connect(owner1).greenizeBTCPermit( bricksToGreen1, bricksToGreen2, badgeInfo, permitToPay))
+        await expect(hashKeyESGBTC.connect(owner1).greenizeBTCPermit( bricksToGreen, badgeInfo, permitToPay))
+                            .to.emit(hashKeyESGBTC, 'Transfer')
+                            .withArgs(zeroAddress, owner1.address, 1)        
                             .to.emit(WETHPartner, 'Transfer')
                             .withArgs(owner1.address, hashKeyESGBTC.address, amountPay)
                             .to.emit(WETHPartner, 'Transfer')
@@ -693,6 +712,20 @@ describe("HashKeyESGBTC", () => {
         const badgeID = 1                            
         expect(await arkreenRetirement.getCertificate(badgeID)).to.deep.equal(offsetRecord)
         expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(ARECBefore)   
+
+        expect(await hashKeyESGBTC.checkBrick(1)).to.equal(true)
+        expect(await hashKeyESGBTC.checkBrick(2)).to.equal(true)
+        expect(await hashKeyESGBTC.checkBrick(7)).to.equal(true)
+        expect(await hashKeyESGBTC.checkBrick(9)).to.equal(true)
+        expect(await hashKeyESGBTC.checkBrick(13)).to.equal(true)
+        expect(await hashKeyESGBTC.checkBrick(15)).to.equal(true)
+        expect(await hashKeyESGBTC.checkBrick(18)).to.equal(true)
+        expect(await hashKeyESGBTC.checkBrick(10)).to.equal(false)
+
+        const ownerInfo = [ owner1.address, 1, bricksToGreen]
+        expect(await hashKeyESGBTC.ownerBricks(1)).to.deep.equal(ownerInfo)
+        expect(await hashKeyESGBTC.ownerBricks(9)).to.deep.equal(ownerInfo)        
+
       });      
 
       it("HashKeyESGBTC with Permit 2: ", async () => {
@@ -704,10 +737,9 @@ describe("HashKeyESGBTC", () => {
         const tokenArtAmount = expandTo9Decimals(1000000)
         await addLiquidityTTA(tokenTTAmount, tokenArtAmount, 100)
 
-        const bricksToGreen1 = BigNumber.from('0x100020003000400050005')
-        const bricksToGreen2 = BigNumber.from(0)    
+        const bricksToGreen = BigNumber.from('0x00700F01200D009002001')        
         const amountPay = expandTo18Decimals(20)
-        const amountART = expandTo9Decimals(5)
+        const amountART = expandTo9Decimals(7)
         const badgeInfo =  {
                   beneficiary:    owner2.address,
                   offsetEntityID: 'Owner1',
@@ -727,7 +759,7 @@ describe("HashKeyESGBTC", () => {
         // Abnormal Test
         // Check signature
         permitToPay.deadline = constants.MaxUint256.sub(1)
-        await expect(hashKeyESGBTC.connect(owner1).greenizeBTCPermit( bricksToGreen1, bricksToGreen2, badgeInfo, permitToPay ))
+        await expect(hashKeyESGBTC.connect(owner1).greenizeBTCPermit( bricksToGreen, badgeInfo, permitToPay ))
                                                     .to.be.revertedWith("FeSwap: INVALID_SIGNATURE")  
 
         // Normal transaction   
@@ -736,10 +768,9 @@ describe("HashKeyESGBTC", () => {
                                       .div(tokenArtAmount.sub(amountART))  
 
         const ARECBefore = await arkreenRECToken.balanceOf(owner1.address)   
-        
-        // await hashKeyESGBTC.connect(owner1).greenizeBTCPermit( bricksToGreen, badgeInfo, permitToPay)
-        
-        await expect(hashKeyESGBTC.connect(owner1).greenizeBTCPermit( bricksToGreen1, bricksToGreen2, badgeInfo, permitToPay))
+        await expect(hashKeyESGBTC.connect(owner1).greenizeBTCPermit( bricksToGreen, badgeInfo, permitToPay))
+                            .to.emit(hashKeyESGBTC, 'Transfer')
+                            .withArgs(zeroAddress, owner1.address, 1)     
                             .to.emit(WETHPartner, 'Transfer')
                             .withArgs(owner1.address, hashKeyESGBTC.address, amountPay)
                             .to.emit(WETHPartner, 'Transfer')
@@ -772,6 +803,20 @@ describe("HashKeyESGBTC", () => {
         const badgeID = 1                            
         expect(await arkreenRetirement.getCertificate(badgeID)).to.deep.equal(offsetRecord)
         expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(ARECBefore)   
+
+        expect(await hashKeyESGBTC.checkBrick(1)).to.equal(true)
+        expect(await hashKeyESGBTC.checkBrick(2)).to.equal(true)
+        expect(await hashKeyESGBTC.checkBrick(7)).to.equal(true)
+        expect(await hashKeyESGBTC.checkBrick(9)).to.equal(true)
+        expect(await hashKeyESGBTC.checkBrick(13)).to.equal(true)
+        expect(await hashKeyESGBTC.checkBrick(15)).to.equal(true)
+        expect(await hashKeyESGBTC.checkBrick(18)).to.equal(true)
+        expect(await hashKeyESGBTC.checkBrick(10)).to.equal(false)
+
+        const ownerInfo = [ owner1.address, 1, bricksToGreen]
+        expect(await hashKeyESGBTC.ownerBricks(1)).to.deep.equal(ownerInfo)
+        expect(await hashKeyESGBTC.ownerBricks(9)).to.deep.equal(ownerInfo)
+
       });      
 
     })  
