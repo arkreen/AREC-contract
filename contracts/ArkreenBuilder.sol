@@ -85,7 +85,7 @@ contract ArkreenBuilder is
     ) external {               // Deadline will be checked by router, no need to check here. //ensure(permitToPay.deadline)
 
         // Transfer payement 
-        TransferHelper.safeTransferFrom(tokenPay, _msgSender(), address(this), amountPay);
+        TransferHelper.safeTransferFrom(tokenPay, msg.sender, address(this), amountPay);
         _actionBuilder (tokenPay, tokenART, amountPay, amountART, isExactPay, deadline);
     }
 
@@ -163,8 +163,8 @@ contract ArkreenBuilder is
         BadgeInfo calldata  badgeInfo
     ) external {               // Deadline will be checked by router, no need to check here. //ensure(permitToPay.deadline)
 
-        // Transfer payement 
-        TransferHelper.safeTransferFrom(tokenPay, _msgSender(), address(this), amountPay);
+        // Transfer payement
+        TransferHelper.safeTransferFrom(tokenPay, msg.sender, address(this), amountPay);
         _actionBuilderBadge (tokenPay, tokenART, amountPay, amountART, isExactPay, deadline, badgeInfo);
     }
 
@@ -258,7 +258,7 @@ contract ArkreenBuilder is
                     revert(add(32, returndata), returndata_size)
                 }
             } else {
-                revert("ACT: Error Call to commitOffset");
+                revert("BLD: Error Call to commitOffset");
             }
         }
   
@@ -315,7 +315,7 @@ contract ArkreenBuilder is
                     revert(add(32, returndata), returndata_size)
                 }
             } else {
-                revert("ACT: Error Call to offsetAndMintCertificate");
+                revert("BLD: Error Call to offsetAndMintCertificate");
             }
         }
   
@@ -332,9 +332,23 @@ contract ArkreenBuilder is
             }
         }
     }
+
+    function _msgSender() internal override view returns (address signer) {
+        signer = msg.sender;
+        if (msg.data.length>=20 && trustedForwarders[signer]) {
+            assembly {
+                signer := shr(96,calldataload(sub(calldatasize(),20)))
+            }
+        }    
+    }    
+
+    function mangeTrustedForwarder(address forwarder, bool addOrRemove) external onlyOwner {
+        require(forwarder != address(0), "BLD: Zero Forwarder");
+        trustedForwarders[forwarder] = addOrRemove;
+    }      
  
     function approveRouter(address[] memory tokens) external onlyOwner {
-        require(routerSwap != address(0), "ACT: No Router");
+        require(routerSwap != address(0), "BLD: No Router");
         for(uint256 i = 0; i < tokens.length; i++) {
             TransferHelper.safeApprove(tokens[i], routerSwap, type(uint256).max);
         }
