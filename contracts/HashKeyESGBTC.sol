@@ -27,18 +27,16 @@ contract HashKeyESGBTC is
     using AddressUpgradeable for address;
 
     // Public variables
-    string  public    constant NAME         = 'HashKey ESG BTC';
-    string  public    constant SYMBOL       = 'HGBTC';
-    uint256 public    constant ART_DECIMAL  = 9;
-    uint256 private   constant MAX_BRICK_ID = 4096;
-    uint256 private   constant MASK_ID      = 0xFFF;
-
+    string  public    constant NAME             = 'HashKey ESG BTC';
+    string  public    constant SYMBOL           = 'HGBTC';
+    uint256 public    constant ART_DECIMAL      = 9;
+    uint256 private   constant MAX_BRICK_ID     = 4096;
+    uint256 private   constant MASK_ID          = 0xFFF;
 
     string  public baseURI;
     address public tokenHART;                         // HashKey Pro ART
     address public arkreenBuilder;
     address public tokenNative;                       // The wrapped token of the Native token, such as WETH, WMATIC
-//  mapping(uint256 => uint256) public bricksState;   // Brick Id (Offset) -> Occupied status, If occupied, the bit is SET.
     mapping(uint256 => uint256) public brickIds;      // Green Id -> Owned brick id list, maximumly 21 bricks, 12 bits each
     mapping(uint256 => uint256) public greenIdLoc;    // Brick Id -> Green Id
 
@@ -46,16 +44,12 @@ contract HashKeyESGBTC is
     uint256 public maxRECToGreenBTC;
 
      // Events
-    event ArkreenRegistryUpdated(address newArkreenRegistry);
-    event OffsetCertificateMinted(uint256 tokenId);
-    event OffsetCertificateUpdated(uint256 tokenId);
 
     // Modifiers
     modifier ensure(uint deadline) {
-        require(deadline >= block.timestamp, 'ARB: EXPIRED');
+        require(deadline >= block.timestamp, 'HSKESG: EXPIRED');
         _;
     }
-  
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -66,10 +60,11 @@ contract HashKeyESGBTC is
         __Ownable_init_unchained();
         __UUPSUpgradeable_init();        
         __ERC721_init_unchained(NAME, SYMBOL);
-        arkreenBuilder = builder; 
-        tokenHART = hArt;
-        tokenNative = native;
-        maxRECToGreenBTC = numBlock;
+
+        arkreenBuilder      = builder; 
+        tokenHART           = hArt;
+        tokenNative         = native;
+        maxRECToGreenBTC    = numBlock;
 
         baseURI = 'https://www.arkreen.com/ESGBTC/' ;
     }   
@@ -80,30 +75,23 @@ contract HashKeyESGBTC is
     function _authorizeUpgrade(address newImplementation) internal virtual override onlyOwner
     {}
 
+    /** 
+     * @dev Greenize BTC with Native token, such as MATIC.
+     * @param bricksToGreen The brick ID list in the format of IDn || ... || ID2 || ID1, each of which is 12 bits.
+     * @param deadline The deadline to cancel the transaction.
+     * @param badgeInfo The information to be included for climate badge.
+     */
     function greenizeBTCNative(
         uint256             bricksToGreen,      
         uint256             deadline,
         BadgeInfo calldata  badgeInfo
-    ) external payable {               // Deadline will be checked by router, no need to check here. //ensure(permitToPay.deadline)
+    ) external payable ensure(deadline) {                       // Deadline will be checked by router, no need to check here. 
 
-        uint256 amountART;
-        uint256 brickID;
         address actorGreenBTC = _msgSender();
-        
-        bricksToGreen = (bricksToGreen<<4) >> 4;                            // clear 4 msb, uint252
-        uint256 greenId = totalSupply() + 1;
-        _safeMint(actorGreenBTC, greenId);
-        brickIds[greenId] = bricksToGreen;
-
-        while( (brickID = (bricksToGreen & MASK_ID)) != 0) {
-            amountART += 1;
-            setBrick(brickID, greenId);
-            bricksToGreen = bricksToGreen >> 12;
-        }
+        uint256 amountART = _mintESGBadge(actorGreenBTC, bricksToGreen);        
         
         // Wrap MATIC to WMATIC  
         IWETH(tokenNative).deposit{value: msg.value}();
-        amountART = amountART * (10**ART_DECIMAL);
 
         // actionBuilderBadge(address,address,uint256,uint256,bool,uint256,(address,string,string,string)): 0x28a5e88d
         bytes memory callData = abi.encodeWithSelector(0x28a5e88d, tokenNative, tokenHART, msg.value,
@@ -113,32 +101,27 @@ contract HashKeyESGBTC is
 
     }
 
+    /** 
+     * @dev Greenize BTC with specified payment token
+     * @param tokenPay The token to pay for swapping ART token
+     * @param amountPay The maximum amount of tokenPay which will de paid
+     * @param bricksToGreen The brick ID list in the format of IDn || ... || ID2 || ID1, each of which is 12 bits
+     * @param deadline The deadline to cancel the transaction
+     * @param badgeInfo The information to be included for climate badge
+     */
     function greenizeBTC(
         address             tokenPay,
         uint256             amountPay,
         uint256             bricksToGreen,   
         uint256             deadline,        
         BadgeInfo calldata  badgeInfo
-    ) external  {               // Deadline will be checked by router, no need to check here. //ensure(permitToPay.deadline)
+    ) external ensure(deadline) {                               // Deadline will be checked by router, no need to check here.
 
-        uint256 amountART;
-        uint256 brickID;
         address actorGreenBTC = _msgSender();
-
-        bricksToGreen = (bricksToGreen<<4) >> 4;                            // clear 4 msb, uint252
-        uint256 greenId = totalSupply() + 1;
-        _safeMint(actorGreenBTC, greenId);
-        brickIds[greenId] = bricksToGreen;
-
-        while( (brickID = (bricksToGreen & MASK_ID)) != 0) {
-            amountART += 1;
-            setBrick(brickID, greenId);
-            bricksToGreen = bricksToGreen >> 12;
-        }
+        uint256 amountART = _mintESGBadge(actorGreenBTC, bricksToGreen);
 
         // Transfer payement 
         TransferHelper.safeTransferFrom(tokenPay, actorGreenBTC, address(this), amountPay);
-        amountART = amountART * (10**ART_DECIMAL);
         
         // actionBuilderBadge(address,address,uint256,uint256,bool,uint256,(address,string,string,string)): 0x28a5e88d
         bytes memory callData = abi.encodeWithSelector(0x28a5e88d, tokenPay, tokenHART, amountPay,
@@ -157,7 +140,7 @@ contract HashKeyESGBTC is
         uint256             bricksToGreen,      
         BadgeInfo calldata  badgeInfo,
         Signature calldata  permitToPay
-    ) external  {                                  // Deadline will be checked by router, no need to check here. 
+    ) external ensure(permitToPay.deadline) {                     // Deadline will be checked by router, no need to check here. 
 
         address actorGreenBTC = _msgSender();
         uint256 amountART = _mintESGBadge(actorGreenBTC, bricksToGreen);
@@ -176,6 +159,12 @@ contract HashKeyESGBTC is
         _actionBuilderBadge(abi.encodePacked(callData, actorGreenBTC));
     }
 
+    /** 
+     * @dev mint ESGBadge to the greenActor
+     * @param actorGreenBTC The address of the actor
+     * @param bricksToGreen The brick ID list in the format of IDn || ... || ID2 || ID1, each of which is 12 bits
+     * @return uint256 The amount ART token to pay for the ESG badge
+     */
     function _mintESGBadge(address actorGreenBTC, uint256 bricksToGreen) internal returns (uint256){
         uint256 amountART;
         uint256 brickID;
@@ -193,6 +182,10 @@ contract HashKeyESGBTC is
         return amountART * (10**ART_DECIMAL);
     }
 
+    /** 
+     * @dev call actionBuilderBadge to buy ART token and mint the Arkreen cliamte badge.
+     * @param callData The calling data with actors address attached
+     */
     function _actionBuilderBadge(bytes memory callData) internal {
         (bool success, bytes memory returndata) = arkreenBuilder.call(callData);
 
@@ -208,38 +201,31 @@ contract HashKeyESGBTC is
             }
         }        
     }
-/*
-    function setBrick(uint256 brickId) internal {                               //  brickId starts from 1
-        require( (brickId = (brickId - 1)) < MAX_BRICK_ID, "HSKESG: Wrong Brick ID");
-        uint256 offset = brickId >> 8;
-        uint256 mask = 1 << (brickId & 0xFF);
-        require( (bricksState[offset] & mask) == 0,  "HSKESG: Brick Occupied");
-        bricksState[offset] |= mask;
-    }
 
-    function checkBrick(uint256 brickId) external view returns (bool) {         //  brickId starts from 1
-        require( (brickId = (brickId - 1)) < MAX_BRICK_ID, "HSKESG: Wrong Brick ID");
-
-        uint256 offset = brickId >> 8;
-        uint256 mask = 1 << (brickId & 0xFF);
-        return (bricksState[offset] & mask) != 0;
-     }
-*/
+    /** 
+     * @dev set the greenId to the given brick
+     */
     function setBrick(uint256 brickId, uint256 greenId) internal {                           //  brickId starts from 1
-        require((brickId != 0) || (brickId <= MAX_BRICK_ID), "HSKESG: Wrong Brick ID");
+        require((brickId != 0) || (brickId <= maxRECToGreenBTC), "HSKESG: Wrong Brick ID");
         require( greenIdLoc[brickId] == 0,  "HSKESG: Brick Occupied");
         greenIdLoc[brickId] = greenId;
     }
 
+    /** 
+     * @dev Return the given brick information: owner, greenId, and all sibbling bricks
+     */
     function ownerBricks(uint256 brickId) external view returns (address owner, uint256 greenId, uint256 bricks) {
-        require((brickId != 0) || (brickId <= MAX_BRICK_ID), "HSKESG: Wrong Brick ID");
+        require((brickId != 0) || (brickId <= maxRECToGreenBTC), "HSKESG: Wrong Brick ID");
         greenId = greenIdLoc[brickId];
         owner = ownerOf(greenId);
         bricks = brickIds[greenId];
     }
 
+    /** 
+     * @dev Check if the given brick occupied
+     */
     function checkBrick(uint256 brickId) external view returns (bool) {         //  brickId starts from 1
-        require((brickId != 0) || (brickId <= MAX_BRICK_ID), "HSKESG: Wrong Brick ID");
+        require((brickId != 0) || (brickId <= maxRECToGreenBTC), "HSKESG: Wrong Brick ID");
         return greenIdLoc[brickId] != 0;
     }    
 
@@ -251,7 +237,11 @@ contract HashKeyESGBTC is
         maxRECToGreenBTC = amountREC;
     }
 
-    function approveBuilder(address[] memory tokens) external onlyOwner {
+    /**
+     * @dev Approve the token that the  arkreenBuilder smart contract can transfer from this ESG smart contract
+     * @param tokens The token list
+     */
+    function approveBuilder(address[] calldata tokens) external onlyOwner {
         require(arkreenBuilder != address(0), "HSKESG: No Builder");
         for(uint256 i = 0; i < tokens.length; i++) {
             TransferHelper.safeApprove(tokens[i], arkreenBuilder, type(uint256).max);
@@ -261,7 +251,7 @@ contract HashKeyESGBTC is
     /** 
      * @dev Change the BaseURI
      */
-    function setBaseURI(string memory newBaseURI) external virtual onlyOwner {
+    function setBaseURI(string calldata newBaseURI) external virtual onlyOwner {
         baseURI = newBaseURI;
     }
 
@@ -270,9 +260,7 @@ contract HashKeyESGBTC is
     }
 
     /**
-     * @dev Hook that is called before any token transfer. Miner Info is checked as the following rules:  
-     * A) Game miner cannot be transferred
-     * B) Only miner in Normal state can be transferred
+     * @dev Hook that is called before any token transfer. Blocking transfer unless minting
      */
     function _beforeTokenTransfer(
         address from,
