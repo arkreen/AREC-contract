@@ -567,19 +567,19 @@ describe("ArkreenRECToken", () => {
 
       const tx_1 = await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(500))
       const receipt_1 = await tx_1.wait()
-      expect(receipt_1.gasUsed).to.eq("463499")  //  460991 461138
+      expect(receipt_1.gasUsed).to.eq("463565")  //  463499 460991 461138
 
       const tx_2 = await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(800))
       const receipt_2 = await tx_2.wait()
-      expect(receipt_2.gasUsed).to.eq("444968")  // 442460 442607
+      expect(receipt_2.gasUsed).to.eq("445034")  // 444968 442460 442607
 
       const tx_3 = await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(200))
       const receipt_3 = await tx_3.wait()
-      expect(receipt_3.gasUsed).to.eq("207062")  // 204554 204554      
+      expect(receipt_3.gasUsed).to.eq("207106")  // 207062 204554 204554      
 
       const tx = await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(66000))
       const receipt = await tx.wait()
-      expect(receipt.gasUsed).to.eq("2755840")  // 2753332 2756125 
+      expect(receipt.gasUsed).to.eq("2756302")  // 2755840 2753332 2756125 
     });
   })
 

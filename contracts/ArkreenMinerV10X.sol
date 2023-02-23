@@ -33,7 +33,7 @@ contract ArkreenMinerV10X is
 
     address public tokenAKRE;                       // Token adddress of AKRE
     uint256 public totalGameMiner;                  // Total amount of game miner
-    uint256 public capGameMinerAirdrop;             // Total amount of game miner that can airdropped
+    uint256 public capGameMinerAirdrop;             // Total amount of game miner that can airdropped // Not used
     uint256 public counterGameMinerAirdrop;         // counter of game miner that can airdropped
     uint256 public indexGameMinerWithdraw;          // start index withdrawing the pending game miner
 
@@ -62,6 +62,8 @@ contract ArkreenMinerV10X is
     // Miner white list mapping from miner address to miner type
     mapping(address => uint8) public whiteListMiner;
 
+    uint256 public totalStandardMiner;                              // Total amount of standard miner
+
     // Constants
     // keccak256("GameMinerOnboard(address owner,address miners,bool bAirDrop,uint256 deadline)");
     bytes32 public constant GAME_MINER_TYPEHASH = 0xB0C08E369CF9D149F7E973AF789B8C94B7DA6DCC0A8B1F5F10F1820FB6224C11;  
@@ -69,12 +71,16 @@ contract ArkreenMinerV10X is
     uint256 public constant INIT_CAP_AIRDROP = 10000;              // Cap of Game miner airdrop
 
     // keccak256("RemoteMinerOnboard(address owner,address miners,address token,uint256 price,uint256 deadline)");
-    bytes32 public constant REMOTE_MINER_TYPEHASH = 0xE397EAA556C649D10F65393AC1D09D5AA50D72547C850822C207516865E89E32;      
+    bytes32 public constant REMOTE_MINER_TYPEHASH = 0xE397EAA556C649D10F65393AC1D09D5AA50D72547C850822C207516865E89E32;  
+
+    // keccak256("StandardMinerOnboard(address owner,address miner,uint256 deadline)");
+    bytes32 public constant STANDARD_MINER_TYPEHASH = 0x73F94559854A7E6267266A158D1576CBCAFFD8AE930E61FB632F9EC576D2BB37;  
 
     // Events
     event GameMinerAirdropped(uint256 timestamp, uint256 amount);
     event GameMinerOnboarded(address indexed owner, address[] miners);
     event MinerOnboarded(address indexed owner, address indexed miner);
+    event StandardMinerOnboarded(address indexed owner, address indexed miner);
     event VitualMinersInBatch(address[] owners, address[] miners);
     
     modifier ensure(uint256 deadline) {
@@ -152,6 +158,7 @@ contract ArkreenMinerV10X is
      * @param receiver address receiving the game miner tokens
      * @param miners address of the game miners    
      */
+/*    
     function OrderMiners(
         address receiver,
         address[] memory miners,
@@ -195,6 +202,7 @@ contract ArkreenMinerV10X is
         // Transfer onboarding fee
         TransferHelper.safeTransferFrom(permitToPay.token, receiver, address(this), permitToPay.value);
     }
+*/
 
     /**
      * @dev Airdrop game miners to the users
@@ -202,6 +210,7 @@ contract ArkreenMinerV10X is
      * @param miners address of the airdropped game miners. If miners is null,
      * withdraw the pending game miners and send to the new receivers
      */
+/*    
     function AirdropMiners(
         address[] memory receivers,
         address[] memory miners
@@ -292,6 +301,7 @@ contract ArkreenMinerV10X is
 
         emit GameMinerAirdropped(block.timestamp, receivers.length);
     }
+*/
 
     /**
      * @dev Onboarding game miner, an airdropped one, or a new applied one.
@@ -335,7 +345,7 @@ contract ArkreenMinerV10X is
 
         } else {
             // Boading a new applied game miner
-//          require(bAllowedToMintGameMiner(owner), 'Game Miner: Holding Game Miner');    // Remove for testing
+          require(bAllowedToMintGameMiner(owner), 'Game Miner: Holding Game Miner');    // Remove for testing
             require(AllMinersToken[miner] == 0, "Game Miner: Miner Repeated");
             uint256 gMinerID = totalSupply() + 1;
             _safeMint(owner, gMinerID);
@@ -404,6 +414,50 @@ contract ArkreenMinerV10X is
         TransferHelper.safeTransferFrom(permitToPay.token, sender, address(this), permitToPay.value);
 
         emit MinerOnboarded(owner, miner);
+    }
+
+    /**
+     * @dev Onboarding standard miner
+     * @param owner address receiving the standard miner
+     * @param miner address of the standard miner onboarding
+     * @param permitMiner signature of onboarding manager to approve the onboarding
+     */
+    function StardardMinerOnboard(
+        address owner,
+        address miner,
+        uint256 deadline,
+        Sig     calldata permitMiner
+    ) external ensure(deadline) {
+
+        // Check the starndard address
+        require(!miner.isContract(), 'Arkreen Miner: Not EOA Address');
+        require(AllMinersToken[miner] == 0, "Arkreen Miner: Miner Repeated");
+
+        // Check signature
+        bytes32 hashRegister = keccak256(abi.encode(STANDARD_MINER_TYPEHASH, owner, miner, deadline));
+        bytes32 digest = keccak256(abi.encodePacked('\x19\x01', DOMAIN_SEPARATOR, hashRegister));
+        address recoveredAddress = ecrecover(digest, permitMiner.v, permitMiner.r, permitMiner.s);
+  
+        require(recoveredAddress != address(0) && 
+                recoveredAddress == AllManagers[uint256(MinerManagerType.Register_Authority)], 'Arkreen Miner: INVALID_SIGNATURE');
+
+        Miner memory tmpMiner;
+        tmpMiner.mAddress = miner;
+        tmpMiner.mType = MinerType.StandardMiner;
+        tmpMiner.mStatus = MinerStatus.Normal;
+        tmpMiner.timestamp = uint32(block.timestamp);        
+
+        // Mint a new standard miner
+        uint256 minerID = totalSupply() + 1;
+        _safeMint(owner, minerID);
+        AllMinersToken[miner] = minerID;
+        AllMinerInfo[minerID] = tmpMiner;
+
+        // Increase the counter of total standard miner 
+        totalStandardMiner += 1;       
+
+        // emit onboarding event
+        emit StandardMinerOnboarded(owner,  miner);
     }
 
     /**
@@ -613,11 +667,12 @@ contract ArkreenMinerV10X is
      * @dev Update the cap to airdrop game miners
      * @param newMinerCap new cap to airdrop game miners
      */
+/*    
     function ChangeAirdropCap(uint256 newMinerCap) external onlyOwner {
         require(newMinerCap >= counterGameMinerAirdrop, 'Arkreen Miner: Cap Is Lower');      
        capGameMinerAirdrop = newMinerCap;
     }    
-
+*/
     /**
      * @dev Set the timestamp of Arkreen network formal launch. 
      */

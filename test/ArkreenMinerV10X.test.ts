@@ -85,7 +85,7 @@ describe("ArkreenMinerV10X", () => {
     it("ArkreenMiner Basics: isOwner ", async () => {
       const receivers = randomAddresses(10)
       const miners = randomAddresses(10)
-      await ArkreenMiner.connect(deployer).AirdropMiners(receivers, miners)
+      await ArkreenMiner.connect(manager).VirtualMinerOnboardInBatch(receivers, miners)
       expect(await ArkreenMiner.isOwner(owner1.address)).to.be.equal(false)
       expect(await ArkreenMiner.isOwner(receivers[0])).to.be.equal(true)
       expect(await ArkreenMiner.isOwner(receivers[9])).to.be.equal(true)
@@ -118,20 +118,20 @@ describe("ArkreenMinerV10X", () => {
       expect(await AKREToken.balanceOf(fund_receiver.address)).to.equal(expandTo18Decimals(10000));
       expect(await AKREToken.balanceOf(ArkreenMiner.address)).to.equal(BigNumber.from(0));
     })
-    it("ArkreenMiner Basics: Get Miners (Airdrop)", async () => {
+    it("ArkreenMiner Basics: Get Miners (VirtualMinerOnboardInBatch)", async () => {
       const receivers = randomAddresses(10)
       const miners = randomAddresses(10)
-      await ArkreenMiner.connect(deployer).AirdropMiners(receivers, miners)
+      await ArkreenMiner.connect(manager).VirtualMinerOnboardInBatch(receivers, miners)
       const lastBlock = await ethers.provider.getBlock('latest')
-      const timestamp = lastBlock.timestamp + DURATION_ACTIVATE
-      const minerInfo = [miners[9], MinerType.GameMiner, MinerStatus.Pending, timestamp]
+      const timestamp = lastBlock.timestamp
+      const minerInfo = [miners[9], MinerType.RemoteMiner, MinerStatus.Normal, timestamp]
       // ID starting from 1
       expect(await ArkreenMiner.AllMinerInfo(10)).to.deep.eq(minerInfo);
     })
-    it("ArkreenMiner Basics: Get Miners Address (Airdrop)", async () => {
+    it("ArkreenMiner Basics: Get Miners Address (VirtualMinerOnboardInBatch)", async () => {
       const receivers = randomAddresses(10)
       const miners = randomAddresses(10)
-      await ArkreenMiner.connect(deployer).AirdropMiners(receivers, miners)
+      await ArkreenMiner.connect(manager).VirtualMinerOnboardInBatch(receivers, miners)
       const minerInfo = miners[9]
       expect(await ArkreenMiner.GetMinersAddr(receivers[9])).to.deep.eq([minerInfo]);
     })
@@ -160,6 +160,7 @@ describe("ArkreenMinerV10X", () => {
     })
 */
     
+/*
     it("ArkreenMiner Basics: Get Miners Address (Order Miners)", async () => {
       const receiver = owner1.address
       const miners = randomAddresses(3)
@@ -177,7 +178,10 @@ describe("ArkreenMinerV10X", () => {
      
       await ArkreenMiner.connect(manager).OrderMiners(receiver, miners, signature)
       expect(await ArkreenMiner.GetMinersAddr(receiver)).to.deep.eq(miners);
-    })  
+    })
+*/
+
+/*
     it("ArkreenMiner Basics: Update miner status", async () => {
       const receiver = owner1.address
       const miners = randomAddresses(3)
@@ -200,6 +204,9 @@ describe("ArkreenMinerV10X", () => {
               .to.be.revertedWith("Ownable: caller is not the owner")
       await ArkreenMiner.connect(deployer).SetMinersStatus(2, MinerStatus.Terminated)
     })  
+*/
+
+/*
     it("ArkreenMiner Basics: Change airdrop cap", async () => {
       const receivers = randomAddresses(10)
       const miners = randomAddresses(10)
@@ -210,7 +217,8 @@ describe("ArkreenMinerV10X", () => {
               .to.be.revertedWith("Arkreen Miner: Cap Is Lower")
       await ArkreenMiner.connect(deployer).ChangeAirdropCap(20)
       expect(await ArkreenMiner.capGameMinerAirdrop()).to.equal(20)
-    })       
+    }) 
+*/    
     
     it("ArkreenMiner Basics: setLaunchTime", async () => {
       // Check only owner
@@ -223,13 +231,14 @@ describe("ArkreenMinerV10X", () => {
       expect (await ArkreenMiner.timestampFormalLaunch()).to.equal(FORMAL_LAUNCH)                
       const receivers = randomAddresses(10)
       const miners = randomAddresses(10)
-      await ArkreenMiner.connect(deployer).AirdropMiners(receivers, miners)
+      await ArkreenMiner.connect(manager).VirtualMinerOnboardInBatch(receivers, miners)
       await time.increaseTo(FORMAL_LAUNCH + 1);
       const receivers_1 = randomAddresses(10)
       const miners_1 = randomAddresses(10)
-      await expect(ArkreenMiner.connect(deployer).AirdropMiners(receivers_1, miners_1))
+      await expect(ArkreenMiner.connect(manager).VirtualMinerOnboardInBatch(receivers_1, miners_1))
               .to.be.revertedWith("Arkreen Miner: Gaming Phase Ended")
     })       
+
     it("ArkreenMiner Basics: Manage Manufactures", async () => {
       const manufactuers = randomAddresses(10)
       await expect(ArkreenMiner.connect(owner1).ManageManufactures(manufactuers, true))
@@ -243,7 +252,7 @@ describe("ArkreenMinerV10X", () => {
     it("ArkreenMiner Basics: Set Base URI and get token URI", async () => {
       const receivers = randomAddresses(10)
       const miners = randomAddresses(10)
-      await ArkreenMiner.connect(deployer).AirdropMiners(receivers, miners)
+      await ArkreenMiner.connect(manager).VirtualMinerOnboardInBatch(receivers, miners)
       let tokenURI
       tokenURI = await ArkreenMiner.tokenURI(9)
       console.log("tokenURI", tokenURI)
@@ -252,6 +261,8 @@ describe("ArkreenMinerV10X", () => {
 //        console.log("tokenURI", tokenURI)
     })  
   })
+
+/*  
   describe("ArkreenMiner: Fresh Game Miner Airdrop", () => {
     it("Airdrop Miners Failed: Not owner", async () => {
       const receivers = randomAddresses(10)
@@ -259,6 +270,7 @@ describe("ArkreenMinerV10X", () => {
       await expect(ArkreenMiner.connect(owner1).AirdropMiners(receivers, miners))
               .to.be.revertedWith("Ownable: caller is not the owner")
     })
+    
     it("Airdrop Miners Failed: Gaming Phase Ended", async () => {
       const receivers = randomAddresses(10)
       const miners = randomAddresses(10)
@@ -309,6 +321,7 @@ describe("ArkreenMinerV10X", () => {
       expect(await ArkreenMiner.AllMinerInfo(10)).to.deep.eq(miner9);
     })
   })
+
   describe("ArkreenMiner: Game miners cannot be transferred", () => {
     beforeEach(async () => {
       const receivers = randomAddresses(10)
@@ -327,6 +340,9 @@ describe("ArkreenMinerV10X", () => {
               .to.be.revertedWith("ERC721: caller is not token owner nor approved")
     })      
   })
+*/  
+
+/*
   describe("ArkreenMiner: Re-Airdrop pending game miners to new receivers", () => {
     const receivers_0 = randomAddresses(10)
     const miners_0 = randomAddresses(10)
@@ -396,6 +412,9 @@ describe("ArkreenMinerV10X", () => {
       expect(await ArkreenMiner.AllMinerInfo(10)).to.deep.eq(miner9);
     })
   })
+*/
+
+/*
   describe("ArkreenMiner: Order miners and mint game miners to the receiver", () => {
     const receivers_0 = randomAddresses(10)
     const miners_0 = randomAddresses(10)
@@ -467,13 +486,14 @@ describe("ArkreenMinerV10X", () => {
               .withArgs(owner1.address, ArkreenMiner.address, expandTo18Decimals(100).mul(10))
     })
   })
+*/
 
   describe("ArkreenMiner: Onbording a game miner", () => {
     const receivers = randomAddresses(10)
     const miners = randomAddresses(10)
-    beforeEach(async () => {
-      await ArkreenMiner.connect(deployer).AirdropMiners(receivers, miners)
-    });
+//    beforeEach(async () => {
+//      await ArkreenMiner.connect(manager).VirtualMinerOnboardInBatch(receivers, miners)
+//    });
     it("Onboarding Game Miner Failed 1: Signature Deadline checking ", async () => {
       const receiver = receivers[9]
       const miner = AKREToken.address
@@ -568,6 +588,7 @@ describe("ArkreenMinerV10X", () => {
       await expect(ArkreenMiner.connect(owner1).GameMinerOnboard(receiver, miner, true, constants.MaxUint256, signature))
               .to.be.revertedWith("Game Miner: No Miner To Board")
     })
+/*    
     it("Onboarding Game Miner Failed 6: Wrong miner address", async () => {
       const receiver = receivers[9]
       const miner = miners[8]                       // Wrong miner address
@@ -584,6 +605,8 @@ describe("ArkreenMinerV10X", () => {
       await expect(ArkreenMiner.connect(owner1).GameMinerOnboard(receiver, miner, true, constants.MaxUint256, signature))
               .to.be.revertedWith("Game Miner: Wrong Miner Address")
     })
+*/
+
     it("Onboarding Game Miner Failed 7: Onboarding a new one while holding a game miner", async () => {
       const receiver = receivers[9]
       const miners = randomAddresses(5)
@@ -632,7 +655,7 @@ describe("ArkreenMinerV10X", () => {
       await expect(ArkreenMiner.connect(owner1).GameMinerOnboard(receiver, miners[4], false, constants.MaxUint256, signature0))
               .to.be.revertedWith("Game Miner: Miner Repeated")    
     })
-
+/*
     it("Onboarding Game Miner: Onboarding the airdropped game miner", async () => {
       const receiver = receivers[9]
       const miner = miners[9]
@@ -661,6 +684,8 @@ describe("ArkreenMinerV10X", () => {
       const minerNFT = await ArkreenMiner.tokenOfOwnerByIndex(receiver, 0)
       expect(await ArkreenMiner.AllMinerInfo(minerNFT)).to.deep.eq(minerInfo);
     })
+*/
+
     it("Onboarding Game Miner: Onboarding an new game miner", async () => {
       const receiver = randomAddresses(1)[0]
       const miner = randomAddresses(1)[0]
@@ -679,8 +704,8 @@ describe("ArkreenMinerV10X", () => {
               .to.emit(ArkreenMiner, "GameMinerOnboarded")
               .withArgs(receiver, [miner]);
       expect(await ArkreenMiner.GetPendingGameNumber()).to.equal(numbPendingGameMiners)
-      expect(await ArkreenMiner.totalGameMiner()).to.equal(miners.length + 1);
-      expect(await ArkreenMiner.totalSupply()).to.equal(miners.length + 1);
+      expect(await ArkreenMiner.totalGameMiner()).to.equal(1);
+      expect(await ArkreenMiner.totalSupply()).to.equal(1);
       expect(await ArkreenMiner.balanceOf(receiver)).to.equal(1);
       
       const lastBlock = await ethers.provider.getBlock('latest')
@@ -862,7 +887,7 @@ describe("ArkreenMinerV10X", () => {
       expect(await ArkreenMinerV10XU.version()).to.equal('1.0.1');
       const receivers = randomAddresses(10)
       const miners = randomAddresses(10)
-      await ArkreenMinerV10XU.connect(deployer).AirdropMiners(receivers, miners)
+      await ArkreenMinerV10XU.connect(manager).VirtualMinerOnboardInBatch(receivers, miners)
       expect(await ArkreenMinerV10XU.tokenURI(9)).to.equal('https://www.arkreen.com/miners/9');
       await ArkreenMinerV10XU.connect(deployer).updateMineMore(9, "Miner 9 more testing info")
       expect(await ArkreenMinerV10XU.getMineMore(9)).to.equal('Miner 9 more testing info');
