@@ -335,15 +335,15 @@ contract ArkreenMinerV10X is
         tmpMiner.mStatus = MinerStatus.Normal;
         tmpMiner.timestamp = uint32(block.timestamp);        
 
-        if(bAirDrop) {
-            // Boarding an airdropped game miner
-            uint256 pendingMinerID = getPendingMiner(owner);            // Can only have one pending game miner       
-            require(pendingMinerID != type(uint256).max, "Game Miner: No Miner To Board"); 
-            require(miner == AllMinerInfo[pendingMinerID].mAddress, "Game Miner: Wrong Miner Address"); 
-            AllMinerInfo[pendingMinerID] = tmpMiner;
-            allPendingGameMiners.remove(pendingMinerID);
-
-        } else {
+//        if(bAirDrop) {
+//            // Boarding an airdropped game miner
+//            uint256 pendingMinerID = getPendingMiner(owner);            // Can only have one pending game miner       
+//            require(pendingMinerID != type(uint256).max, "Game Miner: No Miner To Board"); 
+//            require(miner == AllMinerInfo[pendingMinerID].mAddress, "Game Miner: Wrong Miner Address"); 
+//            AllMinerInfo[pendingMinerID] = tmpMiner;
+//            allPendingGameMiners.remove(pendingMinerID);
+//        } else 
+        {
             // Boading a new applied game miner
           require(bAllowedToMintGameMiner(owner), 'Game Miner: Holding Game Miner');    // Remove for testing
             require(AllMinersToken[miner] == 0, "Game Miner: Miner Repeated");
@@ -432,6 +432,7 @@ contract ArkreenMinerV10X is
         // Check the starndard address
         require(!miner.isContract(), 'Arkreen Miner: Not EOA Address');
         require(AllMinersToken[miner] == 0, "Arkreen Miner: Miner Repeated");
+        require( (whiteListMiner[miner] == uint8(MinerType.StandardMiner) ), 'Arkreen Miner: Wrong Miner');        
 
         // Check signature
         bytes32 hashRegister = keccak256(abi.encode(STANDARD_MINER_TYPEHASH, owner, miner, deadline));
@@ -454,7 +455,8 @@ contract ArkreenMinerV10X is
         AllMinerInfo[minerID] = tmpMiner;
 
         // Increase the counter of total standard miner 
-        totalStandardMiner += 1;       
+        totalStandardMiner += 1;      
+        delete whiteListMiner[miner]; 
 
         // emit onboarding event
         emit StandardMinerOnboarded(owner,  miner);

@@ -3,7 +3,7 @@ import { expect } from "chai";
 import { ethers, network, upgrades } from "hardhat";
 import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { getOnboardingGameMinerDigest, getOnboardingRemoteMinerDigest, expandTo18Decimals, getOnboardingGameMinerMessage,
-        randomAddresses, MinerType, MinerStatus, getApprovalDigest } from "./utils/utilities";
+        randomAddresses, MinerType, MinerStatus, getApprovalDigest, getOnboardingStandardMinerDigest } from "./utils/utilities";
 import { constants, BigNumber, Contract } from 'ethers'
 import { ecsign, fromRpcSig, ecrecover } from 'ethereumjs-util'
 import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
@@ -561,6 +561,7 @@ describe("ArkreenMinerV10X", () => {
       await expect(ArkreenMiner.connect(owner1).GameMinerOnboard(receiver, miner, false, constants.MaxUint256, signature))
               .to.be.revertedWith("Game Miner: INVALID_SIGNATURE")
     })
+/*    
     it("Onboarding Game Miner Failed 5: No Game Miner To Board", async () => {
       const receiver = owner1.address
       const miner = miners[9]
@@ -588,6 +589,8 @@ describe("ArkreenMinerV10X", () => {
       await expect(ArkreenMiner.connect(owner1).GameMinerOnboard(receiver, miner, true, constants.MaxUint256, signature))
               .to.be.revertedWith("Game Miner: No Miner To Board")
     })
+*/
+
 /*    
     it("Onboarding Game Miner Failed 6: Wrong miner address", async () => {
       const receiver = receivers[9]
@@ -711,6 +714,112 @@ describe("ArkreenMinerV10X", () => {
       const lastBlock = await ethers.provider.getBlock('latest')
       const timestamp = lastBlock.timestamp
       const minerInfo = [miner, MinerType.GameMiner, MinerStatus.Normal, timestamp]
+      const minerNFT = await ArkreenMiner.tokenOfOwnerByIndex(receiver, 0)
+      expect(await ArkreenMiner.AllMinerInfo(minerNFT)).to.deep.eq(minerInfo);
+    })
+  })
+
+  describe("ArkreenMiner: Onbording a standard miner", () => {
+    const receivers = randomAddresses(10)
+    const miners = randomAddresses(10)
+
+    it("Onboarding standard Miner Failed 1: Signature Deadline checking ", async () => {
+      const receiver = receivers[9]
+      const miner = miners[9]
+      const lastBlock = await ethers.provider.getBlock('latest')
+      const timestamp = lastBlock.timestamp
+      const digest = getOnboardingStandardMinerDigest(
+        'Arkreen Miner',
+        ArkreenMiner.address,
+        { owner: receiver, miner: miner },
+         BigNumber.from(timestamp + 600)
+      )
+      await network.provider.send("evm_increaseTime", [601]);
+      const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))        
+      const signature: SigStruct = { v, r, s }  
+     
+      await expect(ArkreenMiner.connect(owner1).StardardMinerOnboard(receiver, miner, BigNumber.from(timestamp + 600), signature))
+              .to.be.revertedWith("Arkreen Miner: EXPIRED")
+    })
+
+    it("Onboarding standard Miner Failed 2: standard miner address checking ", async () => {
+      const receiver = receivers[9]
+      const miner = AKREToken.address                   // wrong address
+      const digest = getOnboardingStandardMinerDigest(
+        'Arkreen Miner',
+        ArkreenMiner.address,
+        { owner: receiver, miner: miner},
+        constants.MaxUint256
+      )
+      const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))        
+      const signature: SigStruct = { v, r, s }  
+      
+      await expect(ArkreenMiner.connect(owner1).StardardMinerOnboard(receiver, miner, constants.MaxUint256, signature))
+              .to.be.revertedWith("Arkreen Miner: Not EOA Address")
+    })
+
+    it("Onboarding standard Miner Failed 3: standard miner repeated", async () => {
+      // Normal case 
+      const owners = randomAddresses(5)
+      const miners = randomAddresses(5)
+      await ArkreenMiner.connect(manager).VirtualMinerOnboardInBatch(owners, miners)
+
+      const receiver = receivers[9]
+      const digest = getOnboardingStandardMinerDigest(
+                      'Arkreen Miner',
+                      ArkreenMiner.address,
+                      { owner: receiver, miner: miners[4] },
+                      constants.MaxUint256
+                    )
+      await ArkreenMiner.setManager(Register_Authority, register_authority.address)
+      const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyRegister.slice(2), 'hex'))           
+      const signature0: SigStruct = { v, r, s } 
+      
+      await expect(ArkreenMiner.connect(owner1).StardardMinerOnboard(receiver, miners[4], constants.MaxUint256, signature0))
+              .to.be.revertedWith("Arkreen Miner: Miner Repeated")    
+    })       
+
+    it("Onboarding standard Miner Failed 4: Signature checking", async () => {
+      const receiver = receivers[9]
+      const miner = miners[9]
+      const digest = getOnboardingStandardMinerDigest(
+        'Arkreen Miner',
+        ArkreenMiner.address,
+        { owner: receiver, miner: miner },
+        constants.MaxUint256
+      )
+      const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))
+      const signature: SigStruct = { v, r, s }  
+      
+      await ArkreenMiner.connect(manager).UpdateMinerWhiteList(MinerType.StandardMiner, miners) 
+      await expect(ArkreenMiner.connect(owner1).StardardMinerOnboard(receiver, miner, constants.MaxUint256, signature))
+              .to.be.revertedWith("Arkreen Miner: INVALID_SIGNATURE")
+    })
+
+    it("Onboarding standard Miner: Onboarding an new standard miner", async () => {
+      const receiver = receivers[3]
+      const miner = miners[3]
+      const digest = getOnboardingStandardMinerDigest(
+        'Arkreen Miner',
+        ArkreenMiner.address,
+        { owner: receiver, miner: miner},
+        constants.MaxUint256
+      )
+      await ArkreenMiner.setManager(Register_Authority, register_authority.address)
+      const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyRegister.slice(2), 'hex'))
+      const signature: SigStruct = { v, r, s }  
+      
+      await ArkreenMiner.connect(manager).UpdateMinerWhiteList(MinerType.StandardMiner, miners)       
+      await expect(ArkreenMiner.connect(owner1).StardardMinerOnboard(receiver, miner, constants.MaxUint256, signature))
+              .to.emit(ArkreenMiner, "StandardMinerOnboarded")
+              .withArgs(receiver, miner);
+      expect(await ArkreenMiner.totalStandardMiner()).to.equal(1);
+      expect(await ArkreenMiner.totalSupply()).to.equal(1);
+      expect(await ArkreenMiner.balanceOf(receiver)).to.equal(1);
+      
+      const lastBlock = await ethers.provider.getBlock('latest')
+      const timestamp = lastBlock.timestamp
+      const minerInfo = [miner, MinerType.StandardMiner, MinerStatus.Normal, timestamp]
       const minerNFT = await ArkreenMiner.tokenOfOwnerByIndex(receiver, 0)
       expect(await ArkreenMiner.AllMinerInfo(minerNFT)).to.deep.eq(minerInfo);
     })
