@@ -345,7 +345,7 @@ contract ArkreenMinerV10X is
 //        } else 
         {
             // Boading a new applied game miner
-          require(bAllowedToMintGameMiner(owner), 'Game Miner: Holding Game Miner');    // Remove for testing
+//          require(bAllowedToMintGameMiner(owner), 'Game Miner: Holding Game Miner');    // Remove for testing
             require(AllMinersToken[miner] == 0, "Game Miner: Miner Repeated");
             uint256 gMinerID = totalSupply() + 1;
             _safeMint(owner, gMinerID);
