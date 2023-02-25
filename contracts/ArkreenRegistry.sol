@@ -137,9 +137,13 @@ contract ArkreenRegistry is
     }
 
 
-    function getRECToken(address issuer) external virtual returns(address tokenREC) {
-        require(recIssuers[issuer].added, 'Arkreen: Issuer Not Added');
-        tokenREC = recIssuers[issuer].tokenREC;
+    function getRECToken(address issuer, uint256 idAsset) external view virtual returns(address tokenREC) {
+        if( idAsset == 0) {
+            require(recIssuers[issuer].added, 'Arkreen: Issuer Not Added');
+            tokenREC = recIssuers[issuer].tokenREC;
+        } else {
+            tokenREC = allAssets[idAsset].tokenREC;
+        }
     }
 
     function setArkreenRetirement(address arkRetirement) external virtual onlyOwner checkAddress(arkRetirement) {

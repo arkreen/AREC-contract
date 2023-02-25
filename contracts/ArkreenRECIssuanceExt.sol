@@ -89,7 +89,7 @@ contract ArkreenRECIssuanceExt is
 
         // Check the caller be the MVP enity
         address sender = _msgSender();
-        require( AllMVPEnity[sender], "AREC: Not Allowed");
+        require( AllMVPEntity[sender], "AREC: Not Allowed");
 
         // Check and get asset information
         (address issuer, , address tokenPay, uint128 rateToIssue, ) 
@@ -222,7 +222,7 @@ contract ArkreenRECIssuanceExt is
     {
         // Check the caller be the MVP enity
         address sender = _msgSender();
-        require( AllMVPEnity[sender], "AREC: Not Allowed");
+        require( AllMVPEntity[sender], "AREC: Not Allowed");
 
         // Only ESG_AREC owner allowed to change the REC data
         require(ownerOf(tokenID) == _msgSender(), 'AREC: Not Owner');     // owner should be the minter also
@@ -307,23 +307,26 @@ contract ArkreenRECIssuanceExt is
     /**
      * @dev Redeem the REC NFT by retiring the NFT and registering an offset action
      */
+/*    
     function redeem(uint256 tokenId) public virtual whenNotPaused returns (uint256 offsetActionId) {
         offsetActionId = _redeem(_msgSender(), tokenId);
     }
-
+*/
     /**
      * @dev The third party triggers the RE redeem in the approval of the owner
      */
+/*
     function redeemFrom(address account, uint256 tokenId)
         external virtual whenNotPaused returns (uint256 offsetActionId) 
     {
         require(_isApprovedOrOwner(msg.sender, tokenId), 'AREC: Not Approved');
         offsetActionId = _redeem(account, tokenId);
     }
-   
+*   
     /**
      * @dev The internal function to offset the REC NFT.
      */
+/*
     function _redeem(address owner, uint256 tokenId) internal virtual returns (uint256 offsetActionId) {
 
         // Check if the REC owner
@@ -345,7 +348,7 @@ contract ArkreenRECIssuanceExt is
 
         emit RedeemFinished(owner, tokenId, offsetActionId);
     }
-
+*/
    /**
      * @dev Redeem the REC NFT and mint an offset certificate.
      * @param tokenId Id of the REC NFT to redeem.
@@ -354,6 +357,7 @@ contract ArkreenRECIssuanceExt is
      * @param beneficiaryID ID string of the beneficiary.
      * @param offsetMessage Message to illustrate the offset intention.
      */
+/*    
     function redeemAndMintCertificate(
         uint256         tokenId, 
         address         beneficiary,
@@ -378,7 +382,7 @@ contract ArkreenRECIssuanceExt is
                 .mintCertificate(owner, beneficiary, offsetEntityID, beneficiaryID, offsetMessage, offsetActionIds);
    
     }   
-
+*/
    /**
      * @dev liquidize the REC NFT and mint the corresponding ERC20 token
      * @param tokenId Id of the REC NFT to liquidize
@@ -434,11 +438,10 @@ contract ArkreenRECIssuanceExt is
      * @param op The operation of MVP address, =true, add MVP; =false, remove MVP 
      * @param listMVP The list of the MVP addresses
      */
-
     function manageMVPAddress(bool op, address[] calldata listMVP) public whenNotPaused onlyOwner {
         for(uint256 index; index < listMVP.length; index++) {
-            require( AllMVPEnity[listMVP[index]] != op, "AREC: Wrong Status" );
-            AllMVPEnity[listMVP[index]] = op;
+            require( AllMVPEntity[listMVP[index]] != op, "AREC: Wrong Status" );
+            AllMVPEntity[listMVP[index]] = op;
         }
     }
 
@@ -453,28 +456,29 @@ contract ArkreenRECIssuanceExt is
 
         // Only certified REC can be transferred
         if(from != address(0)) {
-            if(allRECData[tokenId].status == uint8(RECStatus.Liquidized)) {
-                address issuerREC = allRECData[tokenId].issuer;
-                address tokenREC = IArkreenRegistry(arkreenRegistry).getRECToken(issuerREC);
+            RECData storage recData = allRECData[tokenId];
+            if(recData.status == uint8(RECStatus.Liquidized)) {
+                address issuerREC = recData.issuer;
+                address tokenREC = IArkreenRegistry(arkreenRegistry).getRECToken(issuerREC, recData.idAsset);
                 address arkreenBadge = IArkreenRegistry(arkreenRegistry).getArkreenRetirement();
 
                 // Only the ART contract can restore the AREC
                 require(msg.sender == tokenREC, 'AREC: Not Allowed');
 
                 if(to == arkreenBadge) {
-                    allRECData[tokenId].status = uint8(RECStatus.Retired);
+                    recData.status = uint8(RECStatus.Retired);
                 } else {
-                    uint256 amountREC = allRECData[tokenId].amountREC;
+                    uint256 amountREC = recData.amountREC;
                     
                     // Modified the Liquidized REC amount
                     allRECLiquidized -= amountREC;
 
                     // Set the AREC status to be Liquidized
-                    allRECData[tokenId].status = uint8(RECStatus.Certified);
+                    recData.status = uint8(RECStatus.Certified);
                 }
             }
             else {
-                require(allRECData[tokenId].status == uint8(RECStatus.Certified), 'AREC: Wrong Status');
+                require(recData.status == uint8(RECStatus.Certified), 'AREC: Wrong Status');
             }
         }
 //      console.log("AAAAAAAAAAAAA");

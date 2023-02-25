@@ -140,7 +140,6 @@ contract ArkreenRECToken is
         // Track total retirement amount in TCO2 factory
         uint256 steps = 0;
         uint256 curAREC; 
-        RECData memory recData;
         uint256 amountFilled = 0; 
         uint256 amountRegister;
 
@@ -158,9 +157,9 @@ contract ArkreenRECToken is
                     curAREC = allARECLiquidized[latestARECID];
                     _remove(latestARECID, curAREC);
                     IArkreenRECIssuance(issuanceAREC).safeTransferFrom(address(this), badgeContract, curAREC);
-                    
-                    recData = IArkreenRECIssuance(issuanceAREC).getRECData(curAREC);
-                    partialAvailableAmount = recData.amountREC;
+
+                    (, uint128 amountREC, , ) = IArkreenRECIssuance(issuanceAREC).getRECDataCore(curAREC);
+                    partialAvailableAmount = amountREC;
                     partialARECID = curAREC;
                 }
 
@@ -232,14 +231,13 @@ contract ArkreenRECToken is
         address solidifier = _msgSender();
         address issuanceAREC = IArkreenRegistry(arkreenRegistry).getRECIssuance();
 
-        RECData memory recData;
         uint256 skips = 0;
         uint256 curAREC = allARECLiquidized[latestARECID];
         uint256 preAREC = latestARECID;
 
         while (skips <= MAX_SKIP) {
-            recData = IArkreenRECIssuance(issuanceAREC).getRECData(curAREC);
-            uint256 amountAREC = recData.amountREC;
+            (, uint128 amountREC, , ) = IArkreenRECIssuance(issuanceAREC).getRECDataCore(curAREC);
+            uint256 amountAREC = amountREC;
 
             if(amount < amountAREC) {
                 require(solidifiedAmount != 0, 'ART: Amount Too Less');                // Must solidify the oldest AREC first
@@ -298,9 +296,9 @@ contract ArkreenRECToken is
         // Check calling from REC Manager
         require( IArkreenRegistry(arkreenRegistry).getRECIssuance() == msg.sender, 'ART: Not From REC Issuance');
 
-        RECData memory recData = IArkreenRECIssuance(msg.sender).getRECData(tokenId);
-        require(recData.status == uint256(RECStatus.Certified), 'ART: Wrong Status');
-
+        (, uint128 amountREC, uint8 status, ) = IArkreenRECIssuance(msg.sender).getRECDataCore(tokenId);
+        require(status == uint256(RECStatus.Certified), 'ART: Wrong Status');
+        
         if(latestARECID == 0) {
             allARECLiquidized[tokenId] = tokenId;                           // build the loop list
             latestARECID = tokenId;
@@ -310,16 +308,16 @@ contract ArkreenRECToken is
             latestARECID = tokenId;                                         // refresh the newest AREC
         }
 
-        totalLiquidized += recData.amountREC;
+        totalLiquidized += amountREC;
 
         // Prepare liquidization fee 
         uint256 fee = 0;
         if(ratioLiquidizedFee != 0 && receiverFee != address(0)) {
-            fee = recData.amountREC * ratioLiquidizedFee / 10000;
+            fee = amountREC * ratioLiquidizedFee / 10000;
             _mint(receiverFee, fee);
         }
 
-        _mint(from, recData.amountREC - fee);
+        _mint(from, amountREC - fee);
 
         return this.onERC721Received.selector;
     }
@@ -335,7 +333,8 @@ contract ArkreenRECToken is
         uint256 curAREC = allARECLiquidized[latestARECID];
         for(uint256 index; index < number; index++) {
             amountAREC[index].ARECID = curAREC;
-            amountAREC[index].amountREC = IArkreenRECIssuance(issuanceAREC).getRECData(curAREC).amountREC;
+            (, uint128 amountREC, , ) = IArkreenRECIssuance(issuanceAREC).getRECDataCore(curAREC);
+            amountAREC[index].amountREC = amountREC;
             numAREC ++;
             if(curAREC == latestARECID) break;
             curAREC = allARECLiquidized[curAREC];

@@ -47,7 +47,7 @@ describe("ArkreenRECIssuance", () => {
     let arkreenRECToken:              ArkreenRECToken
     let arkreenRetirement:            ArkreenBadge
 
-    const FORMAL_LAUNCH       = 1682913600;         // 2023-05-01, 12:00:00
+    const FORMAL_LAUNCH = 1714536000;         // 2024-05-01, 12:00:00
     const Miner_Manager       = 0         
 
     async function deployFixture() {

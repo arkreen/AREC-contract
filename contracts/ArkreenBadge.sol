@@ -124,12 +124,13 @@ contract ArkreenBadge is
         uint256 amount,
         uint256 tokenId
     ) external returns (uint256) {
-        bool isRECIssuance = (msg.sender == IArkreenRegistry(arkreenRegistry).getRECIssuance());
+        address RECIssuance = IArkreenRegistry(arkreenRegistry).getRECIssuance();
+        bool isRECIssuance = (msg.sender == RECIssuance);
         bool isOffsetTokenId = (tokenId == 0) || ((tokenId >> 64) != 0);        // FLAG_OFFSET = 1<<64, to compliant with old design 
 
         // Check called from the REC token contract, or from the REC issuance contrarct
-        require( isRECIssuance || msg.sender == IArkreenRegistry(arkreenRegistry).getRECToken(issuerREC), 
-                    'ARB: Wrong Issuer');
+        ( , , , uint16 idAsset) = IArkreenRECIssuance(RECIssuance).getRECDataCore(tokenId);
+        require( isRECIssuance || msg.sender == IArkreenRegistry(arkreenRegistry).getRECToken(issuerREC, idAsset), 'ARB: Wrong Issuer');
 
         // TokenId should not be zero for RECIssuance, and should be offset type for RECToken
         require(isRECIssuance != isOffsetTokenId, 'ARB: Wrong TokenId');      
@@ -310,19 +311,21 @@ contract ArkreenBadge is
         address issuerREC = IArkreenRegistry(arkreenRegistry).getRECIssuance();
         require( issuerREC == msg.sender, 'ARB: Not From REC Issuance');
 
-        RECData memory recData = IArkreenRECIssuance(msg.sender).getRECData(tokenId);
-        if(from == IArkreenRegistry(arkreenRegistry).getRECToken(recData.issuer)) {
-            require(recData.status == uint256(RECStatus.Retired), 'ARB: Wrong Status'); 
+//      RECData memory recData = IArkreenRECIssuance(msg.sender).getRECData(tokenId);
+        (address issuer, uint128 amountREC, uint8 status, uint16 idAsset) = IArkreenRECIssuance(msg.sender).getRECDataCore(tokenId);
+
+        if(from == IArkreenRegistry(arkreenRegistry).getRECToken(issuer, idAsset)) {
+            require(status == uint256(RECStatus.Retired), 'ARB: Wrong Status'); 
             require(partialAvailableAmount == 0, 'ARB: Partial Left');
             partialARECID = tokenId;
-            partialAvailableAmount = recData.amountREC;
+            partialAvailableAmount = amountREC;
             return this.onERC721Received.selector;
         }
 
         require( keccak256(data) == keccak256("Redeem"), 'ARB: Refused');
-        require(recData.status == uint256(RECStatus.Certified), 'ARB: Wrong Status');  // Checking may be removed
+        require( status == uint256(RECStatus.Certified), 'ARB: Wrong Status');  // Checking may be removed
 
-        totalRedeemed = totalRedeemed + recData.amountREC;
+        totalRedeemed = totalRedeemed + amountREC;
         return this.onERC721Received.selector;
     }
 
@@ -348,7 +351,7 @@ contract ArkreenBadge is
         return userActions[user];
     }
 
-    /// @dev retrieve all data from VintageData struct
+    /// @dev retrieve all data from OffsetAction struct
     function getOffsetActions(uint256 offsetId) external view virtual returns (OffsetAction memory) {
         return (offsetActions[offsetId]);
     }    

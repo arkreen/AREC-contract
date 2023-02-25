@@ -45,7 +45,8 @@ interface V2Fixture {
 }
 
 const initPoolPrice = expandTo18Decimals(1).div(5)
-const BidStartTime: number = 1679241600   // 2023/03/20 00/00/00
+//const BidStartTime: number = 1679241600   // 2023/03/20 00/00/00
+const BidStartTime: number = 1687190400   // 2023/06/20 00/00/00
 const OPEN_BID_DURATION: number =  (3600 * 24 * 14)
 const rateTriggerArbitrage: number = 10
 

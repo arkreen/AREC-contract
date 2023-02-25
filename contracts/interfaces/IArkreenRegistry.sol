@@ -6,7 +6,7 @@ interface IArkreenRegistry {
     function recIssuers(address) external view returns (uint256);
     function getRECIssuance() external view returns (address);
     function isRECIssuer(address) external view returns(bool);
-    function getRECToken(address) external view returns (address);
+    function getRECToken(address, uint256) external view returns (address);
     function tokenRECs(address) external view returns (address);  
     function getArkreenRetirement() external view returns (address);  
     function getAssetInfo(uint256) external view returns (address issuer, address tokenREC,

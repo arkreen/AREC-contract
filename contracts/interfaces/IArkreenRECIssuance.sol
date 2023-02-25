@@ -6,6 +6,8 @@ import "../ArkreenRECIssuanceType.sol";
 interface IArkreenRECIssuance {
     function baseURI() external view returns (string memory);
     function getRECData(uint256 tokenId) external view returns (RECData memory);
+    function getRECDataCore(uint256 tokenId) external view 
+                            returns(address issuer, uint128 amountREC, uint8 status, uint16 idAsset); 
     function restore(uint256 tokenId) external returns (bool);
     function safeTransferFrom(address from, address to, uint256 tokenId) external;
 }

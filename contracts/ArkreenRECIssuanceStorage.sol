@@ -27,7 +27,7 @@ contract ArkreenRECIssuanceStorage {
     mapping(address => uint256) public paymentTokenPrice;
     address[] public paymentTokens;
 
-    mapping(address => bool) public AllMVPEnity;
+    mapping(address => bool) public AllMVPEntity;
 
     // keccak256("RECIssuance(address owner,uint256 startTime,uint256 endTime,
     //                        uint256 amountREC,uint256 merkelRoot,string url,
