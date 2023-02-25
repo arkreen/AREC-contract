@@ -213,7 +213,7 @@ describe("HashKeyESGBTC", () => {
       await arkreenRECIssuance.deployed()
 
       const ArkreenRECTokenFactory = await ethers.getContractFactory("ArkreenRECToken")
-      arkreenRECToken = await upgrades.deployProxy(ArkreenRECTokenFactory,[arkreenRegistry.address, manager.address]) as ArkreenRECToken
+      arkreenRECToken = await upgrades.deployProxy(ArkreenRECTokenFactory,[arkreenRegistry.address, manager.address,'', '']) as ArkreenRECToken
       await arkreenRECToken.deployed()
       
       const ArkreenRetirementFactory = await ethers.getContractFactory("ArkreenBadge")

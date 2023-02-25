@@ -71,10 +71,14 @@ contract ArkreenRECToken is
         _disableInitializers();
     }
 
-    function initialize(address arkRegistry, address issuer) external virtual initializer {
+    function initialize(address arkRegistry, address issuer, string calldata name, string calldata symbol) external virtual initializer {
         __Ownable_init_unchained();
         __UUPSUpgradeable_init();        
-        __ERC20_init_unchained(NAME, SYMBOL);
+        if(bytes(symbol).length == 0) {
+          __ERC20_init_unchained(NAME, SYMBOL);
+        } else {
+          __ERC20_init_unchained(name, symbol);          
+        }
         arkreenRegistry = arkRegistry;
         issuerREC = issuer;
     }
@@ -255,6 +259,7 @@ contract ArkreenRECToken is
         }
 
         _burn(solidifier, solidifiedAmount);                    // solidifiedAmount must be more than 0 here, burn once to save gas
+        totalLiquidized -= solidifiedAmount;                    // 
 
         if(chargeOn) {
             feeSolidify = solidifiedAmount * ratioFeeToSolidify / 10000;

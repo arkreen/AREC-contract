@@ -47,6 +47,7 @@ struct RECData {
     string    region;
     string    url;
     string    memo;
+    uint16    idAsset;
 }
 
 struct ARECAmount {

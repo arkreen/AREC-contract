@@ -12,6 +12,17 @@ contract ArkreenRegistryStorage {
         string    issuerId;
     }
 
+    struct AssetAREC {
+        string      idAsset;        
+        address     issuer;        
+        address     tokenREC;
+        address     tokenPay;
+        uint128     rateToIssue;                // Calculated based on 1 AREC, 10**9
+        uint16      rateToLiquidize;            // Calculated based on 10000
+        bool        bActive;
+        string      description;
+    }
+
     // Arkreen Miner Contact Address
     address internal arkreenMiner;
 
@@ -26,4 +37,6 @@ contract ArkreenRegistryStorage {
     mapping(address => IssuerStatus) public recIssuers;
     mapping(address => address) public tokenRECs;           // mapping token to issuer
     mapping(uint256 => address) public allIssuers;          // All Issuers
+    uint256 public numAsset;
+    mapping(uint256 => AssetAREC) public allAssets;          // All assets
 }

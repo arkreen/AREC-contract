@@ -9,4 +9,6 @@ interface IArkreenRegistry {
     function getRECToken(address) external view returns (address);
     function tokenRECs(address) external view returns (address);  
     function getArkreenRetirement() external view returns (address);  
+    function getAssetInfo(uint256) external view returns (address issuer, address tokenREC,
+                                    address tokenPay, uint128 rateToIssue, uint16 rateToLiquidize);
 }

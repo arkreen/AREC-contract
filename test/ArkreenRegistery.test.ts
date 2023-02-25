@@ -29,7 +29,7 @@ describe("ArkreenRegistry", () => {
         await arkreenRegistry.deployed()
 
         const ArkreenRECTokenFactory = await ethers.getContractFactory("ArkreenRECToken")
-        arkreenRECToken = await upgrades.deployProxy(ArkreenRECTokenFactory,[arkreenRegistry.address, bob.address]) as ArkreenRECToken
+        arkreenRECToken = await upgrades.deployProxy(ArkreenRECTokenFactory,[arkreenRegistry.address, bob.address, '', '']) as ArkreenRECToken
         await arkreenRECToken.deployed()        
     });
 

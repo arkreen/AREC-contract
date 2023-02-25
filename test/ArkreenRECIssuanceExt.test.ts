@@ -15,11 +15,11 @@ import {
 } from "../typechain";
 
 import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { getApprovalDigest, expandTo18Decimals, randomAddresses, MinerType, RECStatus } from "./utils/utilities";
+import { getApprovalDigest, expandTo18Decimals, randomAddresses, MinerType, RECStatus, expandTo9Decimals } from "./utils/utilities";
 import { ecsign, fromRpcSig, ecrecover } from 'ethereumjs-util'
 import { RECRequestStruct, SignatureStruct, RECDataStruct } from "../typechain/contracts/ArkreenRECIssuance";
 
-describe("ArkreenRECIssuance", () => {
+describe("ArkreenRECIssuanceExt", () => {
     let deployer: SignerWithAddress;
     let manager: SignerWithAddress;
     let register_authority: SignerWithAddress;
@@ -45,6 +45,7 @@ describe("ArkreenRECIssuance", () => {
 
 
     let arkreenRECToken:              ArkreenRECToken
+    let ArkreenRECTokenESG:           ArkreenRECToken
     let arkreenRetirement:            ArkreenBadge
 
     const FORMAL_LAUNCH       = 1682913600;         // 2023-05-01, 12:00:00
@@ -71,25 +72,29 @@ describe("ArkreenRECIssuance", () => {
       await arkreenRECIssuance.deployed()
 
       const ArkreenRECIssuanceExtFactory = await ethers.getContractFactory("ArkreenRECIssuanceExt")
-      const arkreenRECIssuanceExt = await ArkreenRECIssuanceExtFactory.deploy()
-      await arkreenRECIssuanceExt.deployed()    
+      const arkreenRECIssuanceExtImp = await ArkreenRECIssuanceExtFactory.deploy()
+      await arkreenRECIssuanceExtImp.deployed()    
       
-      await arkreenRECIssuance.setESGExtAddress(arkreenRECIssuanceExt.address)
+      await arkreenRECIssuance.setESGExtAddress(arkreenRECIssuanceExtImp.address)
 
       const ArkreenRECTokenFactory = await ethers.getContractFactory("ArkreenRECToken")
-      arkreenRECToken = await upgrades.deployProxy(ArkreenRECTokenFactory,[arkreenRegistry.address, manager.address,'','']) as ArkreenRECToken
-      await arkreenRECToken.deployed()     
+      const arkreenRECToken = await upgrades.deployProxy(ArkreenRECTokenFactory,[arkreenRegistry.address, manager.address,'','']) as ArkreenRECToken
+      await arkreenRECToken.deployed()   
+
+      const ArkreenRECTokenESGFactory = await ethers.getContractFactory("ArkreenRECToken")
+      const ArkreenRECTokenESG = await upgrades.deployProxy(ArkreenRECTokenESGFactory,[arkreenRegistry.address, manager.address,'HashKey AREC Token','HART']) as ArkreenRECToken
+      await ArkreenRECTokenESG.deployed()          
       
       const ArkreenRetirementFactory = await ethers.getContractFactory("ArkreenBadge")
-      arkreenRetirement = await upgrades.deployProxy(ArkreenRetirementFactory,[arkreenRegistry.address]) as ArkreenBadge
+      const arkreenRetirement = await upgrades.deployProxy(ArkreenRetirementFactory,[arkreenRegistry.address]) as ArkreenBadge
       await arkreenRetirement.deployed()           
   
-      await AKREToken.transfer(owner1.address, expandTo18Decimals(10000))
-      await AKREToken.connect(owner1).approve(arkreenRECIssuance.address, expandTo18Decimals(10000))
-      await AKREToken.transfer(maker1.address, expandTo18Decimals(10000))
-      await AKREToken.connect(maker1).approve(arkreenRECIssuance.address, expandTo18Decimals(10000))
-      await AKREToken.connect(owner1).approve(arkreenMiner.address, expandTo18Decimals(10000))
-      await AKREToken.connect(maker1).approve(arkreenMiner.address, expandTo18Decimals(10000))
+      await AKREToken.transfer(owner1.address, expandTo18Decimals(100000))
+      await AKREToken.connect(owner1).approve(arkreenRECIssuance.address, expandTo18Decimals(100000))
+      await AKREToken.transfer(maker1.address, expandTo18Decimals(100000))
+      await AKREToken.connect(maker1).approve(arkreenRECIssuance.address, expandTo18Decimals(100000))
+      await AKREToken.connect(owner1).approve(arkreenMiner.address, expandTo18Decimals(100000))
+      await AKREToken.connect(maker1).approve(arkreenMiner.address, expandTo18Decimals(100000))
 
       // set formal launch
       await arkreenMiner.setLaunchTime(FORMAL_LAUNCH)
@@ -121,7 +126,12 @@ describe("ArkreenRECIssuance", () => {
       await arkreenRegistry.setRECIssuance(arkreenRECIssuance.address)
       await arkreenRegistry.setArkreenRetirement(arkreenRetirement.address)
 
-      return {AKREToken, arkreenMiner, arkreenRegistry, arkreenRECIssuance, arkreenRECToken, arkreenRetirement}
+      arkreenRECIssuanceExt = ArkreenRECIssuanceExt__factory.connect(arkreenRECIssuance.address, deployer);
+
+      await arkreenRegistry.newAssetAREC('Test ARE', maker1.address, arkreenRECToken.address,
+                  AKREToken.address, BigNumber.from("0x3635c9adc5dea00000"), 1000, 'HashKey ESG BTC' )
+
+      return {AKREToken, arkreenMiner, arkreenRegistry, arkreenRECIssuance, arkreenRECToken, ArkreenRECTokenESG, arkreenRetirement, arkreenRECIssuanceExt}
     }
 
     beforeEach(async () => {
@@ -137,119 +147,186 @@ describe("ArkreenRECIssuance", () => {
         arkreenMiner = fixture.arkreenMiner        
         arkreenRegistry = fixture.arkreenRegistry
         arkreenRECIssuance = fixture.arkreenRECIssuance
+        arkreenRECIssuanceExt = fixture.arkreenRECIssuanceExt
+        arkreenRECToken = fixture.arkreenRECToken
     });
 
-    it("ArkreenRECIssuance: Basics", async () => {
-        expect(await arkreenRECIssuance.NAME()).to.equal("Arkreen RE Certificate");
-        expect(await arkreenRECIssuance.SYMBOL()).to.equal("AREC");
-    });
-
-    it("ArkreenRECIssuance: setBaseURI", async () => {
-      expect(await arkreenRECIssuance.baseURI()).to.equal("https://www.arkreen.com/AREC/");
-      await arkreenRECIssuance.setBaseURI("https://www.arkreen.com/A-REC/")
-      expect(await arkreenRECIssuance.baseURI()).to.equal("https://www.arkreen.com/A-REC/");
-    });
-
-    it("ArkreenRECIssuance: supportsInterface", async () => {      
-      expect(await arkreenRECIssuance.supportsInterface("0x01ffc9a7")).to.equal(true);    // EIP165
-      expect(await arkreenRECIssuance.supportsInterface("0x80ac58cd")).to.equal(true);    // ERC721
-      expect(await arkreenRECIssuance.supportsInterface("0x780e9d63")).to.equal(true);    // ERC721Enumerable
-      expect(await arkreenRECIssuance.supportsInterface("0x5b5e139f")).to.equal(true);    // ERC721Metadata
-      expect(await arkreenRECIssuance.supportsInterface("0x150b7a02")).to.equal(false);   // ERC721TokenReceiver
-    });   
-
-   
-    describe("ARECMintPrice related", () => {
-
-      let TokenA: ArkreenTokenTest
-      let TokenB: ArkreenTokenTest
-      let TokenC: ArkreenTokenTest
-      let TokenD: ArkreenTokenTest
-      let arkreenRECIssuanceExt: ArkreenRECIssuanceExt
+    describe("mintESGBatch", () => {
+      let signature: SignatureStruct
+      let recMintRequest: RECRequestStruct 
+      let lastBlock
+      const startTime = 1564888526
+      const endTime   = 1654888526
+      const mintFee = expandTo18Decimals(99 *1000)      
 
       beforeEach(async () => {
-        const ERC20Factory = await ethers.getContractFactory("ArkreenTokenTest");
-        TokenA = await ERC20Factory.deploy(10_000_000_000);
-        await TokenA.deployed();
-        TokenB = await ERC20Factory.deploy(10_000_000_000);
-        await TokenB.deployed();
-        TokenC = await ERC20Factory.deploy(10_000_000_000);
-        await TokenC.deployed();  
-        TokenD = await ERC20Factory.deploy(10_000_000_000);
-        await TokenD.deployed();     
-        arkreenRECIssuanceExt = ArkreenRECIssuanceExt__factory.connect(arkreenRECIssuance.address, deployer);       
-        
+        recMintRequest = { 
+          issuer: manager.address, startTime, endTime,
+          amountREC: BigNumber.from(1000), 
+          cID: "bafybeihepmxz4ytc4ht67j73nzurkvsiuxhsmxk27utnopzptpo7wuigte", 
+          region: 'Beijing',
+          url:"", memo:""
+        } 
+        const nonce1 = await AKREToken.nonces(owner1.address)
+        const digest1 = await getApprovalDigest(
+                                AKREToken,
+                                { owner: owner1.address, spender: arkreenRECIssuance.address, value: mintFee },
+                                nonce1,
+                                constants.MaxUint256
+                              )
+        const { v,r,s } = ecsign(Buffer.from(digest1.slice(2), 'hex'), Buffer.from(privateKeyOwner.slice(2), 'hex'))
+        signature = { v, r, s, token: AKREToken.address, value:mintFee, deadline: constants.MaxUint256 } 
       })
 
-      it("ArkreenRECIssuance: updateARECMintPrice Normal", async () => {
+      it("ArkreenRECIssuanceExt: mintESGBatch Abnormal", async () => {
+
+        lastBlock = await ethers.provider.getBlock('latest') 
+        signature.deadline = BigNumber.from(lastBlock.timestamp -1 )
+
+        // Deadline check
+        recMintRequest.issuer = maker1.address
+        await expect(arkreenRECIssuanceExt.connect(owner1).mintESGBatch(1, expandTo9Decimals(99), signature))
+                .to.be.revertedWith("RECIssuance: EXPIRED") 
+
+        // Only MVP entity allowed
+        signature.deadline = constants.MaxUint256
+        await expect(arkreenRECIssuanceExt.connect(owner1).mintESGBatch(1, expandTo9Decimals(99), signature))
+                .to.be.revertedWith("AREC: Not Allowed") 
+        recMintRequest.issuer = manager.address    
+
+        await arkreenRECIssuanceExt.manageMVPAddress(true,[owner1.address])
+
+        signature.token = arkreenRECToken.address
+        await expect(arkreenRECIssuanceExt.connect(owner1).mintESGBatch(1, expandTo9Decimals(99), signature))
+                .to.be.revertedWith("AREC: Wrong Payment Token") 
+
+        // Miner Contract not set
+        signature.token = AKREToken.address
+        signature.value = mintFee.sub(1)
+        await expect(arkreenRECIssuanceExt.connect(owner1).mintESGBatch(1, expandTo9Decimals(99), signature))
+                .to.be.revertedWith("AREC: Low Payment Value") 
+
+        signature.value = mintFee
+        signature.deadline = constants.MaxUint256.sub(1)
+        await expect(arkreenRECIssuanceExt.connect(owner1).mintESGBatch(1, expandTo9Decimals(99), signature))
+                .to.be.revertedWith("ERC20Permit: invalid signature")    
+
+        signature.deadline = constants.MaxUint256
+        await arkreenRECIssuanceExt.connect(owner1).mintESGBatch(1, expandTo9Decimals(99), signature)
+
+      });
+
+      it("ArkreenRECIssuanceExt: mintESGBatch Normal", async () => {
         // Normal
-        const price0:BigNumber = expandTo18Decimals(50)
-        const price1:BigNumber = expandTo18Decimals(60)
-        const price2:BigNumber = expandTo18Decimals(70)
-        const price3:BigNumber = expandTo18Decimals(80)
-        const price4:BigNumber = expandTo18Decimals(90)
+        await arkreenRECIssuanceExt.manageMVPAddress(true,[owner1.address])              
+        const balanceArkreenRECIssuance = await AKREToken.balanceOf(arkreenRECIssuance.address)
+        await expect(arkreenRECIssuanceExt.connect(owner1).mintESGBatch(1, expandTo9Decimals(99), signature))
+                  .to.emit(arkreenRECIssuanceExt, 'Transfer')
+                  .withArgs(0, owner1.address, 1)
+                  .to.emit(arkreenRECIssuanceExt, 'ESGBatchMinted')
+                  .withArgs(owner1.address, 1)
+                  .to.emit(AKREToken, 'Transfer')
+                  .withArgs(owner1.address, arkreenRECIssuanceExt.address, mintFee)
 
-        await arkreenRECIssuance.updateARECMintPrice(AKREToken.address, price0)
-        await arkreenRECIssuance.updateARECMintPrice(TokenA.address, price1)
-        await arkreenRECIssuance.updateARECMintPrice(TokenB.address, price2)
-        await arkreenRECIssuance.updateARECMintPrice(TokenC.address, price3)
-        await arkreenRECIssuance.updateARECMintPrice(TokenD.address, price4)
+        let recData = [ maker1.address,  "",  owner1.address,
+                        0,  0,
+                        expandTo9Decimals(99),
+                        BigNumber.from(RECStatus.Pending),
+                        '', 
+                        '',
+                        '', '', 1 ]
 
-        const priceList0 = [ [AKREToken.address, price0],
-                            [TokenA.address, price1],
-                            [TokenB.address, price2],
-                            [TokenC.address, price3],
-                            [TokenD.address, price4] ]
+        expect(await arkreenRECIssuance.getRECData(1)).to.deep.eq(recData);
 
-        let allARECMintPrice
-        allARECMintPrice = await arkreenRECIssuanceExt.allARECMintPrice()
-        expect(allARECMintPrice).to.deep.eq(priceList0);
-
-        //  Remove TokenA
-        await arkreenRECIssuance.updateARECMintPrice(TokenA.address, 0)
-        const priceList1 = [ [AKREToken.address, price0],
-                              [TokenD.address, price4],
-                              [TokenB.address, price2],
-                              [TokenC.address, price3] ]
-        allARECMintPrice = await arkreenRECIssuanceExt.allARECMintPrice()                            
-        expect(allARECMintPrice).to.deep.eq(priceList1);   
+        let payInfo = [AKREToken.address, mintFee]
+        expect(await arkreenRECIssuance.allPayInfo(1)).to.deep.eq(payInfo);
         
-//        console.log('allARECMintPrice', allARECMintPrice, priceList1)
-
-        //  Update TokenB
-        await arkreenRECIssuance.updateARECMintPrice(TokenB.address, price4)
-        const priceList2 = [ [AKREToken.address, price0],
-                              [TokenD.address, price4],
-                              [TokenB.address, price4],
-                              [TokenC.address, price3] ]
-        allARECMintPrice = await arkreenRECIssuanceExt.allARECMintPrice()                            
-        expect(allARECMintPrice).to.deep.eq(priceList2);   
-
-        //  add TokenA
-        await arkreenRECIssuance.updateARECMintPrice(TokenA.address, price2)
-        const priceList3 = [ [AKREToken.address, price0],
-                              [TokenD.address, price4],
-                              [TokenB.address, price4],
-                              [TokenC.address, price3],
-                              [TokenA.address, price2],
-                             ]
-        allARECMintPrice = await arkreenRECIssuanceExt.allARECMintPrice()                            
-        expect(allARECMintPrice).to.deep.eq(priceList3);
-        
-        // Not Owner
-        await expect(arkreenRECIssuance.connect(owner1).updateARECMintPrice(TokenA.address, price2))
-                .to.be.revertedWith("Ownable: caller is not the owner") 
-
-        // Not contract                              
-        await expect(arkreenRECIssuance.updateARECMintPrice(owner1.address, price2))
-                .to.be.revertedWith("AREC: Wrong token") 
-
-        // Zero price      
-        await arkreenRECIssuance.updateARECMintPrice(TokenA.address, 0)                        
-        await expect(arkreenRECIssuance.updateARECMintPrice(TokenA.address, 0))
-                .to.be.revertedWith("AREC: Zero Price") 
+        expect(await AKREToken.balanceOf(arkreenRECIssuance.address)).to.equal(balanceArkreenRECIssuance.add(mintFee))
       })
     })
+
+    describe("updateRECDataExt", () => {
+      let tokenID: BigNumber
+      let signature: SignatureStruct
+      const startTime = 1564888526
+      const endTime   = 1654888526
+      const mintFee = expandTo18Decimals(9 *1000)   
+
+      const region = "Shanghai"
+      const url = "https://www.arkreen.com/AREC/"
+      const memo = "Test Update"   
+      const cID = "bafybeihepmxz4ytc4ht67j73nzurkvsiuxhsmxk27utnopzptpo7wuigte"
+
+      beforeEach(async () => {
+        const nonce1 = await AKREToken.nonces(owner1.address)
+        const digest1 = await getApprovalDigest(
+                                AKREToken,
+                                { owner: owner1.address, spender: arkreenRECIssuance.address, value: mintFee },
+                                nonce1,
+                                constants.MaxUint256
+                              )
+        const { v,r,s } = ecsign(Buffer.from(digest1.slice(2), 'hex'), Buffer.from(privateKeyOwner.slice(2), 'hex'))
+        signature = { v, r, s, token: AKREToken.address, value:mintFee, deadline: constants.MaxUint256 } 
+
+        // Normal
+        await arkreenRECIssuanceExt.manageMVPAddress(true,[owner1.address])    
+        await arkreenRECIssuanceExt.connect(owner1).mintESGBatch(1, expandTo9Decimals(9), signature)
+        tokenID = await arkreenRECIssuanceExt.totalSupply()
+      })
+
+      it("ArkreenRECIssuanceExt: updateRECDataExt Abnormal", async () => {
+
+        await expect(arkreenRECIssuanceExt.connect(owner2).updateRECDataExt(tokenID, startTime, endTime, cID, region, url, memo))
+                .to.be.revertedWith("AREC: Not Allowed")         
+
+        await arkreenRECIssuanceExt.manageMVPAddress(true,[owner2.address])    
+        await expect(arkreenRECIssuanceExt.connect(owner2).updateRECDataExt(tokenID, startTime, endTime, cID, region, url, memo))
+                .to.be.revertedWith("AREC: Not Owner") 
+                
+        await arkreenRECIssuance.connect(maker1).rejectRECRequest(tokenID)  
+        await arkreenRECIssuanceExt.connect(owner1).cancelRECRequest(tokenID)
+        await expect(arkreenRECIssuanceExt.connect(owner1).updateRECDataExt(tokenID, startTime, endTime, cID, region, url, memo))
+                .to.be.revertedWith("AREC: Wrong Status") 
+      })
+
+      it("ArkreenRECIssuanceExt: updateRECDataExt Normal", async () => {
+        await arkreenRECIssuance.connect(maker1).rejectRECRequest(tokenID)  
+        await arkreenRECIssuanceExt.connect(owner1).updateRECDataExt(tokenID, startTime, endTime, cID, region, url, memo)
+
+        await expect(arkreenRECIssuanceExt.connect(owner1).updateRECDataExt(tokenID, startTime, endTime, cID, region, url, memo))
+                .to.emit(arkreenRECIssuanceExt, "ESGBatchDataUpdated")
+                .withArgs(owner1.address, tokenID)                
+
+        let recData = [ maker1.address,  "",  owner1.address,
+                        startTime,  endTime,
+                        expandTo9Decimals(9),
+                        BigNumber.from(RECStatus.Pending),
+                        cID, region, url, memo, 1 ]
+
+        expect(await arkreenRECIssuance.getRECData(tokenID)).to.deep.eq(recData);    
+        
+        await arkreenRECIssuance.connect(maker1).rejectRECRequest(tokenID)  
+        let recData1 = [ maker1.address,  "",  owner1.address,
+                        startTime,  endTime,
+                        expandTo9Decimals(9),
+                        BigNumber.from(RECStatus.Rejected),
+                        cID, region, url, memo, 1 ]
+        expect(await arkreenRECIssuance.getRECData(tokenID)).to.deep.eq(recData1);  
+
+        const newMemo = 'Test Memo'
+        await arkreenRECIssuanceExt.connect(owner1).updateRECDataExt(tokenID, 0, 0, '', '', '', newMemo)
+        let recData2 = [ maker1.address,  "",  owner1.address,
+                        startTime,  endTime,
+                        expandTo9Decimals(9),
+                        BigNumber.from(RECStatus.Pending),
+                        cID, region, url, newMemo, 1 ]
+        expect(await arkreenRECIssuance.getRECData(tokenID)).to.deep.eq(recData2);  
+      })
+    })
+
+
+
+//////////////////////////////////////////////////
 
     describe("mintRECRequest", () => {
       let signature: SignatureStruct
@@ -277,7 +354,7 @@ describe("ArkreenRECIssuance", () => {
         signature = { v, r, s, token: AKREToken.address, value:mintFee, deadline: constants.MaxUint256 } 
       })
 
-      it("ArkreenRECIssuance: mintRECRequest Abnormal", async () => {
+      it("ArkreenRECIssuanceExt: mintRECRequest Abnormal", async () => {
         // Wrong Issuer
         recMintRequest.issuer = maker1.address
         await expect(arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature))
@@ -296,8 +373,8 @@ describe("ArkreenRECIssuance", () => {
 
         // Not Miner
         /////////////////////////////////////////////////////////
-//        await expect(arkreenRECIssuance.connect(owner2).mintRECRequest(recMintRequest, signature))
-//                .to.be.revertedWith("AREC: Not Miner")                 
+        //        await expect(arkreenRECIssuance.connect(owner2).mintRECRequest(recMintRequest, signature))
+        //                .to.be.revertedWith("AREC: Not Miner")                 
         /////////////////////////////////////////////////////////
 
         // Payment token not set  
@@ -320,7 +397,7 @@ describe("ArkreenRECIssuance", () => {
                 .to.be.revertedWith("RECIssuance: EXPIRED") 
       });
 
-      it("ArkreenRECIssuance: mintRECRequest Normal", async () => {
+      it("ArkreenRECIssuanceExt: mintRECRequest Normal", async () => {
         // Normal
         await arkreenRegistry.setArkreenMiner(arkreenMiner.address)        
         const balanceArkreenRECIssuance = await AKREToken.balanceOf(arkreenRECIssuance.address)
@@ -375,7 +452,7 @@ describe("ArkreenRECIssuance", () => {
         tokenID = await arkreenRECIssuance.totalSupply()
       })
 
-      it("ArkreenRECIssuance: rejectRECRequest", async () => {
+      it("ArkreenRECIssuanceExt: rejectRECRequest", async () => {
         // Not issuer
         await expect(arkreenRECIssuance.connect(maker1).rejectRECRequest(tokenID))
                 .to.be.revertedWith("AREC: Not Issuer") 
@@ -433,7 +510,7 @@ describe("ArkreenRECIssuance", () => {
         tokenID = await arkreenRECIssuance.totalSupply()
       })
 
-      it("ArkreenRECIssuance: updateRECData Abnormal", async () => {
+      it("ArkreenRECIssuanceExt: updateRECData Abnormal", async () => {
         await expect(arkreenRECIssuance.connect(owner2).updateRECData(tokenID, maker1.address, region, url, memo ))
                 .to.be.revertedWith("AREC: Not Owner") 
 
@@ -445,7 +522,7 @@ describe("ArkreenRECIssuance", () => {
                 .to.be.revertedWith("AREC: Wrong Issuer")           
       })
 
-      it("ArkreenRECIssuance: updateRECData Normal", async () => {
+      it("ArkreenRECIssuanceExt: updateRECData Normal", async () => {
         await arkreenRECIssuance.connect(manager).rejectRECRequest(tokenID)  
         await expect(arkreenRECIssuance.connect(owner1).updateRECData(tokenID, manager.address, region, url, memo))
                 .to.emit(arkreenRECIssuance, "RECDataUpdated")
@@ -498,7 +575,7 @@ describe("ArkreenRECIssuance", () => {
 
       })
 
-      it("ArkreenRECIssuance: cancelRECRequest Abnormal", async () => {
+      it("ArkreenRECIssuanceExt: cancelRECRequest Abnormal", async () => {
         await expect(arkreenRECIssuanceExt.connect(owner2).cancelRECRequest(tokenID ))
                 .to.be.revertedWith("AREC: Not Owner") 
 
@@ -507,7 +584,7 @@ describe("ArkreenRECIssuance", () => {
      
       })
 
-      it("ArkreenRECIssuance: cancelRECRequest Normal", async () => {
+      it("ArkreenRECIssuanceExt: cancelRECRequest Normal", async () => {
         await arkreenRECIssuance.connect(manager).rejectRECRequest(tokenID)  
         await expect(arkreenRECIssuanceExt.connect(owner1).cancelRECRequest(tokenID))
                 .to.emit(arkreenRECIssuance, "RECCanceled")
@@ -560,7 +637,7 @@ describe("ArkreenRECIssuance", () => {
         tokenID = await arkreenRECIssuance.totalSupply()
       })
 
-      it("ArkreenRECIssuance: certifyRECRequest Abnormal", async () => {
+      it("ArkreenRECIssuanceExt: certifyRECRequest Abnormal", async () => {
         await arkreenRegistry.addRECIssuer(maker1.address, arkreenRECToken.address, "Arkreen Issuer Maker") 
         await expect(arkreenRECIssuance.connect(owner2).certifyRECRequest(tokenID,"Serial12345678" ))
                 .to.be.revertedWith("AREC: Not Issuer") 
@@ -574,7 +651,7 @@ describe("ArkreenRECIssuance", () => {
      
       })
 
-      it("ArkreenRECIssuance: certifyRECRequest Normal", async () => {
+      it("ArkreenRECIssuanceExt: certifyRECRequest Normal", async () => {
         await expect(arkreenRECIssuance.connect(manager).certifyRECRequest(tokenID, "Serial12345678"))
                 .to.emit(arkreenRECIssuance, "RECCertified")
                 .withArgs(manager.address, tokenID)
@@ -601,7 +678,7 @@ describe("ArkreenRECIssuance", () => {
 
 
     describe("redeem", () => {
-      it("ArkreenRECIssuance: redeem", async () => {
+      it("ArkreenRECIssuanceExt: redeem", async () => {
 
         const startTime = 1564888526
         const endTime   = 1654888526
@@ -699,7 +776,7 @@ describe("ArkreenRECIssuance", () => {
 
       })
 
-      it("ArkreenRECIssuance: redeemFrom Abnormal", async () => {
+      it("ArkreenRECIssuanceExt: redeemFrom Abnormal", async () => {
         // Abnormal Test
         // Abnormal 1: Not owner   
         await expect(arkreenRECIssuance.connect(owner2).redeemFrom(owner1.address, tokenID))
@@ -716,7 +793,7 @@ describe("ArkreenRECIssuance", () => {
                 .to.be.revertedWith("AREC: Not Approved")  
       })
 
-      it("ArkreenRECIssuance: redeemFrom Normal", async () => {
+      it("ArkreenRECIssuanceExt: redeemFrom Normal", async () => {
         // Normal
         await arkreenRECIssuance.connect(manager).certifyRECRequest(tokenID, "Serial12345678")
         await expect(arkreenRECIssuance.connect(owner1).redeemFrom(owner1.address, tokenID))
@@ -737,7 +814,7 @@ describe("ArkreenRECIssuance", () => {
         expect(await arkreenRECIssuance.allRECRedeemed()).to.deep.eq(expandTo18Decimals(1000));        
       })
 
-      it("ArkreenRECIssuance: redeemFrom by approval", async () => {
+      it("ArkreenRECIssuanceExt: redeemFrom by approval", async () => {
         await arkreenRECIssuance.connect(manager).certifyRECRequest(tokenID, "Serial12345678")
 
         // Abnormal 3: Not owner
@@ -750,7 +827,7 @@ describe("ArkreenRECIssuance", () => {
         await arkreenRECIssuance.connect(owner2).redeemFrom(owner1.address, tokenID)
       })
 
-      it("ArkreenRECIssuance: redeemFrom by approve for all", async () => {
+      it("ArkreenRECIssuanceExt: redeemFrom by approve for all", async () => {
         await arkreenRECIssuance.connect(manager).certifyRECRequest(tokenID, "Serial12345678")
 
         // Abnormal 3: Not owner
@@ -798,14 +875,14 @@ describe("ArkreenRECIssuance", () => {
         await arkreenRECIssuance.connect(manager).certifyRECRequest(tokenID, "Serial12345678")
       });
     
-      it("ArkreenRECIssuance: redeemAndMintCertificate", async () => {
+      it("ArkreenRECIssuanceExt: redeemAndMintCertificate", async () => {
         // Normal
         // offsetAndMintCertificate
         await arkreenRECIssuance.connect(owner1).redeemAndMintCertificate(
                   tokenID, owner1.address, "Owner","Alice","Save Earcth") 
       })
     
-      it("ArkreenRECIssuance: redeemAndMintCertificate by approval", async () => {
+      it("ArkreenRECIssuanceExt: redeemAndMintCertificate by approval", async () => {
         // Abnormal: Not owner
         await expect(arkreenRECIssuance.connect(owner2).redeemFrom(owner1.address, tokenID))
                 .to.be.revertedWith("AREC: Not Approved")  
@@ -820,7 +897,7 @@ describe("ArkreenRECIssuance", () => {
                 .withArgs(owner1.address, tokenID, tokenID)         // Here offsetActionId is same as tokenID 
       })
     
-      it("ArkreenRECIssuance: redeemAndMintCertificate by approval for all", async () => {
+      it("ArkreenRECIssuanceExt: redeemAndMintCertificate by approval for all", async () => {
         // Abnormal: Not owner
         await expect(arkreenRECIssuance.connect(owner2).redeemFrom(owner1.address, tokenID))
                 .to.be.revertedWith("AREC: Not Approved")  
@@ -847,7 +924,7 @@ describe("ArkreenRECIssuance", () => {
     })
     
     describe("liquidizeREC", () => {
-      it("ArkreenRECIssuance: liquidizeREC", async () => {
+      it("ArkreenRECIssuanceExt: liquidizeREC", async () => {
 
         const startTime = 1564888526
         const endTime   = 1654888526
@@ -934,14 +1011,14 @@ describe("ArkreenRECIssuance", () => {
       await arkreenRegistry.setArkreenMiner(arkreenMiner.address)
     })
 
-    it("ArkreenRECIssuance: tokenURI, No given URI", async () => {
+    it("ArkreenRECIssuanceExt: tokenURI, No given URI", async () => {
       await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
       tokenID = await arkreenRECIssuance.totalSupply()
       await arkreenRECIssuance.connect(manager).certifyRECRequest(tokenID, "Serial12345678")
       expect( await arkreenRECIssuance.tokenURI(tokenID)).to.equal("https://www.arkreen.com/AREC/1");
     })
 
-    it("ArkreenRECIssuance: tokenURI, given URI", async () => {
+    it("ArkreenRECIssuanceExt: tokenURI, given URI", async () => {
       recMintRequest.url = "Shangxi"
       await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
       tokenID = await arkreenRECIssuance.totalSupply()
@@ -985,7 +1062,7 @@ describe("ArkreenRECIssuance", () => {
       await arkreenRECIssuance.connect(manager).certifyRECRequest(tokenID, "Serial12345678")
     })
 
-    it("ArkreenRECIssuance: Withdraw: zero address", async () => {
+    it("ArkreenRECIssuanceExt: Withdraw: zero address", async () => {
       await expect(arkreenRECIssuance.connect(owner1).withdraw(AKREToken.address, owner1.address))
               .to.be.revertedWith("Ownable: caller is not the owner")    
 
@@ -994,7 +1071,7 @@ describe("ArkreenRECIssuance", () => {
       expect(await AKREToken.balanceOf(deployer.address)).to.equal(balance.add(mintFee))
     })
 
-    it("ArkreenRECIssuance: withdraw: given address", async () => {
+    it("ArkreenRECIssuanceExt: withdraw: given address", async () => {
       await arkreenRECIssuance.withdraw(AKREToken.address, owner2.address)
       expect(await AKREToken.balanceOf(owner2.address)).to.equal(mintFee)
     })
@@ -1034,7 +1111,7 @@ describe("ArkreenRECIssuance", () => {
       tokenID = await arkreenRECIssuance.totalSupply()
     })
 
-    it("ArkreenRECIssuance: Transfer: not allowed", async () => {
+    it("ArkreenRECIssuanceExt: Transfer: not allowed", async () => {
       await expect(arkreenRECIssuance.connect(owner1).transferFrom(owner1.address, owner2.address, tokenID))
               .to.be.revertedWith("AREC: Wrong Status")    
 
@@ -1047,7 +1124,7 @@ describe("ArkreenRECIssuance", () => {
           .to.be.revertedWith("AREC: Wrong Status")                  
     })
 
-    it("ArkreenRECIssuance: Transfer: Allowed", async () => {
+    it("ArkreenRECIssuanceExt: Transfer: Allowed", async () => {
       await arkreenRECIssuance.connect(manager).certifyRECRequest(tokenID, "Serial12345678")
       await arkreenRECIssuance.connect(owner1)["safeTransferFrom(address,address,uint256)"](
                 owner1.address, owner2.address, tokenID)

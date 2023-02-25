@@ -17,12 +17,10 @@ import "./interfaces/IERC20Permit.sol";
 import "./ArkreenRECIssuanceStorage.sol";
 import "./interfaces/IPausable.sol";
 
-import '@openzeppelin/contracts/utils/StorageSlot.sol';
-
 // Import this file to use console.log
 import "hardhat/console.sol";
 
-contract ArkreenRECIssuance is
+contract ArkreenRECIssuanceExt is
     OwnableUpgradeable,
     UUPSUpgradeable,
     ERC721EnumerableUpgradeable,
@@ -43,6 +41,8 @@ contract ArkreenRECIssuance is
     event RECCanceled(address owner, uint256 tokenId);    
     event RECLiquidized(address owner, uint256 tokenId, uint256 amountREC);
     event RedeemFinished(address redeemEntity, uint256 tokenId, uint256 offsetActionId);
+    event ESGBatchMinted(address owner, uint256 tokenId);
+    event ESGBatchDataUpdated(address owner, uint256 tokenId);
 
     // Modifiers
     modifier ensure(uint deadline) {
@@ -75,39 +75,12 @@ contract ArkreenRECIssuance is
     function _authorizeUpgrade(address newImplementation) internal virtual override onlyOwner
     {}    
 
-    receive() external payable {
-        revert("Wrong calling"); // only accept WMATIC via fallback from the WMATIC contract
-    }  
-
     /**
-     * @dev Fallback function that delegates calls to the address returned by `_implementation()`. Will run if no other
-     * function in the contract matches the call data.
+     * @dev To mint the empty AREC NFT as as ESG batch, which must be updated later to be successfully confirmed.
+     * @param idAssetType The type of the AREC asset to issue
+     * @param amountREC The amount if the AREC asset target to issue.
+     * permitToPay Payment info to mint the AREC NFT
      */
-    
-    fallback () external payable virtual {
-       // solhint-disable-next-line no-inline-assembly
-        address addrESG = getESGExtAddress();
-        assembly {
-            // Copy msg.data. We take full control of memory in this inline assembly
-            // block because it will not return to Solidity code. We overwrite the
-            // Solidity scratch pad at memory position 0.
-            calldatacopy(0, 0, calldatasize())
-
-            // Call the implementation.
-            // out and outsize are 0 because we don't know the size yet.
-            let result := delegatecall(gas(), addrESG, 0, calldatasize(), 0, 0)
-
-            // Copy the returned data.
-            returndatacopy(0, 0, returndatasize())
-
-            switch result
-            // delegatecall returns 0 on error.
-            case 0 { revert(0, returndatasize()) }
-            default { return(0, returndatasize()) }
-        }
-    }    
-
-/*
     function mintESGBatch(
         uint256   idAssetType,
         uint256   amountREC,
@@ -152,7 +125,6 @@ contract ArkreenRECIssuance is
         // Transfer the REC mint fee
         TransferHelper.safeTransferFrom(permitToPay.token, _msgSender(), address(this), permitToPay.value);
     }
-*/
 
     /**
      * @dev To mint the REC NFT. After minted, the NFT is in pending status.
@@ -160,7 +132,7 @@ contract ArkreenRECIssuance is
      * recRequest The request info to mint the REC NFT
      * permitToPay Payment info to mint the REC NFT
      */
-  
+/*    
     function mintRECRequest(
         RECRequest calldata recRequest,
         Signature calldata permitToPay
@@ -211,62 +183,63 @@ contract ArkreenRECIssuance is
         // Transfer the REC mint fee
         TransferHelper.safeTransferFrom(permitToPay.token, _msgSender(), address(this), permitToPay.value);
     }
+*/    
 
     /**
      * @dev To reject the REC NFT mint request by the issuer for any reason.
      * Only can be called while the NFT is in pending state.
      * tokenId The ID of the REC NFT
      */
+/*    
     function rejectRECRequest(uint256 tokenId) external whenNotPaused
     {
         // Check that the call is the issuer of the token
         address issuer = _msgSender();
-        RECData storage recData = allRECData[tokenId];
+        require(IArkreenRegistry(arkreenRegistry).isRECIssuer(issuer), 'AREC: Not Issuer');
+        require(issuer == allRECData[tokenId].issuer, 'AREC: Wrong Issuer');
 
-        uint16 idAssetType = recData.idAsset;
-        if(idAssetType == 0) {
-            require(IArkreenRegistry(arkreenRegistry).isRECIssuer(issuer), 'AREC: Not Issuer');
-            require(issuer == recData.issuer, 'AREC: Wrong Issuer');
-        } else {
-            (address issuerAsset, , , , ) = IArkreenRegistry(arkreenRegistry).getAssetInfo(idAssetType);
-            require(issuer == issuerAsset, 'AREC: Wrong Issuer');
-        }
-
-        // Only pending REC can be cancelled
-        require(recData.status == uint8(RECStatus.Pending), 'AREC: Wrong Status');  
+       // Only pending REC can be cancelled
+        require(allRECData[tokenId].status == uint8(RECStatus.Pending), 'AREC: Wrong Status');  
 
         // Set status to Rejected
-        recData.status = uint8(RECStatus.Rejected);
+        allRECData[tokenId].status = uint8(RECStatus.Rejected);
         emit RECRejected(tokenId);
     }
-    
+*/
+
     /**
      * @dev To update the REC NFT mint info while it is rejected by the the issuer.
      * tokenId The ID of the REC NFT to update
      */
-    function updateRECData(
+    function updateRECDataExt(
         uint256         tokenID,
-        address         issuer,
-        string memory   region,
-        string memory   url,
-        string memory   memo) external whenNotPaused
+        uint32          startTime,
+        uint32          endTime,
+        string calldata cID,
+        string calldata region,
+        string calldata url,
+        string calldata memo) external whenNotPaused
     {
-        // Only REC owner allowed to change the REC data
+        // Check the caller be the MVP enity
+        address sender = _msgSender();
+        require( AllMVPEnity[sender], "AREC: Not Allowed");
+
+        // Only ESG_AREC owner allowed to change the REC data
         require(ownerOf(tokenID) == _msgSender(), 'AREC: Not Owner');     // owner should be the minter also
 
-        // Only rejected REC can be cancelled
-        require(allRECData[tokenID].status == uint8(RECStatus.Rejected), 'AREC: Wrong Status');  
+        // Only Pending and Rejected ESG_AREC can be updated
+        RECData storage recData = allRECData[tokenID];
+        require(recData.status <= uint8(RECStatus.Rejected), 'AREC: Wrong Status');
 
-        // Check issuer address
-        require(IArkreenRegistry(arkreenRegistry).isRECIssuer(issuer), 'AREC: Wrong Issuer');
+        if(startTime != 0) recData.startTime = startTime;                        
+        if(endTime != 0) recData.endTime = endTime;
+        if(bytes(cID).length != 0) recData.cID = cID;                          
+        if(bytes(region).length != 0) recData.region = region;
+        if(bytes(url).length != 0) recData.url = url;
+        if(bytes(memo).length != 0) recData.memo = memo;
 
-        allRECData[tokenID].issuer = issuer;                              
-        allRECData[tokenID].region = region;                    // Null string is not checked, as it could be set to null
-        allRECData[tokenID].url = url;
-        allRECData[tokenID].memo = memo;
-
-        allRECData[tokenID].status =  uint8(RECStatus.Pending);
-        emit RECDataUpdated(_msgSender(), tokenID);
+        recData.status =  uint8(RECStatus.Pending);
+        emit ESGBatchDataUpdated(_msgSender(), tokenID);
     }
 
     /**
@@ -274,7 +247,6 @@ contract ArkreenRECIssuance is
      * REC NFT mint fee is refund to the owner after the transaction.
      * tokenId The ID of the REC NFT to update
      */
-/*    
     function cancelRECRequest(uint256 tokenID) external whenNotPaused {
 
         // Only REC owner allowed to cancel the request
@@ -291,13 +263,15 @@ contract ArkreenRECIssuance is
 
         // Refund the request fee
         TransferHelper.safeTransfer(allPayInfo[tokenID].token, _msgSender(), allPayInfo[tokenID].value);
+
     }
-*/
+
     /**
      * @dev To certify the REC NFT mint request by the REC issuer.
      * tokenId The ID of the REC NFT to certify.
      * serialNumber The SN of REC NFT certificaton.
      */
+/*    
     function certifyRECRequest(uint256 tokenID, string memory serialNumber) external whenNotPaused
     {
         // Check the issuer
@@ -329,7 +303,7 @@ contract ArkreenRECIssuance is
 
         emit RECCertified(issuer, tokenID);
     }
-
+*/
     /**
      * @dev Redeem the REC NFT by retiring the NFT and registering an offset action
      */
@@ -409,6 +383,7 @@ contract ArkreenRECIssuance is
      * @dev liquidize the REC NFT and mint the corresponding ERC20 token
      * @param tokenId Id of the REC NFT to liquidize
      */
+/*     
     function liquidizeREC( uint256 tokenId ) external whenNotPaused {
 
         require(_isApprovedOrOwner(msg.sender, tokenId), 'AREC: Not Approved');
@@ -439,70 +414,9 @@ contract ArkreenRECIssuance is
         allRECLiquidized += amountREC;
         emit RECLiquidized(owner, tokenId, amountREC);
     }
-
-    /**
-     * @dev restore the AREC NFT from Liquidized state to Certified state, called only by ART token contract
-     * @param tokenId Id of the AREC NFT to restore 
-     */
-    function restore( uint256 tokenId ) external whenNotPaused returns (bool){
-        // Check if the REC status
-        RECData storage recData = allRECData[tokenId];
-        require(recData.status == uint8(RECStatus.Liquidized), 'AREC: Not Liquidized');
-
-        address issuerREC = recData.issuer;
-        uint256 amountREC = recData.amountREC;
-        address tokenREC = IArkreenRegistry(arkreenRegistry).getRECToken(issuerREC) ;
-
-        // Only the ART contract can restore the AREC
-        require(msg.sender == tokenREC, 'AREC: Not Allowed');
-
-        // Modified the Liquidized REC amount
-        allRECLiquidized -= amountREC;
-
-        // Set the AREC status to be Liquidized
-        recData.status = uint8(RECStatus.Certified);
-        return true;
-    }
-
-    /// @dev retrieve all data from VintageData struct
-    function getRECData(uint256 tokenId) external view virtual returns (RECData memory) {
-        return (allRECData[tokenId]);
-    }
-
-    /**
-     * @dev Add/update/remove AREC isssaunce payment token/price. 
-     * If the token existed, and if price is not zero, update the price, 
-     *                           if the price is zero, remove the token/price.
-     * If the token not existed, add the price
-     * @param token address of the token to add/update/remove
-     * @param price the price to pay AREC issuance, or, =0, remove the token/price.
-     */
-    function updateARECMintPrice(address token, uint256 price) external virtual onlyOwner {
-      require(token.isContract(), 'AREC: Wrong token');
-
-      for(uint256 index; index < paymentTokens.length; index++) {
-        if(paymentTokens[index] == token) {
-          if(price == 0) {
-            // Zero price means remove the token/price
-            if(index != (paymentTokens.length-1)) {
-              // replace by the last token/price
-              paymentTokens[index] = paymentTokens[paymentTokens.length-1];     
-            }
-            paymentTokens.pop();                  // pop the last price as it is moved to the deleted position  
-            delete paymentTokenPrice[token];
-          } else {
-            paymentTokenPrice[token] = price;         // update the price
-          } 
-          return; 
-        }
-      }
-      require(price != 0, 'AREC: Zero Price');
-      paymentTokens.push(token);
-      paymentTokenPrice[token] = price;
-    }
-
+*/
     /// @dev return all the AREC issaunce token/price list
-/*    
+    
     function allARECMintPrice() external view virtual returns (RECMintPrice[] memory) {
         uint256 sizePrice = paymentTokens.length;
         RECMintPrice[] memory ARECMintPrice = new RECMintPrice[](sizePrice);
@@ -514,33 +428,20 @@ contract ArkreenRECIssuance is
         }          
         return ARECMintPrice;
     }
-*/
-
-    /**
-     * @dev Withdraw all the REC certification fee
-     * @param token address of the token to withdraw, USDC/ARKE
-     */
-    function withdraw(address token, address receiver) public whenNotPaused onlyOwner {
-        if(receiver == address(0)) {
-            receiver = _msgSender();
-        }
-        uint256 balance = IERC20(token).balanceOf(address(this));
-        TransferHelper.safeTransfer(token, receiver, balance);
-    }
 
     /**
      * @dev Add or remove the MVP addresses 
      * @param op The operation of MVP address, =true, add MVP; =false, remove MVP 
      * @param listMVP The list of the MVP addresses
      */
-/*
+
     function manageMVPAddress(bool op, address[] calldata listMVP) public whenNotPaused onlyOwner {
         for(uint256 index; index < listMVP.length; index++) {
             require( AllMVPEnity[listMVP[index]] != op, "AREC: Wrong Status" );
             AllMVPEnity[listMVP[index]] = op;
         }
     }
-*/
+
     /**
      * @dev Hook that is called before any token transfer.
      */
@@ -576,44 +477,9 @@ contract ArkreenRECIssuance is
                 require(allRECData[tokenId].status == uint8(RECStatus.Certified), 'AREC: Wrong Status');
             }
         }
-//        console.log("BBBBBBBBBBBBBBBBBBBBBBB");
+//      console.log("AAAAAAAAAAAAA");
         super._beforeTokenTransfer(from, to, tokenId);
-    }   
-
-    function setESGExtAddress(address addrESGExt) external virtual onlyOwner {
-        StorageSlot.getAddressSlot(_ESG_EXT_SLOT).value = addrESGExt; 
-    }
-
-    function getESGExtAddress() internal view returns (address) {
-        return StorageSlot.getAddressSlot(_ESG_EXT_SLOT).value;
     }    
 
-    function setBaseURI(string memory newBaseURI) external virtual onlyOwner {
-        baseURI = newBaseURI;
-    }
 
-    function _baseURI() internal view virtual override returns (string memory) {
-        return baseURI;
-    }
-
-    /**
-     * @dev Returns the URI for the given token.  
-     */    
-    function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
-        _requireMinted(tokenId);
-
-        string memory url = allRECData[tokenId].url;
-        string memory base = baseURI;
-
-        // If there is no base URI, return url
-        if (bytes(base).length == 0) {
-            return url;
-        }
-        // If both are set, concatenate them
-        if (bytes(url).length > 0) {
-            return string(abi.encodePacked(base, url));
-        }
-
-        return super.tokenURI(tokenId);
-    }
 }
