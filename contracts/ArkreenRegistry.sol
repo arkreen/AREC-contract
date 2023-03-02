@@ -106,6 +106,7 @@ contract ArkreenRegistry is
     function newAssetAREC(string calldata idAsset, address issuer, address tokenREC, address tokenPay,
                         uint128 rateToIssue, uint16 rateToLiquidize, string calldata description) external virtual onlyOwner {
         numAsset += 1;
+        tokenRECs[tokenREC] = issuer;
         allAssets[numAsset] = AssetAREC(idAsset, issuer, tokenREC, tokenPay, rateToIssue, rateToLiquidize, true, description);
     }
 

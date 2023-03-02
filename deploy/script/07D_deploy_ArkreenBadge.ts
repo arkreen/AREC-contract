@@ -19,6 +19,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     console.log("ArkreenBadge deployed to %s: ", hre.network.name, ArkreenBadge.address);
 };
 
+// 2023/02/26: 
+// yarn deploy:matic_test:RECBadgeD
+// 0xD12E75566CeAa2bA669EDEbBA524359D7564b2c5
+
 func.tags = ["RECBadgeD"];
 
 export default func;

@@ -177,7 +177,7 @@ contract ArkreenRECIssuance is
         address arkreenMiner = IArkreenRegistry(arkreenRegistry).getArkreenMiner();   /// for testing ///
 
         // require(arkreenMiner.isContract(), "AREC: Wrong Miner Contract");            // no need to check
-        require(IArkreenMiner(arkreenMiner).isOwner(sender), "AREC: Not Miner");        /// May Removed for testing ///
+//      require(IArkreenMiner(arkreenMiner).isOwner(sender), "AREC: Not Miner");        /// May Removed for testing ///
 
         // Check payment appoval
         require( (permitToPay.token == tokenAKRE) || (paymentTokenPrice[permitToPay.token] != 0), "AREC: Wrong Payment Token");
@@ -316,7 +316,7 @@ contract ArkreenRECIssuance is
 
         // Only pending REC can be Certified
         require(recData.status == uint8(RECStatus.Pending), 'AREC: Wrong Status');  
-//        require(bytes(recData.cID).length > 20, 'AREC: Wrong CID');  
+        require(bytes(recData.cID).length > 20, 'AREC: Wrong CID');  
 
         // Uniqueness is not checked here assuming the issuer has checked this point
         recData.serialNumber = serialNumber;            

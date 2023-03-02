@@ -45,7 +45,7 @@
     "deploy:matic_test:RECIssue": "hardhat --network matic_test deploy --tags RECIssue",
     "deploy:matic_test:RECIssueD": "hardhat --network matic_test deploy --tags RECIssueD --reset",
     "deploy:matic_test:RECIssueU": "hardhat --network matic_test deploy --tags RECIssueU",
-    "deploy:matic_test:RECToken": "hardhat --network matic_test deploy --tags RECToken",
+    "deploy:matic_test:RECToken": "hardhat --network matic_test deploy --tags RECToken --reset",
     "deploy:matic_test:RECTokenD": "hardhat --network matic_test deploy --tags RECTokenD",
     "deploy:matic_test:RECTokenU": "hardhat --network matic_test deploy --tags RECTokenU",
     "deploy:matic_test:RECRetire": "hardhat --network matic_test deploy --tags RECRetire",
@@ -55,8 +55,18 @@
     "deploy:matic_test:gAKRE2U": "hardhat --network matic_test deploy --tags gAKRE2U",
     "deploy:matic_test:RECBadgeD": "hardhat --network matic_test deploy --tags RECBadgeD",
     "deploy:matic_test:arkReward": "hardhat --network matic_test deploy --tags arkReward",
+
+    "deploy:matic_test:ABuilder": "hardhat --network matic_test deploy --tags ABuilder",
+    "deploy:matic_test:HskBTC": "hardhat --network matic_test deploy --tags HskBTC --reset",
+    "deploy:matic_test:gRegistryD": "hardhat --network matic_test deploy --tags gRegistryD --reset",
+    "deploy:matic_test:RECIssueExtD": "hardhat --network matic_test deploy --tags RECIssueExtD --reset",   
+    "deploy:matic_test:gRegistryI": "hardhat --network matic_test deploy --tags gRegistryI", 
+    "deploy:matic_test:RECIssueI": "hardhat --network matic_test deploy --tags RECIssueI", 
+
+    "deploy:matic_test:ABuilderI": "hardhat --network matic_test deploy --tags ABuilderI",
+
     "verify:matic_test": "npx hardhat verify --network matic_test <ADDRESS> <PARAMS>",
-    "confirmAuto:matic_test": "npx hardhat run --network matic_test ./deploy/confirmIssuance.ts",
+    "confirmAuto:matic_test": "hardhat run --network matic_test ./deploy/confirmIssuance.ts",
     "deploy:matic_test:all": "hardhat --network matic_test deploy",
     "etherscan:matic_test": "hardhat --network matic_test etherscan-verify <--api-key>",
     "deploy_ARKE_test": "hardhat run --network matic_test scripts/deployArkreenToken.ts",

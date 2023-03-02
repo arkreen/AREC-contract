@@ -7,23 +7,19 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  console.log("Deploying: ", CONTRACTS.RECIssuance, deployer);  
+  console.log("Deploying: ", CONTRACTS.gRegistry, deployer);  
 
   // For Simulation mode, need to remove the checking if being miner
-  const ArkreenRECIssuance = await deploy(CONTRACTS.RECIssuance, {
+  const ArkreenRegistry = await deploy(CONTRACTS.gRegistry, {
       from: deployer,
       args: [],
       log: true,
       skipIfAlreadyDeployed: false,
   });
 
-  console.log("ArkreenRECIssuance deployed to %s: ", hre.network.name, ArkreenRECIssuance.address);
+  console.log("ArkreenRegistry deployed to %s: ", hre.network.name, ArkreenRegistry.address);
 };
 
-// 2023/02/26: 
-// yarn deploy:matic_test:RECIssueD
-// 0x8Dc3cd4666909D09aCf8d7197fD4E5F43D7ae4aB
-
-func.tags = ["RECIssueD"];
+func.tags = ["gRegistryD"];
 
 export default func;
