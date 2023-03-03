@@ -88,6 +88,10 @@ contract ArkreenBadge is
     }
 
     function registerDetail(uint256 amount, uint256 tokenId, bool bNew) external returns (uint256, uint256) {
+
+        // The caller should be the REC token contract
+        require( IArkreenRegistry(arkreenRegistry).tokenRECs(msg.sender) != address(0), 'ARB: Caller Not Allowed');
+
         require(tokenId == partialARECID, 'ARB: Error TokenId');
 
         if(bNew) {
