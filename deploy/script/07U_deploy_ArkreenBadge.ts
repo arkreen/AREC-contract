@@ -38,8 +38,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     if(hre.network.name === 'matic') {
       const PROXY_ADDRESS = "0x3d5531cF0bC2e8d0658fEc0D1a9995211Ac1f337"            // Need to check
       //  const NEW_IMPLEMENTATION = '0x504fb898a5dc3cf99f237e62228d09f52ee64a7f'   // Update to support SBT
-      const NEW_IMPLEMENTATION = '0xc9fc3571e419d8d24826b9bb518a4420a89b30cf'       // Upgrade to support solidify and offset traceback
-      
+      //  const NEW_IMPLEMENTATION = '0xc9fc3571e419d8d24826b9bb518a4420a89b30cf'   // Upgrade to support solidify and offset traceback
+      const NEW_IMPLEMENTATION = '0x7Db78703C9B1561A5F0810c96449AFdE6eA9096b'       // 2023/03/03: Add caller checking in registerDetail
+    
       const [deployer] = await ethers.getSigners();
 
       const feeData = await deployer.getFeeData()
