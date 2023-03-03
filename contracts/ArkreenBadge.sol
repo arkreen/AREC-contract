@@ -88,10 +88,15 @@ contract ArkreenBadge is
     }
 
     function registerDetail(uint256 amount, uint256 tokenId, bool bNew) external returns (uint256, uint256) {
+
+        // The caller should be the REC token contract
+        require( IArkreenRegistry(arkreenRegistry).tokenRECs(msg.sender) != address(0), 'ARB: Caller Not Allowed');
+
         require(tokenId == partialARECID, 'ARB: Error TokenId');
 
         if(bNew) {
-            require(amount == partialAvailableAmount, 'ARB: Wrong New');
+            // Only register new details while offsetting more than current paratial amount
+            require(amount == partialAvailableAmount, 'ARB: Wrong New');    
             detailsCounter += 1;
         } else {
             require(amount <= partialAvailableAmount, 'ARB: Wrong Amount');
@@ -129,11 +134,10 @@ contract ArkreenBadge is
         bool isOffsetTokenId = (tokenId == 0) || ((tokenId >> 64) != 0);        // FLAG_OFFSET = 1<<64, to compliant with old design 
 
         // Check called from the REC token contract, or from the REC issuance contrarct
-        ( , , , uint16 idAsset) = IArkreenRECIssuance(RECIssuance).getRECDataCore(tokenId);
-        require( isRECIssuance || msg.sender == IArkreenRegistry(arkreenRegistry).getRECToken(issuerREC, idAsset), 'ARB: Wrong Issuer');
+        require( isRECIssuance || issuerREC == IArkreenRegistry(arkreenRegistry).tokenRECs(msg.sender), 'ARB: Wrong Issuer');
 
         // TokenId should not be zero for RECIssuance, and should be offset type for RECToken
-        require(isRECIssuance != isOffsetTokenId, 'ARB: Wrong TokenId');      
+        require(isRECIssuance != isOffsetTokenId, 'ARB: Wrong TokenId');
 
         // Check the minimum offset amount
         require( amount >= minOffsetAmount, 'ARB: Less Amount');

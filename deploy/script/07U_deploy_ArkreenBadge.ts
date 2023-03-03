@@ -16,7 +16,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //      const NEW_IMPLEMENTATION = '0x6f4fff7faa238cd68f03de75b8906e23dbd95f30'   // Need to check
 //      const NEW_IMPLEMENTATION = '0xA82E33A80f8c6A0dC66678956F8dC3b27928F036'   // Update to support SBT
 //      const NEW_IMPLEMENTATION = '0x8d58d9C7a2cB1A68F7F14BCd08CC735E3f12D267'   // Upgrade to support Offset trace back
-        const NEW_IMPLEMENTATION = '0xD12E75566CeAa2bA669EDEbBA524359D7564b2c5'   // 2023/02/26: Upgrade to support HashKey ESG BTC
+//      const NEW_IMPLEMENTATION = '0xD12E75566CeAa2bA669EDEbBA524359D7564b2c5'   // 2023/02/26: Upgrade to support HashKey ESG BTC
+        const NEW_IMPLEMENTATION = '0x619f4a175B17C51cC11e7afB85e50a78b3899900'   // 2023/03/02: Upgrade to fix the Isser checking problem
 
 //      MATIC Test
 //      const PROXY_ADDRESS = "0xe07968E3b0D64B99EA3653Dd925a850eBb9a3Bb9"       // Need to check: Matic testnet

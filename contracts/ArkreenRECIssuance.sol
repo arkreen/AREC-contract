@@ -174,7 +174,7 @@ contract ArkreenRECIssuance is
 
         // Check the caller be acceptable miner
         address sender = _msgSender();
-        address arkreenMiner = IArkreenRegistry(arkreenRegistry).getArkreenMiner();   /// for testing ///
+        address arkreenMiner = IArkreenRegistry(arkreenRegistry).getArkreenMiner();     /// for testing ///
 
         // require(arkreenMiner.isContract(), "AREC: Wrong Miner Contract");            // no need to check
 //      require(IArkreenMiner(arkreenMiner).isOwner(sender), "AREC: Not Miner");        /// May Removed for testing ///

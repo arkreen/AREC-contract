@@ -154,9 +154,9 @@ contract ArkreenRECToken is
         if(amount > partialAvailableAmount) {
             while(steps < MAX_SKIP) {
                 if(partialAvailableAmount == 0) {
-                    curAREC = allARECLiquidized[latestARECID];
-                    _remove(latestARECID, curAREC);
-                    IArkreenRECIssuance(issuanceAREC).safeTransferFrom(address(this), badgeContract, curAREC);
+                    curAREC = allARECLiquidized[latestARECID];        // Get the ID at AREC NFT loop head
+                    _remove(latestARECID, curAREC);                   // Remove from the loop
+                    IArkreenRECIssuance(issuanceAREC).safeTransferFrom(address(this), badgeContract, curAREC);  // Send to Badge contract
 
                     (, uint128 amountREC, , ) = IArkreenRECIssuance(issuanceAREC).getRECDataCore(curAREC);
                     partialAvailableAmount = amountREC;
