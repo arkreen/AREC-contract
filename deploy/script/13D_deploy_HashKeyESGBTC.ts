@@ -27,6 +27,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // deploy:matic_test:HskBTCD
 // 0x084726129D09976D236642CdCE648039BaE2b072
 
+// 2023/03/07
+// deploy:matic_test:HskBTCD: return owners in getAllBrickIDs
+// 0xd5F14899428e135B1684ba653487795eF39242B9
+
 func.tags = ["HskBTCD"];
 
 export default func;
