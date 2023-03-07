@@ -211,8 +211,8 @@ describe("ArkreenRECToken", () => {
 
       expect(await arkreenRetirement.getOffsetActions(offsetID1)).to.deep.equal(action_1)
 
-      expect(await arkreenRetirement.partialARECID()).to.equal(1)
-      expect(await arkreenRetirement.partialAvailableAmount()).to.equal(balance_1.sub(expandTo18Decimals(10)))
+      expect(await arkreenRetirement.partialARECIDExt(arkreenRECToken.address)).to.equal(1)
+      expect(await arkreenRetirement.partialAvailableAmountExt(arkreenRECToken.address)).to.equal(balance_1.sub(expandTo18Decimals(10)))
       
       await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(10))
       expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(balance_1.sub(expandTo18Decimals(20)))
@@ -221,8 +221,8 @@ describe("ArkreenRECToken", () => {
       const action_2 = [  owner1.address, manager.address, expandTo18Decimals(10),
                           tokenID.add(MASK_OFFSET), lastBlock.timestamp, false ]
 
-      expect(await arkreenRetirement.partialARECID()).to.equal(1)
-      expect(await arkreenRetirement.partialAvailableAmount()).to.equal(balance_1.sub(expandTo18Decimals(20)))                          
+      expect(await arkreenRetirement.partialARECIDExt(arkreenRECToken.address)).to.equal(1)
+      expect(await arkreenRetirement.partialAvailableAmountExt(arkreenRECToken.address)).to.equal(balance_1.sub(expandTo18Decimals(20)))                          
 
       expect(await arkreenRetirement.getOffsetActions(offsetID2)).to.deep.equal(action_2)
 
@@ -230,8 +230,8 @@ describe("ArkreenRECToken", () => {
               .to.emit(arkreenRECToken, "OffsetFinished")
               .withArgs(owner1.address, expandTo18Decimals(10), offsetID2.add(1)) 
 
-      expect(await arkreenRetirement.partialARECID()).to.equal(1)
-      expect(await arkreenRetirement.partialAvailableAmount()).to.equal(balance_1.sub(expandTo18Decimals(30)))     
+      expect(await arkreenRetirement.partialARECIDExt(arkreenRECToken.address)).to.equal(1)
+      expect(await arkreenRetirement.partialAvailableAmountExt(arkreenRECToken.address)).to.equal(balance_1.sub(expandTo18Decimals(30)))     
       
       const recData: RECDataStruct = await arkreenRECIssuance.getRECData(tokenID)
       expect(recData.status).to.equal(BigNumber.from(RECStatus.Retired));      
@@ -476,8 +476,8 @@ describe("ArkreenRECToken", () => {
       const detail_1 = [11, expandTo18Decimals(5000)]
       const detail_2 = [17, expandTo18Decimals(3100)]
 
-      expect(await arkreenRetirement.partialARECID()).to.equal(17)
-      expect(await arkreenRetirement.partialAvailableAmount()).to.equal(expandTo18Decimals(9000-3100))
+      expect(await arkreenRetirement.partialARECIDExt(arkreenRECToken.address)).to.equal(17)
+      expect(await arkreenRetirement.partialAvailableAmountExt(arkreenRECToken.address)).to.equal(expandTo18Decimals(9000-3100))
 
       expect(await arkreenRetirement.OffsetDetails(2,2)).to.deep.equal(detail_0)
       expect(await arkreenRetirement.OffsetDetails(2,9)).to.deep.equal(detail_1)
@@ -567,7 +567,7 @@ describe("ArkreenRECToken", () => {
 
       const tx_1 = await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(500))
       const receipt_1 = await tx_1.wait()
-      expect(receipt_1.gasUsed).to.eq("442346")  // 432982 460991 461138 
+      expect(receipt_1.gasUsed).to.eq("435278")  // 432982 460991 461138 
 
       const tx_2 = await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(800))
       const receipt_2 = await tx_2.wait()

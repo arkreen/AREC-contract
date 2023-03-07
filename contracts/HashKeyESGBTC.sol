@@ -271,7 +271,29 @@ contract HashKeyESGBTC is
         super._beforeTokenTransfer(from, to, tokenId);
     }
 
-    function locked(uint256 tokenId) external view returns (bool){
+    /**
+     * @dev get all the brick IDs with in th scope specified by the paramters
+     * @param tokeIDStart the starting token ID, from which all brick IDs are returned
+     * @param tokeIDEnd the starting token ID, till which all brick IDs are retured
+     */
+    function getAllBrickIDs(uint256 tokeIDStart, uint256 tokeIDEnd) 
+                external view returns (uint256 totalTokens, address[] memory owners, uint256[] memory allBricks) {
+
+        totalTokens = totalSupply();
+        if(tokeIDEnd == 0) tokeIDEnd = totalTokens;
+        require( (tokeIDStart >= 1) && (tokeIDStart <= tokeIDEnd) && (tokeIDEnd <= totalTokens), 'ARB: Wrong tokeID');
+
+        owners =  new address[](tokeIDEnd - tokeIDStart + 1);
+        allBricks = new uint256[](tokeIDEnd - tokeIDStart + 1);
+        uint256 offset;
+        for (uint256 index = tokeIDStart; index <= tokeIDEnd; index++ ) {
+            owners[offset] = ownerOf(index);
+            allBricks[offset] = brickIds[index];
+            offset += 1;
+        }
+    }
+
+    function locked(uint256 tokenId) external view returns (bool) {
         require((tokenId > 0) && (tokenId <= totalSupply()), 'ARB: Wrong tokenId');
         return true;  
     }

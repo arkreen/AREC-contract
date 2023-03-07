@@ -27,6 +27,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:RECBadgeD
 // 0x619f4a175B17C51cC11e7afB85e50a78b3899900
 
+// 2023/03/03: Upgrade to trace back AREC NFT based on asset type
+// yarn deploy:matic_test:RECBadgeD
+// 0x2cc8fFc86eAbdAA486d5408C8813813eb60b507a
+
 func.tags = ["RECBadgeD"];
 
 export default func;

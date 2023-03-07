@@ -46,7 +46,7 @@
     "deploy:matic_test:RECIssueD": "hardhat --network matic_test deploy --tags RECIssueD --reset",
     "deploy:matic_test:RECIssueU": "hardhat --network matic_test deploy --tags RECIssueU",
     "deploy:matic_test:RECToken": "hardhat --network matic_test deploy --tags RECToken --reset",
-    "deploy:matic_test:RECTokenD": "hardhat --network matic_test deploy --tags RECTokenD",
+    "deploy:matic_test:RECTokenD": "hardhat --network matic_test deploy --tags RECTokenD --reset",
     "deploy:matic_test:RECTokenU": "hardhat --network matic_test deploy --tags RECTokenU",
     "deploy:matic_test:RECRetire": "hardhat --network matic_test deploy --tags RECRetire",
     "deploy:matic_test:RECBadgeU": "hardhat --network matic_test deploy --tags RECBadgeU",
@@ -64,11 +64,16 @@
     "deploy:matic_test:RECIssueI": "hardhat --network matic_test deploy --tags RECIssueI", 
 
     "deploy:matic_test:ABuilderI": "hardhat --network matic_test deploy --tags ABuilderI",
+    "deploy:matic_test:HskBTCI": "hardhat --network matic_test deploy --tags HskBTCI",
+    "deploy:matic_test:HskBTCD": "hardhat --network matic_test deploy --tags HskBTCD",
+    "deploy:matic_test:HskBTCU": "hardhat --network matic_test deploy --tags HskBTCU",
 
     "verify:matic_test": "npx hardhat verify --network matic_test <ADDRESS> <PARAMS>",
     "confirmAuto:matic_test": "hardhat run --network matic_test ./deploy/confirmIssuance.ts",
+    "claim:matic_test": "hardhat run --network matic_test ./deploy/matic-gatherer-v2.ts",
+
     "deploy:matic_test:all": "hardhat --network matic_test deploy",
-    "etherscan:matic_test": "hardhat --network matic_test etherscan-verify <--api-key>",
+    "etherscan:matic_test": "hardhat --network matic_test etherscan-verify --api-key",
     "deploy_ARKE_test": "hardhat run --network matic_test scripts/deployArkreenToken.ts",
     "deploy_ARKE_matic": "hardhat run --network matic scripts/deployArkreenToken.ts",
     "deploy:matic_test": "hardhat --network matic_test deploy --no-compile --reset --tags ARKE",

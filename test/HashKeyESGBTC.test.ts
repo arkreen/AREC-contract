@@ -269,7 +269,7 @@ describe("HashKeyESGBTC", () => {
       await hashKeyESGBTC.deployed();
       await hashKeyESGBTC.approveBuilder([WETHPartner.address, WETH.address])
 
-      await arkreenBuilder.mangeTrustedForwarder(hashKeyESGBTC.address, true)
+//      await arkreenBuilder.mangeTrustedForwarder(hashKeyESGBTC.address, true)
 
       return {  tokenA,
         tokenB, WETH, WETHPartner, factoryFeswa,
@@ -502,7 +502,12 @@ describe("HashKeyESGBTC", () => {
                                       .div(tokenArtAmount.sub(amountART))  
 
         const balanceBefore = await ethers.provider.getBalance(owner1.address)                                      
-        const ARECBefore = await arkreenRECToken.balanceOf(owner1.address)                                      
+        const ARECBefore = await arkreenRECToken.balanceOf(owner1.address)  
+        
+        await expect(hashKeyESGBTC.connect(owner1).greenizeBTCNative( bricksToGreen, constants.MaxUint256, badgeInfo, {value: amountPay}))   
+                    .to.be.revertedWith("ERC721: transfer to non ERC721Receiver implementer")          
+
+        await arkreenBuilder.mangeTrustedForwarder(hashKeyESGBTC.address, true)
         await expect(hashKeyESGBTC.connect(owner1).greenizeBTCNative( bricksToGreen, constants.MaxUint256, badgeInfo, {value: amountPay}))
                             .to.emit(hashKeyESGBTC, 'Transfer')
                             .withArgs(zeroAddress, owner1.address, 1)
@@ -585,6 +590,12 @@ describe("HashKeyESGBTC", () => {
 
         const ARECBefore = await arkreenRECToken.balanceOf(owner1.address)                                      
         await WETHPartner.connect(owner1).approve(hashKeyESGBTC.address, constants.MaxUint256)
+
+        await expect(hashKeyESGBTC.connect(owner1).greenizeBTC( WETHPartner.address, 
+                                        amountPay, bricksToGreen, constants.MaxUint256, badgeInfo))   
+              .to.be.revertedWith("ERC721: transfer to non ERC721Receiver implementer")     
+
+        await arkreenBuilder.mangeTrustedForwarder(hashKeyESGBTC.address, true)
         await expect(hashKeyESGBTC.connect(owner1).greenizeBTC( WETHPartner.address,
                                                       amountPay, bricksToGreen, constants.MaxUint256, badgeInfo))
                             .to.emit(hashKeyESGBTC, 'Transfer')
@@ -676,7 +687,12 @@ describe("HashKeyESGBTC", () => {
         const expectedInputAmount  = amountART.mul(tokenTTAmount).add(tokenArtAmount.sub(amountART))  // to solve the round problem
                                       .div(tokenArtAmount.sub(amountART))  
 
-        const ARECBefore = await arkreenRECToken.balanceOf(owner1.address)   
+        const ARECBefore = await arkreenRECToken.balanceOf(owner1.address)  
+        
+        await expect(hashKeyESGBTC.connect(owner1).greenizeBTCPermit( bricksToGreen, badgeInfo, permitToPay ))
+                            .to.be.revertedWith("ERC721: transfer to non ERC721Receiver implementer")  
+
+        await arkreenBuilder.mangeTrustedForwarder(hashKeyESGBTC.address, true)
         await expect(hashKeyESGBTC.connect(owner1).greenizeBTCPermit( bricksToGreen, badgeInfo, permitToPay))
                             .to.emit(hashKeyESGBTC, 'Transfer')
                             .withArgs(zeroAddress, owner1.address, 1)        
@@ -766,6 +782,10 @@ describe("HashKeyESGBTC", () => {
         permitToPay.deadline = constants.MaxUint256   
         const expectedInputAmount  = amountART.mul(tokenTTAmount).add(tokenArtAmount.sub(amountART))  // to solve the round problem
                                       .div(tokenArtAmount.sub(amountART))  
+
+        await expect(hashKeyESGBTC.connect(owner1).greenizeBTCPermit( bricksToGreen, badgeInfo, permitToPay ))
+                            .to.be.revertedWith("ERC721: transfer to non ERC721Receiver implementer")  
+        await arkreenBuilder.mangeTrustedForwarder(hashKeyESGBTC.address, true)
 
         const ARECBefore = await arkreenRECToken.balanceOf(owner1.address)   
         await expect(hashKeyESGBTC.connect(owner1).greenizeBTCPermit( bricksToGreen, badgeInfo, permitToPay))

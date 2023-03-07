@@ -45,6 +45,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     console.log("HashKeyESGBTC deployed to %s: ", hre.network.name, HashKeyESGBTC.address);
 };
 
+// 2023/02/26
+// deploy:matic_test:HskBTC
+// 0xDe8e59dAB27EB97b2267d4230f8FE713A637e03c
+
+
 func.tags = ["HskBTC"];
 
 export default func;

@@ -91,15 +91,15 @@ contract ArkreenBadge is
 
         // The caller should be the REC token contract
         require( IArkreenRegistry(arkreenRegistry).tokenRECs(msg.sender) != address(0), 'ARB: Caller Not Allowed');
+        require(tokenId == partialARECIDExt[msg.sender], 'ARB: Error TokenId');
 
-        require(tokenId == partialARECID, 'ARB: Error TokenId');
-
+        uint256 curAmount = partialAvailableAmountExt[msg.sender];
         if(bNew) {
             // Only register new details while offsetting more than current paratial amount
-            require(amount == partialAvailableAmount, 'ARB: Wrong New');    
+            require(amount == curAmount, 'ARB: Wrong New');    
             detailsCounter += 1;
         } else {
-            require(amount <= partialAvailableAmount, 'ARB: Wrong Amount');
+            require(amount <= curAmount, 'ARB: Wrong Amount');
         }
 
         OffsetDetail memory offsetDetail;
@@ -107,13 +107,13 @@ contract ArkreenBadge is
         offsetDetail.tokenId = uint64(tokenId);
 
         OffsetDetails[detailsCounter].push(offsetDetail);            
-        partialAvailableAmount -= amount;                    // if bNew is true, partialAvailableAmount will be 0
+        curAmount = (partialAvailableAmountExt[msg.sender] -= amount);   // if bNew is true, partialAvailableAmountExt will be 0
         
-        return (detailsCounter, partialAvailableAmount);
+        return (detailsCounter, curAmount);
     }
 
-    function getDetailStatus() external view returns (uint256, uint256) {
-        return (partialAvailableAmount, partialARECID);
+    function getDetailStatus(address tokenAREC) external view returns (uint256, uint256) {
+        return (partialAvailableAmountExt[tokenAREC], partialARECIDExt[tokenAREC]);
     }
 
     /** 
@@ -149,8 +149,8 @@ contract ArkreenBadge is
             if(tokenId != 0) {                          // to be compliant with old design
                 tokenId = uint64(tokenId);
                 if(tokenId ==0) {
-                    tokenId = partialARECID + (1<<63);
-                    partialAvailableAmount -= amount;
+                    tokenId = partialARECIDExt[msg.sender] + (1<<63);
+                    partialAvailableAmountExt[msg.sender] -= amount;
                 } else {
                     tokenId = uint64(detailsCounter) + (3<< 62);
                 }
@@ -320,9 +320,9 @@ contract ArkreenBadge is
 
         if(from == IArkreenRegistry(arkreenRegistry).getRECToken(issuer, idAsset)) {
             require(status == uint256(RECStatus.Retired), 'ARB: Wrong Status'); 
-            require(partialAvailableAmount == 0, 'ARB: Partial Left');
-            partialARECID = tokenId;
-            partialAvailableAmount = amountREC;
+            require(partialAvailableAmountExt[from] == 0, 'ARB: Partial Left');
+            partialARECIDExt[from] = tokenId;
+            partialAvailableAmountExt[from] = amountREC;
             return this.onERC721Received.selector;
         }
 

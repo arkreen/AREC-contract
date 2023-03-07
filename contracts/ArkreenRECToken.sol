@@ -149,7 +149,7 @@ contract ArkreenRECToken is
         uint256 amountOffset;
         uint256 detailsCounter;
 
-        (partialAvailableAmount, partialARECID) = IArkreenBadge(badgeContract).getDetailStatus();
+        (partialAvailableAmount, partialARECID) = IArkreenBadge(badgeContract).getDetailStatus(address(this));
 
         if(amount > partialAvailableAmount) {
             while(steps < MAX_SKIP) {

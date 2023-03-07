@@ -19,6 +19,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     console.log("ArkreenRECToken deployed to %s: ", hre.network.name, ArkreenRECToken.address);
 };
 
+// 2023/03/03: Upgrade to support tracing back AREC NFT based on asset type
+// yarn deploy:matic_test:RECTokenD
+// 0x5238a537aD184198d79ED52EeE10907f56438584
+
 func.tags = ["RECTokenD"];
 
 export default func;

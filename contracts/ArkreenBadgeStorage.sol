@@ -35,5 +35,6 @@ abstract contract ArkreenBadgeStorage {
     uint256 public detailsCounter;
     mapping(uint256 => OffsetDetail[]) public OffsetDetails;
 
-
+    mapping(address => uint256) public partialARECIDExt;            // AREC NFT ID already partialy offset, from REC Token to ID
+    mapping(address => uint256) public partialAvailableAmountExt;   // Amount available for partial offset, from REC Token to Amount
 }
