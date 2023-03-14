@@ -15,6 +15,7 @@ import "./interfaces/IWETH.sol";
 
 import "./interfaces/IERC20Permit.sol";
 import "./ArkreenBuilderTypes.sol";
+import "./interfaces/IArkreenRECBank.sol";
 import "./interfaces/IFeSwapRouter.sol";
 import "./interfaces/IArkreenRECToken.sol";
 
@@ -245,25 +246,24 @@ contract ArkreenBuilder is
         uint256             deadline
     ) internal {
 
-        uint256 amountOffset;
+        bool isExact = (modeAction&0x01) == 0x01;
         if(modeAction & 0x02 != 0x00) {
-
-        }
-        else {
+            IArkreenRECBank(artBank).buyART(tokenPay, tokenART, amountPay, amountART, isExact);
+        } else {
           address[] memory swapPath = new address[](2);
           swapPath[0] = tokenPay;
           swapPath[1] = tokenART;
 
-
-          if(modeAction & 0x01 != 0x00) {
+          if(isExact) {
               IFeSwapRouter(routerSwap).swapExactTokensForTokens(amountPay, amountART, swapPath, address(this), deadline);
-              amountOffset = IERC20(tokenART).balanceOf(address(this));
           } else {
               IFeSwapRouter(routerSwap).swapTokensForExactTokens(amountART, amountPay, swapPath, address(this), deadline);
-              amountOffset = amountART;
           }
         }
 
+        uint256 amountOffset = amountART;  
+        if(isExact)  amountOffset = IERC20(tokenART).balanceOf(address(this));
+ 
         // commitOffset(uint256 amount): 0xe8fef571
         bytes memory callData = abi.encodeWithSelector(0xe8fef571, amountOffset);
 
@@ -306,11 +306,10 @@ contract ArkreenBuilder is
         BadgeInfo calldata  badgeInfo
     ) internal {
 
-        uint256 amountOffset;
+        bool isExact = (modeAction&0x01) == 0x01;
         if(modeAction & 0x02 != 0x00) {
-
-        }
-        else {
+            IArkreenRECBank(artBank).buyART(tokenPay, tokenART, amountPay, amountART, isExact);
+        } else {
           address[] memory swapPath = new address[](2);
           swapPath[0] = tokenPay;
           swapPath[1] = tokenART;
@@ -318,12 +317,13 @@ contract ArkreenBuilder is
 
           if(modeAction & 0x01 != 0x00) {
               IFeSwapRouter(routerSwap).swapExactTokensForTokens(amountPay, amountART, swapPath, address(this), deadline);
-              amountOffset = IERC20(tokenART).balanceOf(address(this));
           } else {
               IFeSwapRouter(routerSwap).swapTokensForExactTokens(amountART, amountPay, swapPath, address(this), deadline);
-              amountOffset = amountART;
           }
         }
+
+        uint256 amountOffset = amountART;  
+        if(isExact)  amountOffset = IERC20(tokenART).balanceOf(address(this));        
 
         // offsetAndMintCertificate(address beneficiary,string offsetEntityID,string beneficiaryID,string offsetMessage,uint256 amount)
         // offsetAndMintCertificate(address,string,string,string,uint256): signature = 0x0fba6a8d
@@ -388,6 +388,6 @@ contract ArkreenBuilder is
     }
 
     function getVersion() external pure virtual returns (string memory) {
-        return "0.1.0";
+        return "0.2.0";
     }
 }

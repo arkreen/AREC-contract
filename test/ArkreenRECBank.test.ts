@@ -48,7 +48,7 @@ describe("ArkreenRECIssuanceExt", () => {
 
 
     let arkreenRECToken:              ArkreenRECToken
-    let ArkreenRECTokenESG:           ArkreenRECToken
+    let arkreenRECTokenESG:           ArkreenRECToken
     let arkreenRetirement:            ArkreenBadge
     let arkreenRECBank:               ArkreenRECBank
 
@@ -96,8 +96,8 @@ describe("ArkreenRECIssuanceExt", () => {
       await arkreenRECToken.deployed()   
 
       const ArkreenRECTokenESGFactory = await ethers.getContractFactory("ArkreenRECToken")
-      const ArkreenRECTokenESG = await upgrades.deployProxy(ArkreenRECTokenESGFactory,[arkreenRegistry.address, manager.address,'HashKey AREC Token','HART']) as ArkreenRECToken
-      await ArkreenRECTokenESG.deployed()          
+      const arkreenRECTokenESG = await upgrades.deployProxy(ArkreenRECTokenESGFactory,[arkreenRegistry.address, manager.address,'HashKey AREC Token','HART']) as ArkreenRECToken
+      await arkreenRECTokenESG.deployed()          
       
       const ArkreenRetirementFactory = await ethers.getContractFactory("ArkreenBadge")
       const arkreenRetirement = await upgrades.deployProxy(ArkreenRetirementFactory,[arkreenRegistry.address]) as ArkreenBadge
@@ -154,10 +154,10 @@ describe("ArkreenRECIssuanceExt", () => {
 
       arkreenRECIssuanceExt = ArkreenRECIssuanceExt__factory.connect(arkreenRECIssuance.address, deployer);
 
-      await arkreenRegistry.newAssetAREC('Test ARE', maker1.address, ArkreenRECTokenESG.address,
+      await arkreenRegistry.newAssetAREC('Test ARE', maker1.address, arkreenRECTokenESG.address,
                   AKREToken.address, BigNumber.from("0x3635c9adc5dea00000"), 1000, 'HashKey ESG BTC')
 
-      return { AKREToken, arkreenMiner, arkreenRegistry, arkreenRECIssuance, arkreenRECToken, ArkreenRECTokenESG, 
+      return { AKREToken, arkreenMiner, arkreenRegistry, arkreenRECIssuance, arkreenRECToken, arkreenRECTokenESG, 
                arkreenRetirement, arkreenRECIssuanceExt, arkreenRECBank, WETH, tokenA }
     }
 
@@ -178,7 +178,7 @@ describe("ArkreenRECIssuanceExt", () => {
         arkreenRECToken = fixture.arkreenRECToken
         arkreenRetirement = fixture.arkreenRetirement
         arkreenRECToken = fixture.arkreenRECToken
-        ArkreenRECTokenESG = fixture.ArkreenRECTokenESG
+        arkreenRECTokenESG = fixture.arkreenRECTokenESG
         arkreenRECBank = fixture.arkreenRECBank
         WETH = fixture.WETH
         tokenA = fixture.tokenA
@@ -248,8 +248,8 @@ describe("ArkreenRECIssuanceExt", () => {
           // Normal
           await arkreenRECIssuance.connect(owner1).liquidizeREC(tokenID)
 
-          await ArkreenRECTokenESG.connect(owner1).transfer(maker2.address, expandTo9Decimals(9000))
-          await ArkreenRECTokenESG.connect(maker2).approve(arkreenRECBank.address, expandTo9Decimals(9000))          
+          await arkreenRECTokenESG.connect(owner1).transfer(maker2.address, expandTo9Decimals(9000))
+          await arkreenRECTokenESG.connect(maker2).approve(arkreenRECBank.address, expandTo9Decimals(9000))          
         }
       });
 
@@ -265,10 +265,10 @@ describe("ArkreenRECIssuanceExt", () => {
         await expect(arkreenRECBank.addNewART( arkreenRECToken.address,  maker1.address))
                   .to.be.revertedWith("ARBK: Already Added")  
 
-        await arkreenRECBank.addNewART( ArkreenRECTokenESG.address,  maker2.address)                  
+        await arkreenRECBank.addNewART( arkreenRECTokenESG.address,  maker2.address)                  
 
         const artSaleInfo1 = await arkreenRECBank.artSaleInfo(arkreenRECToken.address)
-        const artSaleInfo2 = await arkreenRECBank.artSaleInfo(ArkreenRECTokenESG.address)
+        const artSaleInfo2 = await arkreenRECBank.artSaleInfo(arkreenRECTokenESG.address)
 
         expect(artSaleInfo1.controller).to.deep.equal( maker1.address)
         expect(artSaleInfo2.controller).to.deep.equal(maker2.address)
@@ -276,7 +276,7 @@ describe("ArkreenRECIssuanceExt", () => {
 
       it("ArkreenRECBank: changeARTOwner test", async () => {
         await arkreenRECBank.addNewART( arkreenRECToken.address,  maker1.address)
-        await arkreenRECBank.addNewART( ArkreenRECTokenESG.address,  maker2.address)   
+        await arkreenRECBank.addNewART( arkreenRECTokenESG.address,  maker2.address)   
 
         await expect(arkreenRECBank.connect(maker2).changeARTOwner( arkreenRECToken.address,  owner1.address))
                   .to.be.revertedWith("ARBK: Not allowed")  
@@ -287,10 +287,10 @@ describe("ArkreenRECIssuanceExt", () => {
         await arkreenRECBank.connect(maker1).changeARTOwner( arkreenRECToken.address,  maker2.address)
         await arkreenRECBank.changeARTOwner( arkreenRECToken.address,  maker1.address)
 
-        await arkreenRECBank.connect(maker2).changeARTOwner( ArkreenRECTokenESG.address, owner1.address)                  
+        await arkreenRECBank.connect(maker2).changeARTOwner( arkreenRECTokenESG.address, owner1.address)                  
 
         const artSaleInfo1 = await arkreenRECBank.artSaleInfo(arkreenRECToken.address)
-        const artSaleInfo2 = await arkreenRECBank.artSaleInfo(ArkreenRECTokenESG.address)
+        const artSaleInfo2 = await arkreenRECBank.artSaleInfo(arkreenRECTokenESG.address)
 
         expect(artSaleInfo1.controller).to.deep.equal(maker1.address)
         expect(artSaleInfo2.controller).to.deep.equal(owner1.address)
@@ -299,19 +299,19 @@ describe("ArkreenRECIssuanceExt", () => {
 
       it("ArkreenRECBank: setFundReceiver", async () => {
         await arkreenRECBank.addNewART( arkreenRECToken.address,  maker1.address)
-        await arkreenRECBank.addNewART( ArkreenRECTokenESG.address,  maker2.address)   
+        await arkreenRECBank.addNewART( arkreenRECTokenESG.address,  maker2.address)   
 
         await expect(arkreenRECBank.connect(maker2).setFundReceiver( arkreenRECToken.address,  owner2.address))
                   .to.be.revertedWith("ARBK: Not allowed")  
 
-        await expect(arkreenRECBank.connect(maker1).setFundReceiver( ArkreenRECTokenESG.address, owner1.address))
+        await expect(arkreenRECBank.connect(maker1).setFundReceiver( arkreenRECTokenESG.address, owner1.address))
                   .to.be.revertedWith("ARBK: Not allowed")  
 
         await arkreenRECBank.connect(maker1).setFundReceiver( arkreenRECToken.address,  owner1.address)
-        await arkreenRECBank.connect(maker2).setFundReceiver( ArkreenRECTokenESG.address, owner2.address)                  
+        await arkreenRECBank.connect(maker2).setFundReceiver( arkreenRECTokenESG.address, owner2.address)                  
 
         const artSaleInfo1 = await arkreenRECBank.artSaleInfo(arkreenRECToken.address)
-        const artSaleInfo2 = await arkreenRECBank.artSaleInfo(ArkreenRECTokenESG.address)
+        const artSaleInfo2 = await arkreenRECBank.artSaleInfo(arkreenRECTokenESG.address)
 
         expect(artSaleInfo1.fundReceiver).to.deep.equal(owner1.address)
         expect(artSaleInfo2.fundReceiver).to.deep.equal(owner2.address)
@@ -319,7 +319,7 @@ describe("ArkreenRECIssuanceExt", () => {
 
       it("ArkreenRECBank: depositART test", async () => {
         await arkreenRECBank.addNewART( arkreenRECToken.address,  maker1.address)
-        await arkreenRECBank.addNewART( ArkreenRECTokenESG.address,  maker2.address)   
+        await arkreenRECBank.addNewART( arkreenRECTokenESG.address,  maker2.address)   
 
         await expect(arkreenRECBank.connect(maker2).depositART( arkreenRECToken.address,  expandTo9Decimals(1000)))
                   .to.be.revertedWith("ARBK: Not allowed")  
@@ -332,15 +332,15 @@ describe("ArkreenRECIssuanceExt", () => {
         await arkreenRECBank.connect(maker1).depositART( arkreenRECToken.address,  expandTo9Decimals(500))
         expect(await arkreenRECToken.balanceOf(arkreenRECBank.address)).to.eq(expandTo9Decimals(1500))
 
-        await arkreenRECBank.connect(maker2).depositART( ArkreenRECTokenESG.address,  expandTo9Decimals(1000))
-        expect(await ArkreenRECTokenESG.balanceOf(arkreenRECBank.address)).to.eq(expandTo9Decimals(1000))
-        await arkreenRECBank.connect(maker2).depositART( ArkreenRECTokenESG.address,  expandTo9Decimals(1500))
-        expect(await ArkreenRECTokenESG.balanceOf(arkreenRECBank.address)).to.eq(expandTo9Decimals(2500))
+        await arkreenRECBank.connect(maker2).depositART( arkreenRECTokenESG.address,  expandTo9Decimals(1000))
+        expect(await arkreenRECTokenESG.balanceOf(arkreenRECBank.address)).to.eq(expandTo9Decimals(1000))
+        await arkreenRECBank.connect(maker2).depositART( arkreenRECTokenESG.address,  expandTo9Decimals(1500))
+        expect(await arkreenRECTokenESG.balanceOf(arkreenRECBank.address)).to.eq(expandTo9Decimals(2500))
       })     
       
       it("ArkreenRECBank: changeSalePrice test", async () => {
         await arkreenRECBank.addNewART( arkreenRECToken.address,  maker1.address)
-        await arkreenRECBank.addNewART( ArkreenRECTokenESG.address,  maker2.address)   
+        await arkreenRECBank.addNewART( arkreenRECTokenESG.address,  maker2.address)   
 
         await expect(arkreenRECBank.connect(maker2).changeSalePrice( arkreenRECToken.address, WETH.address, expandTo9Decimals(100000)))
                   .to.be.revertedWith("ARBK: Not allowed")  
@@ -358,17 +358,17 @@ describe("ArkreenRECIssuanceExt", () => {
         const saleIncome3 = await arkreenRECBank.connect(maker1).saleIncome( arkreenRECToken.address, AKREToken.address)
         expect(saleIncome3.priceForSale).to.eq(expandTo18Decimals(100))
 
-        await arkreenRECBank.connect(maker2).changeSalePrice( ArkreenRECTokenESG.address, WETH.address, expandTo9Decimals(200000))
-        await arkreenRECBank.connect(maker2).changeSalePrice( ArkreenRECTokenESG.address, tokenA.address, 20000000)
-        await arkreenRECBank.connect(maker2).changeSalePrice( ArkreenRECTokenESG.address, AKREToken.address, expandTo18Decimals(200))
+        await arkreenRECBank.connect(maker2).changeSalePrice( arkreenRECTokenESG.address, WETH.address, expandTo9Decimals(200000))
+        await arkreenRECBank.connect(maker2).changeSalePrice( arkreenRECTokenESG.address, tokenA.address, 20_000_000)
+        await arkreenRECBank.connect(maker2).changeSalePrice( arkreenRECTokenESG.address, AKREToken.address, expandTo18Decimals(200))
 
-        const saleIncome11 = await arkreenRECBank.connect(maker1).saleIncome( ArkreenRECTokenESG.address, WETH.address)
+        const saleIncome11 = await arkreenRECBank.connect(maker1).saleIncome( arkreenRECTokenESG.address, WETH.address)
         expect(saleIncome11.priceForSale).to.eq(expandTo9Decimals(200000))
 
-        const saleIncome22 = await arkreenRECBank.connect(maker1).saleIncome( ArkreenRECTokenESG.address, tokenA.address)
+        const saleIncome22 = await arkreenRECBank.connect(maker1).saleIncome( arkreenRECTokenESG.address, tokenA.address)
         expect(saleIncome22.priceForSale).to.eq(20000000)
 
-        const saleIncome33 = await arkreenRECBank.connect(maker1).saleIncome( ArkreenRECTokenESG.address, AKREToken.address)
+        const saleIncome33 = await arkreenRECBank.connect(maker1).saleIncome( arkreenRECTokenESG.address, AKREToken.address)
         expect(saleIncome33.priceForSale).to.eq(expandTo18Decimals(200))
 
       })    
@@ -376,10 +376,10 @@ describe("ArkreenRECIssuanceExt", () => {
       it("ArkreenRECBank: buyART + withdraw", async () => {
         // Add ART token
         await arkreenRECBank.addNewART( arkreenRECToken.address,  maker1.address)
-        await arkreenRECBank.addNewART( ArkreenRECTokenESG.address,  maker2.address)  
+        await arkreenRECBank.addNewART( arkreenRECTokenESG.address,  maker2.address)  
         
         await arkreenRECBank.connect(maker1).depositART( arkreenRECToken.address,  expandTo9Decimals(9000))
-        await arkreenRECBank.connect(maker2).depositART( ArkreenRECTokenESG.address,  expandTo9Decimals(9000))
+        await arkreenRECBank.connect(maker2).depositART( arkreenRECTokenESG.address,  expandTo9Decimals(9000))
 
         await tokenA.approve(arkreenRECBank.address, constants.MaxUint256)    
         
@@ -421,39 +421,39 @@ describe("ArkreenRECIssuanceExt", () => {
           expect(await tokenA.balanceOf(maker1.address)).to.eq(1000_000_000 + 2000_000_000)
         }
         {
-          await arkreenRECBank.connect(maker2).changeSalePrice( ArkreenRECTokenESG.address, tokenA.address, 20_000_000)
+          await arkreenRECBank.connect(maker2).changeSalePrice( arkreenRECTokenESG.address, tokenA.address, 20_000_000)
 
-          await expect(arkreenRECBank.buyART( tokenA.address, ArkreenRECTokenESG.address, 2999_000_000, expandTo9Decimals(150), false))    
+          await expect(arkreenRECBank.buyART( tokenA.address, arkreenRECTokenESG.address, 2999_000_000, expandTo9Decimals(150), false))    
                         .to.be.revertedWith("ARBK: Pay Less")  
 
-          await expect(arkreenRECBank.buyART( tokenA.address, ArkreenRECTokenESG.address, 3000_000_000, expandTo9Decimals(150), false))
+          await expect(arkreenRECBank.buyART( tokenA.address, arkreenRECTokenESG.address, 3000_000_000, expandTo9Decimals(150), false))
                   .to.emit(arkreenRECBank, "ARTSold")
-                  .withArgs(ArkreenRECTokenESG.address, tokenA.address, expandTo9Decimals(150), 3000_000_000)
+                  .withArgs(arkreenRECTokenESG.address, tokenA.address, expandTo9Decimals(150), 3000_000_000)
 
-          expect(await ArkreenRECTokenESG.balanceOf(deployer.address)).to.eq(expandTo9Decimals(150))
+          expect(await arkreenRECTokenESG.balanceOf(deployer.address)).to.eq(expandTo9Decimals(150))
 
-          const saleIncome0 = await arkreenRECBank.saleIncome(ArkreenRECTokenESG.address, tokenA.address)
+          const saleIncome0 = await arkreenRECBank.saleIncome(arkreenRECTokenESG.address, tokenA.address)
           expect(saleIncome0.amountReceived).to.equal(3000_000_000)
 
-          const artSaleInfo0 = await arkreenRECBank.artSaleInfo(ArkreenRECTokenESG.address)
+          const artSaleInfo0 = await arkreenRECBank.artSaleInfo(arkreenRECTokenESG.address)
           expect(artSaleInfo0.amountSold).to.equal(expandTo9Decimals(150))
 
-          await arkreenRECBank.buyART( tokenA.address, ArkreenRECTokenESG.address, 4000_000_000, expandTo9Decimals(200), false)       
+          await arkreenRECBank.buyART( tokenA.address, arkreenRECTokenESG.address, 4000_000_000, expandTo9Decimals(200), false)       
 
-          expect(await ArkreenRECTokenESG.balanceOf(deployer.address)).to.eq(expandTo9Decimals(150 + 200))  
+          expect(await arkreenRECTokenESG.balanceOf(deployer.address)).to.eq(expandTo9Decimals(150 + 200))  
 
-          const saleIncome1 = await arkreenRECBank.saleIncome(ArkreenRECTokenESG.address, tokenA.address)
+          const saleIncome1 = await arkreenRECBank.saleIncome(arkreenRECTokenESG.address, tokenA.address)
           expect(saleIncome1.amountReceived).to.equal(3000_000_000 + 4000_000_000)
 
-          const artSaleInfo1 = await arkreenRECBank.artSaleInfo(ArkreenRECTokenESG.address)
+          const artSaleInfo1 = await arkreenRECBank.artSaleInfo(arkreenRECTokenESG.address)
           expect(artSaleInfo1.amountSold).to.equal(expandTo9Decimals(150 + 200))
 
           // Test withdraw
-          await expect(arkreenRECBank.connect(maker1).withdraw(ArkreenRECTokenESG.address, tokenA.address))
+          await expect(arkreenRECBank.connect(maker1).withdraw(arkreenRECTokenESG.address, tokenA.address))
                   .to.be.revertedWith("ARBK: Not allowed")
 
-          await arkreenRECBank.connect(maker2).setFundReceiver( ArkreenRECTokenESG.address, owner2.address)                  
-          await arkreenRECBank.connect(maker2).withdraw(ArkreenRECTokenESG.address, tokenA.address)          
+          await arkreenRECBank.connect(maker2).setFundReceiver( arkreenRECTokenESG.address, owner2.address)                  
+          await arkreenRECBank.connect(maker2).withdraw(arkreenRECTokenESG.address, tokenA.address)          
           expect(await tokenA.balanceOf(owner2.address)).to.eq(3000_000_000 + 4000_000_000)
         }   
       })
@@ -461,10 +461,10 @@ describe("ArkreenRECIssuanceExt", () => {
       it("ArkreenRECBank: buyARTNtative + withdraw", async () => {
         // Add ART token
         await arkreenRECBank.addNewART( arkreenRECToken.address,  maker1.address)
-        await arkreenRECBank.addNewART( ArkreenRECTokenESG.address,  maker2.address)  
+        await arkreenRECBank.addNewART( arkreenRECTokenESG.address,  maker2.address)  
         
         await arkreenRECBank.connect(maker1).depositART( arkreenRECToken.address,  expandTo9Decimals(9000))
-        await arkreenRECBank.connect(maker2).depositART( ArkreenRECTokenESG.address,  expandTo9Decimals(9000))
+        await arkreenRECBank.connect(maker2).depositART( arkreenRECTokenESG.address,  expandTo9Decimals(9000))
        
         {
           await expect(arkreenRECBank.buyARTNative( arkreenRECToken.address, 0, true, {value: expandTo18Decimals(1)}))    
@@ -504,47 +504,47 @@ describe("ArkreenRECIssuanceExt", () => {
           expect( await ethers.provider.getBalance(maker1.address)).to.gt(balanceBefore)
         }
         {
-          await arkreenRECBank.connect(maker2).changeSalePrice( ArkreenRECTokenESG.address, WETH.address, expandTo9Decimals(2_500_000))  // 0.025ETH
+          await arkreenRECBank.connect(maker2).changeSalePrice( arkreenRECTokenESG.address, WETH.address, expandTo9Decimals(2_500_000))  // 0.025ETH
 
-          await expect(arkreenRECBank.buyARTNative( ArkreenRECTokenESG.address, expandTo9Decimals(400).add(1), false, {value: expandTo18Decimals(1)} ))    
+          await expect(arkreenRECBank.buyARTNative( arkreenRECTokenESG.address, expandTo9Decimals(400).add(1), false, {value: expandTo18Decimals(1)} ))    
                         .to.be.revertedWith("ARBK: Pay Less")  
 
-          await expect(arkreenRECBank.buyARTNative( ArkreenRECTokenESG.address, expandTo9Decimals(400), false, {value: expandTo18Decimals(1)}))
+          await expect(arkreenRECBank.buyARTNative( arkreenRECTokenESG.address, expandTo9Decimals(400), false, {value: expandTo18Decimals(1)}))
                   .to.emit(arkreenRECBank, "ARTSold")
-                  .withArgs(ArkreenRECTokenESG.address, WETH.address, expandTo9Decimals(400), expandTo18Decimals(1))
+                  .withArgs(arkreenRECTokenESG.address, WETH.address, expandTo9Decimals(400), expandTo18Decimals(1))
 
-          expect(await ArkreenRECTokenESG.balanceOf(deployer.address)).to.eq(expandTo9Decimals(400))
+          expect(await arkreenRECTokenESG.balanceOf(deployer.address)).to.eq(expandTo9Decimals(400))
 
-          const saleIncome0 = await arkreenRECBank.saleIncome(ArkreenRECTokenESG.address, WETH.address)
+          const saleIncome0 = await arkreenRECBank.saleIncome(arkreenRECTokenESG.address, WETH.address)
           expect(saleIncome0.amountReceived).to.equal(expandTo18Decimals(1))
 
-          const artSaleInfo0 = await arkreenRECBank.artSaleInfo(ArkreenRECTokenESG.address)
+          const artSaleInfo0 = await arkreenRECBank.artSaleInfo(arkreenRECTokenESG.address)
           expect(artSaleInfo0.amountSold).to.equal(expandTo9Decimals(400))
 
-          await arkreenRECBank.buyARTNative( ArkreenRECTokenESG.address, expandTo9Decimals(1200), false, {value: expandTo18Decimals(3)})    
-          expect(await ArkreenRECTokenESG.balanceOf(deployer.address)).to.eq(expandTo9Decimals(400 + 1200))  
+          await arkreenRECBank.buyARTNative( arkreenRECTokenESG.address, expandTo9Decimals(1200), false, {value: expandTo18Decimals(3)})    
+          expect(await arkreenRECTokenESG.balanceOf(deployer.address)).to.eq(expandTo9Decimals(400 + 1200))  
 
-          const saleIncome1 = await arkreenRECBank.saleIncome(ArkreenRECTokenESG.address, WETH.address)
+          const saleIncome1 = await arkreenRECBank.saleIncome(arkreenRECTokenESG.address, WETH.address)
           expect(saleIncome1.amountReceived).to.equal(expandTo18Decimals(1 +3 ))
 
-          const artSaleInfo1 = await arkreenRECBank.artSaleInfo(ArkreenRECTokenESG.address)
+          const artSaleInfo1 = await arkreenRECBank.artSaleInfo(arkreenRECTokenESG.address)
           expect(artSaleInfo1.amountSold).to.equal(expandTo9Decimals(400 + 1200))
 
           const balanceBefore = await ethers.provider.getBalance(deployer.address)       
-          await expect(arkreenRECBank.buyARTNative( ArkreenRECTokenESG.address, expandTo9Decimals(800), false, {value: expandTo18Decimals(5)}))
+          await expect(arkreenRECBank.buyARTNative( arkreenRECTokenESG.address, expandTo9Decimals(800), false, {value: expandTo18Decimals(5)}))
                   .to.emit(arkreenRECBank, "ARTSold")
-                  .withArgs(ArkreenRECTokenESG.address, WETH.address, expandTo9Decimals(800), expandTo18Decimals(2))
+                  .withArgs(arkreenRECTokenESG.address, WETH.address, expandTo9Decimals(800), expandTo18Decimals(2))
           const balanceAfter = await ethers.provider.getBalance(deployer.address)   
           expect(balanceBefore.sub(balanceAfter)).to.lte(expandTo18Decimals(3))  
           
           {
             // Test withdraw
-            await expect(arkreenRECBank.connect(maker1).withdraw(ArkreenRECTokenESG.address, WETH.address))
+            await expect(arkreenRECBank.connect(maker1).withdraw(arkreenRECTokenESG.address, WETH.address))
                     .to.be.revertedWith("ARBK: Not allowed")
                     
             const balanceBefore = await ethers.provider.getBalance(owner2.address)   
-            await arkreenRECBank.connect(maker2).setFundReceiver( ArkreenRECTokenESG.address, owner2.address)     
-            await arkreenRECBank.connect(maker2).withdraw(ArkreenRECTokenESG.address, WETH.address)
+            await arkreenRECBank.connect(maker2).setFundReceiver( arkreenRECTokenESG.address, owner2.address)     
+            await arkreenRECBank.connect(maker2).withdraw(arkreenRECTokenESG.address, WETH.address)
 
             expect( await ethers.provider.getBalance(owner2.address)).to.gt(
                 balanceBefore.add(expandTo18Decimals(1 +3).sub(expandTo18Decimals(1).div(100))))    // gas fee less than 0.01ETH
@@ -555,10 +555,10 @@ describe("ArkreenRECIssuanceExt", () => {
       it("ArkreenRECBank: buyARTWithPermit test", async () => {
         // Add ART token
         await arkreenRECBank.addNewART( arkreenRECToken.address,  maker1.address)
-        await arkreenRECBank.addNewART( ArkreenRECTokenESG.address,  maker2.address)  
+        await arkreenRECBank.addNewART( arkreenRECTokenESG.address,  maker2.address)  
         
         await arkreenRECBank.connect(maker1).depositART( arkreenRECToken.address,  expandTo9Decimals(9000))
-        await arkreenRECBank.connect(maker2).depositART( ArkreenRECTokenESG.address,  expandTo9Decimals(9000))
+        await arkreenRECBank.connect(maker2).depositART( arkreenRECTokenESG.address,  expandTo9Decimals(9000))
        
         {
           const nonce1 = await AKREToken.nonces(owner1.address)
@@ -640,24 +640,24 @@ describe("ArkreenRECIssuanceExt", () => {
           const { v,r,s } = ecsign(Buffer.from(digest1.slice(2), 'hex'), Buffer.from(privateKeyOwner.slice(2), 'hex'))
           const permitToPay: SignatureStruct = { v, r, s, token: AKREToken.address, value:expandTo18Decimals(1500*150), deadline: constants.MaxUint256 }      
                 
-          await expect(arkreenRECBank.connect(owner1).buyARTWithPermit( ArkreenRECTokenESG.address, expandTo9Decimals(1500), false, permitToPay))    
+          await expect(arkreenRECBank.connect(owner1).buyARTWithPermit( arkreenRECTokenESG.address, expandTo9Decimals(1500), false, permitToPay))    
                         .to.be.revertedWith("ARBK: Payment token not allowed")  
 
-          await arkreenRECBank.connect(maker2).changeSalePrice( ArkreenRECTokenESG.address, AKREToken.address, expandTo18Decimals(150))    // 100 AKRE                
-          await expect(arkreenRECBank.connect(owner1).buyARTWithPermit( ArkreenRECTokenESG.address, expandTo9Decimals(1500).add(1), false, permitToPay))    
+          await arkreenRECBank.connect(maker2).changeSalePrice( arkreenRECTokenESG.address, AKREToken.address, expandTo18Decimals(150))    // 100 AKRE                
+          await expect(arkreenRECBank.connect(owner1).buyARTWithPermit( arkreenRECTokenESG.address, expandTo9Decimals(1500).add(1), false, permitToPay))    
                         .to.be.revertedWith("ARBK: Pay Less")  
 
-          const ARTBalance = await ArkreenRECTokenESG.balanceOf(owner1.address)               
-          await expect(arkreenRECBank.connect(owner1).buyARTWithPermit( ArkreenRECTokenESG.address, expandTo9Decimals(1500), false, permitToPay))
+          const ARTBalance = await arkreenRECTokenESG.balanceOf(owner1.address)               
+          await expect(arkreenRECBank.connect(owner1).buyARTWithPermit( arkreenRECTokenESG.address, expandTo9Decimals(1500), false, permitToPay))
                   .to.emit(arkreenRECBank, "ARTSold")
-                  .withArgs(ArkreenRECTokenESG.address, AKREToken.address, expandTo9Decimals(1500), expandTo18Decimals(1500*150))
+                  .withArgs(arkreenRECTokenESG.address, AKREToken.address, expandTo9Decimals(1500), expandTo18Decimals(1500*150))
 
-          expect(await ArkreenRECTokenESG.balanceOf(owner1.address)).to.eq(ARTBalance.add(expandTo9Decimals(1500)))
+          expect(await arkreenRECTokenESG.balanceOf(owner1.address)).to.eq(ARTBalance.add(expandTo9Decimals(1500)))
 
-          const saleIncome0 = await arkreenRECBank.saleIncome(ArkreenRECTokenESG.address, AKREToken.address)
+          const saleIncome0 = await arkreenRECBank.saleIncome(arkreenRECTokenESG.address, AKREToken.address)
           expect(saleIncome0.amountReceived).to.equal(expandTo18Decimals(1500*150))
 
-          const artSaleInfo0 = await arkreenRECBank.artSaleInfo(ArkreenRECTokenESG.address)
+          const artSaleInfo0 = await arkreenRECBank.artSaleInfo(arkreenRECTokenESG.address)
           expect(artSaleInfo0.amountSold).to.equal(expandTo9Decimals(1500))
 
           {
@@ -670,24 +670,24 @@ describe("ArkreenRECIssuanceExt", () => {
             const { v,r,s } = ecsign(Buffer.from(digest1.slice(2), 'hex'), Buffer.from(privateKeyOwner.slice(2), 'hex'))
             const permitToPay: SignatureStruct = { v, r, s, token: AKREToken.address, value:expandTo18Decimals(2500*150), deadline: constants.MaxUint256 }      
 
-            await arkreenRECBank.connect(owner1).buyARTWithPermit( ArkreenRECTokenESG.address, expandTo9Decimals(2500), false, permitToPay)    
-            expect(await ArkreenRECTokenESG.balanceOf(owner1.address)).to.eq(ARTBalance.add(expandTo9Decimals(1500 + 2500)))   // 100 + 200
+            await arkreenRECBank.connect(owner1).buyARTWithPermit( arkreenRECTokenESG.address, expandTo9Decimals(2500), false, permitToPay)    
+            expect(await arkreenRECTokenESG.balanceOf(owner1.address)).to.eq(ARTBalance.add(expandTo9Decimals(1500 + 2500)))   // 100 + 200
 
-            const saleIncome1 = await arkreenRECBank.saleIncome(ArkreenRECTokenESG.address, AKREToken.address)
+            const saleIncome1 = await arkreenRECBank.saleIncome(arkreenRECTokenESG.address, AKREToken.address)
             expect(saleIncome1.amountReceived).to.equal(expandTo18Decimals((1500+2500)*150))
 
-            const artSaleInfo1 = await arkreenRECBank.artSaleInfo(ArkreenRECTokenESG.address)
+            const artSaleInfo1 = await arkreenRECBank.artSaleInfo(arkreenRECTokenESG.address)
             expect(artSaleInfo1.amountSold).to.equal(expandTo9Decimals(1500 + 2500))
 
           }
         }
         
         // Test withdraw
-        await expect(arkreenRECBank.connect(maker1).withdraw(ArkreenRECTokenESG.address, AKREToken.address))
+        await expect(arkreenRECBank.connect(maker1).withdraw(arkreenRECTokenESG.address, AKREToken.address))
                   .to.be.revertedWith("ARBK: Not allowed")
 
-        await arkreenRECBank.connect(maker2).setFundReceiver( ArkreenRECTokenESG.address, owner2.address)                  
-        await arkreenRECBank.connect(maker2).withdraw(ArkreenRECTokenESG.address, AKREToken.address)          
+        await arkreenRECBank.connect(maker2).setFundReceiver( arkreenRECTokenESG.address, owner2.address)                  
+        await arkreenRECBank.connect(maker2).withdraw(arkreenRECTokenESG.address, AKREToken.address)          
         expect(await AKREToken.balanceOf(owner2.address)).to.eq(expandTo18Decimals((1500+2500)*150))
       })
     })  

@@ -61,7 +61,7 @@ describe("ArkreenBuilder", () => {
 
     let AKREToken:                    ArkreenTokenTest
     let arkreenMiner:                 ArkreenMiner
-    let arkreenRegistry:             ArkreenRegistry
+    let arkreenRegistry:              ArkreenRegistry
     let arkreenRECIssuance:           ArkreenRECIssuance
     let arkreenRECToken:              ArkreenRECToken
     let arkreenRetirement:            ArkreenBadge
@@ -216,6 +216,10 @@ describe("ArkreenBuilder", () => {
       const ArkreenRECTokenFactory = await ethers.getContractFactory("ArkreenRECToken")
       arkreenRECToken = await upgrades.deployProxy(ArkreenRECTokenFactory,[arkreenRegistry.address, manager.address, '', '']) as ArkreenRECToken
       await arkreenRECToken.deployed()
+
+      const ArkreenRECTokenESGFactory = await ethers.getContractFactory("ArkreenRECToken")
+      const ArkreenRECTokenESG = await upgrades.deployProxy(ArkreenRECTokenESGFactory,[arkreenRegistry.address, manager.address,'HashKey AREC Token','HART']) as ArkreenRECToken
+      await ArkreenRECTokenESG.deployed()        
       
       const ArkreenRetirementFactory = await ethers.getContractFactory("ArkreenBadge")
       arkreenRetirement = await upgrades.deployProxy(ArkreenRetirementFactory,[arkreenRegistry.address]) as ArkreenBadge
@@ -475,7 +479,7 @@ describe("ArkreenBuilder", () => {
   
       })
 
-      it("ActionBuilder: Exact Payment Token", async () => {
+      it("ActionBuilder: Exact Payment Token with DEX", async () => {
         await mintAREC(5000)          // 2
 
         await arkreenRECToken.setClimateBuilder(arkreenBuilder.address)
@@ -522,8 +526,8 @@ describe("ArkreenBuilder", () => {
         expect(await arkreenRetirement.getOffsetActions(actionID)).to.deep.equal(action)
         expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(ARECBefore)
 
-      });      
-
+      });    
+      
       it("ActionBuilder: Exact ART Token", async () => {
         await mintAREC(5000)          // 2
 
