@@ -39,6 +39,7 @@ contract HashKeyESGBTC is
     address public tokenNative;                       // The wrapped token of the Native token, such as WETH, WMATIC
     mapping(uint256 => uint256) public brickIds;      // Green Id -> Owned brick id list, maximumly 21 bricks, 12 bits each
     mapping(uint256 => uint256) public greenIdLoc;    // Brick Id -> Green Id
+    mapping(uint256 => uint256[]) public brickIdsMVP;   // Green Id -> bricks id more than 21 cells
 
     // The total REC amount to greenize the BTC block mined at the same time of HashKey Pro opening ceremony
     uint256 public maxRECToGreenBTC;
@@ -99,8 +100,29 @@ contract HashKeyESGBTC is
                                                         amountART, modeAction, deadline, badgeInfo);
 
         _actionBuilderBadge(abi.encodePacked(callData, actorGreenBTC));     // Pay back to msg.sender already
-
     }
+
+    function greenizeBTCNativeMVP(
+        uint256             bricksToGreen,   
+        uint256[] memory    bricksToGreenMVP,           
+        uint256             deadline,
+        BadgeInfo calldata  badgeInfo
+    ) external payable ensure(deadline) {                       // Deadline will be checked by router, no need to check here. 
+
+        address actorGreenBTC = _msgSender();
+        uint256 amountART = _mintESGBadgeMVP(actorGreenBTC, bricksToGreen, bricksToGreenMVP);        
+        
+        // Wrap MATIC to WMATIC  
+        IWETH(tokenNative).deposit{value: msg.value}();
+
+        // actionBuilderBadge(address,address,uint256,uint256,uint256,uint256,(address,string,string,string)): 0x8D7FCEFD
+        uint256 modeAction = (bricksToGreen>>255)<<1;     
+        bytes memory callData = abi.encodeWithSelector(0x8D7FCEFD, tokenNative, tokenHART, msg.value,
+                                                        amountART, modeAction, deadline, badgeInfo);
+
+        _actionBuilderBadge(abi.encodePacked(callData, actorGreenBTC));     // Pay back to msg.sender already
+
+    }    
 
     /** 
      * @dev Greenize BTC with specified payment token
@@ -120,6 +142,29 @@ contract HashKeyESGBTC is
 
         address actorGreenBTC = _msgSender();
         uint256 amountART = _mintESGBadge(actorGreenBTC, bricksToGreen);
+
+        // Transfer payement 
+        TransferHelper.safeTransferFrom(tokenPay, actorGreenBTC, address(this), amountPay);
+        
+        // actionBuilderBadge(address,address,uint256,uint256,uint256,uint256,(address,string,string,string)): 0x8D7FCEFD
+        uint256 modeAction = (bricksToGreen>>255)<<1;
+        bytes memory callData = abi.encodeWithSelector(0x8D7FCEFD, tokenPay, tokenHART, amountPay,
+                                                        amountART, modeAction, deadline, badgeInfo);
+
+        _actionBuilderBadge(abi.encodePacked(callData, actorGreenBTC));
+    }
+
+    function greenizeBTCMVP(
+        address             tokenPay,
+        uint256             amountPay,
+        uint256             bricksToGreen,   
+        uint256[] memory    bricksToGreenMVP,
+        uint256             deadline,        
+        BadgeInfo calldata  badgeInfo
+    ) external ensure(deadline) {                               // Deadline will be checked by router, no need to check here.
+
+        address actorGreenBTC = _msgSender();
+        uint256 amountART = _mintESGBadgeMVP(actorGreenBTC, bricksToGreen, bricksToGreenMVP);
 
         // Transfer payement 
         TransferHelper.safeTransferFrom(tokenPay, actorGreenBTC, address(this), amountPay);
@@ -163,6 +208,38 @@ contract HashKeyESGBTC is
     }
 
     /** 
+     * @dev Greenize BTC with payment Approval.
+     * @param bricksToGreen The brick ID list in the format of IDn || ... || ID2 || ID1, each of which is 12 bits.
+     * @param badgeInfo The information to be included for climate badge.
+     * @param permitToPay The Permit information to approve the payment token to swap for ART token 
+     */
+    function greenizeBTCPermitMVP(
+        uint256             bricksToGreen,
+        uint256[] memory    bricksToGreenMVP,
+        BadgeInfo calldata  badgeInfo,
+        Signature calldata  permitToPay
+    ) external ensure(permitToPay.deadline) {                     // Deadline will be checked by router, no need to check here. 
+
+        address actorGreenBTC = _msgSender();
+        uint256 amountART = _mintESGBadgeMVP(actorGreenBTC, bricksToGreen, bricksToGreenMVP);
+
+        // Permit payment token
+        IERC20Permit(permitToPay.token).permit(actorGreenBTC, address(this), 
+                        permitToPay.value, permitToPay.deadline, permitToPay.v, permitToPay.r, permitToPay.s);
+
+        // Transfer payement 
+        TransferHelper.safeTransferFrom(permitToPay.token, actorGreenBTC, address(this), permitToPay.value);
+
+        // actionBuilderBadge(address,address,uint256,uint256,uint256,uint256,(address,string,string,string)): 0x8D7FCEFD
+        uint256 modeAction = (bricksToGreen>>255)<<1;
+        bytes memory callData = abi.encodeWithSelector(0x8D7FCEFD, permitToPay.token, tokenHART, permitToPay.value,
+                                                        amountART, modeAction, permitToPay.deadline, badgeInfo);
+
+        _actionBuilderBadge(abi.encodePacked(callData, actorGreenBTC));
+    }
+
+
+    /** 
      * @dev mint ESGBadge to the greenActor
      * @param actorGreenBTC The address of the actor
      * @param bricksToGreen The brick ID list in the format of IDn || ... || ID2 || ID1, each of which is 12 bits
@@ -184,6 +261,45 @@ contract HashKeyESGBTC is
         }
         return amountART * 2 * (10**ART_DECIMAL);       // 1 Cell -> 2 ART token 
     }
+
+    /** 
+     * @dev mint ESGBadge to the greenActor
+     * @param actorGreenBTC The address of the actor
+     * @param bricksToGreen The brick ID list in the format of IDn || ... || ID2 || ID1, each of which is 12 bits
+     * @return uint256 The amount ART token to pay for the ESG badge
+     */
+    function _mintESGBadgeMVP(address actorGreenBTC, uint256 bricksToGreen, uint256[] memory bricksToGreenMVP) internal returns (uint256) {
+        uint256 amountART;
+        uint256 brickID;
+
+        bricksToGreen = (bricksToGreen<<4) >> 4;                            // clear 4 msb, uint252
+        uint256 greenId = totalSupply() + 1;
+        _safeMint(actorGreenBTC, greenId);
+        brickIds[greenId] = bricksToGreen;
+
+        while( (brickID = (bricksToGreen & MASK_ID)) != 0) {
+            amountART += 1;
+            setBrick(brickID, greenId);
+            bricksToGreen = bricksToGreen >> 12;
+        }
+        
+        if(bricksToGreenMVP.length > 0 ) {
+          require (amountART == 21, "HSKESG: Not MVP"); 
+        }
+
+        brickIdsMVP[greenId] = bricksToGreenMVP;
+        for (uint256 index; index < bricksToGreenMVP.length; index++) {
+          bricksToGreen = (bricksToGreenMVP[index]<<4) >> 4;
+          while( (brickID = (bricksToGreen & MASK_ID)) != 0) {
+              amountART += 1;
+              setBrick(brickID, greenId);
+              bricksToGreen = bricksToGreen >> 12;
+          }
+        }
+
+        return amountART * 2 * (10**ART_DECIMAL);       // 1 Cell -> 2 ART token 
+    }
+
 
     /** 
      * @dev call actionBuilderBadge to buy ART token and mint the Arkreen cliamte badge.

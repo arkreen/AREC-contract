@@ -338,6 +338,78 @@ describe("ArkreenRECIssuanceExt", () => {
 
       });      
 
+      it("HashKeyESGBTCBank:  greenizeBTCPermit", async () => {
+
+        await arkreenRECBank.addNewART( arkreenRECToken.address,  maker1.address)
+        await arkreenRECBank.addNewART( arkreenRECTokenESG.address,  maker2.address)  
+        
+        await arkreenRECBank.connect(maker1).depositART( arkreenRECToken.address,  expandTo9Decimals(9000))
+        await arkreenRECBank.connect(maker2).depositART( arkreenRECTokenESG.address,  expandTo9Decimals(9000))
+
+        await arkreenRECToken.setClimateBuilder(arkreenBuilder.address)
+        await arkreenRECTokenESG.setClimateBuilder(arkreenBuilder.address)
+
+        const badgeInfo =  {
+          beneficiary:    owner1.address,
+          offsetEntityID: 'Owner1',
+          beneficiaryID:  'Tester',
+          offsetMessage:  "Just Testing"
+        }        
+
+        await AKREToken.approve(arkreenBuilder.address, constants.MaxUint256)    
+          
+        const bricksToGreen = BigNumber.from('0x09109209309409509609708808708608508408308200700F01200D009002001').or(BigNumber.from(1).shl(255))
+        await arkreenRECBank.connect(maker2).changeSalePrice( arkreenRECTokenESG.address, AKREToken.address, expandTo18Decimals(10))
+
+        const bricksToGreen1 = BigNumber.from('0x101102103104105106107110112113114115116117121122123124125126127')
+        const bricksToGreen2 = BigNumber.from('0x201202203204205206207208210211212213')     //12 
+  
+        const amountPay = expandTo18Decimals(1100)
+        const amountART = expandTo9Decimals(54*2)
+
+        const ARECBefore = await arkreenRECTokenESG.balanceOf(owner1.address)                    
+        await AKREToken.connect(owner1).approve(hashKeyESGBTC.address, constants.MaxUint256)
+
+        await arkreenBuilder.mangeTrustedForwarder(hashKeyESGBTC.address, true)
+        await hashKeyESGBTC.connect(owner1).greenizeBTCMVP( AKREToken.address,
+                                                      amountPay, bricksToGreen, [bricksToGreen1, bricksToGreen2], 
+                                                      constants.MaxUint256, badgeInfo)
+
+        const actionID =1     
+        const lastBlock = await ethers.provider.getBlock('latest')     
+        
+        const tokenID = await arkreenRECIssuance.totalSupply()
+        const action = [  owner1.address, maker1.address, amountART,    // Manger is the issuer address
+                          tokenID.add(MASK_OFFSET), lastBlock.timestamp, true ]     // Offset action is claimed
+        expect(await arkreenRetirement.getOffsetActions(actionID)).to.deep.equal(action)
+
+        const offsetRecord = [owner1.address, owner1.address, "Owner1", "Tester", "Just Testing", 
+                              BigNumber.from(lastBlock.timestamp), amountART, [actionID]]
+        const badgeID = 1                            
+        expect(await arkreenRetirement.getCertificate(badgeID)).to.deep.equal(offsetRecord)
+        expect(await arkreenRECTokenESG.balanceOf(owner1.address)).to.equal(ARECBefore)   
+
+        expect(await hashKeyESGBTC.checkBrick(1)).to.equal(true)
+        expect(await hashKeyESGBTC.checkBrick(2)).to.equal(true)
+        expect(await hashKeyESGBTC.checkBrick(7)).to.equal(true)
+        expect(await hashKeyESGBTC.checkBrick(9)).to.equal(true)
+        expect(await hashKeyESGBTC.checkBrick(13)).to.equal(true)
+        expect(await hashKeyESGBTC.checkBrick(15)).to.equal(true)
+        expect(await hashKeyESGBTC.checkBrick(18)).to.equal(true)
+        expect(await hashKeyESGBTC.checkBrick(10)).to.equal(false)
+
+        const ownerInfo = [ owner1.address, 1, bricksToGreen.xor(BigNumber.from(1).shl(255))]   // Mask the highest bit
+        expect(await hashKeyESGBTC.ownerBricks(1)).to.deep.equal(ownerInfo)
+        expect(await hashKeyESGBTC.ownerBricks(9)).to.deep.equal(ownerInfo)
+
+        const brickIdsMVP0 = await hashKeyESGBTC.brickIdsMVP(1,0)
+        const brickIdsMVP1 = await hashKeyESGBTC.brickIdsMVP(1,1)
+        const brickIds = await hashKeyESGBTC.brickIds(1)
+        expect(brickIdsMVP0).to.equal(bricksToGreen1)
+        expect(brickIdsMVP1).to.equal(bricksToGreen2)
+        expect(brickIds).to.equal(bricksToGreen.xor(BigNumber.from(1).shl(255)))
+
+      });      
 
       //////////////////////////////////////
 /*      
