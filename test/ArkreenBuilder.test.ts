@@ -13,6 +13,7 @@ import {
     ArkreenRECToken,
     ArkreenBadge,
     ArkreenBuilder,
+    ArkreenRECBank,
 } from "../typechain";
 
 import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
@@ -64,6 +65,7 @@ describe("ArkreenBuilder", () => {
     let arkreenRECIssuance:           ArkreenRECIssuance
     let arkreenRECToken:              ArkreenRECToken
     let arkreenRetirement:            ArkreenBadge
+  
 
     const Miner_Manager       = 0       
 
@@ -82,7 +84,8 @@ describe("ArkreenBuilder", () => {
     let pairTAArt: Contract
     let pairEEArt: Contract
     let pairEAArt: Contract
-    let arkreenBuilder: Contract
+    let arkreenBuilder:     ArkreenBuilder
+    let arkreenRECBank:     ArkreenRECBank
       
     async function deployFixture() {
 
@@ -256,9 +259,13 @@ describe("ArkreenBuilder", () => {
       await arkreenRegistry.setRECIssuance(arkreenRECIssuance.address)
       await arkreenRegistry.setArkreenRetirement(arkreenRetirement.address)
 
+      const ArkreenRECBankFactory = await ethers.getContractFactory("ArkreenRECBank")
+      const arkreenRECBank = await upgrades.deployProxy(ArkreenRECBankFactory,[WETH.address]) as ArkreenRECBank
+      await arkreenRECBank.deployed()  
+
       const ArkreenBuilderFactory = await ethers.getContractFactory("ArkreenBuilder");
 //    const arkreenBuilder = await ArkreenBuilderFactory.deploy(routerFeswa.address);
-      arkreenBuilder = await upgrades.deployProxy(ArkreenBuilderFactory,[routerFeswa.address, WETH.address]) as ArkreenBuilder
+      arkreenBuilder = await upgrades.deployProxy(ArkreenBuilderFactory,[routerFeswa.address, arkreenRECBank.address, WETH.address]) as ArkreenBuilder
       await arkreenBuilder.deployed();
       await arkreenBuilder.approveRouter([WETHPartner.address, WETH.address])
 
@@ -269,7 +276,7 @@ describe("ArkreenBuilder", () => {
         tokenIDMatch, MetamorphicFactory, 
         pairTTArt, pairTAArt,  pairEEArt, pairEAArt,
         AKREToken, arkreenMiner, arkreenRegistry, arkreenRECIssuance, 
-        arkreenRECToken, arkreenRetirement, arkreenBuilder }
+        arkreenRECToken, arkreenRetirement, arkreenBuilder, arkreenRECBank }
     }
 
     beforeEach(async () => {
@@ -305,6 +312,7 @@ describe("ArkreenBuilder", () => {
         pairEEArt = fixture.pairEEArt  
         pairEAArt = fixture.pairEAArt  
         arkreenBuilder = fixture.arkreenBuilder  
+        arkreenRECBank = fixture.arkreenRECBank  
         
         const startTime = 1564888526
         const endTime   = 1654888526
@@ -485,13 +493,13 @@ describe("ArkreenBuilder", () => {
         const ARECBefore = await arkreenRECToken.balanceOf(owner1.address)
 
         await expect(arkreenBuilder.connect(owner1).actionBuilder( WETHPartner.address, arkreenRECToken.address,
-                                              amountPay, amountART, true, constants.MaxUint256))   
+                                              amountPay, amountART, 1, constants.MaxUint256))   
                     .to.be.revertedWith("TransferHelper: TRANSFER_FROM_FAILED")     
 
         await WETHPartner.connect(owner1).approve(arkreenBuilder.address, constants.MaxUint256)
 
         await expect(arkreenBuilder.connect(owner1).actionBuilder( WETHPartner.address, arkreenRECToken.address,
-                            amountPay, amountART, true, constants.MaxUint256))
+                            amountPay, amountART, 1, constants.MaxUint256))
                             .to.emit(WETHPartner, 'Transfer')
                             .withArgs(owner1.address, arkreenBuilder.address, amountPay)
                             .to.emit(WETHPartner, 'Transfer')
@@ -534,12 +542,12 @@ describe("ArkreenBuilder", () => {
 
         const ARECBefore = await arkreenRECToken.balanceOf(owner1.address)                                      
         await expect(arkreenBuilder.connect(owner1).actionBuilder( WETHPartner.address, arkreenRECToken.address,
-                                        amountPay, amountART, true, constants.MaxUint256 ))   
+                                        amountPay, amountART, 1, constants.MaxUint256 ))   
               .to.be.revertedWith("TransferHelper: TRANSFER_FROM_FAILED")     
 
         await WETHPartner.connect(owner1).approve(arkreenBuilder.address, constants.MaxUint256)
         await expect(arkreenBuilder.connect(owner1).actionBuilder( WETHPartner.address, arkreenRECToken.address,
-                            amountPay, amountART, false, constants.MaxUint256 ))
+                            amountPay, amountART, 0, constants.MaxUint256 ))
                             .to.emit(WETHPartner, 'Transfer')
                             .withArgs(owner1.address, arkreenBuilder.address, amountPay)
                             .to.emit(WETHPartner, 'Transfer')
@@ -581,7 +589,7 @@ describe("ArkreenBuilder", () => {
         const ARECBefore = await arkreenRECToken.balanceOf(owner1.address)                                      
         const expectedOutputAmount  = amountPay.mul(tokenArtAmount).div(tokenETHAmount.add(amountPay))   
         await expect(arkreenBuilder.connect(owner1).actionBuilderNative(arkreenRECToken.address,
-                            amountART, true, constants.MaxUint256, {value: amountPay}))
+                            amountART, 1, constants.MaxUint256, {value: amountPay}))
                             .to.emit(WETH, 'Deposit')
                             .withArgs(arkreenBuilder.address, amountPay)
                             .to.emit(WETH, 'Transfer')
@@ -625,7 +633,7 @@ describe("ArkreenBuilder", () => {
         const balanceBefore = await ethers.provider.getBalance(owner1.address)                                      
 
         await expect(arkreenBuilder.connect(owner1).actionBuilderNative(arkreenRECToken.address,
-                            amountART, false, constants.MaxUint256, {value: amountPay}))
+                            amountART, 0, constants.MaxUint256, {value: amountPay}))
                             .to.emit(WETH, 'Deposit')
                             .withArgs(arkreenBuilder.address, amountPay)
                             .to.emit(WETH, 'Transfer')
@@ -680,14 +688,14 @@ describe("ArkreenBuilder", () => {
         // Abnormal Test
         // Check signature
         permitToPay.deadline = constants.MaxUint256.sub(1)
-        await expect(arkreenBuilder.connect(owner1).actionBuilderWithPermit( arkreenRECToken.address, amountART, true, permitToPay ))
+        await expect(arkreenBuilder.connect(owner1).actionBuilderWithPermit( arkreenRECToken.address, amountART, 1, permitToPay ))
                                                       .to.be.revertedWith("FeSwap: INVALID_SIGNATURE")  
 
         // Normal transaction   
         permitToPay.deadline = constants.MaxUint256   
         const ARECBefore = await arkreenRECToken.balanceOf(owner1.address)                                      
         const expectedOutputAmount  = amountPay.mul(tokenArtAmount).div(tokenTTAmount.add(amountPay))    
-        await expect(arkreenBuilder.connect(owner1).actionBuilderWithPermit( arkreenRECToken.address, amountART, true, permitToPay))
+        await expect(arkreenBuilder.connect(owner1).actionBuilderWithPermit( arkreenRECToken.address, amountART, 1, permitToPay))
                             .to.emit(WETHPartner, 'Transfer')
                             .withArgs(owner1.address, arkreenBuilder.address, amountPay)
                             .to.emit(WETHPartner, 'Transfer')
@@ -735,7 +743,7 @@ describe("ArkreenBuilder", () => {
         // Abnormal Test
         // Check signature
         permitToPay.deadline = constants.MaxUint256.sub(1)
-        await expect(arkreenBuilder.connect(owner1).actionBuilderWithPermit( arkreenRECToken.address, amountART, false, permitToPay ))
+        await expect(arkreenBuilder.connect(owner1).actionBuilderWithPermit( arkreenRECToken.address, amountART, 0, permitToPay ))
                                                       .to.be.revertedWith("FeSwap: INVALID_SIGNATURE")  
 
         // Normal transaction   
@@ -743,7 +751,7 @@ describe("ArkreenBuilder", () => {
         const expectedInputAmount  = amountART.mul(tokenTTAmount).add(tokenArtAmount.sub(amountART))  // to solve the round problem
                                       .div(tokenArtAmount.sub(amountART))  
         const ARECBefore = await arkreenRECToken.balanceOf(owner1.address)                                      
-        await expect(arkreenBuilder.connect(owner1).actionBuilderWithPermit( arkreenRECToken.address, amountART, false, permitToPay))
+        await expect(arkreenBuilder.connect(owner1).actionBuilderWithPermit( arkreenRECToken.address, amountART, 0, permitToPay))
                             .to.emit(WETHPartner, 'Transfer')
                             .withArgs(owner1.address, arkreenBuilder.address, amountPay)
                             .to.emit(WETHPartner, 'Transfer')
@@ -793,7 +801,7 @@ describe("ArkreenBuilder", () => {
         const ARECBefore = await arkreenRECToken.balanceOf(owner1.address)                                      
         const expectedOutputAmount  = amountPay.mul(tokenArtAmount).div(tokenETHAmount.add(amountPay))   
         await expect(arkreenBuilder.connect(owner1).actionBuilderBadgeNative(arkreenRECToken.address,
-                            amountART, true, constants.MaxUint256 , badgeInfo, {value: amountPay}))
+                            amountART, 1, constants.MaxUint256 , badgeInfo, {value: amountPay}))
                             .to.emit(WETH, 'Deposit')
                             .withArgs(arkreenBuilder.address, amountPay)
                             .to.emit(WETH, 'Transfer')
@@ -849,7 +857,7 @@ describe("ArkreenBuilder", () => {
         const balanceBefore = await ethers.provider.getBalance(owner1.address)                                      
         const ARECBefore = await arkreenRECToken.balanceOf(owner1.address)                                      
         await expect(arkreenBuilder.connect(owner1).actionBuilderBadgeNative(arkreenRECToken.address,
-                            amountART, false, constants.MaxUint256, badgeInfo, {value: amountPay}))
+                            amountART, 0, constants.MaxUint256, badgeInfo, {value: amountPay}))
                             .to.emit(WETH, 'Deposit')
                             .withArgs(arkreenBuilder.address, amountPay)
                             .to.emit(WETH, 'Transfer')
@@ -908,13 +916,13 @@ describe("ArkreenBuilder", () => {
         const expectedOutputAmount  = amountPay.mul(tokenArtAmount).div(tokenTTAmount.add(amountPay))   
 
         await expect(arkreenBuilder.connect(owner1).actionBuilderBadge( WETHPartner.address, arkreenRECToken.address,
-                                              amountPay, amountART, true, constants.MaxUint256 , badgeInfo))   
+                                              amountPay, amountART, 1, constants.MaxUint256 , badgeInfo))   
                     .to.be.revertedWith("TransferHelper: TRANSFER_FROM_FAILED")     
 
         await WETHPartner.connect(owner1).approve(arkreenBuilder.address, constants.MaxUint256)
         const ARECBefore = await arkreenRECToken.balanceOf(owner1.address)                                      
         await expect(arkreenBuilder.connect(owner1).actionBuilderBadge( WETHPartner.address, arkreenRECToken.address,
-                            amountPay, amountART, true, constants.MaxUint256 , badgeInfo))
+                            amountPay, amountART, 1, constants.MaxUint256 , badgeInfo))
                             .to.emit(WETHPartner, 'Transfer')
                             .withArgs(owner1.address, arkreenBuilder.address, amountPay)
                             .to.emit(WETHPartner, 'Transfer')
@@ -969,13 +977,13 @@ describe("ArkreenBuilder", () => {
                                       .div(tokenArtAmount.sub(amountART))  
 
         await expect(arkreenBuilder.connect(owner1).actionBuilderBadge( WETHPartner.address, arkreenRECToken.address,
-                                        amountPay, amountART, true, constants.MaxUint256 , badgeInfo))   
+                                        amountPay, amountART, 1, constants.MaxUint256 , badgeInfo))   
               .to.be.revertedWith("TransferHelper: TRANSFER_FROM_FAILED")     
 
         const ARECBefore = await arkreenRECToken.balanceOf(owner1.address)                                      
         await WETHPartner.connect(owner1).approve(arkreenBuilder.address, constants.MaxUint256)
         await expect(arkreenBuilder.connect(owner1).actionBuilderBadge( WETHPartner.address, arkreenRECToken.address,
-                            amountPay, amountART, false, constants.MaxUint256, badgeInfo))
+                            amountPay, amountART, 0, constants.MaxUint256, badgeInfo))
                             .to.emit(WETHPartner, 'Transfer')
                             .withArgs(owner1.address, arkreenBuilder.address, amountPay)
                             .to.emit(WETHPartner, 'Transfer')
@@ -1039,16 +1047,15 @@ describe("ArkreenBuilder", () => {
         // Check signature
         permitToPay.deadline = constants.MaxUint256.sub(1)
         await expect(arkreenBuilder.connect(owner1).actionBuilderBadgeWithPermit( arkreenRECToken.address,
-                            amountART, true, badgeInfo, permitToPay ))
+                            amountART, 1, badgeInfo, permitToPay ))
                   .to.be.revertedWith("FeSwap: INVALID_SIGNATURE")  
-
 
         // Normal transaction   
         permitToPay.deadline = constants.MaxUint256   
         const ARECBefore = await arkreenRECToken.balanceOf(owner1.address)                                      
         const expectedOutputAmount  = amountPay.mul(tokenArtAmount).div(tokenTTAmount.add(amountPay))    
         await expect(arkreenBuilder.connect(owner1).actionBuilderBadgeWithPermit( arkreenRECToken.address,
-                            amountART, true, badgeInfo, permitToPay))
+                            amountART, 1, badgeInfo, permitToPay))
                             .to.emit(WETHPartner, 'Transfer')
                             .withArgs(owner1.address, arkreenBuilder.address, amountPay)
                             .to.emit(WETHPartner, 'Transfer')
@@ -1111,7 +1118,7 @@ describe("ArkreenBuilder", () => {
         // Check signature
         permitToPay.deadline = constants.MaxUint256.sub(1)
         await expect(arkreenBuilder.connect(owner1).actionBuilderBadgeWithPermit( arkreenRECToken.address,
-                            amountART, false, badgeInfo, permitToPay ))
+                            amountART, 0, badgeInfo, permitToPay ))
                   .to.be.revertedWith("FeSwap: INVALID_SIGNATURE")  
 
         // Normal transaction   
@@ -1120,7 +1127,7 @@ describe("ArkreenBuilder", () => {
                                       .div(tokenArtAmount.sub(amountART))  
         const ARECBefore = await arkreenRECToken.balanceOf(owner1.address)                                      
         await expect(arkreenBuilder.connect(owner1).actionBuilderBadgeWithPermit( arkreenRECToken.address,
-                            amountART, false, badgeInfo, permitToPay))
+                            amountART, 0, badgeInfo, permitToPay))
                             .to.emit(WETHPartner, 'Transfer')
                             .withArgs(owner1.address, arkreenBuilder.address, amountPay)
                             .to.emit(WETHPartner, 'Transfer')
