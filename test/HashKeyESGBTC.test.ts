@@ -495,7 +495,7 @@ describe("HashKeyESGBTC", () => {
         await addLiquidityEEA(tokenETHAmount, tokenArtAmount, 0)      // should be 0 here
 
         const amountPay = expandTo18Decimals(20)
-        const amountART = expandTo9Decimals(7)
+        const amountART = expandTo9Decimals(14)
         const badgeInfo =  {
                   beneficiary:    owner1.address,
                   offsetEntityID: 'Owner1',
@@ -578,7 +578,7 @@ describe("HashKeyESGBTC", () => {
         await addLiquidityTTA(tokenTTAmount, tokenArtAmount, 100)
 
         const amountPay = expandTo18Decimals(20)
-        const amountART = expandTo9Decimals(7)
+        const amountART = expandTo9Decimals(14)
         const badgeInfo =  {
                   beneficiary:    owner1.address,
                   offsetEntityID: 'Owner1',
@@ -665,7 +665,7 @@ describe("HashKeyESGBTC", () => {
 
         const bricksToGreen = BigNumber.from('0x00700F01200D009002001')
         const amountPay = expandTo18Decimals(20)
-        const amountART = expandTo9Decimals(7)
+        const amountART = expandTo9Decimals(14)
         const badgeInfo =  {
                   beneficiary:    owner1.address,
                   offsetEntityID: 'Owner1',
@@ -761,7 +761,7 @@ describe("HashKeyESGBTC", () => {
 
         const bricksToGreen = BigNumber.from('0x00700F01200D009002001')        
         const amountPay = expandTo18Decimals(20)
-        const amountART = expandTo9Decimals(7)
+        const amountART = expandTo9Decimals(14)
         const badgeInfo =  {
                   beneficiary:    owner2.address,
                   offsetEntityID: 'Owner1',

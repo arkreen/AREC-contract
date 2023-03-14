@@ -299,8 +299,8 @@ describe("ArkreenRECIssuanceExt", () => {
         const bricksToGreen = BigNumber.from('0x00700F01200D009002001').or(BigNumber.from(1).shl(255))
         await arkreenRECBank.connect(maker2).changeSalePrice( arkreenRECTokenESG.address, AKREToken.address, expandTo18Decimals(10))
 
-        const amountPay = expandTo18Decimals(70)
-        const amountART = expandTo9Decimals(7)
+        const amountPay = expandTo18Decimals(200)
+        const amountART = expandTo9Decimals(14)
 
         const ARECBefore = await arkreenRECTokenESG.balanceOf(owner1.address)                    
         await AKREToken.connect(owner1).approve(hashKeyESGBTC.address, constants.MaxUint256)

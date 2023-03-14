@@ -182,7 +182,7 @@ contract HashKeyESGBTC is
             setBrick(brickID, greenId);
             bricksToGreen = bricksToGreen >> 12;
         }
-        return amountART * (10**ART_DECIMAL);       // 1 Cell -> 2 ART token 
+        return amountART * 2 * (10**ART_DECIMAL);       // 1 Cell -> 2 ART token 
     }
 
     /** 
