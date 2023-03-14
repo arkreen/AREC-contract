@@ -93,9 +93,10 @@ contract HashKeyESGBTC is
         // Wrap MATIC to WMATIC  
         IWETH(tokenNative).deposit{value: msg.value}();
 
-        // actionBuilderBadge(address,address,uint256,uint256,bool,uint256,(address,string,string,string)): 0x28a5e88d
-        bytes memory callData = abi.encodeWithSelector(0x28a5e88d, tokenNative, tokenHART, msg.value,
-                                                        amountART, false, deadline, badgeInfo);
+        // actionBuilderBadge(address,address,uint256,uint256,uint256,uint256,(address,string,string,string)): 0x8D7FCEFD
+        uint256 modeAction = (bricksToGreen>>255)<<1;     
+        bytes memory callData = abi.encodeWithSelector(0x8D7FCEFD, tokenNative, tokenHART, msg.value,
+                                                        amountART, modeAction, deadline, badgeInfo);
 
         _actionBuilderBadge(abi.encodePacked(callData, actorGreenBTC));     // Pay back to msg.sender already
 
@@ -123,9 +124,10 @@ contract HashKeyESGBTC is
         // Transfer payement 
         TransferHelper.safeTransferFrom(tokenPay, actorGreenBTC, address(this), amountPay);
         
-        // actionBuilderBadge(address,address,uint256,uint256,bool,uint256,(address,string,string,string)): 0x28a5e88d
-        bytes memory callData = abi.encodeWithSelector(0x28a5e88d, tokenPay, tokenHART, amountPay,
-                                                        amountART, false, deadline, badgeInfo);
+        // actionBuilderBadge(address,address,uint256,uint256,uint256,uint256,(address,string,string,string)): 0x8D7FCEFD
+        uint256 modeAction = (bricksToGreen>>255)<<1;
+        bytes memory callData = abi.encodeWithSelector(0x8D7FCEFD, tokenPay, tokenHART, amountPay,
+                                                        amountART, modeAction, deadline, badgeInfo);
 
         _actionBuilderBadge(abi.encodePacked(callData, actorGreenBTC));
     }
@@ -152,9 +154,10 @@ contract HashKeyESGBTC is
         // Transfer payement 
         TransferHelper.safeTransferFrom(permitToPay.token, actorGreenBTC, address(this), permitToPay.value);
 
-        // actionBuilderBadge(address,address,uint256,uint256,bool,uint256,(address,string,string,string)): 0x28a5e88d
-        bytes memory callData = abi.encodeWithSelector(0x28a5e88d, permitToPay.token, tokenHART, permitToPay.value,
-                                                        amountART, false, permitToPay.deadline, badgeInfo);
+        // actionBuilderBadge(address,address,uint256,uint256,uint256,uint256,(address,string,string,string)): 0x8D7FCEFD
+        uint256 modeAction = (bricksToGreen>>255)<<1;
+        bytes memory callData = abi.encodeWithSelector(0x8D7FCEFD, permitToPay.token, tokenHART, permitToPay.value,
+                                                        amountART, modeAction, permitToPay.deadline, badgeInfo);
 
         _actionBuilderBadge(abi.encodePacked(callData, actorGreenBTC));
     }

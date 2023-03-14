@@ -176,6 +176,7 @@ contract ArkreenBuilder is
 
         // Transfer payement
         TransferHelper.safeTransferFrom(tokenPay, msg.sender, address(this), amountPay);
+
         _actionBuilderBadge (tokenPay, tokenART, amountPay, amountART, modeAction, deadline, badgeInfo);
     }
 
