@@ -15,7 +15,8 @@ export const CONTRACTS: Record<string, string> = {
     Notary:         "ArkreenNotary",
     AReward:        "ArkreenReward",
     ABuilder:       "ArkreenBuilder",
-    HskBTC:         "HashKeyESGBTC"
+    HskBTC:         "HashKeyESGBTC",
+    ArtBank:        "ArkreenRECBank"
   };
 
 // Constructor Arguments

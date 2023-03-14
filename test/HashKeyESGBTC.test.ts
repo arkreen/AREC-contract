@@ -14,6 +14,7 @@ import {
     ArkreenBadge,
     ArkreenBuilder,
     HashKeyESGBTC,
+    ArkreenRECBank,
 } from "../typechain";
 
 import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
@@ -85,6 +86,7 @@ describe("HashKeyESGBTC", () => {
     let pairEAArt: Contract
     let arkreenBuilder: Contract
     let hashKeyESGBTC: Contract
+    let arkreenRECBank:     ArkreenRECBank    
       
     async function deployFixture() {
 
@@ -258,8 +260,12 @@ describe("HashKeyESGBTC", () => {
       await arkreenRegistry.setRECIssuance(arkreenRECIssuance.address)
       await arkreenRegistry.setArkreenRetirement(arkreenRetirement.address)
 
+      const ArkreenRECBankFactory = await ethers.getContractFactory("ArkreenRECBank")
+      const arkreenRECBank = await upgrades.deployProxy(ArkreenRECBankFactory,[WETH.address]) as ArkreenRECBank
+      await arkreenRECBank.deployed()        
+
       const ArkreenBuilderFactory = await ethers.getContractFactory("ArkreenBuilder");
-      arkreenBuilder = await upgrades.deployProxy(ArkreenBuilderFactory,[routerFeswa.address, WETH.address]) as ArkreenBuilder
+      arkreenBuilder = await upgrades.deployProxy(ArkreenBuilderFactory,[routerFeswa.address, arkreenRECBank.address, WETH.address]) as ArkreenBuilder
       await arkreenBuilder.deployed();
       await arkreenBuilder.approveRouter([WETHPartner.address, WETH.address])
 

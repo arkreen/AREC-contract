@@ -68,6 +68,8 @@
     "deploy:matic_test:HskBTCD": "hardhat --network matic_test deploy --tags HskBTCD",
     "deploy:matic_test:HskBTCU": "hardhat --network matic_test deploy --tags HskBTCU",
 
+    "deploy:matic_test:ArtBank": "hardhat --network matic_test deploy --tags ArtBank",
+
     "verify:matic_test": "npx hardhat verify --network matic_test <ADDRESS> <PARAMS>",
     "confirmAuto:matic_test": "hardhat run --network matic_test ./deploy/confirmIssuance.ts",
     "claim:matic_test": "hardhat run --network matic_test ./deploy/matic-gatherer-v2.ts",
