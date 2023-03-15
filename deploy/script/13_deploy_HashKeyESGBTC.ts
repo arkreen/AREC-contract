@@ -49,6 +49,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // deploy:matic_test:HskBTC
 // 0xDe8e59dAB27EB97b2267d4230f8FE713A637e03c
 
+// 2023/03/14
+// deploy:matic_test:HskBTC
+// Proxy:         0x785dca2ca9a51513da1fef9f70e6b6ab02896f67
+// Implementaion: 0x16f40bf24e7232056800b0601d6f36121f66ff44
+
 
 func.tags = ["HskBTC"];
 
