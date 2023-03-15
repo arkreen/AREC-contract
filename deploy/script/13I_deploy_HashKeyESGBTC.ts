@@ -13,7 +13,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     if(hre.network.name === 'matic_test')  {    
       // 2023/03/05, simulation 
-      ESGBTC_ADDRESS  = "0xDe8e59dAB27EB97b2267d4230f8FE713A637e03c"         // HashKey ESG BTC address
+      //ESGBTC_ADDRESS  = "0xDe8e59dAB27EB97b2267d4230f8FE713A637e03c"         // HashKey ESG BTC address
+      ESGBTC_ADDRESS  = "0x785dCa2Ca9a51513da1fef9F70E6B6ab02896F67"         // 2023/3/14 HashKey ESG BTC address
 
       USDC_ADDRESS    = "0x0FA8781a83E46826621b3BC094Ea2A0212e71B23"        // USDC address
       USDT_ADDRESS    = "0xD89EDB2B7bc5E80aBFD064403e1B8921004Cdb4b"        // USDT address

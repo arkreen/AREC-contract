@@ -39,7 +39,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2023/03/14
 // yarn deploy:matic_test:ArtBank
-// 0x7ee6D2A14d6Db71339a010d44793B27895B36d50
+// Proxy:           0x7ee6D2A14d6Db71339a010d44793B27895B36d50
+// Implementation:  0xCdacE7DB767e77BD938e488925B6b00f98D4063C
 
 func.tags = ["ArtBank"];
 

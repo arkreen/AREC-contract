@@ -69,6 +69,11 @@
     "deploy:matic_test:HskBTCU": "hardhat --network matic_test deploy --tags HskBTCU",
 
     "deploy:matic_test:ArtBank": "hardhat --network matic_test deploy --tags ArtBank",
+    "deploy:matic_test:ABuilderD": "hardhat --network matic_test deploy --tags ABuilderD",
+    "deploy:matic_test:ABuilderU": "hardhat --network matic_test deploy --tags ABuilderU",
+    "deploy:matic_test:ArtBankI": "hardhat --network matic_test deploy --tags ArtBankI",
+
+    "deploy:matic_test:UUPSProxy": "hardhat --network matic_test deploy --tags UUPSProxy",
 
     "verify:matic_test": "npx hardhat verify --network matic_test <ADDRESS> <PARAMS>",
     "confirmAuto:matic_test": "hardhat run --network matic_test ./deploy/confirmIssuance.ts",

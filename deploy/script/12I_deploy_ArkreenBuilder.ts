@@ -47,11 +47,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     console.log(" Set ArkreenBuilder address to the HART token contract: ", hre.network.name, BUIDER_ADDRESS, HART_ADDRESS );
 */
 
+/*
     const ArkreenBuilderFactory = ArkreenBuilder__factory.connect(BUIDER_ADDRESS as string, deployer);
     const mangeTrustedForwarderTx = await ArkreenBuilderFactory.mangeTrustedForwarder(HSKESG_ADDRESS as string, true)
     await mangeTrustedForwarderTx.wait()
     console.log("ArkreenBuilder mangeTrustedForwarder is executed: %s: ", hre.network.name, BUIDER_ADDRESS, HSKESG_ADDRESS );    
-
+*/
     // Approve the DEX Router to Tranfer-From the specified tokens
 /*    
     const ArkreenBuilderFactory = ArkreenBuilder__factory.connect(BUIDER_ADDRESS as string, deployer);
@@ -61,7 +62,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     await approveRouterTx.wait()
     console.log("ArkreenBuilder approveRouter is executed: %s: ", hre.network.name, BUIDER_ADDRESS, 
                               [USDC_ADDRESS, USDT_ADDRESS, WMATIC_ADDRESS, AKRE_ADDRESS] );
-*/                              
+*/      
+
+    const ArkreenBuilderFactory = ArkreenBuilder__factory.connect(BUIDER_ADDRESS as string, deployer);
+
+    const approveArtBankTx = await ArkreenBuilderFactory.approveArtBank(
+                                      [USDC_ADDRESS, USDT_ADDRESS, WMATIC_ADDRESS, AKRE_ADDRESS] as string[])
+    await approveArtBankTx.wait()
+    console.log("ArkreenBuilder approveRouter is executed: %s: ", hre.network.name, BUIDER_ADDRESS, 
+                              [USDC_ADDRESS, USDT_ADDRESS, WMATIC_ADDRESS, AKRE_ADDRESS] );
+
 };
 
 func.tags = ["ABuilderI"];

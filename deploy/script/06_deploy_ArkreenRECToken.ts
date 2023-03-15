@@ -50,7 +50,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
               methodName: "initialize",                   // Function to call when deployed first time.
 //            args: [REGISTRY_ADDRESS, ISSUER_ADDRESS]    // 2023/2/26: Old Version
 
-              // 2023/02/16: Name and Symbol can be customized for HashKey ESG project
+              // 2023/02/26: Name and Symbol can be customized for HashKey ESG project
               args: [REGISTRY_ADDRESS, ISSUER_ADDRESS, ART_NAME, SYMBOL]
 
             },
