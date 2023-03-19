@@ -35,6 +35,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // deploy:matic_test:HskBTCD: Urgrade to support: 1 cell-> 2ART, MVP feature (>21cells)
 // 0x16F40BF24E7232056800b0601d6f36121f66ff44
 
+// 2023/03/18
+// deploy:matic_test:HskBTCD: add API getMVPBlocks, and the flag in brickIds to indicate MVP
+// 0xF9Be1Dc7Be9659A4EB47D26581a864fCef10631E
+
+// 2023/03/18
+// deploy:matic_test:HskBTCD: Fix the compatibility problem in test
+// 0x7D427484834e9d89F5777EBef16f5f2CF83E9093
+
 func.tags = ["HskBTCD"];
 
 export default func;

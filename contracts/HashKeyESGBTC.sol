@@ -71,7 +71,9 @@ contract HashKeyESGBTC is
     }   
 
     function postUpdate() external onlyProxy onlyOwner 
-    {}
+    {
+      brickIds[12] |= 1<<255;
+    }
 
     function _authorizeUpgrade(address newImplementation) internal virtual override onlyOwner
     {}
@@ -275,7 +277,9 @@ contract HashKeyESGBTC is
         bricksToGreen = (bricksToGreen<<4) >> 4;                            // clear 4 msb, uint252
         uint256 greenId = totalSupply() + 1;
         _safeMint(actorGreenBTC, greenId);
-        brickIds[greenId] = bricksToGreen;
+
+        uint256 flagMVP = (bricksToGreenMVP.length > 0) ? (1<<255) : 0;
+        brickIds[greenId] = bricksToGreen | flagMVP;
 
         while( (brickID = (bricksToGreen & MASK_ID)) != 0) {
             amountART += 1;
@@ -346,6 +350,14 @@ contract HashKeyESGBTC is
     function checkBrick(uint256 brickId) external view returns (bool) {         //  brickId starts from 1
         require((brickId != 0) || (brickId <= maxRECToGreenBTC), "HSKESG: Wrong Brick ID");
         return greenIdLoc[brickId] != 0;
+    }    
+
+
+    /** 
+     * @dev Get the all MVP blocks of the specified GreenID
+     */
+    function getMVPBlocks(uint256 greenId) external view returns (uint256[] memory bricksMVP) {         //  brickId starts from 1
+        return brickIdsMVP[greenId];
     }    
 
     /**

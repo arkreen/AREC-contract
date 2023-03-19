@@ -42,7 +42,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       USDC_PRICE      = BigNumber.from(2).mul(BigNumber.from(10).pow(6))      // 2 USDC, 10**6
       USDT_PRICE      = BigNumber.from(2).mul(BigNumber.from(10).pow(6))      // 2 USDT, 10**6
       MATIC_PRICE     = BigNumber.from(5).mul(BigNumber.from(10).pow(16))     // 0.05 MATIC, as Test MATIC is too less
-      AKRE_PRICE      = expandTo18Decimals(200)
+      AKRE_PRICE      = expandTo18Decimals(200)                               // 200 AKRE
     }
 
     else if(hre.network.name === 'matic')  {        // Matic Mainnet

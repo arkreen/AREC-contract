@@ -398,7 +398,7 @@ describe("ArkreenRECIssuanceExt", () => {
         expect(await hashKeyESGBTC.checkBrick(18)).to.equal(true)
         expect(await hashKeyESGBTC.checkBrick(10)).to.equal(false)
 
-        const ownerInfo = [ owner1.address, 1, bricksToGreen.xor(BigNumber.from(1).shl(255))]   // Mask the highest bit
+        const ownerInfo = [ owner1.address, 1, bricksToGreen.or(BigNumber.from(1).shl(255))]   // Mask the highest bit to flag MVP  
         expect(await hashKeyESGBTC.ownerBricks(1)).to.deep.equal(ownerInfo)
         expect(await hashKeyESGBTC.ownerBricks(9)).to.deep.equal(ownerInfo)
 
@@ -407,8 +407,9 @@ describe("ArkreenRECIssuanceExt", () => {
         const brickIds = await hashKeyESGBTC.brickIds(1)
         expect(brickIdsMVP0).to.equal(bricksToGreen1)
         expect(brickIdsMVP1).to.equal(bricksToGreen2)
-        expect(brickIds).to.equal(bricksToGreen.xor(BigNumber.from(1).shl(255)))
+        expect(brickIds).to.equal(bricksToGreen.or(BigNumber.from(1).shl(255)))
 
+        expect(await hashKeyESGBTC.getMVPBlocks(1)).to.deep.equal([bricksToGreen1, bricksToGreen2])
       });      
 
       //////////////////////////////////////
