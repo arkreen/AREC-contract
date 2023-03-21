@@ -738,7 +738,7 @@ describe("ArkreenMinerV10X", () => {
       const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))        
       const signature: SigStruct = { v, r, s }  
      
-      await expect(ArkreenMiner.connect(owner1).StardardMinerOnboard(receiver, miner, BigNumber.from(timestamp + 600), signature))
+      await expect(ArkreenMiner.connect(owner1).StandardMinerOnboard(receiver, miner, BigNumber.from(timestamp + 600), signature))
               .to.be.revertedWith("Arkreen Miner: EXPIRED")
     })
 
@@ -754,7 +754,7 @@ describe("ArkreenMinerV10X", () => {
       const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))        
       const signature: SigStruct = { v, r, s }  
       
-      await expect(ArkreenMiner.connect(owner1).StardardMinerOnboard(receiver, miner, constants.MaxUint256, signature))
+      await expect(ArkreenMiner.connect(owner1).StandardMinerOnboard(receiver, miner, constants.MaxUint256, signature))
               .to.be.revertedWith("Arkreen Miner: Not EOA Address")
     })
 
@@ -775,7 +775,7 @@ describe("ArkreenMinerV10X", () => {
       const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyRegister.slice(2), 'hex'))           
       const signature0: SigStruct = { v, r, s } 
       
-      await expect(ArkreenMiner.connect(owner1).StardardMinerOnboard(receiver, miners[4], constants.MaxUint256, signature0))
+      await expect(ArkreenMiner.connect(owner1).StandardMinerOnboard(receiver, miners[4], constants.MaxUint256, signature0))
               .to.be.revertedWith("Arkreen Miner: Miner Repeated")    
     })       
 
@@ -792,7 +792,7 @@ describe("ArkreenMinerV10X", () => {
       const signature: SigStruct = { v, r, s }  
       
       await ArkreenMiner.connect(manager).UpdateMinerWhiteList(MinerType.StandardMiner, miners) 
-      await expect(ArkreenMiner.connect(owner1).StardardMinerOnboard(receiver, miner, constants.MaxUint256, signature))
+      await expect(ArkreenMiner.connect(owner1).StandardMinerOnboard(receiver, miner, constants.MaxUint256, signature))
               .to.be.revertedWith("Arkreen Miner: INVALID_SIGNATURE")
     })
 
@@ -810,7 +810,7 @@ describe("ArkreenMinerV10X", () => {
       const signature: SigStruct = { v, r, s }  
       
       await ArkreenMiner.connect(manager).UpdateMinerWhiteList(MinerType.StandardMiner, miners)       
-      await expect(ArkreenMiner.connect(owner1).StardardMinerOnboard(receiver, miner, constants.MaxUint256, signature))
+      await expect(ArkreenMiner.connect(owner1).StandardMinerOnboard(receiver, miner, constants.MaxUint256, signature))
               .to.emit(ArkreenMiner, "StandardMinerOnboarded")
               .withArgs(receiver, miner);
       expect(await ArkreenMiner.totalStandardMiner()).to.equal(1);

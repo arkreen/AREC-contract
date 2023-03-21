@@ -68,5 +68,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 };
 
+// 2023/03/21: yarn deploy:matic_test:AMinerV10X 
+// Spell correction
+// 0x4d0ffa7bbe4c249842789b4d01fc609f832ba9cd
+
 export default func;
 func.tags = ["AMinerV10X"];

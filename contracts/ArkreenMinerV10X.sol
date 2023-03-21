@@ -345,7 +345,7 @@ contract ArkreenMinerV10X is
 //        } else 
         {
             // Boading a new applied game miner
-//          require(bAllowedToMintGameMiner(owner), 'Game Miner: Holding Game Miner');    // Remove for testing
+  //        require(bAllowedToMintGameMiner(owner), 'Game Miner: Holding Game Miner');    // Remove for testing
             require(AllMinersToken[miner] == 0, "Game Miner: Miner Repeated");
             uint256 gMinerID = totalSupply() + 1;
             _safeMint(owner, gMinerID);
@@ -422,7 +422,7 @@ contract ArkreenMinerV10X is
      * @param miner address of the standard miner onboarding
      * @param permitMiner signature of onboarding manager to approve the onboarding
      */
-    function StardardMinerOnboard(
+    function StandardMinerOnboard(
         address owner,
         address miner,
         uint256 deadline,

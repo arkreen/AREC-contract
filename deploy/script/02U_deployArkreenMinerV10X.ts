@@ -53,7 +53,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //  const NEW_IMPLEMENTATION =  "0x16a427a1a2012fdde0ccad2664d5f2981d52a2d2"        // restored Wrong
 //  const NEW_IMPLEMENTATION =  "0x544dc72e13904bda9719c3511b7c2f1e616488d1"        // V10X // adding remote miner
 //  const NEW_IMPLEMENTATION =  "0x6ca97ce7fb9d77f2eb961957791acdab5484f936"        // V10X // adding GetMinerInfo
-    const NEW_IMPLEMENTATION =  "0x0Aa406Fb5B95E884bE90b4b547bBD795C8Fe4357"        // V10X // Standard Miner added, airdrop removed
+//  const NEW_IMPLEMENTATION =  "0x0Aa406Fb5B95E884bE90b4b547bBD795C8Fe4357"        // V10X // Standard Miner added, airdrop removed
+    const NEW_IMPLEMENTATION =  "0x4d0ffa7bbe4c249842789b4d01fc609f832ba9cd"        // 2023/03/21: Spell correction: Stardard > Standard
    
     const [deployer] = await ethers.getSigners();
     const ArkreenMinerFactory = ArkreenMinerV10__factory.connect(MINER_PROXY_ADDRESS, deployer);
