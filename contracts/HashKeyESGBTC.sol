@@ -36,10 +36,13 @@ contract HashKeyESGBTC is
     string  public baseURI;
     address public tokenHART;                         // HashKey Pro ART
     address public arkreenBuilder;
-    address public tokenNative;                       // The wrapped token of the Native token, such as WETH, WMATIC
-    mapping(uint256 => uint256) public brickIds;      // Green Id -> Owned brick id list, maximumly 21 bricks, 12 bits each
-    mapping(uint256 => uint256) public greenIdLoc;    // Brick Id -> Green Id
+    address public tokenNative;                         // The wrapped token of the Native token, such as WETH, WMATIC
+    mapping(uint256 => uint256) public brickIds;        // Green Id -> Owned brick id list, maximumly 21 bricks, 12 bits each
+    mapping(uint256 => uint256) public greenIdLoc;      // Brick Id -> Green Id
     mapping(uint256 => uint256[]) public brickIdsMVP;   // Green Id -> bricks id more than 21 cells
+    uint256 public ESGBadgeLimit;                       // Limit of each level of ESG badge, one byte for one level, starting from low end
+    uint256 public ESGBadgeCount;                       // Count of each level of ESG badge, one byte for one level, starting from low end
+
 
     // The total REC amount to greenize the BTC block mined at the same time of HashKey Pro opening ceremony
     uint256 public maxRECToGreenBTC;
@@ -251,6 +254,8 @@ contract HashKeyESGBTC is
         uint256 amountART;
         uint256 brickID;
 
+        require( bricksToGreen > 0, "HSKESG: Wrong IDs");
+
         bricksToGreen = (bricksToGreen<<4) >> 4;                            // clear 4 msb, uint252
         uint256 greenId = totalSupply() + 1;
         _safeMint(actorGreenBTC, greenId);
@@ -261,7 +266,15 @@ contract HashKeyESGBTC is
             setBrick(brickID, greenId);
             bricksToGreen = bricksToGreen >> 12;
         }
-        return amountART * 2 * (10**ART_DECIMAL);       // 1 Cell -> 2 ART token 
+
+        uint256 levelOffet = ((amountART-1)/3) * 8;
+        uint256 limit = (ESGBadgeLimit >> levelOffet) & 0xFF; 
+        uint256 count = (ESGBadgeCount >> levelOffet) & 0xFF; 
+
+        require( count < limit, "HSKESG: Reach Limit");
+        ESGBadgeCount += (1 << levelOffet);                     // Add count, no overflow happens here
+
+        return amountART * 2 * (10**ART_DECIMAL);               // 1 Cell -> 2 ART token 
     }
 
     /** 
@@ -273,6 +286,8 @@ contract HashKeyESGBTC is
     function _mintESGBadgeMVP(address actorGreenBTC, uint256 bricksToGreen, uint256[] memory bricksToGreenMVP) internal returns (uint256) {
         uint256 amountART;
         uint256 brickID;
+
+        require( bricksToGreen > 0, "HSKESG: Wrong IDs");
 
         bricksToGreen = (bricksToGreen<<4) >> 4;                            // clear 4 msb, uint252
         uint256 greenId = totalSupply() + 1;
@@ -289,19 +304,26 @@ contract HashKeyESGBTC is
         
         if(bricksToGreenMVP.length > 0 ) {
           require (amountART == 21, "HSKESG: Not MVP"); 
-        }
+          brickIdsMVP[greenId] = bricksToGreenMVP;
 
-        brickIdsMVP[greenId] = bricksToGreenMVP;
-        for (uint256 index; index < bricksToGreenMVP.length; index++) {
-          bricksToGreen = (bricksToGreenMVP[index]<<4) >> 4;
-          while( (brickID = (bricksToGreen & MASK_ID)) != 0) {
-              amountART += 1;
-              setBrick(brickID, greenId);
-              bricksToGreen = bricksToGreen >> 12;
+          for (uint256 index; index < bricksToGreenMVP.length; index++) {
+            bricksToGreen = (bricksToGreenMVP[index]<<4) >> 4;
+            while( (brickID = (bricksToGreen & MASK_ID)) != 0) {
+                amountART += 1;
+                setBrick(brickID, greenId);
+                bricksToGreen = bricksToGreen >> 12;
+            }
           }
         }
 
-        return amountART * 2 * (10**ART_DECIMAL);       // 1 Cell -> 2 ART token 
+        uint256 levelOffet = (amountART >= 22) ? 7:  ((amountART-1)/3) * 8;
+        uint256 limit = (ESGBadgeLimit >> levelOffet) & 0xFF; 
+        uint256 count = (ESGBadgeCount >> levelOffet) & 0xFF; 
+
+        require( count < limit, "HSKESG: Reach Limit");
+        ESGBadgeCount += (1 << levelOffet);                     // Add count, no overflow happens here        
+
+        return amountART * 2 * (10**ART_DECIMAL);             // 1 Cell -> 2 ART token 
     }
 
 
@@ -354,11 +376,18 @@ contract HashKeyESGBTC is
 
 
     /** 
+     * @dev Update the ESGBadgeLimit
+     */
+    function UpdateESGBadgeLimit(uint256 limit) external onlyOwner {    
+        ESGBadgeLimit = limit;
+    }    
+
+    /** 
      * @dev Get the all MVP blocks of the specified GreenID
      */
     function getMVPBlocks(uint256 greenId) external view returns (uint256[] memory bricksMVP) {         //  brickId starts from 1
         return brickIdsMVP[greenId];
-    }    
+    }       
 
     /**
      * @dev update the maximum REC number to green BTC block
