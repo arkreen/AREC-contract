@@ -359,6 +359,14 @@ contract ArkreenRECToken is
     }  
 
     /**
+     * @dev Change the REC issuance address
+     */     
+    function setIssuerREC(address issuer) external onlyOwner {
+        require(issuer != address(0), 'ART: Wrong Address');
+        issuerREC = issuer;
+    }
+
+    /**
      * @dev set the ratio of solidify fee to Solidify from ART to AREC
      */     
     function setRatioFeeToSolidify(uint256 ratio) external onlyOwner {

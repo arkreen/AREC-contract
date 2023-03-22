@@ -34,12 +34,20 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     if(hre.network.name === 'matic') {
 
-        const ArkreenRegistry_address    = '0x3E8A27dA0BF241f588141659cBb6Bd39717527F1'
+        // Version Test 
+//      const ArkreenRegistry_address     = '0x3E8A27dA0BF241f588141659cBb6Bd39717527F1'
+//      const ArkreenMiner_address        = '0xAc4da3681e51278f82288617c7185a7a119E5b7B'
+//      const ArkreenRECIssuance_address  = '0x45D0c0E2480212A60F1a9f2A820F1d7d6472CA6B'
+//      const ArkreenRECToken_address     = '0x815bFE3aaCF765c9E0A4DdEb98Ad710a4Fb860d3'
+//      const ArkreenRECBadge_address     = '0x3d5531cF0bC2e8d0658fEc0D1a9995211Ac1f337'
+
+        // 2023/03/22: Normal release
+        const ArkreenRegistry_address     = '0xb17faCaCA106fB3D216923DB6CaBFC7C0517029d'
         const ArkreenMiner_address        = '0xAc4da3681e51278f82288617c7185a7a119E5b7B'
-        const ArkreenRECIssuance_address  = '0x45D0c0E2480212A60F1a9f2A820F1d7d6472CA6B'
-        const ArkreenRECToken_address     = '0x815bFE3aaCF765c9E0A4DdEb98Ad710a4Fb860d3'
-        const ArkreenRECBadge_address     = '0x3d5531cF0bC2e8d0658fEc0D1a9995211Ac1f337'
-    
+        const ArkreenRECIssuance_address  = '0x954585adF9425F66a0a2FD8e10682EB7c4F1f1fD'
+        const ArkreenRECToken_address     = '0x58E4D14ccddD1E993e6368A8c5EAa290C95caFDF'
+        const ArkreenRECBadge_address     = '0x1e5132495cdaBac628aB9F5c306722e33f69aa24'
+
         const Issuer_address              = '0xec9254677d252df0dCaEb067dFC8b4ea5F6edAfC'
         const Issuer_name                 = 'Arkreen DAO REC Issuer'
 

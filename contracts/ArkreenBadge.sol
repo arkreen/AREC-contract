@@ -16,7 +16,7 @@ import "./interfaces/IERC5192.sol";
 import "./ArkreenBadgeType.sol";  
 
 // Import this file to use console.log
-import "hardhat/console.sol";
+// import "hardhat/console.sol";
 
 contract ArkreenBadge is
     OwnableUpgradeable,
@@ -59,11 +59,6 @@ contract ArkreenBadge is
         __ERC721_init_unchained(NAME, SYMBOL);
         arkreenRegistry = arkRegistry;
         baseURI = 'https://www.arkreen.com/badge/' ;
-
-        address owner = _msgSender();
-        assembly {
-            sstore(0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103, owner)
-        }          
     }   
 
     function postUpdate() external onlyProxy onlyOwner 
@@ -315,7 +310,6 @@ contract ArkreenBadge is
         address issuerREC = IArkreenRegistry(arkreenRegistry).getRECIssuance();
         require( issuerREC == msg.sender, 'ARB: Not From REC Issuance');
 
-//      RECData memory recData = IArkreenRECIssuance(msg.sender).getRECData(tokenId);
         (address issuer, uint128 amountREC, uint8 status, uint16 idAsset) = IArkreenRECIssuance(msg.sender).getRECDataCore(tokenId);
 
         if(from == IArkreenRegistry(arkreenRegistry).getRECToken(issuer, idAsset)) {

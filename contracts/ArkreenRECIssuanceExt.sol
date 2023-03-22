@@ -18,7 +18,7 @@ import "./ArkreenRECIssuanceStorage.sol";
 import "./interfaces/IPausable.sol";
 
 // Import this file to use console.log
-import "hardhat/console.sol";
+//import "hardhat/console.sol";
 
 contract ArkreenRECIssuanceExt is
     OwnableUpgradeable,
@@ -481,7 +481,6 @@ contract ArkreenRECIssuanceExt is
                 require(recData.status == uint8(RECStatus.Certified), 'AREC: Wrong Status');
             }
         }
-//      console.log("AAAAAAAAAAAAA");
         super._beforeTokenTransfer(from, to, tokenId);
     }    
 

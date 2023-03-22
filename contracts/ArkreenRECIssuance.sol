@@ -20,7 +20,7 @@ import "./interfaces/IPausable.sol";
 import '@openzeppelin/contracts/utils/StorageSlot.sol';
 
 // Import this file to use console.log
-import "hardhat/console.sol";
+// import "hardhat/console.sol";
 
 contract ArkreenRECIssuance is
     OwnableUpgradeable,
@@ -177,7 +177,7 @@ contract ArkreenRECIssuance is
         address arkreenMiner = IArkreenRegistry(arkreenRegistry).getArkreenMiner();     /// for testing ///
 
         // require(arkreenMiner.isContract(), "AREC: Wrong Miner Contract");            // no need to check
-//      require(IArkreenMiner(arkreenMiner).isOwner(sender), "AREC: Not Miner");        /// May Removed for testing ///
+        require(IArkreenMiner(arkreenMiner).isOwner(sender), "AREC: Not Miner");        /// May Removed for testing ///
 
         // Check payment appoval
         require( (permitToPay.token == tokenAKRE) || (paymentTokenPrice[permitToPay.token] != 0), "AREC: Wrong Payment Token");
@@ -593,7 +593,6 @@ contract ArkreenRECIssuance is
                 require(recData.status == uint8(RECStatus.Certified), 'AREC: Wrong Status');
             }
         }
-//        console.log("BBBBBBBBBBBBBBBBBBBBBBB");
         super._beforeTokenTransfer(from, to, tokenId);
     }   
 

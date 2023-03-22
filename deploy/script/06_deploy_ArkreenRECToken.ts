@@ -29,16 +29,23 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //    }
     else if(hre.network.name === 'matic')  {        // Matic Mainnet for test
       AKREToken_ADDRESS   = "0x960C67B8526E6328b30Ed2c2fAeA0355BEB62A83"
-      REGISTRY_ADDRESS   = "0x3E8A27dA0BF241f588141659cBb6Bd39717527F1"
-      ISSUER_ADDRESS      = "0xec9254677d252df0dCaEb067dFC8b4ea5F6edAfC"
+//    REGISTRY_ADDRESS   = "0x3E8A27dA0BF241f588141659cBb6Bd39717527F1"       // Version Test
+//    ISSUER_ADDRESS      = "0xec9254677d252df0dCaEb067dFC8b4ea5F6edAfC"      // Version Test
+
+      REGISTRY_ADDRESS   = "0xb17faCaCA106fB3D216923DB6CaBFC7C0517029d"       // 2023/03/22: Normal release
+      ISSUER_ADDRESS     = "0xec9254677d252df0dCaEb067dFC8b4ea5F6edAfC"       // 2023/03/22: same as test version
+
     } 
 
     const { deployments, getNamedAccounts } = hre;
     const { deploy } = deployments;
     const { deployer } = await getNamedAccounts();
 
-    const ART_NAME = 'HashKey AREC Token'
-    const SYMBOL = 'HART'
+//  const ART_NAME = 'HashKey AREC Token'
+//  const SYMBOL = 'HART'
+
+    const ART_NAME = ''         
+    const SYMBOL = ''
 
     console.log("Deploying: ", CONTRACTS.RECToken, deployer);  
     const ArkreenRECToken = await deploy(CONTRACTS.RECToken, {
@@ -50,9 +57,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
               methodName: "initialize",                   // Function to call when deployed first time.
 //            args: [REGISTRY_ADDRESS, ISSUER_ADDRESS]    // 2023/2/26: Old Version
 
-              // 2023/02/26: Name and Symbol can be customized for HashKey ESG project
+              // 2023/02/26: Name and Symbol can be customized for HashKey ESG project, test simulation
               args: [REGISTRY_ADDRESS, ISSUER_ADDRESS, ART_NAME, SYMBOL]
-
             },
           },
         },
@@ -62,6 +68,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     console.log("ArkreenRECToken deployed to %s: ", hre.network.name, ArkreenRECToken.address);
 };
+
+// 2023/03/22
+// yarn deploy:matic:RECIssue
+// Proxy:           0x58E4D14ccddD1E993e6368A8c5EAa290C95caFDF
+// Implementation:  0xfE6B6fe2a965453c2B30f0E2159b346C61DbCA59
 
 func.tags = ["RECToken"];
 

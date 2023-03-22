@@ -3,6 +3,8 @@ import { DeployFunction } from "hardhat-deploy/types";
 import { CONTRACTS } from "../constants";
 import { ethers } from "hardhat";
 import { ArkreenRECIssuanceExt__factory } from "../../typechain";
+import { ArkreenRECIssuance__factory } from "../../typechain";
+import { BigNumber } from "ethers";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
@@ -33,18 +35,35 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     } 
 
     if(hre.network.name === 'matic') {
-      const REC_ISSUANCE_ADDRESS = "0x45D0c0E2480212A60F1a9f2A820F1d7d6472CA6B"       // Need to check
-      const MVP_ADDRESS = ""             
+//    const REC_ISSUANCE_ADDRESS      = "0x45D0c0E2480212A60F1a9f2A820F1d7d6472CA6B"        // Need to check, Version Test
+      const REC_ISSUANCE_ADDRESS      = "0x954585adF9425F66a0a2FD8e10682EB7c4F1f1fD"        // 2023/03/22
+
+//    const REC_ISSUANCE_EXT_ADDRESS  = "0x677174509c37c91e6675f6203608195c456d8b13"        // 2023/03/22
+
+      const AKREToken_ADDRESS         = "0x960C67B8526E6328b30Ed2c2fAeA0355BEB62A83"        // 2023/03/22: gAKRE
+      const AKREToken_PRICE           = BigNumber.from(100000000000)                        // 2023/03/22: 10**11
+
+//    const MVP_ADDRESS = ""             
 
       const [deployer] = await ethers.getSigners();
-      const ArkreenRECIssuanceExtFactory = ArkreenRECIssuanceExt__factory.connect(REC_ISSUANCE_ADDRESS, deployer);
+      const ArkreenRECIssuanceExtFactory = ArkreenRECIssuance__factory.connect(REC_ISSUANCE_ADDRESS, deployer);
+
+      // 2023/03/22
+      // function setESGExtAddress(address addrESGExt) 
+      // const updateTx = await ArkreenRECIssuanceExtFactory.setESGExtAddress(REC_ISSUANCE_EXT_ADDRESS)
+      // await updateTx.wait()      
+
+      // 2023/03/22
+      // function updateARECMintPrice(address token, uint256 price)
+      const updateTx = await ArkreenRECIssuanceExtFactory.updateARECMintPrice(AKREToken_ADDRESS, AKREToken_PRICE)
+      await updateTx.wait()      
 
       // function manageMVPAddress(bool op, address[] calldata listMVP) 
-      const updateTx = await ArkreenRECIssuanceExtFactory.manageMVPAddress(true, [MVP_ADDRESS])
-      await updateTx.wait()
+//    const updateTx = await ArkreenRECIssuanceExtFactory.manageMVPAddress(true, [MVP_ADDRESS])
+//    await updateTx.wait()
 
       console.log("callData, update", updateTx)
-      console.log("ArkreenRECIssuance Updated to %s: ", hre.network.name, ArkreenRECIssuanceExtFactory.address, MVP_ADDRESS);
+      console.log("ArkreenRECIssuance Updated to %s: ", hre.network.name, ArkreenRECIssuanceExtFactory.address);
   } 
 };
 
