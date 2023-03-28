@@ -10,7 +10,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   console.log("Update ArkreenRECToken: ", CONTRACTS.RECToken, deployer.address);  
 
   if(hre.network.name === 'matic_test') {
-      const RECTOKEN_ADDRESS    = "0xb0c9dd915f62d0a37792fd2ce497680e909d8c0f"      // Need to check: Simulation mode
+//    const RECTOKEN_ADDRESS    = "0xb0c9dd915f62d0a37792fd2ce497680e909d8c0f"      // Need to check: Simulation mode
 //    const RECTOKEN_ADDRESS    = "0x0999AFb673944a7B8E1Ef8eb0a7c6FFDc0b43E31"      // Need to check: Simulation: HashKey HART
 
 //    const NEW_IMPLEMENTATION  = "0x87f36c015a23a9e0f15fcb7f62d566a8f4a16209"      // 1.Old implemenation
@@ -19,11 +19,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //    const NEW_IMPLEMENTATION  = "0xc0e5543d8bb04dfa26e176dbb1418da923f3981d"      // 4. Add numberAREC to Solidify event
 //    const NEW_IMPLEMENTATION  = "0xb2d9199071DC648c5F0D7F9e5c8e7c7e7d2e1e6B"      // 5. Return numberAREC in Solidify
 //    const NEW_IMPLEMENTATION  = "0x319334463C5d18D5bD45cC6d6eB27216F712906E"      // 6. Add getARECInfo(uint256 number)
-      const NEW_IMPLEMENTATION  = "0x19e9BAD19ca2696b509d938476ee4CF823538df4"      // 7. 2023/03/03: Upgrade for HashKey
+//    const NEW_IMPLEMENTATION  = "0x19e9BAD19ca2696b509d938476ee4CF823538df4"      // 7. 2023/03/03: Upgrade for HashKey
 
-
-//    const RECTOKEN_ADDRESS    = "0xd1348bb43dbf51a2446db6e40de5f6c178cb2d47"      // Need to check: MATIC Testnet      
+      const RECTOKEN_ADDRESS    = "0xd1348bb43dbf51a2446db6e40de5f6c178cb2d47"      // Need to check: MATIC Testnet      
 //    const NEW_IMPLEMENTATION  = "0xf05CDd31b95C80D4DA67DFf799F866938A54A2E8"      // 6. Add getARECInfo(uint256 number)
+      const NEW_IMPLEMENTATION  = "0x19e9BAD19ca2696b509d938476ee4CF823538df4"      // 7. 2023/03/28: Upgrade for HashKey
 
       const ArkreenRECTokenFactory = ArkreenRECToken__factory.connect(RECTOKEN_ADDRESS, deployer);
 

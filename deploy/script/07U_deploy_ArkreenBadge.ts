@@ -11,18 +11,19 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   
     if(hre.network.name === 'matic_test') {
 //      Simulation test      
-        const PROXY_ADDRESS = "0x5C653b445BE2bdEB6f8f3CD099FC801865Cab835"       // Need to check: Simu mode
+//      const PROXY_ADDRESS = "0x5C653b445BE2bdEB6f8f3CD099FC801865Cab835"       // Need to check: Simu mode
 
 //      const NEW_IMPLEMENTATION = '0x6f4fff7faa238cd68f03de75b8906e23dbd95f30'   // Need to check
 //      const NEW_IMPLEMENTATION = '0xA82E33A80f8c6A0dC66678956F8dC3b27928F036'   // Update to support SBT
 //      const NEW_IMPLEMENTATION = '0x8d58d9C7a2cB1A68F7F14BCd08CC735E3f12D267'   // Upgrade to support Offset trace back
 //      const NEW_IMPLEMENTATION = '0xD12E75566CeAa2bA669EDEbBA524359D7564b2c5'   // 2023/02/26: Upgrade to support HashKey ESG BTC
 //      const NEW_IMPLEMENTATION = '0x619f4a175B17C51cC11e7afB85e50a78b3899900'   // 2023/03/02: Upgrade to fix the Isser checking problem
-        const NEW_IMPLEMENTATION = '0x2cc8fFc86eAbdAA486d5408C8813813eb60b507a'   // 2023/03/03: Upgrade to trace back based on asset type while offsetting
+//      const NEW_IMPLEMENTATION = '0x2cc8fFc86eAbdAA486d5408C8813813eb60b507a'   // 2023/03/03: Upgrade to trace back based on asset type while offsetting
 
 //      MATIC Test
-//      const PROXY_ADDRESS = "0xe07968E3b0D64B99EA3653Dd925a850eBb9a3Bb9"       // Need to check: Matic testnet
+        const PROXY_ADDRESS = "0xe07968E3b0D64B99EA3653Dd925a850eBb9a3Bb9"       // Need to check: Matic testnet
 //      const NEW_IMPLEMENTATION = '0xA82E33A80f8c6A0dC66678956F8dC3b27928F036'   // Update to support SBT
+        const NEW_IMPLEMENTATION = '0x2cc8fFc86eAbdAA486d5408C8813813eb60b507a'   // 2023/03/28: Upgrade based on simu implementation
 
         const  ArkreenBadgeFactory = ArkreenBadge__factory.connect(PROXY_ADDRESS, deployer);
 
@@ -72,6 +73,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       console.log(" ArkreenBadge upgraded to %s: ", hre.network.name,  ArkreenBadgeFactory.address, NEW_IMPLEMENTATION);
     } 
 };
+
+// 2023/03/28: Upgrade based on simu implementation
 
 func.tags = ["RECBadgeU"];
 

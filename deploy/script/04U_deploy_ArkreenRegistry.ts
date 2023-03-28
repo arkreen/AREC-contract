@@ -12,9 +12,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     console.log("Deploying Updated ArkreenRegistry: ", CONTRACTS.gRegistry, deployerAddress);  
 
     if(hre.network.name === 'matic_test') {
-        const REGISTRY_ADDRESS    =   "0x047eb5205251c5fc8a21ba8f8d46f57df62013c8"       // Need to check  // Simulation
-        const NEW_IMPLEMENTATION  =   "0x29840F70cb8DDbFBA9890c40C1babc6A2C904E6C"       // 2023/02/26
-    
+//      const REGISTRY_ADDRESS    =   "0x047eb5205251c5fc8a21ba8f8d46f57df62013c8"       // Need to check  // Simulation
+//      const NEW_IMPLEMENTATION  =   "0x29840F70cb8DDbFBA9890c40C1babc6A2C904E6C"       // 2023/02/26
+
+        const REGISTRY_ADDRESS    =   "0x61A914363Ef99AabCa69504cee5ccfd5523C845d"       // MATIC test net
+        const NEW_IMPLEMENTATION  =   "0x29840F70cb8DDbFBA9890c40C1babc6A2C904E6C"       // 2023/03/28: Reuse simu implt
+      
         const [deployer] = await ethers.getSigners();
         const ArkreenRegistryFactory = ArkreenRegistry__factory.connect(REGISTRY_ADDRESS, deployer);
 

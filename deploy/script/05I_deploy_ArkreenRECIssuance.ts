@@ -17,8 +17,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //    await ArkreenRECIssuance_Upgrade.deployed();
 
     if(hre.network.name === 'matic_test') {
-        const REC_ISSUANCE_ADDRESS = "0x95f56340889642a41b913c32d160d2863536e073"       // Need to check  // Simu mode
-        const MVP_ADDRESS = "0x8d832f73D678cFd2dA04401b18973Ed146Db1ABA"                // (2023/2/26): Simu mode, MVP address, account 6
+//      const REC_ISSUANCE_ADDRESS = "0x95f56340889642a41b913c32d160d2863536e073"       // Need to check  // Simu mode
+        const REC_ISSUANCE_ADDRESS = "0x7370c2166D7720c41F0931f0bbF67e10d00B0D18"       // Need to check  // Matic testnet
+
+//      const MVP_ADDRESS = "0x8d832f73D678cFd2dA04401b18973Ed146Db1ABA"                // (2023/2/26): Simu mode, MVP address, account 6
         const MVP_ADDRESS1 = "0x364a71eE7a1C9EB295a4F4850971a1861E9d3c7D"               // (2023/2/27): Simu mode, MVP address, account 1
         const MVP_ADDRESS2 = "0xB53B96e1eF29cB14313c18Fa6374AB87df59BcD9"               // (2023/2/27): Simu mode, MVP address, account 2
         const MVP_ADDRESS3 = "0x576Ab950B8B3B18b7B53F7edd8A47986a44AE6F4"               // (2023/2/27): Simu mode, MVP address, account 3
@@ -27,11 +29,13 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         const ArkreenRECIssuanceExtFactory = ArkreenRECIssuanceExt__factory.connect(REC_ISSUANCE_ADDRESS, deployer);
 
         // function manageMVPAddress(bool op, address[] calldata listMVP) 
+        // 1. 2023/03/28
         const updateTx = await ArkreenRECIssuanceExtFactory.manageMVPAddress(true, [MVP_ADDRESS1, MVP_ADDRESS2, MVP_ADDRESS3])
         await updateTx.wait()
 
         console.log("callData, update", updateTx)
-        console.log("ArkreenRECIssuance: set MVP address to %s: ", hre.network.name, ArkreenRECIssuanceExtFactory.address, MVP_ADDRESS);
+        console.log("ArkreenRECIssuance: set MVP address to %s: ", hre.network.name, ArkreenRECIssuanceExtFactory.address,
+                      [MVP_ADDRESS1, MVP_ADDRESS2, MVP_ADDRESS3] );
     } 
 
     if(hre.network.name === 'matic') {
@@ -66,6 +70,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       console.log("ArkreenRECIssuance Updated to %s: ", hre.network.name, ArkreenRECIssuanceExtFactory.address);
   } 
 };
+
+// 2023/03/28： Called manageMVPAddress
 
 func.tags = ["RECIssueI"];
 

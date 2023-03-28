@@ -11,12 +11,19 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     console.log("Initialize ArkreenRegistry: ", CONTRACTS.gRegistry );  
 
     if(hre.network.name === 'matic_test') {
-        const ArkreenRegistry_address    = '0x047eb5205251c5fc8a21ba8f8d46f57df62013c8'
+        // Simulation mode 
+//      const ArkreenRegistry_address    = '0x047eb5205251c5fc8a21ba8f8d46f57df62013c8'
+//      const issuer  = 	"0x576Ab950B8B3B18b7B53F7edd8A47986a44AE6F4"
+//      const tokenREC = 	"0x0999afb673944a7b8e1ef8eb0a7c6ffdc0b43e31"
+//      const tokenPay = 	"0x54e1c534f59343c56549c76d1bdccc8717129832"
+
+        // 2023/03/28:  Matic testnet
+        const ArkreenRegistry_address     = '0x61a914363ef99aabca69504cee5ccfd5523c845d'
+        const issuer                      = "0x0AF6Fad1e63De91d5C53Af1dD2e55BB1b278b131"
+        const tokenREC                    = "0x58Ac4e54a70b98960Ed5ecF9B9A2cd1AE83879Db"
+        const tokenPay                    = "0x6c28fF02d3A132FE52D022db1f25a33d91caeCA2"
 
         const idAsset =   "AREC_HSK_ESG_BTC"
-        const issuer  = 	"0x576Ab950B8B3B18b7B53F7edd8A47986a44AE6F4"
-        const tokenREC = 	"0x0999afb673944a7b8e1ef8eb0a7c6ffdc0b43e31"
-        const tokenPay = 	"0x54e1c534f59343c56549c76d1bdccc8717129832"
         const rateToIssue = BigNumber.from(100).mul(BigNumber.from(10).pow(18))
         const rateToLiquidize = 1000
         const description = 	"I-REC ERC20 token to greenize the BTC block while HashKey opening ceremony is held."                        
@@ -73,6 +80,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         console.log("ArkreenRegistry Initialized to %s: ", hre.network.name, ArkreenRegistryFactory.address);
     } 
 };
+
+// 2023/03/28: call newAssetAREC for Matic testnet
 
 func.tags = ["gRegistryI"];
 

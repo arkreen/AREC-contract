@@ -78,6 +78,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     await setForwarderTrx.wait()
 */
 
+/*
     // Called by controller, Account 2
     const changeSalePriceUSDSC = await ArkreenRECBankFactory.changeSalePrice(HART_REC as string, 
                                     USDC_ADDRESS as string, USDC_PRICE as BigNumber)
@@ -94,16 +95,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const changeSalePriceAKRE = await ArkreenRECBankFactory.changeSalePrice(HART_REC as string, 
                                     AKRE_ADDRESS as string, AKRE_PRICE as BigNumber)
     await changeSalePriceAKRE.wait()
+*/    
 
 /*
     const ArkreenRECTokenFactory = ArkreenRECToken__factory.connect(HART_REC as string, deployer);
     const approveTrx = await ArkreenRECTokenFactory.approve(RECBANK_ADDRESS as string, constants.MaxUint256)
     await approveTrx.wait()
-
-    const depositARTTrx = await ArkreenRECBankFactory.depositART(HART_REC as string, 
-                                      BigNumber.from(1000).mul(BigNumber.from(10).pow(9)))      // 1000 HART
-    await depositARTTrx.wait()
 */
+    const depositARTTrx = await ArkreenRECBankFactory.depositART(HART_REC as string, 
+                                      BigNumber.from(3000).mul(BigNumber.from(10).pow(9)))      // 1000 HART
+    await depositARTTrx.wait()
 
     console.log("ArkreenRECBank Price is updated: ", hre.network.name, new Date().toLocaleString(),
                               RECBANK_ADDRESS, HART_REC, ART_CONTROLLER, BUILDER_ADDRESS,
