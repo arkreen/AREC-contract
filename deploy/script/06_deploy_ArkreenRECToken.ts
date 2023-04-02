@@ -70,7 +70,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 };
 
 // 2023/03/22
-// yarn deploy:matic:RECIssue
+// yarn deploy:matic:RECToken
 // Proxy:           0x58E4D14ccddD1E993e6368A8c5EAa290C95caFDF
 // Implementation:  0xfE6B6fe2a965453c2B30f0E2159b346C61DbCA59
 

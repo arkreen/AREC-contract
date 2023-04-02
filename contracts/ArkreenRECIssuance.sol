@@ -107,53 +107,6 @@ contract ArkreenRECIssuance is
         }
     }    
 
-/*
-    function mintESGBatch(
-        uint256   idAssetType,
-        uint256   amountREC,
-        Signature calldata permitToPay
-    ) external ensure(permitToPay.deadline) whenNotPaused returns (uint256 tokenId) {
-
-        // Check the caller be the MVP enity
-        address sender = _msgSender();
-        require( AllMVPEnity[sender], "AREC: Not Allowed");
-
-        // Check and get asset information
-        (address issuer, , address tokenPay, uint128 rateToIssue, ) 
-                                                = IArkreenRegistry(arkreenRegistry).getAssetInfo(idAssetType);
-
-        // Check payment appoval
-        require( permitToPay.token == tokenPay, "AREC: Wrong Payment Token");
-
-        uint256 valuePayment = amountREC * rateToIssue / ( 10**9);              // Rate is caluated based 10**9
-        require( permitToPay.value >= valuePayment, "AREC: Low Payment Value");
-
-        IERC20Permit(permitToPay.token).permit(sender, address(this), 
-                        permitToPay.value, permitToPay.deadline, permitToPay.v, permitToPay.r, permitToPay.s);
-
-        tokenId = totalSupply() + 1;        
-        _safeMint(sender, tokenId);
-
-        // Prepare REC data
-        RECData memory recData;
-        recData.issuer =  issuer;
-        recData.minter = sender;
-        recData.amountREC =  uint128(amountREC);
-        recData.status = uint8(RECStatus.Pending); 
-        recData.idAsset = uint16(idAssetType);
-
-        allRECData[tokenId] = recData;
-
-        PayInfo memory payInfo = PayInfo({token: permitToPay.token, value: permitToPay.value});
-        allPayInfo[tokenId] = payInfo;
-
-        emit ESGBatchMinted(sender, tokenId);
-
-        // Transfer the REC mint fee
-        TransferHelper.safeTransferFrom(permitToPay.token, _msgSender(), address(this), permitToPay.value);
-    }
-*/
-
     /**
      * @dev To mint the REC NFT. After minted, the NFT is in pending status.
      * It needs to certified by the issuer before it can be transferred/retired/liquidized.
@@ -270,30 +223,6 @@ contract ArkreenRECIssuance is
         emit RECDataUpdated(_msgSender(), tokenID);
     }
 
-    /**
-     * @dev To cancel the REC NFT mint request,only can be called the NFT owner.
-     * REC NFT mint fee is refund to the owner after the transaction.
-     * tokenId The ID of the REC NFT to update
-     */
-/*    
-    function cancelRECRequest(uint256 tokenID) external whenNotPaused {
-
-        // Only REC owner allowed to cancel the request
-        require(ownerOf(tokenID) == _msgSender(), 'AREC: Not Owner');
-
-        // Only pending REC can be cancelled
-        require(allRECData[tokenID].status == uint8(RECStatus.Rejected), 'AREC: Wrong Status');  
-
-        allRECData[tokenID].status = uint8(RECStatus.Cancelled);
-
-        // delete the payment info to save storage
-        delete allPayInfo[tokenID];
-        emit RECCanceled(_msgSender(), tokenID);
-
-        // Refund the request fee
-        TransferHelper.safeTransfer(allPayInfo[tokenID].token, _msgSender(), allPayInfo[tokenID].value);
-    }
-*/
     /**
      * @dev To certify the REC NFT mint request by the REC issuer.
      * tokenId The ID of the REC NFT to certify.
@@ -517,21 +446,6 @@ contract ArkreenRECIssuance is
       paymentTokenPrice[token] = price;
     }
 
-    /// @dev return all the AREC issaunce token/price list
-/*    
-    function allARECMintPrice() external view virtual returns (RECMintPrice[] memory) {
-        uint256 sizePrice = paymentTokens.length;
-        RECMintPrice[] memory ARECMintPrice = new RECMintPrice[](sizePrice);
-
-        for(uint256 index; index < sizePrice; index++) {
-          address token = paymentTokens[index];
-          ARECMintPrice[index].token = paymentTokens[index];
-          ARECMintPrice[index].value = paymentTokenPrice[token];
-        }          
-        return ARECMintPrice;
-    }
-*/
-
     /**
      * @dev Withdraw all the REC certification fee
      * @param token address of the token to withdraw, USDC/ARKE
@@ -544,19 +458,6 @@ contract ArkreenRECIssuance is
         TransferHelper.safeTransfer(token, receiver, balance);
     }
 
-    /**
-     * @dev Add or remove the MVP addresses 
-     * @param op The operation of MVP address, =true, add MVP; =false, remove MVP 
-     * @param listMVP The list of the MVP addresses
-     */
-/*
-    function manageMVPAddress(bool op, address[] calldata listMVP) public whenNotPaused onlyOwner {
-        for(uint256 index; index < listMVP.length; index++) {
-            require( AllMVPEnity[listMVP[index]] != op, "AREC: Wrong Status" );
-            AllMVPEnity[listMVP[index]] = op;
-        }
-    }
-*/
     /**
      * @dev Hook that is called before any token transfer.
      */
@@ -594,7 +495,12 @@ contract ArkreenRECIssuance is
             }
         }
         super._beforeTokenTransfer(from, to, tokenId);
-    }   
+    }  
+  
+    function setTokenAKRE(address _tokenAKRE) external virtual onlyOwner {
+        require(_tokenAKRE != address(0), "Zero Address");
+        tokenAKRE = _tokenAKRE;
+    }
 
     function setESGExtAddress(address addrESGExt) external virtual onlyOwner {
         StorageSlot.getAddressSlot(_ESG_EXT_SLOT).value = addrESGExt; 

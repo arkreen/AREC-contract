@@ -510,6 +510,8 @@ describe("ArkreenRECIssuance", () => {
       it("ArkreenRECIssuance: cancelRECRequest Normal", async () => {
         await arkreenRECIssuance.connect(manager).rejectRECRequest(tokenID)  
         await expect(arkreenRECIssuanceExt.connect(owner1).cancelRECRequest(tokenID))
+                .to.emit(AKREToken, 'Transfer')
+                .withArgs(arkreenRECIssuanceExt.address, owner1.address, mintFee)
                 .to.emit(arkreenRECIssuance, "RECCanceled")
                 .withArgs(owner1.address, tokenID)
 

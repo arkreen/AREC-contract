@@ -27,6 +27,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:RECIssueExtD
 // 0x677174509c37c91e6675f6203608195c456d8b13
 
+// 2023/04/02: Update to correct bug of cancelRECRequest
+// yarn deploy:matic_test:RECIssueExtD
+// 0x0babee40f62d946d5de5beec48c5c4c453c6b1f0
+
+// 2023/04/02: Update to correct bug of cancelRECRequest
+// yarn deploy:matic:RECIssueExtD
+// 0x5CdcCdBcCC590893344933003628Ac9B29e593Dd
+
 func.tags = ["RECIssueExtD"];
 
 export default func;

@@ -28,6 +28,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:RECIssueD
 // 0x5e9a9a89e4b5229ec5789e2da1c995a3b1224275
 
+// 2023/04/02: Add "setTokenAKRE"
+// yarn deploy:matic_test:RECIssueD
+// 0x51016eafbc75058391beeea156ab6b8ad9b92e52
+
+// 2023/04/02: Add "setTokenAKRE"
+// yarn deploy:matic:RECIssueD
+// 0x966721720dC732464D2C5594AfF9b0Aa52E1b0e8
+
 func.tags = ["RECIssueD"];
 
 export default func;

@@ -38,7 +38,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         // Matic Test net
         const REC_ISSUANCE_ADDRESS = "0x7370c2166d7720c41f0931f0bbf67e10d00b0d18"   // Need to check  // MATIC Testnet
 //      const NEW_IMPLEMENTATION = "0x09fD58cf56a3f307910CA72eA47a85D7e48EB828"     // 4. Reuse For Matic testnet
-        const NEW_IMPLEMENTATION = "0x5e9a9a89e4B5229Ec5789e2dA1C995a3b1224275"     // 5. Reuse the simu impt (2023/3/26)
+//      const NEW_IMPLEMENTATION = "0x5e9a9a89e4B5229Ec5789e2dA1C995a3b1224275"     // 5. Reuse the simu impt (2023/03/26)
+        const NEW_IMPLEMENTATION = "0x51016eafbc75058391beeea156ab6b8ad9b92e52"     // 6. Add setTokenAKRE (2023/04/02)
 
         const [deployer] = await ethers.getSigners();
         const ArkreenRECIssuanceFactory = ArkreenRECIssuance__factory.connect(REC_ISSUANCE_ADDRESS, deployer);
@@ -55,10 +56,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     } 
 
     if(hre.network.name === 'matic') {
-      const REC_ISSUANCE_ADDRESS = "0x45D0c0E2480212A60F1a9f2A820F1d7d6472CA6B"       // Need to check
-     
+//    const REC_ISSUANCE_ADDRESS = "0x45D0c0E2480212A60F1a9f2A820F1d7d6472CA6B"       // Need to check
+      const REC_ISSUANCE_ADDRESS = "0x954585adF9425F66a0a2FD8e10682EB7c4F1f1fD"       // AREC formal release
+      
       // const NEW_IMPLEMENTATION = "0x0730A83F7a141BBea876C0fCfd2e9BED3e4C195F"  // 1. Original 
-      const NEW_IMPLEMENTATION = "0xEf06990Ee1c2F2694acd87b189d0EbA84DdB7124"     // 2. Upgrade to support solidify and offset traceback
+//    const NEW_IMPLEMENTATION = "0xEf06990Ee1c2F2694acd87b189d0EbA84DdB7124"     // 2. Upgrade to support solidify and offset traceback
+      const NEW_IMPLEMENTATION = "0x966721720dC732464D2C5594AfF9b0Aa52E1b0e8"     // 3. 2023/04/02: Add "setTokenAKRE"
 
       const [deployer] = await ethers.getSigners();
       const ArkreenRECIssuanceFactory = ArkreenRECIssuance__factory.connect(REC_ISSUANCE_ADDRESS, deployer);
@@ -74,6 +77,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
                             ArkreenRECIssuanceFactory.address, NEW_IMPLEMENTATION);
   } 
 };
+
+// 2023/04/02: Add setTokenAKRE
+// yarn deploy:matic_test:RECIssueU
+
+// 2023/04/02: Add setTokenAKRE
+// yarn deploy:matic:RECIssueU
 
 func.tags = ["RECIssueU"];
 

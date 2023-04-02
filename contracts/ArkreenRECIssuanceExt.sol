@@ -127,87 +127,6 @@ contract ArkreenRECIssuanceExt is
     }
 
     /**
-     * @dev To mint the REC NFT. After minted, the NFT is in pending status.
-     * It needs to certified by the issuer before it can be transferred/retired/liquidized.
-     * recRequest The request info to mint the REC NFT
-     * permitToPay Payment info to mint the REC NFT
-     */
-/*    
-    function mintRECRequest(
-        RECRequest calldata recRequest,
-        Signature calldata permitToPay
-    ) external ensure(permitToPay.deadline) whenNotPaused returns (uint256 tokenId) {
-
-        // Check issuer address
-        require(IArkreenRegistry(arkreenRegistry).isRECIssuer(recRequest.issuer), 'AREC: Wrong Issuer');
-
-        // Check REC time period
-        require(recRequest.startTime < recRequest.endTime && recRequest.endTime < block.timestamp, 'AREC: Wrong Period');
-
-        // Check the caller be acceptable miner
-        address sender = _msgSender();
-        address arkreenMiner = IArkreenRegistry(arkreenRegistry).getArkreenMiner();   /// for testing ///
-
-        // require(arkreenMiner.isContract(), "AREC: Wrong Miner Contract");            // no need to check
-        require(IArkreenMiner(arkreenMiner).isOwner(sender), "AREC: Not Miner");        /// May Removed for testing ///
-
-        // Check payment appoval
-        require( (permitToPay.token == tokenAKRE) || (paymentTokenPrice[permitToPay.token] != 0), "AREC: Wrong Payment Token");
-        IERC20Permit(permitToPay.token).permit(sender, address(this), 
-                        permitToPay.value, permitToPay.deadline, permitToPay.v, permitToPay.r, permitToPay.s);
-
-        tokenId = totalSupply() + 1;        
-        _safeMint(sender, tokenId);
-
-        // Prepare REC data
-        RECData memory recData;
-        recData.issuer =  recRequest.issuer;
-        recData.serialNumber = '';
-        recData.minter = sender;
-        recData.startTime =  recRequest.startTime;
-        recData.endTime =  recRequest.endTime;
-        recData.amountREC =  recRequest.amountREC;
-        recData.status = uint8(RECStatus.Pending);        
-        recData.cID =  recRequest.cID;
-        recData.region =  recRequest.region;        
-        recData.url =  recRequest.url;
-        recData.memo =  recRequest.memo;
-
-        allRECData[tokenId] = recData;
-
-        PayInfo memory payInfo = PayInfo({token: permitToPay.token, value: permitToPay.value});
-        allPayInfo[tokenId] = payInfo;
-
-        emit RECRequested(sender, tokenId);
-
-        // Transfer the REC mint fee
-        TransferHelper.safeTransferFrom(permitToPay.token, _msgSender(), address(this), permitToPay.value);
-    }
-*/    
-
-    /**
-     * @dev To reject the REC NFT mint request by the issuer for any reason.
-     * Only can be called while the NFT is in pending state.
-     * tokenId The ID of the REC NFT
-     */
-/*    
-    function rejectRECRequest(uint256 tokenId) external whenNotPaused
-    {
-        // Check that the call is the issuer of the token
-        address issuer = _msgSender();
-        require(IArkreenRegistry(arkreenRegistry).isRECIssuer(issuer), 'AREC: Not Issuer');
-        require(issuer == allRECData[tokenId].issuer, 'AREC: Wrong Issuer');
-
-       // Only pending REC can be cancelled
-        require(allRECData[tokenId].status == uint8(RECStatus.Pending), 'AREC: Wrong Status');  
-
-        // Set status to Rejected
-        allRECData[tokenId].status = uint8(RECStatus.Rejected);
-        emit RECRejected(tokenId);
-    }
-*/
-
-    /**
      * @dev To update the REC NFT mint info while it is rejected by the the issuer.
      * tokenId The ID of the REC NFT to update
      */
@@ -256,171 +175,16 @@ contract ArkreenRECIssuanceExt is
         require(allRECData[tokenID].status == uint8(RECStatus.Rejected), 'AREC: Wrong Status');  
 
         allRECData[tokenID].status = uint8(RECStatus.Cancelled);
+        
+        // Refund the request fee
+        TransferHelper.safeTransfer(allPayInfo[tokenID].token, _msgSender(), allPayInfo[tokenID].value);
 
         // delete the payment info to save storage
         delete allPayInfo[tokenID];
         emit RECCanceled(_msgSender(), tokenID);
-
-        // Refund the request fee
-        TransferHelper.safeTransfer(allPayInfo[tokenID].token, _msgSender(), allPayInfo[tokenID].value);
-
     }
 
-    /**
-     * @dev To certify the REC NFT mint request by the REC issuer.
-     * tokenId The ID of the REC NFT to certify.
-     * serialNumber The SN of REC NFT certificaton.
-     */
-/*    
-    function certifyRECRequest(uint256 tokenID, string memory serialNumber) external whenNotPaused
-    {
-        // Check the issuer
-        address issuer = _msgSender();
-        require(IArkreenRegistry(arkreenRegistry).isRECIssuer(issuer), 'AREC: Not Issuer');
-
-        // Check if the caller is the specified issuer
-        require(issuer == allRECData[tokenID].issuer, 'AREC: Wrong Issuer');
-
-        // Only pending REC can be Certified
-        require(allRECData[tokenID].status == uint8(RECStatus.Pending), 'AREC: Wrong Status');  
-
-        // Uniqueness is not checked here assuming the issuer has checked this point
-        allRECData[tokenID].serialNumber = serialNumber;            
-        allRECData[tokenID].status = uint8(RECStatus.Certified);
-
-        address paymentToken = allPayInfo[tokenID].token;
-        uint256 paymentValue = allPayInfo[tokenID].value;
-
-        uint256 amountREC = allRECData[tokenID].amountREC;
-        allRECByIssuer[issuer] += amountREC;                        // REC amount by the issuer
-        allRECIssued += amountREC;                                  // All REC amount
-
-        // Update the issuer total payment value
-        paymentByIssuer[issuer][paymentToken] += paymentValue;
-
-        // delete the payment info to save storage
-        delete allPayInfo[tokenID];
-
-        emit RECCertified(issuer, tokenID);
-    }
-*/
-    /**
-     * @dev Redeem the REC NFT by retiring the NFT and registering an offset action
-     */
-/*    
-    function redeem(uint256 tokenId) public virtual whenNotPaused returns (uint256 offsetActionId) {
-        offsetActionId = _redeem(_msgSender(), tokenId);
-    }
-*/
-    /**
-     * @dev The third party triggers the RE redeem in the approval of the owner
-     */
-/*
-    function redeemFrom(address account, uint256 tokenId)
-        external virtual whenNotPaused returns (uint256 offsetActionId) 
-    {
-        require(_isApprovedOrOwner(msg.sender, tokenId), 'AREC: Not Approved');
-        offsetActionId = _redeem(account, tokenId);
-    }
-*   
-    /**
-     * @dev The internal function to offset the REC NFT.
-     */
-/*
-    function _redeem(address owner, uint256 tokenId) internal virtual returns (uint256 offsetActionId) {
-
-        // Check if the REC owner
-        require( ownerOf(tokenId) == owner, 'AREC: Not Owner');
-
-        // Check if the REC NFT is in certified stataus
-        require( allRECData[tokenId].status == uint8(RECStatus.Certified), 'AREC: Not Certified');
-
-        // Register the offset event
-        address badgeContract = IArkreenRegistry(arkreenRegistry).getArkreenRetirement();
-        address issuerREC = allRECData[tokenId].issuer;
-        uint256 amount = allRECData[tokenId].amountREC;
-        offsetActionId = IArkreenBadge(badgeContract).registerOffset(owner, issuerREC, amount, tokenId);
-
-        // Send the REC NFT to the retirement contract and set the REC NFT status to be Retired
-        _safeTransfer(owner, badgeContract, tokenId, "Redeem");
-        allRECData[tokenId].status = uint8(RECStatus.Retired);
-        allRECRedeemed += amount;
-
-        emit RedeemFinished(owner, tokenId, offsetActionId);
-    }
-*/
-   /**
-     * @dev Redeem the REC NFT and mint an offset certificate.
-     * @param tokenId Id of the REC NFT to redeem.
-     * @param beneficiary Beneficiary address for whom the REC was offset.
-     * @param offsetEntityID ID string of the offset entity.
-     * @param beneficiaryID ID string of the beneficiary.
-     * @param offsetMessage Message to illustrate the offset intention.
-     */
-/*    
-    function redeemAndMintCertificate(
-        uint256         tokenId, 
-        address         beneficiary,
-        string calldata offsetEntityID,
-        string calldata beneficiaryID,
-        string calldata offsetMessage
-    ) external whenNotPaused virtual {
-
-        // Check if approved
-        require(_isApprovedOrOwner(msg.sender, tokenId), 'AREC: Not Approved');
-
-        // Redeem the specified REC NFT
-        address owner = ownerOf(tokenId);
-        uint256 offsetActionId = _redeem(owner, tokenId);
-
-        uint256[] memory offsetActionIds = new uint256[](1);
-        offsetActionIds[0] = offsetActionId;
-
-        // Issue the offset certificate NFT
-        address badgeContract = IArkreenRegistry(arkreenRegistry).getArkreenRetirement();
-        IArkreenBadge(badgeContract)
-                .mintCertificate(owner, beneficiary, offsetEntityID, beneficiaryID, offsetMessage, offsetActionIds);
-   
-    }   
-*/
-   /**
-     * @dev liquidize the REC NFT and mint the corresponding ERC20 token
-     * @param tokenId Id of the REC NFT to liquidize
-     */
-/*     
-    function liquidizeREC( uint256 tokenId ) external whenNotPaused {
-
-        require(_isApprovedOrOwner(msg.sender, tokenId), 'AREC: Not Approved');
-
-        // Check if the REC status
-        require( allRECData[tokenId].status == uint8(RECStatus.Certified), 'AREC: Not Certified');
-
-        uint256 amountREC = allRECData[tokenId].amountREC;
-
-        address tokenREC;
-        uint256 idAssetType = allRECData[tokenId].idAsset;
-
-        if(idAssetType == 0) {
-            address issuerREC = allRECData[tokenId].issuer;
-            tokenREC = IArkreenRegistry(arkreenRegistry).getRECToken(issuerREC) ;
-        } else {
-            (, tokenREC, , , ) = IArkreenRegistry(arkreenRegistry).getAssetInfo(idAssetType);
-        }
-
-        // Transfer the REC NFT to the ERC20 token contract to be liquidized
-        address owner = ownerOf(tokenId);        
-        _safeTransfer(owner, tokenREC, tokenId, "");
-
-        // Set the AREC status to be Liquidized
-        allRECData[tokenId].status = uint8(RECStatus.Liquidized);
-
-        // Accumulate the Liquidized REC amount
-        allRECLiquidized += amountREC;
-        emit RECLiquidized(owner, tokenId, amountREC);
-    }
-*/
     /// @dev return all the AREC issaunce token/price list
-    
     function allARECMintPrice() external view virtual returns (RECMintPrice[] memory) {
         uint256 sizePrice = paymentTokens.length;
         RECMintPrice[] memory ARECMintPrice = new RECMintPrice[](sizePrice);
@@ -483,6 +247,4 @@ contract ArkreenRECIssuanceExt is
         }
         super._beforeTokenTransfer(from, to, tokenId);
     }    
-
-
 }
