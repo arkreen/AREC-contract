@@ -31,6 +31,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:RECBadgeD
 // 0x2cc8fFc86eAbdAA486d5408C8813813eb60b507a
 
+// 2023/04/02: Upgrade to support updateCID
+// yarn deploy:matic:RECBadgeD
+// 0xC51678BFd8e108F12CC3e5cb80F3067Bd6aEd323
+
 func.tags = ["RECBadgeD"];
 
 export default func;

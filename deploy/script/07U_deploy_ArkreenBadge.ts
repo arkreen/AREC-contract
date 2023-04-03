@@ -40,8 +40,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     if(hre.network.name === 'matic') {
       const PROXY_ADDRESS = "0x3d5531cF0bC2e8d0658fEc0D1a9995211Ac1f337"            // Need to check
-      //  const NEW_IMPLEMENTATION = '0x504fb898a5dc3cf99f237e62228d09f52ee64a7f'   // Update to support SBT
-      const NEW_IMPLEMENTATION = '0xc9fc3571e419d8d24826b9bb518a4420a89b30cf'       // Upgrade to support solidify and offset traceback
+//    const NEW_IMPLEMENTATION = '0x504fb898a5dc3cf99f237e62228d09f52ee64a7f'       // Update to support SBT
+//    const NEW_IMPLEMENTATION = '0xc9fc3571e419d8d24826b9bb518a4420a89b30cf'       // Upgrade to support solidify and offset traceback
+      const NEW_IMPLEMENTATION = '0xC51678BFd8e108F12CC3e5cb80F3067Bd6aEd323'       // 2023/04/02: Upgrade to support updateCID
       
       const [deployer] = await ethers.getSigners();
 
@@ -75,6 +76,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 };
 
 // 2023/03/28: Upgrade based on simu implementation
+
+// 2023/04/02: yarn deploy:matic:RECBadgeU
+// Upgrade to support updateCID on Matic mainnet trial version
 
 func.tags = ["RECBadgeU"];
 

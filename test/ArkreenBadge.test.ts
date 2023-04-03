@@ -366,6 +366,12 @@ describe("ArkreenBadge", () => {
         expect( await arkreenBadge.tokenURI(certId)).to.equal("https://www.arkreen.com/badge/1");     
         await arkreenBadge.setBaseURI("https://www.arkreen.com/offset/")
         expect( await arkreenBadge.tokenURI(certId)).to.equal("https://www.arkreen.com/offset/1"); 
+
+        await arkreenBadge.updateCID([certId], ["bafkreidotvli35mt5rjywkps7aqxo3elc5dh6dlynd6yxcyipnfaghkoe4"])
+        const cid = await arkreenBadge.cidBadge(certId)
+        expect(cid).to.equal("bafkreidotvli35mt5rjywkps7aqxo3elc5dh6dlynd6yxcyipnfaghkoe4"); 
+        expect( await arkreenBadge.tokenURI(certId)).to.equal("https://bafkreidotvli35mt5rjywkps7aqxo3elc5dh6dlynd6yxcyipnfaghkoe4.ipfs.w3s.link"); 
+
       });
     })
 

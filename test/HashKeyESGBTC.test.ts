@@ -568,6 +568,18 @@ describe("HashKeyESGBTC", () => {
         expect(await hashKeyESGBTC.ownerBricks(1)).to.deep.equal(ownerInfo)
         expect(await hashKeyESGBTC.ownerBricks(9)).to.deep.equal(ownerInfo)
 
+        expect( await hashKeyESGBTC.tokenURI(badgeID)).to.equal("https://www.arkreen.com/ESGBTC/1");     
+        await hashKeyESGBTC.setBaseURI("https://www.arkreen.com/ESGBTC/offset/")
+        expect( await hashKeyESGBTC.tokenURI(badgeID)).to.equal("https://www.arkreen.com/ESGBTC/offset/1"); 
+
+        await hashKeyESGBTC.updateCID(badgeID, Buffer.from("bafkreidotvli35mt5rjywkps7aqxo3elc5dh6dlynd6yxcyipnfaghkoe4" + 
+                                    "bafkreidmmdib6arz2fcffxim3tz5nyjlhob5qfl5r7e6ip3gugx25ene5a"))
+                                    
+        expect(await hashKeyESGBTC.cidBadge(badgeID)).to.equal("bafkreidotvli35mt5rjywkps7aqxo3elc5dh6dlynd6yxcyipnfaghkoe4"); 
+        expect(await hashKeyESGBTC.cidBadge(badgeID+1)).to.equal("bafkreidmmdib6arz2fcffxim3tz5nyjlhob5qfl5r7e6ip3gugx25ene5a"); 
+
+        expect( await hashKeyESGBTC.tokenURI(badgeID)).to.equal("https://bafkreidotvli35mt5rjywkps7aqxo3elc5dh6dlynd6yxcyipnfaghkoe4.ipfs.w3s.link"); 
+
       });      
 
       it("ActionBuilderBadge: Exact ART Token", async () => {

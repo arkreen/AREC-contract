@@ -116,6 +116,8 @@
     "deploy:matic:RECIssueExtD": "hardhat --network matic deploy --tags RECIssueExtD --reset",   
     "deploy:matic:RECIssueI": "hardhat --network matic deploy --tags RECIssueI", 
 
+    "deploy:matic:RECBadgeI": "hardhat --network matic deploy --tags RECBadgeI",
+
     "etherscan:matic": "hardhat --network matic etherscan-verify --api-key",
     "test": "hardhat test",
     "gas": "set REPORT_GAS=true && hardhat test",

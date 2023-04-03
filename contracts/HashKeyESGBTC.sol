@@ -42,7 +42,7 @@ contract HashKeyESGBTC is
     mapping(uint256 => uint256[]) public brickIdsMVP;   // Green Id -> bricks id more than 21 cells
     uint256 public ESGBadgeLimit;                       // Limit of each level of ESG badge, one byte for one level, starting from low end
     uint256 public ESGBadgeCount;                       // Count of each level of ESG badge, one byte for one level, starting from low end
-
+    mapping(uint256 => string) public cidBadge; 
 
     // The total REC amount to greenize the BTC block mined at the same time of HashKey Pro opening ceremony
     uint256 public maxRECToGreenBTC;
@@ -418,6 +418,28 @@ contract HashKeyESGBTC is
     function _baseURI() internal view virtual override returns (string memory) {
         return baseURI;
     }
+
+    /**
+     * @dev See {IERC721Metadata-tokenURI}.
+     */
+    function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
+        _requireMinted(tokenId);
+
+        string memory cid = cidBadge[tokenId];
+        if( bytes(cid).length > 0) {
+          return string(abi.encodePacked("https://", cid, ".ipfs.w3s.link"));
+        } else {
+          return super.tokenURI(tokenId);
+        }
+    }    
+
+    function updateCID(uint256 tokenIdStart, bytes calldata allCID) external virtual onlyOwner {
+        uint256 offset;
+        for(uint256 index = 0; index < allCID.length / 59; index++ ) {
+          offset = index * 59;
+          cidBadge[tokenIdStart + index] = string(abi.encodePacked(allCID[offset: offset + 59]));
+        }
+    }        
 
     /**
      * @dev Hook that is called before any token transfer. Blocking transfer unless minting

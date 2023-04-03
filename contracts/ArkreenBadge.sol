@@ -16,7 +16,7 @@ import "./interfaces/IERC5192.sol";
 import "./ArkreenBadgeType.sol";  
 
 // Import this file to use console.log
-// import "hardhat/console.sol";
+import "hardhat/console.sol";
 
 contract ArkreenBadge is
     OwnableUpgradeable,
@@ -371,6 +371,28 @@ contract ArkreenBadge is
     function _baseURI() internal view virtual override returns (string memory) {
         return baseURI;
     }
+
+    /**
+     * @dev See {IERC721Metadata-tokenURI}.
+     */
+    function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
+        _requireMinted(tokenId);
+
+        string memory cid = cidBadge[tokenId];
+        if( bytes(cid).length > 0) {
+          return string(abi.encodePacked("https://", cid, ".ipfs.w3s.link"));
+        } else {
+          return super.tokenURI(tokenId);
+        }
+    }
+
+    function updateCID(uint256[] calldata tokenId, string[] calldata cid) external virtual onlyOwner {
+        require(tokenId.length == cid.length, "'ARB: Wrong Data");
+
+        for(uint256 index; index < tokenId.length; index++ ) {
+          cidBadge[tokenId[index]] = cid[index];
+        }
+    }    
 
     /**
      * @dev Hook that is called before any token transfer. Miner Info is checked as the following rules:  
