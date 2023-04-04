@@ -14,6 +14,7 @@ import "./ArkreenBuilderTypes.sol";
 import "./libraries/TransferHelper.sol";
 import "./interfaces/IWETH.sol";
 import "./interfaces/IERC20Permit.sol";
+import "./libraries/BytesLib.sol";
 
 // Import this file to use console.log
 //import "hardhat/console.sol";
@@ -27,8 +28,8 @@ contract HashKeyESGBTC is
     using AddressUpgradeable for address;
 
     // Public variables
-    string  public    constant NAME             = 'HashKey ESG BTC';
-    string  public    constant SYMBOL           = 'HGBTC';
+    string  public    constant NAME             = 'Eco coiner';
+    string  public    constant SYMBOL           = 'EC';
     uint256 public    constant ART_DECIMAL      = 9;
     uint256 private   constant MAX_BRICK_ID     = 4096;
     uint256 private   constant MASK_ID          = 0xFFF;
@@ -42,11 +43,12 @@ contract HashKeyESGBTC is
     mapping(uint256 => uint256[]) public brickIdsMVP;   // Green Id -> bricks id more than 21 cells
     uint256 public ESGBadgeLimit;                       // Limit of each level of ESG badge, one byte for one level, starting from low end
     uint256 public ESGBadgeCount;                       // Count of each level of ESG badge, one byte for one level, starting from low end
-    mapping(uint256 => string) public cidBadge; 
-    mapping(uint256 => uint256) public levelOrder;      // Green Id -> level + order in level
 
     // The total REC amount to greenize the BTC block mined at the same time of HashKey Pro opening ceremony
     uint256 public maxRECToGreenBTC;
+
+    mapping(uint256 => uint256) public levelOrder;      // Green Id -> level + order in level
+    bytes internal allCIDList;
 
      // Events
 
@@ -276,7 +278,7 @@ contract HashKeyESGBTC is
         require( count < limit, "HSKESG: Reach Limit");
         ESGBadgeCount += (1 << levelOffet);                     // Add count, no overflow happens here
 
-        levelOrder[greenId] = (((levelOffet/8) + 1) << 8) + (count + 1);
+        levelOrder[greenId] = ((levelOffet/8) << 8) + count;
 
         return amountART * 2 * (10**ART_DECIMAL);               // 1 Cell -> 2 ART token 
     }
@@ -327,7 +329,7 @@ contract HashKeyESGBTC is
         require( count < limit, "HSKESG: Reach Limit");
         ESGBadgeCount += (1 << levelOffet);                     // Add count, no overflow happens here     
 
-        levelOrder[greenId] =  (((levelOffet/8) + 1) << 8) + (count + 1);
+        levelOrder[greenId] =  ((levelOffet/8) << 8) + count;
    
         return amountART * 2 * (10**ART_DECIMAL);             // 1 Cell -> 2 ART token 
     }
@@ -431,14 +433,20 @@ contract HashKeyESGBTC is
     function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
         _requireMinted(tokenId);
 
-        string memory cid = cidBadge[levelOrder[tokenId]];
-        if( bytes(cid).length > 0) {
+        uint256[8] memory CID_OFFSET = [uint256(0), 100, 160, 220, 260, 300, 320, 340];
+        uint256 order = levelOrder[tokenId];
+
+        uint256 offset = 59 * (CID_OFFSET[order>>8] + (order & 0xFF));
+        if( allCIDList.length > 0) {
+            require( (offset+59) <= allCIDList.length, "ARB: Overflowed");
+            string memory cid = string(abi.encodePacked(BytesLib.slice(allCIDList, offset, offset + 59)));
             return string(abi.encodePacked("https://", cid, ".ipfs.w3s.link"));
         } else {
             return super.tokenURI(tokenId);
         }
     }    
 
+/*
     function updateCID(uint256 level, uint256 limit, bytes calldata allCID) external virtual onlyOwner {
         uint256 length = allCID.length;
         uint256 offset = 0;
@@ -453,6 +461,10 @@ contract HashKeyESGBTC is
             }
         }
     }        
+*/
+    function updateCID(bytes calldata allCID) external virtual onlyOwner {
+        allCIDList = allCID ; 
+    }   
 
     /**
      * @dev Hook that is called before any token transfer. Blocking transfer unless minting

@@ -73,6 +73,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       await updateCIDTx.wait()
 */
 
+/*
       const level = [7, 8]
       const limit = [20, 10]
 
@@ -91,7 +92,24 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       await updateCIDTx.wait()
 
       console.log( "HashKeyESGBTCContract approveBuilder is executed: %s: ", hre.network.name, ESGBTC_ADDRESS, allMetaCID );      
-     
+*/      
+
+      const level = [1, 2, 3, 4, 5, 6, 7, 8]
+      const limit = [100, 60, 60, 40, 40, 20, 20, 10]
+
+      const allMetaCID = level.reduce<string>((allMeta, lvl, idx) => {
+                for ( let index=1; index<=limit[idx]; index++) {
+                  const key = 'L' + lvl.toString()+ '#' + index.toString().padStart(3,'0')
+                  allMeta = allMeta + (NFT_pic_metadata.All_Green_BTC_NFT as any)[key].CID_META
+                }
+                return allMeta
+            }, '')
+
+      const updateCIDTx = await HashKeyESGBTCFactory.updateCID(Buffer.from(allMetaCID))
+      await updateCIDTx.wait()
+      
+      console.log( "HashKeyESGBTCContract approveBuilder is executed: %s: ", hre.network.name, ESGBTC_ADDRESS, allMetaCID );      
+      
     }
     else if(hre.network.name === 'matic')  {        // Matic Mainnet
       ESGBTC_ADDRESS  = ""          // HashKey ESG BTC address
@@ -106,6 +124,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 };
 
 // 2023/04/03: Add the NFT picture and relative logic
+// yarn deploy:matic_test:HskBTCI
+
+// 2023/04/04: call updateCID to update allCID stored in one bytes  
 // yarn deploy:matic_test:HskBTCI
 
 func.tags = ["HskBTCI"];
