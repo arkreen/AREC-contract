@@ -27,7 +27,8 @@
     "deploy:rinkeby:gMiner": "hardhat --network rinkeby deploy --tags gMiner",
     "deploy:rinkeby:gMinerU": "hardhat --network rinkeby deploy --tags gMinerU",
     "verify:rinkeby": "npx hardhat verify --network rinkeby <ADDRESS> <PARAMS>",
-    "deploy:matic_test:ARKE": "hardhat --network matic_test deploy --tags ARKE",
+
+    "deploy:matic_test:ARKE": "hardhat --network matic_test deploy --tags ARKE --reset",
     "deploy:matic_test:gMiner": "hardhat --network matic_test deploy --tags gMiner",
     "deploy:matic_test:gMinerU": "hardhat --network matic_test deploy --tags gMinerU",
     "deploy:matic_test:AMiner": "hardhat --network matic_test deploy --tags AMiner",
@@ -118,6 +119,8 @@
 
     "deploy:matic:RECBadgeI": "hardhat --network matic deploy --tags RECBadgeI",
     "deploy:matic:RECTokenR": "hardhat --network matic deploy --tags RECTokenR",
+
+    "deploy:matic:ARKE": "hardhat --network matic deploy --tags ARKE --reset",
 
     "etherscan:matic": "hardhat --network matic etherscan-verify --api-key",
     "test": "hardhat test",

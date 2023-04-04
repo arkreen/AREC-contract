@@ -11,7 +11,7 @@ import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import '@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol';
 
 
-contract ArkreenToken is 
+contract ArkreenTokenV1 is 
     ContextUpgradeable,
     ERC20BurnableUpgradeable,
     OwnableUpgradeable,
@@ -21,14 +21,13 @@ contract ArkreenToken is
 {
     using AddressUpgradeable for address;
 
-    string  private constant _NAME = 'Arkreen Token';
-    string  private constant _SYMBOL = 'AKRE';
+    string  private constant _NAME = 'tAKRE';
+    string  private constant _SYMBOL = 'tAKRE';
     string  private constant _VERSION = '1';
     bytes32 private constant _PERMIT_TYPEHASH =
         keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
     
     bytes32 private _DOMAIN_SEPARATOR;
-
     mapping(address => uint256) public nonces;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -36,7 +35,8 @@ contract ArkreenToken is
         _disableInitializers();
     }
 
-    function initialize(uint256 amount, address foundationAddr, string calldata name, string calldata symbol)
+
+    function initialize(uint256 amount, address foundationAddr)
         external
         virtual
         initializer
@@ -46,14 +46,14 @@ contract ArkreenToken is
         __ERC20Burnable_init_unchained();
         __Context_init_unchained();
         
-        if(bytes(name).length == 0 || bytes(symbol).length == 0) {
-          __ERC20_init_unchained(_NAME, _SYMBOL);
-        } else {
-          __ERC20_init_unchained(name, symbol);          
-        }
-
+        __ERC20_init_unchained(_NAME, _SYMBOL);
         __Ownable_init_unchained();
         __Pausable_init_unchained();
+
+        // address owner = _msgSender();
+        // assembly {
+        //     sstore(0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103, owner)
+        // }
  
         _DOMAIN_SEPARATOR = keccak256(
             abi.encode(
@@ -66,6 +66,17 @@ contract ArkreenToken is
         );  
 
         _mint(foundationAddr, amount * 10 ** decimals());
+    }
+
+    //override decimals() from ERC20Upgradeable which returns 18
+    function decimals() public view virtual override returns (uint8) {
+        // return 8;
+        return 18;
+    }
+
+    //
+    function postUpdate(address foundationAddr) external onlyProxy onlyOwner {
+        _mint(foundationAddr, (10_000_000_000 - 10) * 10 ** decimals());
     }
 
     function pause() external onlyOwner{
