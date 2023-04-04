@@ -3,7 +3,9 @@ import { DeployFunction } from "hardhat-deploy/types";
 import { CONTRACTS } from "../constants";
 import { ethers } from "hardhat";
 import { ArkreenRegistry__factory } from "../../typechain";
-import { BigNumber } from "ethers";
+import { BigNumber, constants } from "ethers";
+
+
 
 // Initialize 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
@@ -81,8 +83,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
         console.log("ArkreenRegistry Initialized to %s: ", hre.network.name, ArkreenRegistryFactory.address);
 */
-
-        // 2023/04/04:  Matic testnet
+        //////////////////////////////////////////////////
+/*        
+        // 2023/04/04:  Matic mainnet Normal release
         const issuer                      = "0xec9254677d252df0dCaEb067dFC8b4ea5F6edAfC"
         const tokenREC                    = "0x93b3bb6C51A247a27253c33F0d0C2FF1d4343214"
         const tokenPay                    = "0xA906175C2f72BB2D8d16427dda524CBD324Cc510"    // 2023/04/04:  tAKRE
@@ -102,6 +105,22 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
                                                         
         console.log("updateTxIssuance", updateTxIssuance)
         await updateTxIssuance.wait()
+*/
+
+        // 2023/04/04:  Matic Mainnet Normal release
+        //function manageAssetARECExt( uint256 idxAsset, uint256 flag, string calldata idAsset, address issuer, 
+        //  address tokenREC, address tokenPay)
+        const tokenPay                    = "0x21B101f5d61A66037634f7e1BeB5a733d9987D57"    // 2023/04/04:  new tAKRE
+
+        const [deployer] = await ethers.getSigners();
+        const ArkreenRegistryFactory = ArkreenRegistry__factory.connect(ArkreenRegistry_address, deployer);
+
+        const manageAssetARECExtTx = await ArkreenRegistryFactory.manageAssetARECExt(1, 0x08, 
+                                              '', constants.AddressZero, constants.AddressZero, tokenPay)
+                                                        
+        console.log("manageAssetARECExt", manageAssetARECExtTx)
+        await manageAssetARECExtTx.wait()
+
         console.log("ArkreenRegistry newAssetAREC is executed: %s: ", hre.network.name, ArkreenRegistry_address);
 
     } 
@@ -110,6 +129,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2023/03/28: call newAssetAREC for Matic testnet
 
 // 2023/04/04: call newAssetAREC for Matic mainnet
+// yarn deploy:matic:gRegistryI
+
+// 2023/04/04: call manageAssetARECExt for Matic mainnet to update new tAKRE
 // yarn deploy:matic:gRegistryI
 
 func.tags = ["gRegistryI"];

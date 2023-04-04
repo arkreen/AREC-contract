@@ -24,6 +24,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:gRegistryD
 // 0x29840f70cb8ddbfba9890c40c1babc6a2c904e6c
 
+// 2023/04/4: Upgrade to update tAKRE
+// yarn deploy:matic:gRegistryD
+// 0x8668dD561a693aB7F8B48b599B692F2EFB070937
+
 func.tags = ["gRegistryD"];
 
 export default func;

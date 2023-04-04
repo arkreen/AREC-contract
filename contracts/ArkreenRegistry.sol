@@ -25,15 +25,6 @@ contract ArkreenRegistry is
     // Constants
     bytes32 public constant PAUSER_ROLE = keccak256('PAUSER_ROLE');
 
-    // Modifiers
-    modifier onlyBy(address _factory, address _owner) {
-        require(
-            _factory == _msgSender() || _owner == _msgSender(),
-            'Caller is not the factory'
-        );
-        _;
-    }
-
     modifier checkAddress(address addressToCheck) {
         require(addressToCheck != address(0), 'Arkreen: Zero Address');
         require(addressToCheck.isContract(), "Arkreen: Wrong Contract Address");
@@ -110,20 +101,38 @@ contract ArkreenRegistry is
         allAssets[numAsset] = AssetAREC(idAsset, issuer, tokenREC, tokenPay, rateToIssue, rateToLiquidize, true, description);
     }
 
-    function manageAssetAREC( uint256 idAsset, uint256 flag, uint128 rateToIssue, uint16 rateToLiquidize, bool bActive,
-                                string calldata description) external virtual onlyOwner {
+    function manageAssetAREC( uint256 idxAsset, uint256 flag, uint128 rateToIssue, uint16 rateToLiquidize, bool bActive,
+                                string calldata description) external {
+
+        require( (msg.sender == allAssets[idxAsset].issuer) || (owner() == msg.sender), 'Arkreen: Not Allowed');                                 
         if((flag & 0x01) != 0) {
-            allAssets[idAsset].rateToIssue = rateToIssue;
+            allAssets[idxAsset].rateToIssue = rateToIssue;
         }
         if((flag & 0x02) != 0) {
             require(rateToLiquidize < 10000, "Arkreen: Wrong liquidize rate");
-            allAssets[idAsset].rateToLiquidize = rateToLiquidize;
+            allAssets[idxAsset].rateToLiquidize = rateToLiquidize;
         }
         if((flag & 0x04) != 0) {
-            allAssets[idAsset].bActive = bActive;
+            allAssets[idxAsset].bActive = bActive;
         }
         if((flag & 0x08) != 0) {
-            allAssets[idAsset].description = description;
+            allAssets[idxAsset].description = description;
+        }        
+    }
+
+    function manageAssetARECExt( uint256 idxAsset, uint256 flag, string calldata idAsset, address issuer, 
+                                address tokenREC, address tokenPay) external virtual onlyOwner {
+        if((flag & 0x01) != 0) {
+            allAssets[idxAsset].idAsset = idAsset;
+        }
+        if((flag & 0x02) != 0) {
+            allAssets[idxAsset].issuer = issuer;
+        }
+        if((flag & 0x04) != 0) {
+            allAssets[idxAsset].tokenREC = tokenREC;
+        }
+        if((flag & 0x08) != 0) {
+            allAssets[idxAsset].tokenPay = tokenPay;
         }        
     }
 

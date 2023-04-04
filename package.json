@@ -121,6 +121,8 @@
     "deploy:matic:RECTokenR": "hardhat --network matic deploy --tags RECTokenR",
 
     "deploy:matic:ARKE": "hardhat --network matic deploy --tags ARKE --reset",
+    "deploy:matic:gRegistryD": "hardhat --network matic deploy --tags gRegistryD --reset",
+    "deploy:matic:gRegistryU": "hardhat --network matic deploy --tags gRegistryU",
 
     "etherscan:matic": "hardhat --network matic etherscan-verify --api-key",
     "test": "hardhat test",

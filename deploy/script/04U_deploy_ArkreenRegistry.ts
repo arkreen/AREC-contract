@@ -30,7 +30,27 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         console.log("callData, update", updateTx)
         console.log("ArkreenRegistry deployed to %s: ", hre.network.name, ArkreenRegistryFactory.address);
     }
+    
+    if(hre.network.name === 'matic') {
+        const REGISTRY_ADDRESS    =   "0xb17faCaCA106fB3D216923DB6CaBFC7C0517029d"       // MATIC mainnet normal release
+        const NEW_IMPLEMENTATION  =   "0x8668dD561a693aB7F8B48b599B692F2EFB070937"       // 2023/04/04: Upgrade to update tAKRE
+      
+        const [deployer] = await ethers.getSigners();
+        const ArkreenRegistryFactory = ArkreenRegistry__factory.connect(REGISTRY_ADDRESS, deployer);
+
+//      const callData = ArkreenRegistryFactory.interface.encodeFunctionData("postUpdate")
+//      const updateTx = ArkreenRegistryFactory.interface.encodeFunctionData("upgradeToAndCall", [NEW_IMPLEMENTATION, callData])
+//      const updateTx = await ArkreenRegistryFactory.upgradeToAndCall(NEW_IMPLEMENTATION, callData)
+        const updateTx = await ArkreenRegistryFactory.upgradeTo(NEW_IMPLEMENTATION)
+        await updateTx.wait()
+
+        console.log("callData, update", updateTx)
+        console.log("ArkreenRegistry updated to %s: ", hre.network.name, ArkreenRegistryFactory.address);
+    }
 };
+
+// 2023/04/04: yarn deploy:matic:gRegistryU
+// Upgrade to update tAKRE
 
 func.tags = ["gRegistryU"];
 
