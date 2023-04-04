@@ -43,6 +43,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // deploy:matic_test:HskBTCD: Fix the compatibility problem in test
 // 0x7D427484834e9d89F5777EBef16f5f2CF83E9093
 
+// 2023/04/03
+// deploy:matic_test:HskBTCD: Add the NFT picture and relative logic
+// 0x3980b7c60fa541d126f1c8905f815f658d10611a
+
 func.tags = ["HskBTCD"];
 
 export default func;

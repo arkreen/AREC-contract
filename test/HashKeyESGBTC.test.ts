@@ -572,13 +572,51 @@ describe("HashKeyESGBTC", () => {
         await hashKeyESGBTC.setBaseURI("https://www.arkreen.com/ESGBTC/offset/")
         expect( await hashKeyESGBTC.tokenURI(badgeID)).to.equal("https://www.arkreen.com/ESGBTC/offset/1"); 
 
-        await hashKeyESGBTC.updateCID(badgeID, Buffer.from("bafkreidotvli35mt5rjywkps7aqxo3elc5dh6dlynd6yxcyipnfaghkoe4" + 
-                                    "bafkreidmmdib6arz2fcffxim3tz5nyjlhob5qfl5r7e6ip3gugx25ene5a"))
-                                    
-        expect(await hashKeyESGBTC.cidBadge(badgeID)).to.equal("bafkreidotvli35mt5rjywkps7aqxo3elc5dh6dlynd6yxcyipnfaghkoe4"); 
-        expect(await hashKeyESGBTC.cidBadge(badgeID+1)).to.equal("bafkreidmmdib6arz2fcffxim3tz5nyjlhob5qfl5r7e6ip3gugx25ene5a"); 
+        const level = BigNumber.from('0x0801')
+        const limit = BigNumber.from('0x0202030204020302')
+        const stringL1 =  'bafkreib64j7h42fl5dtmtitzzhy4y7yolkx3x62lufuu2ul6wligq77nh4'+
+                          'bafkreiefvf5z6zhpr2ppfsdfw2s7ca5pwkrpznrjbgy2m6ywx6txrf7hce'
 
-        expect( await hashKeyESGBTC.tokenURI(badgeID)).to.equal("https://bafkreidotvli35mt5rjywkps7aqxo3elc5dh6dlynd6yxcyipnfaghkoe4.ipfs.w3s.link"); 
+        const stringL2 =  'bafkreifhjbxlhizvy6veei2o64repiwmyzgahu255nckeecqspunr5y5fm'+
+                          'bafkreif2tj47e4zobhcfzvhebpxzzfkmz5k55uud7jojc454uh2bnwhjwa'+
+                          'bafkreihppgyo65lyhnpa7vbzaa2evmb3h6sznxs4qp4457t3o5onyps7t4'
+
+        const stringL3 =  'bafkreigruwjvwbaw6qgdtryvvfftwr2nqoyermzoeg2c35bin5m7kgqhpq'+
+                          'bafkreibesooju4joh2bpd3tscjbxch2zb66cvsvsk3ihekntxdfenyuoby'
+
+        const stringL4 =  'bafkreif5ua6x7abmnlr72j7nzcrha56jh4qj5wxcuswf45ojczm5oaubyu'+
+                          'bafkreiczvkn3gf5n5d6w5uj72lbez6xvtts3ovbmc55x4zpkoo22uo45yi'+
+                          'bafkreiefbnj6u2rqpgqlfr6eulkht4vweok6rqnddcafb5fmphoknkfep4'+
+                          'bafkreidfc33ltms4kteeirne7n3vwr3y3xwwaeice2uiynqzwd7dgdvbe4'
+
+        const stringL5 =  'bafkreiegcfh773f2truz3vvgxjco5blpl2iy33lorgrpvkfs6irbrnvlfu'+
+                          'bafkreif4sjf6jn54qwfpne43xqc7rrqi2zlf4yvzqxq5h6zqkand6htlti'
+
+        const stringL6 =  'bafkreidzkojf3c7zt2ynjjm6mj5chaj5iqb7pfqzxxlqt7ykjdhozpbbqa'+
+                          'bafkreibv4xtvxxaeqtol5kxpa5kd5bceppmx4zgn3s5nkb64ezkrkzjwui'+
+                          'bafkreiafuz6yxkpgtut5bwxdgi5x4767hs224xm4dfbx4nbidg4icivbdm'
+
+        const stringL7 =  'bafkreies5t2b6yobyjsuhb6v7f6jfb2hxbeqp2uco6r3nwykyzvp2mol34'+
+                          'bafkreify2oxnfarcckdbbot73jnqjjxasobndycndmvgic5kmnxkqcaneu'
+
+        const stringL8 =  'bafkreidgv5f6dcyls56wivao67trxh3da7xwsxlrvgygwvhqg4ybgmttkq'+
+                          'bafkreibtuwdzidhlls5uhdvlw2jigymcm2i7dwhcikpaorvmhu6etpwm2i'
+
+        await hashKeyESGBTC.updateCID(level, limit, Buffer.from(  stringL1 + stringL2 + stringL3 +stringL4 +
+                                                                  stringL5 +stringL6 +stringL7 + stringL8))
+
+        expect(await hashKeyESGBTC.cidBadge(BigNumber.from("0x0101"))).to.equal("bafkreib64j7h42fl5dtmtitzzhy4y7yolkx3x62lufuu2ul6wligq77nh4"); 
+        expect(await hashKeyESGBTC.cidBadge(BigNumber.from("0x0102"))).to.equal("bafkreiefvf5z6zhpr2ppfsdfw2s7ca5pwkrpznrjbgy2m6ywx6txrf7hce"); 
+
+        expect(await hashKeyESGBTC.cidBadge(BigNumber.from("0x0401"))).to.equal("bafkreif5ua6x7abmnlr72j7nzcrha56jh4qj5wxcuswf45ojczm5oaubyu"); 
+        expect(await hashKeyESGBTC.cidBadge(BigNumber.from("0x0402"))).to.equal("bafkreiczvkn3gf5n5d6w5uj72lbez6xvtts3ovbmc55x4zpkoo22uo45yi"); 
+        expect(await hashKeyESGBTC.cidBadge(BigNumber.from("0x0403"))).to.equal("bafkreiefbnj6u2rqpgqlfr6eulkht4vweok6rqnddcafb5fmphoknkfep4"); 
+        expect(await hashKeyESGBTC.cidBadge(BigNumber.from("0x0404"))).to.equal("bafkreidfc33ltms4kteeirne7n3vwr3y3xwwaeice2uiynqzwd7dgdvbe4"); 
+
+        expect(await hashKeyESGBTC.cidBadge(BigNumber.from("0x0801"))).to.equal("bafkreidgv5f6dcyls56wivao67trxh3da7xwsxlrvgygwvhqg4ybgmttkq"); 
+        expect(await hashKeyESGBTC.cidBadge(BigNumber.from("0x0802"))).to.equal("bafkreibtuwdzidhlls5uhdvlw2jigymcm2i7dwhcikpaorvmhu6etpwm2i"); 
+
+        expect( await hashKeyESGBTC.tokenURI(badgeID)).to.equal("https://bafkreigruwjvwbaw6qgdtryvvfftwr2nqoyermzoeg2c35bin5m7kgqhpq.ipfs.w3s.link"); 
 
       });      
 
