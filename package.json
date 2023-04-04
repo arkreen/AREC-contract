@@ -117,6 +117,7 @@
     "deploy:matic:RECIssueI": "hardhat --network matic deploy --tags RECIssueI", 
 
     "deploy:matic:RECBadgeI": "hardhat --network matic deploy --tags RECBadgeI",
+    "deploy:matic:RECTokenR": "hardhat --network matic deploy --tags RECTokenR",
 
     "etherscan:matic": "hardhat --network matic etherscan-verify --api-key",
     "test": "hardhat test",

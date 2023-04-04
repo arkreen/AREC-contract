@@ -56,17 +56,18 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //    const REC_ISSUANCE_ADDRESS      = "0x45D0c0E2480212A60F1a9f2A820F1d7d6472CA6B"        // Need to check, Version Test
       const REC_ISSUANCE_ADDRESS      = "0x954585adF9425F66a0a2FD8e10682EB7c4F1f1fD"        // 2023/03/22
 
-//    const MVP_ADDRESS = ""             
+      
 
       const [deployer] = await ethers.getSigners();
-      const ArkreenRECIssuanceExtFactory = ArkreenRECIssuance__factory.connect(REC_ISSUANCE_ADDRESS, deployer);
+//    const ArkreenRECIssuanceExtFactory = ArkreenRECIssuance__factory.connect(REC_ISSUANCE_ADDRESS, deployer);
+      const ArkreenRECIssuanceExtFactory = ArkreenRECIssuanceExt__factory.connect(REC_ISSUANCE_ADDRESS, deployer);           
 
       /////////////////////////////////////////////////////////
-      const tARKRE_TOKEN_ADDRESS = "0xA906175C2f72BB2D8d16427dda524CBD324Cc510"
 
       // 2023/04/02
-      const updateTx = await ArkreenRECIssuanceExtFactory.setTokenAKRE(tARKRE_TOKEN_ADDRESS)
-      await updateTx.wait()          
+//    const tARKRE_TOKEN_ADDRESS = "0xA906175C2f72BB2D8d16427dda524CBD324Cc510"
+//    const updateTx = await ArkreenRECIssuanceExtFactory.setTokenAKRE(tARKRE_TOKEN_ADDRESS)
+//    await updateTx.wait()          
 
       /////////////////////////////////////////////////////////
 //    const REC_ISSUANCE_EXT_ADDRESS  = "0x677174509c37c91e6675f6203608195c456d8b13"        // 2023/03/22
@@ -86,9 +87,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //    const updateTx = await ArkreenRECIssuanceExtFactory.updateARECMintPrice(AKREToken_ADDRESS, AKREToken_PRICE)
 //    await updateTx.wait()      
 
+      //////////////////////////////////////////////////////
+      // 2023/04/04
       // function manageMVPAddress(bool op, address[] calldata listMVP) 
-//    const updateTx = await ArkreenRECIssuanceExtFactory.manageMVPAddress(true, [MVP_ADDRESS])
-//    await updateTx.wait()
+      const MVP_ADDRESS = "0x8bCe3621901909851ba5579060D9058Ef489a9EF"
+      const updateTx = await ArkreenRECIssuanceExtFactory.manageMVPAddress(true, [MVP_ADDRESS])
+      await updateTx.wait()
 
       console.log("callData, update", updateTx)
       console.log("ArkreenRECIssuance Updated to %s: ", hre.network.name, ArkreenRECIssuanceExtFactory.address);
@@ -100,6 +104,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2023/04/02： Called setESGExtAddress in Matic testnet
 // 2023/04/02： yarn deploy:matic:RECIssueI :  Called setESGExtAddress in Matic mainnet
 // 2023/04/02： yarn deploy:matic:RECIssueI :  Called setTokenAKRE in Matic mainnet
+
+// 2023/04/04： Called manageMVPAddress
+// yarn deploy:matic:RECIssueI
 
 func.tags = ["RECIssueI"];
 

@@ -50,6 +50,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
         // 2023/03/22: Normal release
         const ArkreenRegistry_address     = '0xb17faCaCA106fB3D216923DB6CaBFC7C0517029d'
+
+/*        
         const ArkreenMiner_address        = '0xAc4da3681e51278f82288617c7185a7a119E5b7B'
         const ArkreenRECIssuance_address  = '0x954585adF9425F66a0a2FD8e10682EB7c4F1f1fD'
         const ArkreenRECToken_address     = '0x58E4D14ccddD1E993e6368A8c5EAa290C95caFDF'
@@ -78,10 +80,37 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         console.log("AddRECIssuer Initialized: %s: ", hre.network.name, Issuer_address, ArkreenRECToken_address, Issuer_name);        
 
         console.log("ArkreenRegistry Initialized to %s: ", hre.network.name, ArkreenRegistryFactory.address);
+*/
+
+        // 2023/04/04:  Matic testnet
+        const issuer                      = "0xec9254677d252df0dCaEb067dFC8b4ea5F6edAfC"
+        const tokenREC                    = "0x93b3bb6C51A247a27253c33F0d0C2FF1d4343214"
+        const tokenPay                    = "0xA906175C2f72BB2D8d16427dda524CBD324Cc510"    // 2023/04/04:  tAKRE
+
+        const idAsset =   "AREC_HSK_ESG_BTC"
+        const rateToIssue = BigNumber.from(100).mul(BigNumber.from(10).pow(18))
+        const rateToLiquidize = 1000
+        const description = 	"HashKey AREC ERC20 token based on redeemed I-REC."                        
+
+        const [deployer] = await ethers.getSigners();
+        const ArkreenRegistryFactory = ArkreenRegistry__factory.connect(ArkreenRegistry_address, deployer);
+
+//      function newAssetAREC(string calldata idAsset, address issuer, address tokenREC, address tokenPay,
+//                              uint128 rateToIssue, uint16 rateToLiquidize, string calldata description)
+        const updateTxIssuance = await ArkreenRegistryFactory.newAssetAREC(idAsset, issuer, tokenREC,
+                                                        tokenPay, rateToIssue, rateToLiquidize, description)
+                                                        
+        console.log("updateTxIssuance", updateTxIssuance)
+        await updateTxIssuance.wait()
+        console.log("ArkreenRegistry newAssetAREC is executed: %s: ", hre.network.name, ArkreenRegistry_address);
+
     } 
 };
 
 // 2023/03/28: call newAssetAREC for Matic testnet
+
+// 2023/04/04: call newAssetAREC for Matic mainnet
+// yarn deploy:matic:gRegistryI
 
 func.tags = ["gRegistryI"];
 
