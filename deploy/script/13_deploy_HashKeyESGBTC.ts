@@ -16,10 +16,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       NUM_CELL          = 1980
     }
     else if(hre.network.name === 'matic')  {        // Matic Mainnet for test
-      BUILDER_ADDRESS   = ""
-      HART_ADDRESS   = ""
-      NATIVE_ADDRESS = ""
-      NUM_CELL = 0
+      BUILDER_ADDRESS   = "0x7073Ea8C9B0612F3C3FE604425E2af7954c4c92e"
+      HART_ADDRESS      = "0x93b3bb6C51A247a27253c33F0d0C2FF1d4343214"
+      NATIVE_ADDRESS    = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"
+      NUM_CELL          = 2427
     } 
 
     const { deployments, getNamedAccounts } = hre;
@@ -54,6 +54,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // Proxy:         0x785dca2ca9a51513da1fef9f70e6b6ab02896f67
 // Implementaion: 0x16f40bf24e7232056800b0601d6f36121f66ff44
 
+// 2023/04/05
+// deploy:matic:HskBTC    : Normal Release
+// Proxy:         0xfe9341218c7Fcb6DA1eC131a72f914B7C724F200         
+// Implementaion: 0xf4425F9596F8015cf95cb0d3DFDB5316F5EC6069
 
 func.tags = ["HskBTC"];
 

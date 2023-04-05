@@ -109,12 +109,24 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   */    
     }
     else if(hre.network.name === 'matic')  {        // Matic Mainnet
-      ESGBTC_ADDRESS  = ""          // HashKey ESG BTC address
+      ESGBTC_ADDRESS    = "0xfe9341218c7Fcb6DA1eC131a72f914B7C724F200"            // HashKey ESG BTC address
 
-      USDC_ADDRESS    = ""          // USDC address
-      USDT_ADDRESS    = ""          // USDT address
-      WMATIC_ADDRESS  = ""          // WMATIC address
-      AKRE_ADDRESS    = ""          // AKRE address
+      USDC_ADDRESS      = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"          // USDC address
+      USDT_ADDRESS      = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F"          // USDT address
+      WMATIC_ADDRESS    = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"          // WMATIC address
+      AKRE_ADDRESS      = "0x21b101f5d61a66037634f7e1beb5a733d9987d57"          // tAKRE address
+
+      const [deployer] = await ethers.getSigners();
+
+      // Approve HashKeyESGBTCContract to Tranfer-From the specified tokens
+      const HashKeyESGBTCFactory = HashKeyESGBTC__factory.connect(ESGBTC_ADDRESS as string, deployer);
+      
+      // 2023/04/05
+      const approveRouterTx = await HashKeyESGBTCFactory.approveBuilder(
+                                        [USDC_ADDRESS, USDT_ADDRESS, WMATIC_ADDRESS, AKRE_ADDRESS] as string[])
+      await approveRouterTx.wait()
+      console.log("HashKeyESGBTCContract approveBuilder is executed: %s: ", hre.network.name, ESGBTC_ADDRESS, 
+                                [USDC_ADDRESS, USDT_ADDRESS, WMATIC_ADDRESS, AKRE_ADDRESS] );
 
     } 
                               
@@ -127,6 +139,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:HskBTCI
 
 // 2023/04/04: call updateCID in the reverted CID logic  
+// yarn deploy:matic_test:HskBTCI
+
+// 2023/04/05: call updateCID in the reverted CID logic  
 // yarn deploy:matic_test:HskBTCI
 
 func.tags = ["HskBTCI"];

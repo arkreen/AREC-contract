@@ -123,6 +123,13 @@
     "deploy:matic:ARKE": "hardhat --network matic deploy --tags ARKE --reset",
     "deploy:matic:gRegistryD": "hardhat --network matic deploy --tags gRegistryD --reset",
     "deploy:matic:gRegistryU": "hardhat --network matic deploy --tags gRegistryU",
+    "deploy:matic:ArtBank": "hardhat --network matic deploy --tags ArtBank",
+    "deploy:matic:ABuilder": "hardhat --network matic deploy --tags ABuilder",
+    "deploy:matic:HskBTC": "hardhat --network matic deploy --tags HskBTC --reset",
+
+    "deploy:matic:ArtBankI": "hardhat --network matic deploy --tags ArtBankI",
+    "deploy:matic:ABuilderI": "hardhat --network matic deploy --tags ABuilderI",    
+    "deploy:matic:HskBTCI": "hardhat --network matic deploy --tags HskBTCI",
 
     "etherscan:matic": "hardhat --network matic etherscan-verify --api-key",
     "test": "hardhat test",
