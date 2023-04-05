@@ -142,7 +142,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:HskBTCI
 
 // 2023/04/05: call updateCID in the reverted CID logic  
-// yarn deploy:matic_test:HskBTCI
+// yarn deploy:matic:HskBTCI
 
 func.tags = ["HskBTCI"];
 

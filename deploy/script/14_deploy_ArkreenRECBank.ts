@@ -42,7 +42,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // Proxy:           0x7ee6D2A14d6Db71339a010d44793B27895B36d50
 // Implementation:  0xCdacE7DB767e77BD938e488925B6b00f98D4063C
 
-// 2023/04/04
+// 2023/04/05
 // yarn deploy:matic:ArtBank
 // Proxy:           0xab65900A52f1DcB722CaB2e5342bB6b128630A28
 // Implementation:  0x4142668D4B26c643266F1787dB542535E13aCC52
