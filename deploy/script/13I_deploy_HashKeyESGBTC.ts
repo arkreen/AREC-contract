@@ -47,8 +47,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //      const limit = [100, 60, 60, 40, 40, 20, 20, 10]
 
 /*
-      const level = [1, 2, 3, 4, 5, 6]
-      const limit = [100, 60, 60, 40, 40, 20]
+      const level = [1, 2, 3]
+      const limit = [100, 60, 60]
 
       const allMetaCID = level.reduce<string>((allMeta, lvl, idx) => {
                 for ( let index=1; index<=limit[idx]; index++) {
@@ -58,24 +58,19 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
                 return allMeta
             }, '')
 
-//    console.log(NFT_pic_metadata.All_Green_BTC_NFT['L1#001'])
-//    console.log(allMetaCID)
-
-
-
 //      const levelRange = 0x0801
 //      const limitList = BigNumber.from("0x0A141428283C3C64")
       
-      const levelRange = 0x0601
-      const limitList = BigNumber.from("0x1428283C3C64")
+      const levelRange = 0x0301
+      const limitList = BigNumber.from("0x3C3C64")
 
       const updateCIDTx = await HashKeyESGBTCFactory.updateCID(levelRange, limitList, Buffer.from(allMetaCID))
       await updateCIDTx.wait()
+      console.log( "HashKeyESGBTCContract approveBuilder is executed: %s: ", hre.network.name, ESGBTC_ADDRESS, allMetaCID ); 
 */
 
-/*
-      const level = [7, 8]
-      const limit = [20, 10]
+      const level = [4, 5, 6, 7, 8]
+      const limit = [40, 40, 20, 20, 10]
 
       const allMetaCID = level.reduce<string>((allMeta, lvl, idx) => {
                 for ( let index=1; index<=limit[idx]; index++) {
@@ -85,15 +80,17 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
                 return allMeta
             }, '')
      
-      const levelRange = 0x0807
-      const limitList = BigNumber.from("0x0A14")
+      const levelRange = 0x0804
+      const limitList = BigNumber.from("0x0A14142828")
 
       const updateCIDTx = await HashKeyESGBTCFactory.updateCID(levelRange, limitList, Buffer.from(allMetaCID))
       await updateCIDTx.wait()
 
       console.log( "HashKeyESGBTCContract approveBuilder is executed: %s: ", hre.network.name, ESGBTC_ADDRESS, allMetaCID );      
-*/      
 
+/*
+      ////////////////////////////////////////////////////
+      // No too much improvement      
       const level = [1, 2, 3, 4, 5, 6, 7, 8]
       const limit = [100, 60, 60, 40, 40, 20, 20, 10]
 
@@ -107,9 +104,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
       const updateCIDTx = await HashKeyESGBTCFactory.updateCID(Buffer.from(allMetaCID))
       await updateCIDTx.wait()
-      
+
       console.log( "HashKeyESGBTCContract approveBuilder is executed: %s: ", hre.network.name, ESGBTC_ADDRESS, allMetaCID );      
-      
+  */    
     }
     else if(hre.network.name === 'matic')  {        // Matic Mainnet
       ESGBTC_ADDRESS  = ""          // HashKey ESG BTC address
@@ -127,6 +124,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:HskBTCI
 
 // 2023/04/04: call updateCID to update allCID stored in one bytes  
+// yarn deploy:matic_test:HskBTCI
+
+// 2023/04/04: call updateCID in the reverted CID logic  
 // yarn deploy:matic_test:HskBTCI
 
 func.tags = ["HskBTCI"];

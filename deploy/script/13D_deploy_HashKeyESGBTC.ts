@@ -51,6 +51,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // deploy:matic_test:HskBTCD: Change name to 'Eco Coiner', and store all CID in one bytes 
 // 0x0Cfe77bE0225A39e5Bb9aB2DEAd3a1350a90d14a
 
+// 2023/04/04: 
+// deploy:matic_test:HskBTCD: Revert to old CID handle logic 
+// 0x999452ad1f9ed7809100106507b5317b796e8851
+
 func.tags = ["HskBTCD"];
 
 export default func;

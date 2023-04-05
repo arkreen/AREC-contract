@@ -270,7 +270,11 @@ describe("ArkreenRECIssuanceExt", () => {
           await arkreenRECIssuance.connect(owner1).liquidizeREC(tokenID)
 
           await arkreenRECTokenESG.connect(owner1).transfer(maker2.address, expandTo9Decimals(9000))
-          await arkreenRECTokenESG.connect(maker2).approve(arkreenRECBank.address, expandTo9Decimals(9000))          
+          await arkreenRECTokenESG.connect(maker2).approve(arkreenRECBank.address, expandTo9Decimals(9000))   
+
+          const limit= BigNumber.from('0x0a141428283c3c64')
+          await hashKeyESGBTC.UpdateESGBadgeLimit(limit)
+
         }
       });
 
