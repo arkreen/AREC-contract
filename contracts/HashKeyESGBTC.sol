@@ -27,7 +27,7 @@ contract HashKeyESGBTC is
     using AddressUpgradeable for address;
 
     // Public variables
-    string  public    constant NAME             = 'Eco coiner';
+    string  public    constant NAME             = 'Eco Coiner';
     string  public    constant SYMBOL           = 'EC';
     uint256 public    constant ART_DECIMAL      = 9;
     uint256 private   constant MAX_BRICK_ID     = 4096;
@@ -385,8 +385,9 @@ contract HashKeyESGBTC is
     /** 
      * @dev Update the ESGBadgeLimit
      */
-    function UpdateESGBadgeLimit(uint256 limit) external onlyOwner {    
-        ESGBadgeLimit = limit;
+    function UpdateESGBadgeLimit(uint256 limit, uint256 count ) external onlyOwner {    
+        if(limit!=0)  ESGBadgeLimit = limit;
+        if(count!=0) ESGBadgeCount = count;
     }    
 
     /** 

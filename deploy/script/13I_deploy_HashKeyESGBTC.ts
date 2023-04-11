@@ -4,7 +4,9 @@ import { ethers } from "hardhat";
 import { HashKeyESGBTC__factory } from "../../typechain";
 import { BigNumber } from 'ethers'
 
-import NFT_pic_metadata from "../NFT_pic.json";
+import NFT_pic_test_metadata from "../resultTest.json";
+import NFT_pic_formal_metadata from "../resultFormal.json";
+
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
@@ -44,44 +46,44 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       const HashKeyESGBTCFactory = HashKeyESGBTC__factory.connect(ESGBTC_ADDRESS as string, deployer);
 
 //      const level = [1, 2, 3, 4, 5, 6, 7, 8]
-//      const limit = [100, 60, 60, 40, 40, 20, 20, 10]
+//      const limit = [100, 60, 60, 40, 40, 20, 20, 20]     // Last 20 is just for in case over sold
 
-/*
-      const level = [1, 2, 3]
-      const limit = [100, 60, 60]
+      {
+        const level = [1, 2, 3]
+        const limit = [100, 60, 60]
 
-      const allMetaCID = level.reduce<string>((allMeta, lvl, idx) => {
-                for ( let index=1; index<=limit[idx]; index++) {
-                  const key = 'L' + lvl.toString()+ '#' + index.toString().padStart(3,'0')
-                  allMeta = allMeta + (NFT_pic_metadata.All_Green_BTC_NFT as any)[key].CID_META
-                }
-                return allMeta
-            }, '')
+        const allMetaCID = level.reduce<string>((allMeta, lvl, idx) => {
+                  for ( let index=1; index<=limit[idx]; index++) {
+                    const key = 'L' + lvl.toString()+ '#' + index.toString().padStart(3,'0')
+                    allMeta = allMeta + (NFT_pic_test_metadata.All_Green_BTC_NFT as any)[key].CID_META
+                  }
+                  return allMeta
+              }, '')
 
-//      const levelRange = 0x0801
-//      const limitList = BigNumber.from("0x0A141428283C3C64")
-      
-      const levelRange = 0x0301
-      const limitList = BigNumber.from("0x3C3C64")
+  //      const levelRange = 0x0801
+  //      const limitList = BigNumber.from("0x0A141428283C3C64")
+        
+        const levelRange = 0x0301
+        const limitList = BigNumber.from("0x3C3C64")
 
-      const updateCIDTx = await HashKeyESGBTCFactory.updateCID(levelRange, limitList, Buffer.from(allMetaCID))
-      await updateCIDTx.wait()
-      console.log( "HashKeyESGBTCContract approveBuilder is executed: %s: ", hre.network.name, ESGBTC_ADDRESS, allMetaCID ); 
-*/
+        const updateCIDTx = await HashKeyESGBTCFactory.updateCID(levelRange, limitList, Buffer.from(allMetaCID))
+        await updateCIDTx.wait()
+        console.log( "HashKeyESGBTCContract approveBuilder is executed: %s: ", hre.network.name, ESGBTC_ADDRESS, allMetaCID ); 
+      }
 
       const level = [4, 5, 6, 7, 8]
-      const limit = [40, 40, 20, 20, 10]
+      const limit = [40, 40, 20, 20, 20]
 
       const allMetaCID = level.reduce<string>((allMeta, lvl, idx) => {
                 for ( let index=1; index<=limit[idx]; index++) {
                   const key = 'L' + lvl.toString()+ '#' + index.toString().padStart(3,'0')
-                  allMeta = allMeta + (NFT_pic_metadata.All_Green_BTC_NFT as any)[key].CID_META
+                  allMeta = allMeta + (NFT_pic_test_metadata.All_Green_BTC_NFT as any)[key].CID_META
                 }
                 return allMeta
             }, '')
      
       const levelRange = 0x0804
-      const limitList = BigNumber.from("0x0A14142828")
+      const limitList = BigNumber.from("0x1414142828")
 
       const updateCIDTx = await HashKeyESGBTCFactory.updateCID(levelRange, limitList, Buffer.from(allMetaCID))
       await updateCIDTx.wait()
@@ -118,15 +120,69 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
       const [deployer] = await ethers.getSigners();
 
+      // 2023/04/10
       // Approve HashKeyESGBTCContract to Tranfer-From the specified tokens
       const HashKeyESGBTCFactory = HashKeyESGBTC__factory.connect(ESGBTC_ADDRESS as string, deployer);
+
+      // Note: Matic test change this ABI; function UpdateESGBadgeLimit(uint256 limit)
+//      const limit = BigNumber.from('0x14141428283C3C64')
+//      const updateCIDTx = await HashKeyESGBTCFactory.UpdateESGBadgeLimit(limit)
+//      await updateCIDTx.wait()
+//      console.log("HashKeyESGBTCContract approveBuilder is executed: %s: ", hre.network.name, 
+//                        limit.toHexString(), ESGBTC_ADDRESS, 
+//                        [USDC_ADDRESS, USDT_ADDRESS, WMATIC_ADDRESS, AKRE_ADDRESS] );
+//    } 
+     
+      {
+        const level = [1, 2, 3]
+        const limit = [100, 60, 60]
+
+        const allMetaCID = level.reduce<string>((allMeta, lvl, idx) => {
+                  for ( let index=1; index<=limit[idx]; index++) {
+                    const key = 'L' + lvl.toString()+ '#' + index.toString().padStart(3,'0')
+                    allMeta = allMeta + (NFT_pic_formal_metadata.All_Green_BTC_NFT as any)[key].CID_META
+                  }
+                  return allMeta
+              }, '')
+
+  //      const levelRange = 0x0801
+  //      const limitList = BigNumber.from("0x0A141428283C3C64")
+        
+        const levelRange = 0x0301
+        const limitList = BigNumber.from("0x3C3C64")
+
+        const updateCIDTx = await HashKeyESGBTCFactory.updateCID(levelRange, limitList, Buffer.from(allMetaCID))
+        await updateCIDTx.wait()
+        console.log( "HashKeyESGBTCContract approveBuilder is executed: %s: ", hre.network.name, ESGBTC_ADDRESS, allMetaCID ); 
+      }
+
+      const level = [4, 5, 6, 7, 8]
+      const limit = [40, 40, 20, 20, 20]
+
+      const allMetaCID = level.reduce<string>((allMeta, lvl, idx) => {
+                for ( let index=1; index<=limit[idx]; index++) {
+                  const key = 'L' + lvl.toString()+ '#' + index.toString().padStart(3,'0')
+                  allMeta = allMeta + (NFT_pic_formal_metadata.All_Green_BTC_NFT as any)[key].CID_META
+                }
+                return allMeta
+            }, '')
+     
+      const levelRange = 0x0804
+      const limitList = BigNumber.from("0x1414142828")
+
+      const updateCIDTx = await HashKeyESGBTCFactory.updateCID(levelRange, limitList, Buffer.from(allMetaCID))
+      await updateCIDTx.wait()
+
+      console.log( "HashKeyESGBTCContract approveBuilder is executed: %s: ", hre.network.name, ESGBTC_ADDRESS, allMetaCID );      
       
+/*      
       // 2023/04/05
       const approveRouterTx = await HashKeyESGBTCFactory.approveBuilder(
                                         [USDC_ADDRESS, USDT_ADDRESS, WMATIC_ADDRESS, AKRE_ADDRESS] as string[])
       await approveRouterTx.wait()
       console.log("HashKeyESGBTCContract approveBuilder is executed: %s: ", hre.network.name, ESGBTC_ADDRESS, 
                                 [USDC_ADDRESS, USDT_ADDRESS, WMATIC_ADDRESS, AKRE_ADDRESS] );
+*/                                
 
     } 
                               
@@ -142,6 +198,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:HskBTCI
 
 // 2023/04/05: call updateCID in the reverted CID logic  
+// yarn deploy:matic:HskBTCI
+
+// 2023/04/09: call updateCID in new QRCode of https://www.greenbtc.club
+// yarn deploy:matic_test:HskBTCI
+
+// 2023/04/11: call updateCID for formal release
 // yarn deploy:matic:HskBTCI
 
 func.tags = ["HskBTCI"];

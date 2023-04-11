@@ -55,6 +55,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // deploy:matic_test:HskBTCD: Revert to old CID handle logic 
 // 0x999452ad1f9ed7809100106507b5317b796e8851
 
+// 2023/04/07: 
+// deploy:matic_test:HskBTCD: Update to update ESGBadgeCount in ABI
+// 0x4DC958E9F1c8950e8a8976e6d81eAbE55f6f7a21
+
 func.tags = ["HskBTCD"];
 
 export default func;
