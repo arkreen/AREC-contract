@@ -45,6 +45,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       // Approve HashKeyESGBTCContract to Tranfer-From the specified tokens
       const HashKeyESGBTCFactory = HashKeyESGBTC__factory.connect(ESGBTC_ADDRESS as string, deployer);
 
+      // Note: Matic test change this ABI; function UpdateESGBadgeLimit(uint256 limit)
+      const limit = BigNumber.from('0x14141428283C3C64')
+      const count = BigNumber.from('0x0B01020100020413')
+      const updateCIDTx = await HashKeyESGBTCFactory.UpdateESGBadgeLimit(limit, count)
+      await updateCIDTx.wait()
+      console.log("HashKeyESGBTCContract approveBuilder is executed: %s: ", hre.network.name, 
+                        limit.toHexString(), ESGBTC_ADDRESS, 
+                        [USDC_ADDRESS, USDT_ADDRESS, WMATIC_ADDRESS, AKRE_ADDRESS] );
+
+/*                        
 //      const level = [1, 2, 3, 4, 5, 6, 7, 8]
 //      const limit = [100, 60, 60, 40, 40, 20, 20, 20]     // Last 20 is just for in case over sold
 
@@ -89,6 +99,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       await updateCIDTx.wait()
 
       console.log( "HashKeyESGBTCContract approveBuilder is executed: %s: ", hre.network.name, ESGBTC_ADDRESS, allMetaCID );      
+*/
 
 /*
       ////////////////////////////////////////////////////
@@ -125,14 +136,15 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       const HashKeyESGBTCFactory = HashKeyESGBTC__factory.connect(ESGBTC_ADDRESS as string, deployer);
 
       // Note: Matic test change this ABI; function UpdateESGBadgeLimit(uint256 limit)
-//      const limit = BigNumber.from('0x14141428283C3C64')
-//      const updateCIDTx = await HashKeyESGBTCFactory.UpdateESGBadgeLimit(limit)
-//      await updateCIDTx.wait()
-//      console.log("HashKeyESGBTCContract approveBuilder is executed: %s: ", hre.network.name, 
-//                        limit.toHexString(), ESGBTC_ADDRESS, 
-//                        [USDC_ADDRESS, USDT_ADDRESS, WMATIC_ADDRESS, AKRE_ADDRESS] );
-//    } 
+      const limit = BigNumber.from('0x0000000000000000')
+      const count = BigNumber.from('0x0300000000000000')
+      const updateCIDTx = await HashKeyESGBTCFactory.UpdateESGBadgeLimit(limit, count)
+      await updateCIDTx.wait()
+      console.log("HashKeyESGBTCContract approveBuilder is executed: %s: ", hre.network.name, 
+                        limit.toHexString(), ESGBTC_ADDRESS, 
+                        [USDC_ADDRESS, USDT_ADDRESS, WMATIC_ADDRESS, AKRE_ADDRESS] );
      
+/*
       {
         const level = [1, 2, 3]
         const limit = [100, 60, 60]
@@ -174,6 +186,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       await updateCIDTx.wait()
 
       console.log( "HashKeyESGBTCContract approveBuilder is executed: %s: ", hre.network.name, ESGBTC_ADDRESS, allMetaCID );      
+*/
       
 /*      
       // 2023/04/05
@@ -204,6 +217,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:HskBTCI
 
 // 2023/04/11: call updateCID for formal release
+// yarn deploy:matic:HskBTCI
+
+// 2023/04/11: call UpdateESGBadgeLimit
+// yarn deploy:matic_test:HskBTCI
+
+// 2023/04/11: call UpdateESGBadgeLimit
 // yarn deploy:matic:HskBTCI
 
 func.tags = ["HskBTCI"];

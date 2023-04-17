@@ -321,7 +321,7 @@ contract HashKeyESGBTC is
           }
         }
 
-        uint256 levelOffet = (amountART >= 22) ? 7:  ((amountART-1)/3) * 8;
+        uint256 levelOffet = (amountART >= 22) ? 7*8 : ((amountART-1)/3) * 8;
         uint256 limit = (ESGBadgeLimit >> levelOffet) & 0xFF; 
         uint256 count = (ESGBadgeCount >> levelOffet) & 0xFF; 
 

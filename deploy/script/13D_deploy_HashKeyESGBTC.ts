@@ -59,6 +59,18 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // deploy:matic_test:HskBTCD: Update to update ESGBadgeCount in ABI
 // 0x4DC958E9F1c8950e8a8976e6d81eAbE55f6f7a21
 
+// 2023/04/11: 
+// deploy:matic_test:HskBTCD:  Upgrade to corect the bug in handling levelOffet
+// 0xfb214fa837539aefc9360d164f2800c768f034da
+
+// 2023/04/11: 
+// deploy:matic_test:HskBTCD:  Upgrade to corect the bug in handling in_mintESGBadgeMVP
+// 0x5A499C5b5d4AcCB2B15437956BAE876e109e7b58
+
+// 2023/04/11: 
+// deploy:matic:HskBTCD:  Upgrade to corect the bug in handling in_mintESGBadgeMVP
+// 0xEaA83A667eEefe4E5eFE6500C746999Cb5Da8FF7
+
 func.tags = ["HskBTCD"];
 
 export default func;

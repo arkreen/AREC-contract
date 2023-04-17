@@ -130,6 +130,8 @@
     "deploy:matic:ArtBankI": "hardhat --network matic deploy --tags ArtBankI",
     "deploy:matic:ABuilderI": "hardhat --network matic deploy --tags ABuilderI",    
     "deploy:matic:HskBTCI": "hardhat --network matic deploy --tags HskBTCI",
+    "deploy:matic:HskBTCD": "hardhat --network matic deploy --tags HskBTCD",
+    "deploy:matic:HskBTCU": "hardhat --network matic deploy --tags HskBTCU",
 
     "etherscan:matic": "hardhat --network matic etherscan-verify --api-key",
     "test": "hardhat test",
