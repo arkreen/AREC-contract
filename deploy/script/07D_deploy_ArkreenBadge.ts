@@ -35,6 +35,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:RECBadgeD
 // 0xC51678BFd8e108F12CC3e5cb80F3067Bd6aEd323
 
+// 2023/04/18: Upgrade to remove the 3-day limitation of updateCertificate and SFT limitation
+// yarn deploy:matic:RECBadgeD
+// 0x968848f24Aacfe2F3f2BD7169B7a1d5669091Eaf
+
+// 2023/04/18: restore SFT limitation
+// yarn deploy:matic:RECBadgeD
+// 0xE6264Ed46380BBf28AEF18ECB2fD1F4C92aa59F5
+
 func.tags = ["RECBadgeD"];
 
 export default func;

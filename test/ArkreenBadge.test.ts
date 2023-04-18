@@ -408,9 +408,9 @@ describe("ArkreenBadge", () => {
 
         expect(await arkreenBadge.getCertificate(certId)).to.deep.equal(offsetRecord2)
 
-        await time.increaseTo(lastBlock.timestamp + 3 *24 * 3600 + 1)    // 3 days
-        await expect(arkreenBadge.connect(owner1).updateCertificate(certId, owner1.address, "Kitty","Alice",""))
-                .to.be.revertedWith("ARB: Time Elapsed")
+//        await time.increaseTo(lastBlock.timestamp + 3 *24 * 3600 + 1)    // 3 days
+//        await expect(arkreenBadge.connect(owner1).updateCertificate(certId, owner1.address, "Kitty","Alice",""))
+//                .to.be.revertedWith("ARB: Time Elapsed")
       });
     })
 

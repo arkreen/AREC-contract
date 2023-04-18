@@ -47,7 +47,7 @@ contract HashKeyESGBTC is
     uint256 public maxRECToGreenBTC;
 
     mapping(uint256 => uint256) public levelOrder;      // Green Id -> level + order in level
-    mapping(uint256 => string)  public cidBadge; 
+    mapping(uint256 => string)  public cidBadge;        // Green Id -> cID
 
      // Events
 
@@ -459,6 +459,7 @@ contract HashKeyESGBTC is
     /**
      * @dev Hook that is called before any token transfer. Blocking transfer unless minting
      */
+/*    
     function _beforeTokenTransfer(
         address from,
         address to,
@@ -467,6 +468,7 @@ contract HashKeyESGBTC is
         require(from == address(0), 'ARB: Transfer Not Allowed');
         super._beforeTokenTransfer(from, to, tokenId);
     }
+*/
 
     /**
      * @dev get all the brick IDs with in th scope specified by the paramters

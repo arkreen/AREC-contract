@@ -273,7 +273,7 @@ describe("ArkreenRECIssuanceExt", () => {
           await arkreenRECTokenESG.connect(maker2).approve(arkreenRECBank.address, expandTo9Decimals(9000))   
 
           const limit= BigNumber.from('0x0a141428283c3c64')
-          await hashKeyESGBTC.UpdateESGBadgeLimit(limit)
+          await hashKeyESGBTC.UpdateESGBadgeLimit(limit, 0)
 
         }
       });
@@ -339,6 +339,9 @@ describe("ArkreenRECIssuanceExt", () => {
         const ownerInfo = [ owner1.address, 1, bricksToGreen.xor(BigNumber.from(1).shl(255))]   // Mask the highest bit
         expect(await hashKeyESGBTC.ownerBricks(1)).to.deep.equal(ownerInfo)
         expect(await hashKeyESGBTC.ownerBricks(9)).to.deep.equal(ownerInfo)
+
+        const ESGID = await hashKeyESGBTC.totalSupply()
+        await hashKeyESGBTC.connect(owner1).transferFrom(owner1.address, owner2.address, ESGID)
 
       });      
 
@@ -417,7 +420,7 @@ describe("ArkreenRECIssuanceExt", () => {
       });      
 
       //////////////////////////////////////
-/*      
+     
       it("ActionBuilder: actionBuilderBadge with Bank", async () => {
         // Add ART token
         await arkreenRECBank.addNewART( arkreenRECToken.address,  maker1.address)
@@ -648,7 +651,7 @@ describe("ArkreenRECIssuanceExt", () => {
 
         }   
       })
-*/
+
     })  
 
 });

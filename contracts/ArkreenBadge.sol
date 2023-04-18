@@ -279,7 +279,7 @@ contract ArkreenBadge is
         string calldata offsetMessage
     ) external virtual {
         require(msg.sender == ownerOf(tokenId), 'ARB: Not Owner');
-        require(block.timestamp < (certificates[tokenId].creationTime + 3 days), 'ARB: Time Elapsed');
+//      require(block.timestamp < (certificates[tokenId].creationTime + 3 days), 'ARB: Time Elapsed');
 
         if (beneficiary != address(0)) {
             certificates[tokenId].beneficiary = beneficiary;

@@ -71,6 +71,18 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // deploy:matic:HskBTCD:  Upgrade to corect the bug in handling in_mintESGBadgeMVP
 // 0xEaA83A667eEefe4E5eFE6500C746999Cb5Da8FF7
 
+// 2023/04/17: 
+// deploy:matic:HskBTCD:  try to mask the check in setBrick to save gas usage for minting audience NFT 
+// 0x8912948ea73281d152314c055dc1e0233eea6473
+
+// 2023/04/18: 
+// yarn deploy:matic_test:HskBTCD:  Upgrade to allow NFT transfer
+// 0xA6dF97C0a613AbEc9021a3037574Bb95f26B9968
+
+// 2023/04/18: 
+// yarn deploy:matic:HskBTCD: Upgrade to allow NFT transfer
+// 0xFF5088639F7378c66117150f066A353870B4EC61
+
 func.tags = ["HskBTCD"];
 
 export default func;
