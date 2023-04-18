@@ -6,7 +6,7 @@ import '@nomiclabs/hardhat-ethers'
 import "hardhat-deploy"
 import "@nomiclabs/hardhat-etherscan"
 import "hardhat-storage-layout"
-//import '@nomiclabs/hardhat-waffle'
+import '@nomiclabs/hardhat-waffle'
 import "hardhat-contract-sizer"
 import "hardhat-gas-reporter"
 import "solidity-coverage"
@@ -71,7 +71,7 @@ const config: HardhatUserConfig = {
     matic: {
       url: getURL("matic"),
       chainId: 137,
-      accounts: [process.env.MATIC_PRIVATE_KEY as string],
+      accounts: [process.env.MATIC_PRIVATE_KEY as string, process.env.MATIC_CONTROLLER_KEY as string],
     },
     BSC_TEST: {
       url: "https://data-seed-prebsc-2-s1.binance.org:8545/",

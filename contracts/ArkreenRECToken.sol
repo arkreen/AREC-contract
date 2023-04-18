@@ -49,6 +49,7 @@ contract ArkreenRECToken is
 //    uint256 partialARECID;                                // AREC NFT ID partialy offset
 //    uint256 partialAvailableAmount;                       // Amount available for partial offset
     uint256 public triggerUpgradeAmount;                    // The amount to trigger solidify upgrade
+    address public climateBuilder;
 
     // Events
     event OffsetFinished(address indexed offsetEntity, uint256 amount, uint256 offsetId);
@@ -70,10 +71,14 @@ contract ArkreenRECToken is
         _disableInitializers();
     }
 
-    function initialize(address arkRegistry, address issuer) external virtual initializer {
+    function initialize(address arkRegistry, address issuer, string calldata name, string calldata symbol) external virtual initializer {
         __Ownable_init_unchained();
         __UUPSUpgradeable_init();        
-        __ERC20_init_unchained(NAME, SYMBOL);
+        if(bytes(symbol).length == 0) {
+          __ERC20_init_unchained(NAME, SYMBOL);
+        } else {
+          __ERC20_init_unchained(name, symbol);          
+        }
         arkreenRegistry = arkRegistry;
         issuerREC = issuer;
     }
@@ -92,7 +97,7 @@ contract ArkreenRECToken is
      * @dev Offset the RE token by burning the tokens
      */
     function commitOffset(uint256 amount) public virtual whenNotPaused returns (uint256 offsetActionId) {
-        offsetActionId = _offset(_msgSender(), amount);
+        offsetActionId = _offset(msg.sender, _msgSender(), amount);
     }
 
     /**
@@ -102,13 +107,13 @@ contract ArkreenRECToken is
         external virtual whenNotPaused returns (uint256 offsetActionId) 
     {
         _spendAllowance(account, _msgSender(), amount);
-        offsetActionId = _offset(account, amount);
+        offsetActionId = _offset(account, account, amount);
     }
    
     /**
      * @dev Internal offset function of the RE token, the RE tokens are burned
      */
-    function _offset(address account, uint256 amount) internal virtual returns (uint256 offsetActionId) {
+    function _offset(address account, address owner, uint256 amount) internal virtual returns (uint256 offsetActionId) {
 
         if(totalOffset < triggerUpgradeAmount) {                                // To check whether triggering upgrade
             uint256 offsetAmount = triggerUpgradeAmount - totalOffset;
@@ -118,10 +123,10 @@ contract ArkreenRECToken is
 
             // Track total retirement amount in TCO2 factory
             address badgeContractU = IArkreenRegistry(arkreenRegistry).getArkreenRetirement();
-            offsetActionId = IArkreenBadge(badgeContractU).registerOffset(account, issuerREC, offsetAmount, 0);
+            offsetActionId = IArkreenBadge(badgeContractU).registerOffset(owner, issuerREC, offsetAmount, 0);
             totalOffset += offsetAmount;
 
-            emit OffsetFinished(account, offsetAmount, offsetActionId);
+            emit OffsetFinished(owner, offsetAmount, offsetActionId);
             if(amount == 0) {
                 return offsetActionId;
             }
@@ -135,7 +140,6 @@ contract ArkreenRECToken is
         // Track total retirement amount in TCO2 factory
         uint256 steps = 0;
         uint256 curAREC; 
-        RECData memory recData;
         uint256 amountFilled = 0; 
         uint256 amountRegister;
 
@@ -145,17 +149,17 @@ contract ArkreenRECToken is
         uint256 amountOffset;
         uint256 detailsCounter;
 
-        (partialAvailableAmount, partialARECID) = IArkreenBadge(badgeContract).getDetailStatus();
+        (partialAvailableAmount, partialARECID) = IArkreenBadge(badgeContract).getDetailStatus(address(this));
 
         if(amount > partialAvailableAmount) {
             while(steps < MAX_SKIP) {
                 if(partialAvailableAmount == 0) {
-                    curAREC = allARECLiquidized[latestARECID];
-                    _remove(latestARECID, curAREC);
-                    IArkreenRECIssuance(issuanceAREC).safeTransferFrom(address(this), badgeContract, curAREC);
-                    
-                    recData = IArkreenRECIssuance(issuanceAREC).getRECData(curAREC);
-                    partialAvailableAmount = recData.amountREC;
+                    curAREC = allARECLiquidized[latestARECID];        // Get the ID at AREC NFT loop head
+                    _remove(latestARECID, curAREC);                   // Remove from the loop
+                    IArkreenRECIssuance(issuanceAREC).safeTransferFrom(address(this), badgeContract, curAREC);  // Send to Badge contract
+
+                    (, uint128 amountREC, , ) = IArkreenRECIssuance(issuanceAREC).getRECDataCore(curAREC);
+                    partialAvailableAmount = amountREC;
                     partialARECID = curAREC;
                 }
 
@@ -179,10 +183,10 @@ contract ArkreenRECToken is
         amountOffset = (steps==0) ? amount: amountFilled;
         _burn(account, amountOffset);
 
-        offsetActionId = IArkreenBadge(badgeContract).registerOffset(account, issuerREC, amountOffset, FLAG_OFFSET+detailsCounter);
+        offsetActionId = IArkreenBadge(badgeContract).registerOffset(owner, issuerREC, amountOffset, FLAG_OFFSET+detailsCounter);
         totalOffset += amountOffset;
 
-        emit OffsetFinished(account, amountOffset, offsetActionId);
+        emit OffsetFinished(owner, amountOffset, offsetActionId);
     }
 
     /**
@@ -202,14 +206,15 @@ contract ArkreenRECToken is
     ) external virtual whenNotPaused {
         
         // Offset the specified amount
-        uint256 offsetActionId = commitOffset(amount);
+        address owner = _msgSender();
+        uint256 offsetActionId = _offset(msg.sender, owner, amount);     // maybe called from climate operator, so use msg.sender
         uint256[] memory offsetActionIds = new uint256[](1);
         offsetActionIds[0] = offsetActionId;
 
         // Issue the offset certificate NFT
         address badgeContract = IArkreenRegistry(arkreenRegistry).getArkreenRetirement();
         IArkreenBadge(badgeContract).mintCertificate(
-                        _msgSender(), beneficiary, offsetEntityID, beneficiaryID, offsetMessage, offsetActionIds);
+                        owner, beneficiary, offsetEntityID, beneficiaryID, offsetMessage, offsetActionIds);
     }
 
     /**
@@ -226,14 +231,13 @@ contract ArkreenRECToken is
         address solidifier = _msgSender();
         address issuanceAREC = IArkreenRegistry(arkreenRegistry).getRECIssuance();
 
-        RECData memory recData;
         uint256 skips = 0;
         uint256 curAREC = allARECLiquidized[latestARECID];
         uint256 preAREC = latestARECID;
 
         while (skips <= MAX_SKIP) {
-            recData = IArkreenRECIssuance(issuanceAREC).getRECData(curAREC);
-            uint256 amountAREC = recData.amountREC;
+            (, uint128 amountREC, , ) = IArkreenRECIssuance(issuanceAREC).getRECDataCore(curAREC);
+            uint256 amountAREC = amountREC;
 
             if(amount < amountAREC) {
                 require(solidifiedAmount != 0, 'ART: Amount Too Less');                // Must solidify the oldest AREC first
@@ -253,6 +257,7 @@ contract ArkreenRECToken is
         }
 
         _burn(solidifier, solidifiedAmount);                    // solidifiedAmount must be more than 0 here, burn once to save gas
+        totalLiquidized -= solidifiedAmount;                    // 
 
         if(chargeOn) {
             feeSolidify = solidifiedAmount * ratioFeeToSolidify / 10000;
@@ -291,9 +296,9 @@ contract ArkreenRECToken is
         // Check calling from REC Manager
         require( IArkreenRegistry(arkreenRegistry).getRECIssuance() == msg.sender, 'ART: Not From REC Issuance');
 
-        RECData memory recData = IArkreenRECIssuance(msg.sender).getRECData(tokenId);
-        require(recData.status == uint256(RECStatus.Certified), 'ART: Wrong Status');
-
+        (, uint128 amountREC, uint8 status, ) = IArkreenRECIssuance(msg.sender).getRECDataCore(tokenId);
+        require(status == uint256(RECStatus.Certified), 'ART: Wrong Status');
+        
         if(latestARECID == 0) {
             allARECLiquidized[tokenId] = tokenId;                           // build the loop list
             latestARECID = tokenId;
@@ -303,16 +308,16 @@ contract ArkreenRECToken is
             latestARECID = tokenId;                                         // refresh the newest AREC
         }
 
-        totalLiquidized += recData.amountREC;
+        totalLiquidized += amountREC;
 
         // Prepare liquidization fee 
         uint256 fee = 0;
         if(ratioLiquidizedFee != 0 && receiverFee != address(0)) {
-            fee = recData.amountREC * ratioLiquidizedFee / 10000;
+            fee = amountREC * ratioLiquidizedFee / 10000;
             _mint(receiverFee, fee);
         }
 
-        _mint(from, recData.amountREC - fee);
+        _mint(from, amountREC - fee);
 
         return this.onERC721Received.selector;
     }
@@ -328,12 +333,22 @@ contract ArkreenRECToken is
         uint256 curAREC = allARECLiquidized[latestARECID];
         for(uint256 index; index < number; index++) {
             amountAREC[index].ARECID = curAREC;
-            amountAREC[index].amountREC = IArkreenRECIssuance(issuanceAREC).getRECData(curAREC).amountREC;
+            (, uint128 amountREC, , ) = IArkreenRECIssuance(issuanceAREC).getRECDataCore(curAREC);
+            amountAREC[index].amountREC = amountREC;
             numAREC ++;
             if(curAREC == latestARECID) break;
             curAREC = allARECLiquidized[curAREC];
         }
     }  
+
+    function _msgSender() internal override view returns (address signer) {
+        signer = msg.sender;
+        if (msg.data.length>=20 && (signer == climateBuilder)) {
+            assembly {
+                signer := shr(96,calldataload(sub(calldatasize(),20)))
+            }
+        }    
+    }
 
     /**
      * @dev set the ratio of liquidization fee
@@ -342,6 +357,14 @@ contract ArkreenRECToken is
         require(ratio <10000, 'ART: Wrong Data');
         ratioLiquidizedFee = ratio;
     }  
+
+    /**
+     * @dev Change the REC issuance address
+     */     
+    function setIssuerREC(address issuer) external onlyOwner {
+        require(issuer != address(0), 'ART: Wrong Address');
+        issuerREC = issuer;
+    }
 
     /**
      * @dev set the ratio of solidify fee to Solidify from ART to AREC
@@ -361,5 +384,9 @@ contract ArkreenRECToken is
 
     function setTriggerAmount(uint256 amount) external onlyOwner {
         triggerUpgradeAmount = amount;
+    }
+
+    function setClimateBuilder(address builder) external onlyOwner {
+        climateBuilder = builder;
     }
 }

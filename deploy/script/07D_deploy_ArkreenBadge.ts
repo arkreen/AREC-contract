@@ -19,9 +19,29 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     console.log("ArkreenBadge deployed to %s: ", hre.network.name, ArkreenBadge.address);
 };
 
-// 2023/03/03
-// Upgraded to check caller in registerDetail
-// 0x7Db78703C9B1561A5F0810c96449AFdE6eA9096b
+// 2023/02/26: 
+// yarn deploy:matic_test:RECBadgeD
+// 0xD12E75566CeAa2bA669EDEbBA524359D7564b2c5
+
+// 2023/03/02: 
+// yarn deploy:matic_test:RECBadgeD
+// 0x619f4a175B17C51cC11e7afB85e50a78b3899900
+
+// 2023/03/03: Upgrade to trace back AREC NFT based on asset type
+// yarn deploy:matic_test:RECBadgeD
+// 0x2cc8fFc86eAbdAA486d5408C8813813eb60b507a
+
+// 2023/04/02: Upgrade to support updateCID
+// yarn deploy:matic:RECBadgeD
+// 0xC51678BFd8e108F12CC3e5cb80F3067Bd6aEd323
+
+// 2023/04/18: Upgrade to remove the 3-day limitation of updateCertificate and SFT limitation
+// yarn deploy:matic:RECBadgeD
+// 0x968848f24Aacfe2F3f2BD7169B7a1d5669091Eaf
+
+// 2023/04/18: restore SFT limitation
+// yarn deploy:matic:RECBadgeD
+// 0xE6264Ed46380BBf28AEF18ECB2fD1F4C92aa59F5
 
 func.tags = ["RECBadgeD"];
 

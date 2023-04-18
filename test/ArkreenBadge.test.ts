@@ -66,7 +66,7 @@ describe("ArkreenBadge", () => {
       await arkreenRECIssuance.deployed()
 
       const ArkreenRECTokenFactory = await ethers.getContractFactory("ArkreenRECToken")
-      arkreenRECToken = await upgrades.deployProxy(ArkreenRECTokenFactory,[arkreenRegistry.address, manager.address]) as ArkreenRECToken
+      arkreenRECToken = await upgrades.deployProxy(ArkreenRECTokenFactory,[arkreenRegistry.address, manager.address, '', '']) as ArkreenRECToken
       await arkreenRECToken.deployed()     
       
       const ArkreenRetirementFactory = await ethers.getContractFactory("ArkreenBadge")
@@ -366,6 +366,12 @@ describe("ArkreenBadge", () => {
         expect( await arkreenBadge.tokenURI(certId)).to.equal("https://www.arkreen.com/badge/1");     
         await arkreenBadge.setBaseURI("https://www.arkreen.com/offset/")
         expect( await arkreenBadge.tokenURI(certId)).to.equal("https://www.arkreen.com/offset/1"); 
+
+        await arkreenBadge.updateCID([certId], ["bafkreidotvli35mt5rjywkps7aqxo3elc5dh6dlynd6yxcyipnfaghkoe4"])
+        const cid = await arkreenBadge.cidBadge(certId)
+        expect(cid).to.equal("bafkreidotvli35mt5rjywkps7aqxo3elc5dh6dlynd6yxcyipnfaghkoe4"); 
+        expect( await arkreenBadge.tokenURI(certId)).to.equal("https://bafkreidotvli35mt5rjywkps7aqxo3elc5dh6dlynd6yxcyipnfaghkoe4.ipfs.w3s.link"); 
+
       });
     })
 
@@ -402,9 +408,9 @@ describe("ArkreenBadge", () => {
 
         expect(await arkreenBadge.getCertificate(certId)).to.deep.equal(offsetRecord2)
 
-        await time.increaseTo(lastBlock.timestamp + 3 *24 * 3600 + 1)    // 3 days
-        await expect(arkreenBadge.connect(owner1).updateCertificate(certId, owner1.address, "Kitty","Alice",""))
-                .to.be.revertedWith("ARB: Time Elapsed")
+//        await time.increaseTo(lastBlock.timestamp + 3 *24 * 3600 + 1)    // 3 days
+//        await expect(arkreenBadge.connect(owner1).updateCertificate(certId, owner1.address, "Kitty","Alice",""))
+//                .to.be.revertedWith("ARB: Time Elapsed")
       });
     })
 

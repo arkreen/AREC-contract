@@ -569,7 +569,7 @@ contract ArkreenMinerV10X is
             }
         }
         return numberGame <= numberReal;
-    }   
+    }
 
     /**
      * @dev Get the token ID of the specified miner 

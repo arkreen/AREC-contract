@@ -24,7 +24,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //  } 
     else if(hre.network.name === 'matic')  {              // MATIC Mainnet
       AKREToken_ADDRESS   = "0x960C67B8526E6328b30Ed2c2fAeA0355BEB62A83"
-      REGISTRY_ADDRESS   = "0x3E8A27dA0BF241f588141659cBb6Bd39717527F1"
+//    REGISTRY_ADDRESS    = "0x3E8A27dA0BF241f588141659cBb6Bd39717527F1"          // Version for test
+      REGISTRY_ADDRESS    = "0xb17faCaCA106fB3D216923DB6CaBFC7C0517029d"          // 2023/3/23: Normal Release
     } 
 
     const { deployments, getNamedAccounts } = hre;
@@ -41,10 +42,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
               methodName: "initialize",   // Function to call when deployed first time.
               args: [AKREToken_ADDRESS, REGISTRY_ADDRESS]
             },
-            onUpgrade: {
-              methodName: "postUpdate", // method to be executed when the proxy is upgraded (not first deployment)
-              args: [],
-            },             
+//            onUpgrade: {
+//              methodName: "postUpdate", // method to be executed when the proxy is upgraded (not first deployment)
+//              args: [],
+//            },             
           },
         },
         log: true,
@@ -53,6 +54,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     console.log("ArkreenRECIssuance deployed to %s: ", hre.network.name, ArkreenRECIssuance.address);
 };
+
+// 2023/03/22
+// yarn deploy:matic:RECIssue
+// Proxy:           0x954585adF9425F66a0a2FD8e10682EB7c4F1f1fD
+// Implementation:  0x345762D12F046F7c0EBDbBfDC1B068eEE2eF3fDC
 
 func.tags = ["RECIssue"];
 

@@ -26,6 +26,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     console.log("ArkreenRegistry deployed to %s: ", hre.network.name, ArkreenRegistry.address);
 };
 
+// 2023/03/22
+// yarn deploy:matic:gRegistry
+// Proxy:           0xb17facaca106fb3d216923db6cabfc7c0517029d
+// Implementation:  0x8c2a6a03b4d2936b029e561acf9ddc502aca72fc
+
 func.tags = ["gRegistry"];
 
 export default func;

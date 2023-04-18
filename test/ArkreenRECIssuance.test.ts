@@ -2,11 +2,13 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { expect } from "chai";
 import { constants, BigNumber, Contract } from 'ethers'
 import { ethers, network, upgrades } from "hardhat";
+import { ArkreenRECIssuanceExt__factory } from "../typechain";
 
 import {
     ArkreenTokenTest,
     ArkreenMiner,
     ArkreenRECIssuance,
+    ArkreenRECIssuanceExt,
     ArkreenRegistry,
     ArkreenRECToken,
     ArkreenBadge
@@ -37,12 +39,15 @@ describe("ArkreenRECIssuance", () => {
 
     let AKREToken:                    ArkreenTokenTest
     let arkreenMiner:                 ArkreenMiner
-    let arkreenRegistry:             ArkreenRegistry
+    let arkreenRegistry:              ArkreenRegistry
     let arkreenRECIssuance:           ArkreenRECIssuance
+    let arkreenRECIssuanceExt:        ArkreenRECIssuanceExt
+
+
     let arkreenRECToken:              ArkreenRECToken
     let arkreenRetirement:            ArkreenBadge
 
-    const FORMAL_LAUNCH       = 1682913600;         // 2023-05-01, 12:00:00
+    const FORMAL_LAUNCH = 1714536000;         // 2024-05-01, 12:00:00
     const Miner_Manager       = 0         
 
     async function deployFixture() {
@@ -65,8 +70,14 @@ describe("ArkreenRECIssuance", () => {
                                   [AKREToken.address, arkreenRegistry.address]) as ArkreenRECIssuance
       await arkreenRECIssuance.deployed()
 
+      const ArkreenRECIssuanceExtFactory = await ethers.getContractFactory("ArkreenRECIssuanceExt")
+      const arkreenRECIssuanceExt = await ArkreenRECIssuanceExtFactory.deploy()
+      await arkreenRECIssuanceExt.deployed()    
+      
+      await arkreenRECIssuance.setESGExtAddress(arkreenRECIssuanceExt.address)
+
       const ArkreenRECTokenFactory = await ethers.getContractFactory("ArkreenRECToken")
-      arkreenRECToken = await upgrades.deployProxy(ArkreenRECTokenFactory,[arkreenRegistry.address, manager.address]) as ArkreenRECToken
+      arkreenRECToken = await upgrades.deployProxy(ArkreenRECTokenFactory,[arkreenRegistry.address, manager.address,'','']) as ArkreenRECToken
       await arkreenRECToken.deployed()     
       
       const ArkreenRetirementFactory = await ethers.getContractFactory("ArkreenBadge")
@@ -154,6 +165,7 @@ describe("ArkreenRECIssuance", () => {
       let TokenB: ArkreenTokenTest
       let TokenC: ArkreenTokenTest
       let TokenD: ArkreenTokenTest
+      let arkreenRECIssuanceExt: ArkreenRECIssuanceExt
 
       beforeEach(async () => {
         const ERC20Factory = await ethers.getContractFactory("ArkreenTokenTest");
@@ -164,7 +176,8 @@ describe("ArkreenRECIssuance", () => {
         TokenC = await ERC20Factory.deploy(10_000_000_000);
         await TokenC.deployed();  
         TokenD = await ERC20Factory.deploy(10_000_000_000);
-        await TokenD.deployed();            
+        await TokenD.deployed();     
+        arkreenRECIssuanceExt = ArkreenRECIssuanceExt__factory.connect(arkreenRECIssuance.address, deployer);       
         
       })
 
@@ -189,7 +202,7 @@ describe("ArkreenRECIssuance", () => {
                             [TokenD.address, price4] ]
 
         let allARECMintPrice
-        allARECMintPrice = await arkreenRECIssuance.allARECMintPrice()
+        allARECMintPrice = await arkreenRECIssuanceExt.allARECMintPrice()
         expect(allARECMintPrice).to.deep.eq(priceList0);
 
         //  Remove TokenA
@@ -198,7 +211,7 @@ describe("ArkreenRECIssuance", () => {
                               [TokenD.address, price4],
                               [TokenB.address, price2],
                               [TokenC.address, price3] ]
-        allARECMintPrice = await arkreenRECIssuance.allARECMintPrice()                            
+        allARECMintPrice = await arkreenRECIssuanceExt.allARECMintPrice()                            
         expect(allARECMintPrice).to.deep.eq(priceList1);   
         
 //        console.log('allARECMintPrice', allARECMintPrice, priceList1)
@@ -209,7 +222,7 @@ describe("ArkreenRECIssuance", () => {
                               [TokenD.address, price4],
                               [TokenB.address, price4],
                               [TokenC.address, price3] ]
-        allARECMintPrice = await arkreenRECIssuance.allARECMintPrice()                            
+        allARECMintPrice = await arkreenRECIssuanceExt.allARECMintPrice()                            
         expect(allARECMintPrice).to.deep.eq(priceList2);   
 
         //  add TokenA
@@ -220,7 +233,7 @@ describe("ArkreenRECIssuance", () => {
                               [TokenC.address, price3],
                               [TokenA.address, price2],
                              ]
-        allARECMintPrice = await arkreenRECIssuance.allARECMintPrice()                            
+        allARECMintPrice = await arkreenRECIssuanceExt.allARECMintPrice()                            
         expect(allARECMintPrice).to.deep.eq(priceList3);
         
         // Not Owner
@@ -319,7 +332,7 @@ describe("ArkreenRECIssuance", () => {
                         BigNumber.from(RECStatus.Pending),
                         "bafybeihepmxz4ytc4ht67j73nzurkvsiuxhsmxk27utnopzptpo7wuigte", 
                         'Beijing',
-                        "", "" ]
+                        "", "", 0 ]
 
         expect(await arkreenRECIssuance.getRECData(1)).to.deep.eq(recData);
 
@@ -443,7 +456,7 @@ describe("ArkreenRECIssuance", () => {
                         BigNumber.from(1000), 
                         BigNumber.from(RECStatus.Pending),
                         "bafybeihepmxz4ytc4ht67j73nzurkvsiuxhsmxk27utnopzptpo7wuigte", 
-                        region, url, memo ]
+                        region, url, memo, 0 ]
 
         expect(await arkreenRECIssuance.getRECData(tokenID)).to.deep.eq(recData);     
       })
@@ -456,6 +469,7 @@ describe("ArkreenRECIssuance", () => {
       const startTime = 1564888526
       const endTime   = 1654888526
       const mintFee = expandTo18Decimals(100)    
+      let arkreenRECIssuanceExt: ArkreenRECIssuanceExt
 
       beforeEach(async () => {
         recMintRequest = { 
@@ -479,20 +493,25 @@ describe("ArkreenRECIssuance", () => {
         await arkreenRegistry.setArkreenMiner(arkreenMiner.address)        
         await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
         tokenID = await arkreenRECIssuance.totalSupply()
+
+        arkreenRECIssuanceExt = ArkreenRECIssuanceExt__factory.connect(arkreenRECIssuance.address, deployer);
+
       })
 
       it("ArkreenRECIssuance: cancelRECRequest Abnormal", async () => {
-        await expect(arkreenRECIssuance.connect(owner2).cancelRECRequest(tokenID ))
+        await expect(arkreenRECIssuanceExt.connect(owner2).cancelRECRequest(tokenID ))
                 .to.be.revertedWith("AREC: Not Owner") 
 
-        await expect(arkreenRECIssuance.connect(owner1).cancelRECRequest(tokenID))
+        await expect(arkreenRECIssuanceExt.connect(owner1).cancelRECRequest(tokenID))
                 .to.be.revertedWith("AREC: Wrong Status") 
      
       })
 
       it("ArkreenRECIssuance: cancelRECRequest Normal", async () => {
         await arkreenRECIssuance.connect(manager).rejectRECRequest(tokenID)  
-        await expect(arkreenRECIssuance.connect(owner1).cancelRECRequest(tokenID))
+        await expect(arkreenRECIssuanceExt.connect(owner1).cancelRECRequest(tokenID))
+                .to.emit(AKREToken, 'Transfer')
+                .withArgs(arkreenRECIssuanceExt.address, owner1.address, mintFee)
                 .to.emit(arkreenRECIssuance, "RECCanceled")
                 .withArgs(owner1.address, tokenID)
 
@@ -501,7 +520,7 @@ describe("ArkreenRECIssuance", () => {
                         BigNumber.from(1000), 
                         BigNumber.from(RECStatus.Cancelled),
                         "bafybeihepmxz4ytc4ht67j73nzurkvsiuxhsmxk27utnopzptpo7wuigte", 
-                        "Beijing", "", "" ]
+                        "Beijing", "", "", 0 ]
 
         expect(await arkreenRECIssuance.getRECData(tokenID)).to.deep.eq(recData);
 
@@ -567,7 +586,7 @@ describe("ArkreenRECIssuance", () => {
                         BigNumber.from(1000), 
                         BigNumber.from(RECStatus.Certified),
                         "bafybeihepmxz4ytc4ht67j73nzurkvsiuxhsmxk27utnopzptpo7wuigte", 
-                        "Beijing", "", "" ]
+                        "Beijing", "", "", 0 ]
 
         expect(await arkreenRECIssuance.getRECData(tokenID)).to.deep.eq(recData);
         expect(await arkreenRECIssuance.allRECByIssuer(manager.address)).to.deep.eq(BigNumber.from(1000));

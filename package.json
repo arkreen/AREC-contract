@@ -13,6 +13,7 @@
     "storage": "hardhat check",
     "flatten": "hardhat flatten",
     "clean": "hardhat clean",
+    "size": "hardhat size-contracts",
     "deploy": "hardhat run scripts/deploy.ts",
     "deploy:local:ARKE": "hardhat --network localhost deploy --tags ARKE",
     "deploy:local:gMiner": "hardhat --network localhost deploy --tags gMiner",
@@ -26,7 +27,8 @@
     "deploy:rinkeby:gMiner": "hardhat --network rinkeby deploy --tags gMiner",
     "deploy:rinkeby:gMinerU": "hardhat --network rinkeby deploy --tags gMinerU",
     "verify:rinkeby": "npx hardhat verify --network rinkeby <ADDRESS> <PARAMS>",
-    "deploy:matic_test:ARKE": "hardhat --network matic_test deploy --tags ARKE",
+
+    "deploy:matic_test:ARKE": "hardhat --network matic_test deploy --tags ARKE --reset",
     "deploy:matic_test:gMiner": "hardhat --network matic_test deploy --tags gMiner",
     "deploy:matic_test:gMinerU": "hardhat --network matic_test deploy --tags gMinerU",
     "deploy:matic_test:AMiner": "hardhat --network matic_test deploy --tags AMiner",
@@ -41,33 +43,51 @@
     "deploy:matic_test:gRegistry": "hardhat --network matic_test deploy --tags gRegistry",
     "deploy:matic_test:gRegistryU": "hardhat --network matic_test deploy --tags gRegistryU",
     "deploy:matic_test:gRegistryP": "hardhat --network matic_test deploy --tags gRegistryP",
-
     "deploy:matic_test:RECIssue": "hardhat --network matic_test deploy --tags RECIssue",
-    "deploy:matic_test:RECIssueD": "hardhat --network matic_test deploy --tags RECIssueD",
+    "deploy:matic_test:RECIssueD": "hardhat --network matic_test deploy --tags RECIssueD --reset",
     "deploy:matic_test:RECIssueU": "hardhat --network matic_test deploy --tags RECIssueU",
-
-    "deploy:matic_test:RECToken": "hardhat --network matic_test deploy --tags RECToken",
-    "deploy:matic_test:RECTokenD": "hardhat --network matic_test deploy --tags RECTokenD",
+    "deploy:matic_test:RECToken": "hardhat --network matic_test deploy --tags RECToken --reset",
+    "deploy:matic_test:RECTokenD": "hardhat --network matic_test deploy --tags RECTokenD --reset",
     "deploy:matic_test:RECTokenU": "hardhat --network matic_test deploy --tags RECTokenU",
-
     "deploy:matic_test:RECRetire": "hardhat --network matic_test deploy --tags RECRetire",
     "deploy:matic_test:RECBadgeU": "hardhat --network matic_test deploy --tags RECBadgeU",
-
     "deploy:matic_test:gAKRE": "hardhat --network matic_test deploy --tags gAKRE",
     "deploy:matic_test:gAKREV2": "hardhat --network matic_test deploy --tags gAKREV2",
     "deploy:matic_test:gAKRE2U": "hardhat --network matic_test deploy --tags gAKRE2U",
     "deploy:matic_test:RECBadgeD": "hardhat --network matic_test deploy --tags RECBadgeD",
-
     "deploy:matic_test:arkReward": "hardhat --network matic_test deploy --tags arkReward",
+
+    "deploy:matic_test:ABuilder": "hardhat --network matic_test deploy --tags ABuilder",
+    "deploy:matic_test:HskBTC": "hardhat --network matic_test deploy --tags HskBTC --reset",
+    "deploy:matic_test:gRegistryD": "hardhat --network matic_test deploy --tags gRegistryD --reset",
+    "deploy:matic_test:RECIssueExtD": "hardhat --network matic_test deploy --tags RECIssueExtD --reset",   
+    "deploy:matic_test:gRegistryI": "hardhat --network matic_test deploy --tags gRegistryI", 
+    "deploy:matic_test:RECIssueI": "hardhat --network matic_test deploy --tags RECIssueI", 
+
+    "deploy:matic_test:ABuilderI": "hardhat --network matic_test deploy --tags ABuilderI",
+    "deploy:matic_test:HskBTCI": "hardhat --network matic_test deploy --tags HskBTCI",
+    "deploy:matic_test:HskBTCD": "hardhat --network matic_test deploy --tags HskBTCD --reset",
+    "deploy:matic_test:HskBTCU": "hardhat --network matic_test deploy --tags HskBTCU",
+
+    "deploy:matic_test:ArtBank": "hardhat --network matic_test deploy --tags ArtBank",
+    "deploy:matic_test:ABuilderD": "hardhat --network matic_test deploy --tags ABuilderD",
+    "deploy:matic_test:ABuilderU": "hardhat --network matic_test deploy --tags ABuilderU",
+    "deploy:matic_test:ArtBankI": "hardhat --network matic_test deploy --tags ArtBankI",
+
+    "deploy:matic_test:RECTokenR": "hardhat --network matic_test deploy --tags RECTokenR",
+
+    "deploy:matic_test:UUPSProxy": "hardhat --network matic_test deploy --tags UUPSProxy",
+
     "verify:matic_test": "npx hardhat verify --network matic_test <ADDRESS> <PARAMS>",
-    "confirmAuto:matic_test": "npx hardhat run --network matic_test ./deploy/confirmIssuance.ts",
+    "confirmAuto:matic_test": "hardhat run --network matic_test ./deploy/confirmIssuance.ts",
+    "claim:matic_test": "hardhat run --network matic_test ./deploy/matic-gatherer-v2.ts",
+
     "deploy:matic_test:all": "hardhat --network matic_test deploy",
     "etherscan:matic_test": "hardhat --network matic_test etherscan-verify --api-key",
     "deploy_ARKE_test": "hardhat run --network matic_test scripts/deployArkreenToken.ts",
     "deploy_ARKE_matic": "hardhat run --network matic scripts/deployArkreenToken.ts",
     "deploy:matic_test": "hardhat --network matic_test deploy --no-compile --reset --tags ARKE",
     "deploy:matic_test_all": "hardhat --network matic_test deploy",
-
     "deploy:matic:gAKRE": "hardhat --network matic deploy --tags gAKRE",
     "deploy:matic:arkReward": "hardhat --network matic deploy --tags arkReward",
     "deploy:matic:AMiner": "hardhat --network matic deploy --tags AMiner",
@@ -77,24 +97,41 @@
     "deploy:matic:AMinerUV10V": "hardhat --network matic deploy --tags AMinerUV10V",
     "deploy:matic:gRegistry": "hardhat --network matic deploy --tags gRegistry",
     "deploy:matic:UUPSProxy": "hardhat --network matic deploy --tags UUPSProxy",
+    "deploy:matic:RECIssue": "hardhat --network matic deploy --tags RECIssue --reset",
 
-    "deploy:matic:RECIssue": "hardhat --network matic deploy --tags RECIssue",
     "deploy:matic:RECIssueD": "hardhat --network matic deploy --tags RECIssueD --reset",
     "deploy:matic:RECIssueU": "hardhat --network matic deploy --tags RECIssueU",
-
     "deploy:matic:RECToken": "hardhat --network matic deploy --tags RECToken",
+    
     "deploy:matic:RECTokenD": "hardhat --network matic deploy --tags RECTokenD --reset",
     "deploy:matic:RECTokenU": "hardhat --network matic deploy --tags RECTokenU",
-
-    "deploy:matic:RECBadge": "hardhat --network matic deploy --tags RECBadge",
+    "deploy:matic:RECBadge": "hardhat --network matic deploy --tags RECBadge --reset",
     "deploy:matic:gRegistryI": "hardhat --network matic deploy --tags gRegistryI",
+    
     "deploy:matic:Notary": "hardhat --network matic deploy --tags Notary",
-
     "deploy:matic:RECBadgeD": "hardhat --network matic deploy --tags RECBadgeD --reset",
     "deploy:matic:RECBadgeU": "hardhat --network matic deploy --tags RECBadgeU",
-
     "deploy:matic:ARewardD": "hardhat --network matic deploy --tags ARewardD --reset",
     "deploy:matic:ARewardU": "hardhat --network matic deploy --tags ARewardU",
+
+    "deploy:matic:RECIssueExtD": "hardhat --network matic deploy --tags RECIssueExtD --reset",   
+    "deploy:matic:RECIssueI": "hardhat --network matic deploy --tags RECIssueI", 
+
+    "deploy:matic:RECBadgeI": "hardhat --network matic deploy --tags RECBadgeI",
+    "deploy:matic:RECTokenR": "hardhat --network matic deploy --tags RECTokenR",
+
+    "deploy:matic:ARKE": "hardhat --network matic deploy --tags ARKE --reset",
+    "deploy:matic:gRegistryD": "hardhat --network matic deploy --tags gRegistryD --reset",
+    "deploy:matic:gRegistryU": "hardhat --network matic deploy --tags gRegistryU",
+    "deploy:matic:ArtBank": "hardhat --network matic deploy --tags ArtBank",
+    "deploy:matic:ABuilder": "hardhat --network matic deploy --tags ABuilder",
+    "deploy:matic:HskBTC": "hardhat --network matic deploy --tags HskBTC --reset",
+
+    "deploy:matic:ArtBankI": "hardhat --network matic deploy --tags ArtBankI",
+    "deploy:matic:ABuilderI": "hardhat --network matic deploy --tags ABuilderI",    
+    "deploy:matic:HskBTCI": "hardhat --network matic deploy --tags HskBTCI",
+    "deploy:matic:HskBTCD": "hardhat --network matic deploy --tags HskBTCD",
+    "deploy:matic:HskBTCU": "hardhat --network matic deploy --tags HskBTCU",
 
     "etherscan:matic": "hardhat --network matic etherscan-verify --api-key",
     "test": "hardhat test",
@@ -134,6 +171,8 @@
     "@types/node": "^18.7.8",
     "chai": "^4.3.6",
     "dotenv": "^16.0.2",
+    "ethereum-waffle": "3.0.0",
+    "ethereumjs-util": "^6.2.0",
     "ethers": "^5.7.0",
     "hardhat": "^2.10.2",
     "hardhat-contract-sizer": "^2.6.1",
@@ -144,5 +183,8 @@
     "ts-node": "^10.9.1",
     "typechain": "^8.1.0",
     "typescript": "^4.7.4"
+  },
+  "dependencies": {
+    "@nomiclabs/hardhat-waffle": "^2.0.5"
   }
 }

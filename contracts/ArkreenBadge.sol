@@ -59,11 +59,6 @@ contract ArkreenBadge is
         __ERC721_init_unchained(NAME, SYMBOL);
         arkreenRegistry = arkRegistry;
         baseURI = 'https://www.arkreen.com/badge/' ;
-
-        address owner = _msgSender();
-        assembly {
-            sstore(0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103, owner)
-        }          
     }   
 
     function postUpdate() external onlyProxy onlyOwner 
@@ -91,14 +86,15 @@ contract ArkreenBadge is
 
         // The caller should be the REC token contract
         require( IArkreenRegistry(arkreenRegistry).tokenRECs(msg.sender) != address(0), 'ARB: Caller Not Allowed');
+        require(tokenId == partialARECIDExt[msg.sender], 'ARB: Error TokenId');
 
-        require(tokenId == partialARECID, 'ARB: Error TokenId');
-
+        uint256 curAmount = partialAvailableAmountExt[msg.sender];
         if(bNew) {
-            require(amount == partialAvailableAmount, 'ARB: Wrong New');
+            // Only register new details while offsetting more than current paratial amount
+            require(amount == curAmount, 'ARB: Wrong New');    
             detailsCounter += 1;
         } else {
-            require(amount <= partialAvailableAmount, 'ARB: Wrong Amount');
+            require(amount <= curAmount, 'ARB: Wrong Amount');
         }
 
         OffsetDetail memory offsetDetail;
@@ -106,13 +102,13 @@ contract ArkreenBadge is
         offsetDetail.tokenId = uint64(tokenId);
 
         OffsetDetails[detailsCounter].push(offsetDetail);            
-        partialAvailableAmount -= amount;                    // if bNew is true, partialAvailableAmount will be 0
+        curAmount = (partialAvailableAmountExt[msg.sender] -= amount);   // if bNew is true, partialAvailableAmountExt will be 0
         
-        return (detailsCounter, partialAvailableAmount);
+        return (detailsCounter, curAmount);
     }
 
-    function getDetailStatus() external view returns (uint256, uint256) {
-        return (partialAvailableAmount, partialARECID);
+    function getDetailStatus(address tokenAREC) external view returns (uint256, uint256) {
+        return (partialAvailableAmountExt[tokenAREC], partialARECIDExt[tokenAREC]);
     }
 
     /** 
@@ -128,15 +124,15 @@ contract ArkreenBadge is
         uint256 amount,
         uint256 tokenId
     ) external returns (uint256) {
-        bool isRECIssuance = (msg.sender == IArkreenRegistry(arkreenRegistry).getRECIssuance());
+        address RECIssuance = IArkreenRegistry(arkreenRegistry).getRECIssuance();
+        bool isRECIssuance = (msg.sender == RECIssuance);
         bool isOffsetTokenId = (tokenId == 0) || ((tokenId >> 64) != 0);        // FLAG_OFFSET = 1<<64, to compliant with old design 
 
         // Check called from the REC token contract, or from the REC issuance contrarct
-        require( isRECIssuance || msg.sender == IArkreenRegistry(arkreenRegistry).getRECToken(issuerREC), 
-                    'ARB: Wrong Issuer');
+        require( isRECIssuance || issuerREC == IArkreenRegistry(arkreenRegistry).tokenRECs(msg.sender), 'ARB: Wrong Issuer');
 
         // TokenId should not be zero for RECIssuance, and should be offset type for RECToken
-        require(isRECIssuance != isOffsetTokenId, 'ARB: Wrong TokenId');      
+        require(isRECIssuance != isOffsetTokenId, 'ARB: Wrong TokenId');
 
         // Check the minimum offset amount
         require( amount >= minOffsetAmount, 'ARB: Less Amount');
@@ -148,8 +144,8 @@ contract ArkreenBadge is
             if(tokenId != 0) {                          // to be compliant with old design
                 tokenId = uint64(tokenId);
                 if(tokenId ==0) {
-                    tokenId = partialARECID + (1<<63);
-                    partialAvailableAmount -= amount;
+                    tokenId = partialARECIDExt[msg.sender] + (1<<63);
+                    partialAvailableAmountExt[msg.sender] -= amount;
                 } else {
                     tokenId = uint64(detailsCounter) + (3<< 62);
                 }
@@ -283,7 +279,7 @@ contract ArkreenBadge is
         string calldata offsetMessage
     ) external virtual {
         require(msg.sender == ownerOf(tokenId), 'ARB: Not Owner');
-        require(block.timestamp < (certificates[tokenId].creationTime + 3 days), 'ARB: Time Elapsed');
+//      require(block.timestamp < (certificates[tokenId].creationTime + 3 days), 'ARB: Time Elapsed');
 
         if (beneficiary != address(0)) {
             certificates[tokenId].beneficiary = beneficiary;
@@ -314,19 +310,20 @@ contract ArkreenBadge is
         address issuerREC = IArkreenRegistry(arkreenRegistry).getRECIssuance();
         require( issuerREC == msg.sender, 'ARB: Not From REC Issuance');
 
-        RECData memory recData = IArkreenRECIssuance(msg.sender).getRECData(tokenId);
-        if(from == IArkreenRegistry(arkreenRegistry).getRECToken(recData.issuer)) {
-            require(recData.status == uint256(RECStatus.Retired), 'ARB: Wrong Status'); 
-            require(partialAvailableAmount == 0, 'ARB: Partial Left');
-            partialARECID = tokenId;
-            partialAvailableAmount = recData.amountREC;
+        (address issuer, uint128 amountREC, uint8 status, uint16 idAsset) = IArkreenRECIssuance(msg.sender).getRECDataCore(tokenId);
+
+        if(from == IArkreenRegistry(arkreenRegistry).getRECToken(issuer, idAsset)) {
+            require(status == uint256(RECStatus.Retired), 'ARB: Wrong Status'); 
+            require(partialAvailableAmountExt[from] == 0, 'ARB: Partial Left');
+            partialARECIDExt[from] = tokenId;
+            partialAvailableAmountExt[from] = amountREC;
             return this.onERC721Received.selector;
         }
 
         require( keccak256(data) == keccak256("Redeem"), 'ARB: Refused');
-        require(recData.status == uint256(RECStatus.Certified), 'ARB: Wrong Status');  // Checking may be removed
+        require( status == uint256(RECStatus.Certified), 'ARB: Wrong Status');  // Checking may be removed
 
-        totalRedeemed = totalRedeemed + recData.amountREC;
+        totalRedeemed = totalRedeemed + amountREC;
         return this.onERC721Received.selector;
     }
 
@@ -352,7 +349,7 @@ contract ArkreenBadge is
         return userActions[user];
     }
 
-    /// @dev retrieve all data from VintageData struct
+    /// @dev retrieve all data from OffsetAction struct
     function getOffsetActions(uint256 offsetId) external view virtual returns (OffsetAction memory) {
         return (offsetActions[offsetId]);
     }    
@@ -374,6 +371,28 @@ contract ArkreenBadge is
     function _baseURI() internal view virtual override returns (string memory) {
         return baseURI;
     }
+
+    /**
+     * @dev See {IERC721Metadata-tokenURI}.
+     */
+    function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
+        _requireMinted(tokenId);
+
+        string memory cid = cidBadge[tokenId];
+        if( bytes(cid).length > 0) {
+          return string(abi.encodePacked("https://", cid, ".ipfs.w3s.link"));
+        } else {
+          return super.tokenURI(tokenId);
+        }
+    }
+
+    function updateCID(uint256[] calldata tokenId, string[] calldata cid) external virtual onlyOwner {
+        require(tokenId.length == cid.length, "'ARB: Wrong Data");
+
+        for(uint256 index; index < tokenId.length; index++ ) {
+          cidBadge[tokenId[index]] = cid[index];
+        }
+    }    
 
     /**
      * @dev Hook that is called before any token transfer. Miner Info is checked as the following rules:  
