@@ -276,7 +276,7 @@ describe("HashKeyESGBTC", () => {
       await hashKeyESGBTC.approveBuilder([WETHPartner.address, WETH.address])
 
       const limit= BigNumber.from('0x0a141428283c3c64')
-      await hashKeyESGBTC.UpdateESGBadgeLimit(limit)
+      await hashKeyESGBTC.UpdateESGBadgeLimit(limit, 0)
 
 //      await arkreenBuilder.mangeTrustedForwarder(hashKeyESGBTC.address, true)
 

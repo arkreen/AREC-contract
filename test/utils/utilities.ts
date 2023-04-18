@@ -273,6 +273,18 @@ export function getOnboardingRemoteMinerDigest(
 ): string {
   const DOMAIN_SEPARATOR = getDomainSeparator(contractName, contractAddress)
 
+  ///////////////////////////
+  /*
+  const dataToHash =  utils.defaultAbiCoder.encode(
+    ['bytes32', 'address', 'address', 'bool', 'uint256', 'uint256', 'uint256'],
+    [MINER_TYPEHASH, approve.owner, approve.miner, approve.bAirDrop, nonce, feeRegister, deadline]
+  )
+  console.log('dataToHash:',  dataToHash)
+  console.log('HashOfData:',  utils.keccak256(dataToHash))
+  console.log('DOMAIN_SEPARATOR:', DOMAIN_SEPARATOR)
+  console.log('contractAddress, chainId:', contractAddress, hre.network.config.chainId)
+  */
+
   return utils.keccak256(
     utils.solidityPack(
       ['bytes1', 'bytes1', 'bytes32', 'bytes32'],
