@@ -133,6 +133,9 @@
     "deploy:matic:HskBTCD": "hardhat --network matic deploy --tags HskBTCD",
     "deploy:matic:HskBTCU": "hardhat --network matic deploy --tags HskBTCU",
 
+    "deploy:matic:AMinerV10": "hardhat --network matic deploy --tags AMinerV10",  
+    "deploy:matic:AMinerUV10": "hardhat --network matic deploy --tags AMinerUV10",  
+
     "etherscan:matic": "hardhat --network matic etherscan-verify --api-key",
     "test": "hardhat test",
     "gas": "set REPORT_GAS=true && hardhat test",

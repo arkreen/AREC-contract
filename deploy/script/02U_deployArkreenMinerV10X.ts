@@ -54,7 +54,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //  const NEW_IMPLEMENTATION =  "0x544dc72e13904bda9719c3511b7c2f1e616488d1"        // V10X // adding remote miner
 //  const NEW_IMPLEMENTATION =  "0x6ca97ce7fb9d77f2eb961957791acdab5484f936"        // V10X // adding GetMinerInfo
 //  const NEW_IMPLEMENTATION =  "0x0Aa406Fb5B95E884bE90b4b547bBD795C8Fe4357"        // V10X // Standard Miner added, airdrop removed
-    const NEW_IMPLEMENTATION =  "0x4d0ffa7bbe4c249842789b4d01fc609f832ba9cd"        // 2023/03/21: Spell correction: Stardard > Standard
+//  const NEW_IMPLEMENTATION =  "0x4d0ffa7bbe4c249842789b4d01fc609f832ba9cd"        // 2023/03/21: Spell correction: Stardard > Standard
+    const NEW_IMPLEMENTATION =  "0x68471882c661BB1A8E8AB32fc1A6bb1A16569fE3"        // 2023/04/20: Remote miner paid by USDT/MATIC 
    
     const [deployer] = await ethers.getSigners();
     const ArkreenMinerFactory = ArkreenMinerV10__factory.connect(MINER_PROXY_ADDRESS, deployer);
@@ -71,6 +72,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     console.log("Game miner Updated: ", hre.network.name, ArkreenMinerFactory.address);
  } 
 };
+
+// 2023/04/20: yarn deploy:matic_test:AMinerUV10X 
+// Add two new ABIs: RemoteMinerOnboardNative and RemoteMinerOnboardApproved 
+// 0x68471882c661BB1A8E8AB32fc1A6bb1A16569fE3
 
 export default func;
 func.tags = ["AMinerUV10X"];

@@ -254,9 +254,9 @@ describe("ArkreenBuilder", () => {
       await arkreenMiner.connect(manager).RemoteMinerOnboardInBatch([owner1.address, maker1.address], miners)
 
       // set formal launch
-      lastBlock = await ethers.provider.getBlock('latest')
-      await arkreenMiner.setLaunchTime(lastBlock.timestamp+5)
-      await time.increaseTo(lastBlock.timestamp+5)
+//      lastBlock = await ethers.provider.getBlock('latest')
+//      await arkreenMiner.setLaunchTime(lastBlock.timestamp+5)
+//      await time.increaseTo(lastBlock.timestamp+5)
 
       const payer = maker1.address
       await arkreenMiner.setManager(Miner_Manager, manager.address)

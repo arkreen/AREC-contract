@@ -131,13 +131,8 @@ contract ArkreenMinerV10 is
         );  
     }
 
-    function postUpdate(
-        address _tokenAKRE, 
-        address _minerManager
-    ) external onlyProxy onlyOwner {
-        tokenAKRE = _tokenAKRE;
-        AllManagers[uint256(MinerManagerType.Miner_Manager)] = _minerManager;
-    }
+    function postUpdate() external onlyProxy onlyOwner 
+    {}
 
     function _authorizeUpgrade(address newImplementation)
         internal
@@ -145,156 +140,6 @@ contract ArkreenMinerV10 is
         override
         onlyOwner
     {}
-
-    /**
-     * @dev Mint game miners to the user who has just ordered some mining Remote/Standard Miners. 
-     * @param receiver address receiving the game miner tokens
-     * @param miners address of the game miners    
-     */
-/*    
-    function OrderMiners(
-        address receiver,
-        address[] memory miners,
-        Signature calldata permitToPay
-    ) external onlyMinerManager {
-
-        // Permit payment
-        IERC20Permit(permitToPay.token).permit(receiver, address(this), 
-                                        permitToPay.value, permitToPay.deadline, permitToPay.v, permitToPay.r, permitToPay.s);
-
-        // Game miner only can be minted before the time of formal lauch date
-        if (block.timestamp < (timestampFormalLaunch)) {
-            require(miners.length != 0, 'Arkreen Miner: Null Game Miner');
-
-            // Default miner info
-            Miner memory tmpMiner;
-            tmpMiner.mType = MinerType.GameMiner;
-            tmpMiner.mStatus = MinerStatus.Normal;
-            tmpMiner.timestamp = uint32(block.timestamp);
-
-            //slither-disable-next-line uninitialized-local
-            for(uint256 index; index < miners.length; index++) {
-                // Mint game miner one by one
-                tmpMiner.mAddress = miners[index];
-                require(AllMinersToken[tmpMiner.mAddress] == 0, "Arkreen Miner: Miner Repeated");
-                uint256 gMinerID = totalSupply() + 1 ;               
-                _safeMint(receiver, gMinerID);
-                AllMinersToken[tmpMiner.mAddress] = gMinerID;
-                AllMinerInfo[gMinerID] = tmpMiner;
-
-                // increase the counter of total game miner 
-                totalGameMiner += 1;        
-            }
-
-            // emit the game minting event
-            emit GameMinerOnboarded(receiver,  miners);
-        } else {
-            require(miners.length == 0, 'Arkreen Miner: Game Miner Not Allowed');
-        }
-        
-        // Transfer onboarding fee
-        TransferHelper.safeTransferFrom(permitToPay.token, receiver, address(this), permitToPay.value);
-    }
-*/
-
-    /**
-     * @dev Airdrop game miners to the users
-     * @param receivers address receiving the game miner tokens
-     * @param miners address of the airdropped game miners. If miners is null,
-     * withdraw the pending game miners and send to the new receivers
-     */
-/*    
-    function AirdropMiners(
-        address[] memory receivers,
-        address[] memory miners
-    ) external isGamingPhase onlyOwner {
-
-        if(miners.length == 0) {
-            // Re-airdrop pending game miners to new receivers 
-            require(counterGameMinerAirdrop >= capGameMinerAirdrop, 'Game Miner: Airdrop Not Full'); 
-            require(receivers.length <= allPendingGameMiners.length(), 'Game Miner: Two Much Airdrop Receiver'); 
-
-            // Start from last ended position
-            uint256 withdrawFrom = indexGameMinerWithdraw;
-
-            // Counter to protect against endless loop
-            uint256 counterHandled = 0;
-
-            uint256 tokenIDWithdraw;
-            for(uint256 index = 0; index < receivers.length; index++) {
-                while(true) {
-                    // Wrap to head if overflowed due to game miner onboarded
-                    if(withdrawFrom >= allPendingGameMiners.length()) {
-                        withdrawFrom = 0;
-                    }  
-
-                    // Check if the claim deadline is passed
-                    tokenIDWithdraw = allPendingGameMiners.at(withdrawFrom);
-                    if( block.timestamp >= AllMinerInfo[tokenIDWithdraw].timestamp) {
-                        break;
-                    }
-
-                    // skip to next game miner
-                    withdrawFrom += 1;
-                    counterHandled += 1;
-                    require(counterHandled < allPendingGameMiners.length(), 'Game Miner: Two Much Airdrop');                     
-                }
-
-                // Check the receiver to avoid repeating airdrop
-                address owner = receivers[index];
-                require( !owner.isContract(), 'Game Miner: Only EOA Address Allowed' );
-                require( balanceOf(owner) == 0, 'Game Miner: Airdrop Repeated' );
-
-                // Withdraw the pending game miner, and transfer to the new receiver
-                address ownerOld = ownerOf(tokenIDWithdraw);
-
-                _transfer(ownerOld, owner, tokenIDWithdraw);
-
-                // Update the new deadline to the claimed game miner
-                AllMinerInfo[tokenIDWithdraw].timestamp = uint32(block.timestamp + DURATION_ACTIVATE);
-
-                // pointer to next pending game miner
-                withdrawFrom += 1;
-            }
-
-            // Save the new index for the next time airdrop
-            indexGameMinerWithdraw = withdrawFrom;
-
-        } else {
-            // Fresh airdrop
-            require(receivers.length == miners.length, 'Game Miner: Wrong Input'); 
-            require((counterGameMinerAirdrop + receivers.length) <= capGameMinerAirdrop, 'Game Miner: Airdrop Overflowed'); 
-
-            // Default airdropped game miner info
-            Miner memory miner;
-            miner.mType = MinerType.GameMiner;
-            miner.mStatus = MinerStatus.Pending;
-            miner.timestamp = uint32(block.timestamp + DURATION_ACTIVATE);
-            
-            for(uint256 index; index < receivers.length; index++) {
-                // Check the receiver to avoid repeating airdrop
-                address owner = receivers[index];
-                require( !owner.isContract(), 'Game Miner: Only EOA Address Allowed' );
-                require( balanceOf(owner) == 0, 'Game Miner: Airdrop Repeated' );
-
-                uint256 gMinerID = totalSupply() + 1;        
-                _safeMint(owner, gMinerID);
-                miner.mAddress = miners[index];
-                AllMinersToken[miner.mAddress] = gMinerID;
-                AllMinerInfo[gMinerID] = miner;
-
-                // increase the counter of total game miner 
-                totalGameMiner += 1;
-
-                // Add to the pending airdrop set
-                allPendingGameMiners.add(gMinerID);
-                counterGameMinerAirdrop += 1;
-            }
-        }
-
-        emit GameMinerAirdropped(block.timestamp, receivers.length);
-    }
-*/
 
     /**
      * @dev Onboarding game miner, an airdropped one, or a new applied one.
@@ -328,14 +173,6 @@ contract ArkreenMinerV10 is
         tmpMiner.mStatus = MinerStatus.Normal;
         tmpMiner.timestamp = uint32(block.timestamp);        
 
-//        if(bAirDrop) {
-//            // Boarding an airdropped game miner
-//            uint256 pendingMinerID = getPendingMiner(owner);            // Can only have one pending game miner       
-//            require(pendingMinerID != type(uint256).max, "Game Miner: No Miner To Board"); 
-//            require(miner == AllMinerInfo[pendingMinerID].mAddress, "Game Miner: Wrong Miner Address"); 
-//            AllMinerInfo[pendingMinerID] = tmpMiner;
-//            allPendingGameMiners.remove(pendingMinerID);
-//        } else 
         {
             // Boading a new applied game miner
             require(bAllowedToMintGameMiner(owner), 'Game Miner: Holding Game Miner');    // Remove for testing
@@ -356,9 +193,9 @@ contract ArkreenMinerV10 is
     }
 
     /**
-     * @dev Onboarding a Remote Miner with Native token (MATIC)
-     * @param owner address receiving the Remote miner
-     * @param miner address of the Remote miner onboarding
+     * @dev Onboarding a remote Miner with Native token (MATIC)
+     * @param owner address receiving the remote miner
+     * @param miner address of the remote miner onboarding
      * @param permitMiner signature of miner register authority to confirm the miner address and price.  
      */
     function RemoteMinerOnboardNative(
@@ -373,15 +210,15 @@ contract ArkreenMinerV10 is
         // Check for minting remote miner  
         _mintRemoteMinerCheck(owner, miner, permitMiner);
 
-        // mint new Remote miner
+        // mint new remote miner
         _mintRemoteMiner(owner, miner);
         emit MinerOnboarded(owner, miner);
     }    
 
     /**
-     * @dev Onboarding a Remote Miner while the payment has been approved
-     * @param owner address receiving the Remote miner
-     * @param miner address of the Remote miner onboarding
+     * @dev Onboarding a remote miner while the payment has been approved
+     * @param owner address receiving the remote miner
+     * @param miner address of the remote miner onboarding
      * @param permitMiner signature of miner register authority to confirm the miner address and price.  
      */
     function RemoteMinerOnboardApproved(
@@ -393,7 +230,7 @@ contract ArkreenMinerV10 is
         // Check for minting remote miner  
         _mintRemoteMinerCheck(owner, miner, permitMiner);
 
-        // mint new Remote miner
+        // mint new remote miner
         _mintRemoteMiner(owner, miner);
 
         // Transfer onboarding fee
@@ -404,9 +241,9 @@ contract ArkreenMinerV10 is
     }
 
     /**
-     * @dev Check for minting a Remote Miner
-     * @param owner address receiving the Remote miner
-     * @param miner address of the Remote miner onboarding
+     * @dev Check for minting a remote Miner
+     * @param owner address receiving the remote miner
+     * @param miner address of the remote miner onboarding
      * @param permitMiner signature of miner register authority to confirm the miner address and price.  
      */
     function _mintRemoteMinerCheck( 
@@ -431,9 +268,9 @@ contract ArkreenMinerV10 is
     }
 
     /**
-     * @dev mint a Remote Miner
-     * @param owner address receiving the Remote miner
-     * @param miner address of the Remote miner onboarding
+     * @dev mint a remote Miner
+     * @param owner address receiving the remote miner
+     * @param miner address of the remote miner onboarding
      */
     function _mintRemoteMiner( address owner, address miner) internal {
 
@@ -454,9 +291,9 @@ contract ArkreenMinerV10 is
     }
 
     /**
-     * @dev Onboarding a Remote Miner
-     * @param owner address receiving the Remote miner
-     * @param miner address of the Remote miner onboarding
+     * @dev Onboarding a remote Miner
+     * @param owner address receiving the remote miner
+     * @param miner address of the remote miner onboarding
      * @param permitMiner signature of miner register authority to confirm the miner address and price.  
      * @param permitToPay signature of payer to pay the onboarding fee
      */
@@ -478,7 +315,7 @@ contract ArkreenMinerV10 is
         IERC20Permit(permitToPay.token).permit(sender, address(this), 
                                         permitToPay.value, permitToPay.deadline, permitToPay.v, permitToPay.r, permitToPay.s);
 
-        // mint new Remote miner
+        // mint new remote miner
         _mintRemoteMiner(owner, miner);
 
         // Transfer onboarding fee
@@ -534,9 +371,9 @@ contract ArkreenMinerV10 is
     }
 
     /**
-     * @dev Onboarding Remote miners in batch
-     * @param owners addresses receiving the Remote miners
-     * @param miners addresses of the Remote miners onboarding
+     * @dev Onboarding remote miners in batch
+     * @param owners addresses receiving the remote miners
+     * @param miners addresses of the remote miners onboarding
      */
     function RemoteMinerOnboardInBatch(
         address[]  calldata   owners,
@@ -644,38 +481,11 @@ contract ArkreenMinerV10 is
         return numberGame <= numberReal;
     }
 
+
     /**
-     * @dev Get the token ID of the specified miner 
-     * @param owner owner address
-     * @param miner miner address to find, if it is zero, return the fisrt found running game miner
+     * @dev Get all the miner info of the specified miner
+     * @param addrMiner miner address
      */
-/*    
-    function getMinerTokenID(address owner, address miner) external view returns (uint256 tokenID) {
-        uint256 totalMiners = balanceOf(owner);
-        for(uint256 index; index < totalMiners; index++) {     
-            uint256 minerID = tokenOfOwnerByIndex(owner, index);
-            if( AllMinerInfo[minerID].mStatus == MinerStatus.Normal &&
-                miner == AllMinerInfo[minerID].mAddress ) {
-                return minerID;
-            }    
-        }
-        return type(uint256).max;
-    } 
-*/
-    /**
-     * @dev Get all the miner info of the owner
-     * @param owner owner address
-     */
-/*
-    function GetMinerInfo(address owner) external view returns (Miner[] memory miners) {
-        uint256 totalMiners = balanceOf(owner);
-        miners = new Miner[](totalMiners);
-        for(uint256 index;  index < totalMiners; index++) {     
-            uint256 minerID = tokenOfOwnerByIndex(owner, index);
-            miners[index] = AllMinerInfo[minerID];
-        }
-    }
-*/
     function GetMinerInfo(address addrMiner) external view returns (address owner, Miner memory miner) {
         uint256 minerID = AllMinersToken[addrMiner];
         owner = ownerOf(minerID);
@@ -738,16 +548,6 @@ contract ArkreenMinerV10 is
       }
     }
 
-    /**
-     * @dev Update the cap to airdrop game miners
-     * @param newMinerCap new cap to airdrop game miners
-     */
-/*    
-    function ChangeAirdropCap(uint256 newMinerCap) external onlyOwner {
-        require(newMinerCap >= counterGameMinerAirdrop, 'Arkreen Miner: Cap Is Lower');      
-       capGameMinerAirdrop = newMinerCap;
-    }    
-*/
     /**
      * @dev Set the timestamp of Arkreen network formal launch. 
      */

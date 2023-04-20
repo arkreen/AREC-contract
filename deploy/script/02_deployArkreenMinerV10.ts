@@ -90,5 +90,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 };
 
+// 2023/04/20: yarn deploy:matic:AMinerV10 
+// Add two new ABIs: RemoteMinerOnboardNative and RemoteMinerOnboardApproved 
+// 0x2DEe917Da0AF2ed006FEf069Ebf2B558E27c26B5
+
 export default func;
 func.tags = ["AMinerV10"];

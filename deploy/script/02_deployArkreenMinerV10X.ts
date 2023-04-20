@@ -72,5 +72,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // Spell correction
 // 0x4d0ffa7bbe4c249842789b4d01fc609f832ba9cd
 
+// 2023/04/20: yarn deploy:matic_test:AMinerV10X 
+// Add two new ABIs: RemoteMinerOnboardNative and RemoteMinerOnboardApproved 
+// 0x68471882c661BB1A8E8AB32fc1A6bb1A16569fE3
+
 export default func;
 func.tags = ["AMinerV10X"];
