@@ -5,7 +5,7 @@ import { ethers, network, upgrades } from "hardhat";
 
 import {
     ArkreenTokenTest,
-    ArkreenMiner,
+    ArkreenMinerV10,
     ArkreenRECIssuance,
     ArkreenRegistry,
     ArkreenRECToken,
@@ -41,7 +41,7 @@ describe("ArkreenRECToken", () => {
     let privateKeyMaker:        string
 
     let AKREToken:                    ArkreenTokenTest
-    let arkreenMiner:                 ArkreenMiner
+    let arkreenMiner:                 ArkreenMinerV10
     let arkreenRegistry:             ArkreenRegistry
     let arkreenRECIssuance:           ArkreenRECIssuance
     let arkreenRECToken:              ArkreenRECToken
@@ -56,7 +56,7 @@ describe("ArkreenRECToken", () => {
 
       const ArkreenMinerFactory = await ethers.getContractFactory("ArkreenMinerV10")
       const arkreenMiner = await upgrades.deployProxy(ArkreenMinerFactory,
-                                        [AKREToken.address, manager.address, register_authority.address]) as ArkreenMiner
+                                        [AKREToken.address, manager.address, register_authority.address]) as ArkreenMinerV10
 
       await arkreenMiner.deployed()
  
@@ -85,7 +85,7 @@ describe("ArkreenRECToken", () => {
       await AKREToken.connect(maker1).approve(arkreenMiner.address, expandTo18Decimals(10000))
 
       const miners = randomAddresses(2)
-      await arkreenMiner.connect(manager).VirtualMinerOnboardInBatch([owner1.address, maker1.address], miners)
+      await arkreenMiner.connect(manager).RemoteMinerOnboardInBatch([owner1.address, maker1.address], miners)
 
       // set formal launch
       const lastBlock = await ethers.provider.getBlock('latest')

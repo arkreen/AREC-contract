@@ -4,8 +4,8 @@ import { Contract, BigNumber, constants } from 'ethers'
 
 import { waffle } from "hardhat"
 
-import {  BigNumberPercent, expandTo18Decimals, mineBlock } from './utils/utilities'
-import { v2Fixture } from './utils/Routerfixtures'
+import {  BigNumberPercent, expandTo18Decimals, mineBlock } from '../utils/utilities'
+import { v2Fixture } from '../utils/Routerfixtures'
 
 const { provider, createFixtureLoader } = waffle;
 

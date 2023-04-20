@@ -6,7 +6,7 @@ import { ArkreenRECIssuanceExt__factory } from "../typechain";
 
 import {
     ArkreenTokenTest,
-    ArkreenMiner,
+    ArkreenMinerV10,
     ArkreenRECIssuance,
     ArkreenRECIssuanceExt,
     ArkreenRegistry,
@@ -38,7 +38,7 @@ describe("ArkreenRECIssuanceExt", () => {
     let privateKeyMaker:        string
 
     let AKREToken:                    ArkreenTokenTest
-    let arkreenMiner:                 ArkreenMiner
+    let arkreenMiner:                 ArkreenMinerV10
     let arkreenRegistry:              ArkreenRegistry
     let arkreenRECIssuance:           ArkreenRECIssuance
     let arkreenRECIssuanceExt:        ArkreenRECIssuanceExt
@@ -48,7 +48,7 @@ describe("ArkreenRECIssuanceExt", () => {
     let ArkreenRECTokenESG:           ArkreenRECToken
     let arkreenRetirement:            ArkreenBadge
 
-    const FORMAL_LAUNCH = 1714536000;         // 2024-05-01, 12:00:00
+//    const FORMAL_LAUNCH = 1682913600;         // 2023-05-01, 12:00:00
     const Miner_Manager       = 0 
 
     const startTime = 1564888526
@@ -63,9 +63,9 @@ describe("ArkreenRECIssuanceExt", () => {
       const AKREToken = await AKRETokenFactory.deploy(10_000_000_000);
       await AKREToken.deployed();
 
-      const ArkreenMinerFactory = await ethers.getContractFactory("ArkreenMiner")
+      const ArkreenMinerFactory = await ethers.getContractFactory("ArkreenMinerV10")
       const arkreenMiner = await upgrades.deployProxy(ArkreenMinerFactory,
-                                        [AKREToken.address, manager.address, register_authority.address]) as ArkreenMiner
+                                        [AKREToken.address, manager.address, register_authority.address]) as ArkreenMinerV10
 
       await arkreenMiner.deployed()
  
@@ -103,31 +103,13 @@ describe("ArkreenRECIssuanceExt", () => {
       await AKREToken.connect(owner1).approve(arkreenMiner.address, expandTo18Decimals(100000))
       await AKREToken.connect(maker1).approve(arkreenMiner.address, expandTo18Decimals(100000))
 
-      // set formal launch
-      await arkreenMiner.setLaunchTime(FORMAL_LAUNCH)
-      await time.increaseTo(FORMAL_LAUNCH + 1)
-
       const payer = maker1.address
-      const nonce = await AKREToken.nonces(payer)
-      const gameMiner =  constants.AddressZero
-      const feeRegister = expandTo18Decimals(200)
-
-      const digest = await getApprovalDigest(
-        AKREToken,
-        { owner: payer, spender: arkreenMiner.address, value: feeRegister },
-        nonce,
-        constants.MaxUint256
-      )
-
-      const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyMaker.slice(2), 'hex'))
-      const signature = { v, r, s, token: AKREToken.address, value:feeRegister, deadline: constants.MaxUint256 }    
- 
-      await arkreenMiner.setManager(Miner_Manager, manager.address)
-      await arkreenMiner.ManageManufactures([payer], true)     
 
       let DTUMiner = randomAddresses(1)[0]
-      await arkreenMiner.connect(manager).MinerOnboard(
-                owner1.address, DTUMiner, gameMiner, MinerType.StandardMiner, payer, signature)
+      await arkreenMiner.connect(manager).RemoteMinerOnboardInBatch([owner1.address], [DTUMiner])
+
+      await arkreenMiner.setManager(Miner_Manager, manager.address)
+      await arkreenMiner.ManageManufactures([payer], true)     
 
       await arkreenRegistry.addRECIssuer(manager.address, arkreenRECToken.address, "Arkreen Issuer")
       await arkreenRegistry.setRECIssuance(arkreenRECIssuance.address)
