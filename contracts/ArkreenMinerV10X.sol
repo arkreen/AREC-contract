@@ -29,7 +29,7 @@ contract ArkreenMinerV10X is
 
     // Public variables
     string public constant NAME = 'Arkreen Miner';
-    string public constant SYMBOL = 'AKREN';
+    string public constant SYMBOL = 'AKREM';
 
     address public tokenAKRE;                       // Token adddress of AKRE
     uint256 public totalGameMiner;                  // Total amount of game miner
@@ -552,14 +552,14 @@ contract ArkreenMinerV10X is
 
         require(owners.length == miners.length, 'Arkreen Miner: Wrong Address List');
 
-        // Prepare to mint new Remote miners, only Remote miners
+        // Prepare to mint new remote miners, only remote miners
         Miner memory newMiner;
         newMiner.mType = MinerType.RemoteMiner;
         newMiner.mStatus = MinerStatus.Normal;
         newMiner.timestamp = uint32(block.timestamp);
 
         for(uint256 index; index < owners.length; index++) {
-            // Mint new Remote miners one by one
+            // Mint new remote miners one by one
             uint256 remoteMinerID = totalSupply() + 1;
             newMiner.mAddress = miners[index];
             _safeMint(owners[index], remoteMinerID);
@@ -581,7 +581,7 @@ contract ArkreenMinerV10X is
         uint256 tokenId
     ) internal virtual override (ERC721EnumerableUpgradeable) {
         // Game miner cannot be transferred, not including mint and burn
-        // But contract owner can withdram and re-airdrop game miner 
+        // But contract owner can withdraw and re-airdrop game miner 
         if(_msgSender() != owner()) {
           if (from != address(0) && to != address(0)){
               Miner memory miner = AllMinerInfo[tokenId];
