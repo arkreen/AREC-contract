@@ -64,6 +64,8 @@ contract ArkreenMinerV10X is
 
     uint256 public totalStandardMiner;                              // Total amount of standard miner
 
+    address public tokenNative;                                     // The wrapped token of the Native token, such as WETH, WMATIC
+
     // Constants
     // keccak256("GameMinerOnboard(address owner,address miners,bool bAirDrop,uint256 deadline)");
     bytes32 public constant GAME_MINER_TYPEHASH = 0xB0C08E369CF9D149F7E973AF789B8C94B7DA6DCC0A8B1F5F10F1820FB6224C11;  
@@ -75,6 +77,10 @@ contract ArkreenMinerV10X is
 
     // keccak256("StandardMinerOnboard(address owner,address miner,uint256 deadline)");
     bytes32 public constant STANDARD_MINER_TYPEHASH = 0x73F94559854A7E6267266A158D1576CBCAFFD8AE930E61FB632F9EC576D2BB37;  
+
+//  address public constant WMATIC_TOKEN_TEST = 0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889;    // WMATIC in polygon testnet
+//  address public constant WMATIC_TOKEN      = 0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270;    // WAMTIC in polygon mainnet
+//  uint256 public constant POLYGON_CHAIN_ID  = 137;                                           // Polygon Chain ID
 
     // Events
     event GameMinerAirdropped(uint256 timestamp, uint256 amount);
@@ -217,7 +223,8 @@ contract ArkreenMinerV10X is
     ) external payable ensure(permitMiner.deadline) {
 
         // Check payment value
-        require( msg.value == permitMiner.value, "Arkreen Miner: Payment error");
+        require( (tokenNative != address(0)) && (tokenNative == permitMiner.token) && 
+                  (msg.value == permitMiner.value), "Arkreen Miner: Payment error");
 
         // Check for minting remote miner  
         _mintRemoteMinerCheck(owner, miner, permitMiner);
@@ -592,6 +599,14 @@ contract ArkreenMinerV10X is
     function setManager(uint256 managerType, address managerAddress) external onlyOwner {
       AllManagers[managerType] = managerAddress;
     }
+
+    /**
+     * @dev Set the native token address
+     * @param native address, not checked againt zero address to disable payment by native token    
+     */
+    function setNativeToken(address native) external onlyOwner {
+      tokenNative = native;
+    }    
 
     /**
      * @dev Withdraw all the onboarding fee

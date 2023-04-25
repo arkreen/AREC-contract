@@ -135,6 +135,33 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       // Approve HashKeyESGBTCContract to Tranfer-From the specified tokens
       const HashKeyESGBTCFactory = HashKeyESGBTC__factory.connect(ESGBTC_ADDRESS as string, deployer);
 
+//    zhang: 514642729@qq.com       // OK 0x2ede75766702f34b6157af1bc78db3e4cf60fba2:  15
+//    Martin: farmerrock@gmail.com  // OK
+//    Vitalii: redemax333@gmail.com // OK
+//    ttzwen:	ttzwen@hotmail.com    // OK: 0x4533c5E0271Ff4e1CF254a24F9590007FA18606D : 18
+//    Zehao: lizakhho@gmail.com     // OK 0xe1dAdfd20bBCD8779D3cF29Eb07D6085Abd4b8Eb: 19
+//    Maxine: 541417213@qq.com      // OK 0x08d2D1f482A17A2FA779a3D4eE4EF7776e2Ba452: 20
+//    BH: yinngbh@gmail.com         // OK
+//    JEY: huangdaming1990@gmail.com  // OK
+//    tommykw: b1463912303@gmail.com  // OK
+//    waato: dd29fwyf@gmail.com       // OK 0x4f4e4247CCc329bdd68EB9f1419B234d50803c9e: 24
+
+      const audienceID = [15, 18, 19, 20, 24]
+      const audienceAddress = [ '0x2ede75766702f34b6157af1bc78db3e4cf60fba2',
+                                '0x4533c5E0271Ff4e1CF254a24F9590007FA18606D',
+                                '0xe1dAdfd20bBCD8779D3cF29Eb07D6085Abd4b8Eb',
+                                '0x08d2D1f482A17A2FA779a3D4eE4EF7776e2Ba452',
+                                '0x4f4e4247CCc329bdd68EB9f1419B234d50803c9e',
+                              ]
+
+    // Not executed                              
+    for( let index=0; index<5; index++) {                              
+      const updateCIDTx = await HashKeyESGBTCFactory.connect(deployer.address).transferFrom(deployer.address, audienceAddress[index], audienceID[index])
+      await updateCIDTx.wait()
+    }
+    console.log("HashKeyESGBTCContract approveBuilder is executed: %s: ", hre.network.name, audienceID, audienceAddress );
+
+/*    
       // Note: Matic test change this ABI; function UpdateESGBadgeLimit(uint256 limit)
       const limit = BigNumber.from('0x0000000000000000')
       const count = BigNumber.from('0x0300000000000000')
@@ -143,7 +170,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       console.log("HashKeyESGBTCContract approveBuilder is executed: %s: ", hre.network.name, 
                         limit.toHexString(), ESGBTC_ADDRESS, 
                         [USDC_ADDRESS, USDT_ADDRESS, WMATIC_ADDRESS, AKRE_ADDRESS] );
-     
+*/
+                        
 /*
       {
         const level = [1, 2, 3]

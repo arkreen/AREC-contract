@@ -72,7 +72,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   if(hre.network.name === 'matic') {
     const MINER_PROXY_ADDRESS = "0xAc4da3681e51278f82288617c7185a7a119E5b7B"       // Miner Contract in matic mainnet
 //  const NEW_IMPLEMENTATION =  "0x8aA572eE9c7991dc059a2Ae18844858B1Eb274F0"       // original 
-    const NEW_IMPLEMENTATION =  "0x2DEe917Da0AF2ed006FEf069Ebf2B558E27c26B5"       // 2023/04/20: Remote miner paid by USDT/MATIC 
+//  const NEW_IMPLEMENTATION =  "0x2DEe917Da0AF2ed006FEf069Ebf2B558E27c26B5"       // 2023/04/20: Remote miner paid by USDT/MATIC 
+    const NEW_IMPLEMENTATION =  "0x8fb18Bb2B2ef751e14BD05d5aaCB5405a6944F8E"       // 2023/04/25: Add native token checking in RemoteMinerOnboardNative
 
     const [deployer] = await ethers.getSigners();
     const ArkreenMinerFactory = ArkreenMinerV10__factory.connect(MINER_PROXY_ADDRESS, deployer);
@@ -93,6 +94,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2023/04/20: yarn deploy:matic:AMinerUV10 
 // 2023/04/20: Remote miner paid by USDT/MATIC
 // 0x2DEe917Da0AF2ed006FEf069Ebf2B558E27c26B5
+
+// 2023/04/25: yarn deploy:matic:AMinerUV10 
+// Add native token checking in RemoteMinerOnboardNative 
+// 0x8fb18Bb2B2ef751e14BD05d5aaCB5405a6944F8E
 
 export default func;
 func.tags = ["AMinerUV10"];

@@ -1060,6 +1060,8 @@ describe("ArkreenMinerV10", () => {
                         token: AKREToken.address, price: minerPrice, deadline: BigNumber.from(timestamp + 600) }
                     )
       await ArkreenMiner.setManager(Register_Authority, register_authority.address)
+      await ArkreenMiner.setNativeToken(AKREToken.address)                          // Just for test 
+
       const {v, r, s} = ecsign( Buffer.from(register_digest.slice(2), 'hex'), 
                                             Buffer.from(privateKeyRegister.slice(2), 'hex'))           
       signature = { v, r, s, token: AKREToken.address, value: minerPrice, deadline: BigNumber.from(timestamp + 600) } 

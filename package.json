@@ -35,6 +35,7 @@
     "deploy:matic_test:AMinerV10": "hardhat --network matic_test deploy --tags AMinerV10",
     "deploy:matic_test:AMinerUV10": "hardhat --network matic_test deploy --tags AMinerUV10",
     "deploy:matic_test:AMinerV10X": "hardhat --network matic_test deploy --tags AMinerV10X --reset",
+    "deploy:matic_test:AMinerV10XD": "hardhat --network matic_test deploy --tags AMinerV10XD",
     "deploy:matic_test:AMinerUV10X": "hardhat --network matic_test deploy --tags AMinerUV10X",
     "deploy:matic_test:AMinerV10V": "hardhat --network matic_test deploy --tags AMinerV10V",
     "deploy:matic_test:AMinerUV10V": "hardhat --network matic_test deploy --tags AMinerUV10V",
@@ -135,6 +136,7 @@
 
     "deploy:matic:AMinerV10": "hardhat --network matic deploy --tags AMinerV10",  
     "deploy:matic:AMinerUV10": "hardhat --network matic deploy --tags AMinerUV10",  
+    "deploy:matic:AMinerV10D": "hardhat --network matic deploy --tags AMinerV10D",  
 
     "etherscan:matic": "hardhat --network matic etherscan-verify --api-key",
     "test": "hardhat test",
