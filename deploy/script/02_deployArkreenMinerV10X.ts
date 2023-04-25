@@ -76,5 +76,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // Add two new ABIs: RemoteMinerOnboardNative and RemoteMinerOnboardApproved 
 // 0x68471882c661BB1A8E8AB32fc1A6bb1A16569fE3
 
+// 2023/04/25: yarn deploy:matic_test:AMinerV10X 
+// Add two new ABIs: RemoteMinerOnboardNative and RemoteMinerOnboardApproved 
+// 
+
 export default func;
 func.tags = ["AMinerV10X"];

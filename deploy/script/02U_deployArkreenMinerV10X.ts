@@ -56,7 +56,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //  const NEW_IMPLEMENTATION =  "0x0Aa406Fb5B95E884bE90b4b547bBD795C8Fe4357"        // V10X // Standard Miner added, airdrop removed
 //  const NEW_IMPLEMENTATION =  "0x4d0ffa7bbe4c249842789b4d01fc609f832ba9cd"        // 2023/03/21: Spell correction: Stardard > Standard
 //  const NEW_IMPLEMENTATION =  "0x68471882c661BB1A8E8AB32fc1A6bb1A16569fE3"        // 2023/04/20: Remote miner paid by USDT/MATIC 
-    const NEW_IMPLEMENTATION =  "0xb18E5C52E9a91B557591CA3764d270B65d7F1027"        // 2023/04/20: Add native token checking in RemoteMinerOnboardNative
+    const NEW_IMPLEMENTATION =  "0xb18E5C52E9a91B557591CA3764d270B65d7F1027"        // 2023/04/25: Add native token checking in RemoteMinerOnboardNative
    
     const [deployer] = await ethers.getSigners();
     const ArkreenMinerFactory = ArkreenMinerV10__factory.connect(MINER_PROXY_ADDRESS, deployer);
