@@ -32,9 +32,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //////////////////////////////////////////////////////////////
 
 ////// These address are remote miner testing ////////////////
-    AKREToken_ADDRESS = "0x6c28fF02d3A132FE52D022db1f25a33d91caeCA2"
-    MANAGER_ADDRESS   = "0xc99b92e8d827aa21cd3ff8fb9576316d90120191"
-    REGISTER_ADDRESS  = "0x58aCE9F0f042bC3DDb1f3d929f32C7931FFdA215"
+//  AKREToken_ADDRESS = "0x6c28fF02d3A132FE52D022db1f25a33d91caeCA2"
+//  MANAGER_ADDRESS   = "0xc99b92e8d827aa21cd3ff8fb9576316d90120191"
+//  REGISTER_ADDRESS  = "0x58aCE9F0f042bC3DDb1f3d929f32C7931FFdA215"
+
+    AKREToken_ADDRESS = "0x8Ab2299351585097101c91FE4b098d95c18D28a7"
+    MANAGER_ADDRESS   = "0xdc641760adAe486Ba9c9878C1f3831c26EbFEAaa"
+    REGISTER_ADDRESS  = "0xdc641760adAe486Ba9c9878C1f3831c26EbFEAaa"
+
 //////////////////////////////////////////////////////////////
 
   } else if(hre.network.name === 'matic')  {
@@ -49,7 +54,6 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  /*
   const ArkreenMiner = await deploy(CONTRACTS.AMinerV10, {
       from: deployer,
       proxy: {
@@ -59,19 +63,15 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
             methodName: "initialize",   // Function to call when deployed first time.
             args: [AKREToken_ADDRESS, MANAGER_ADDRESS, REGISTER_ADDRESS]
           },
-          onUpgrade: {
-            methodName: "postUpdate", // method to be executed when the proxy is upgraded (not first deployment)
-            args: [AKREToken_ADDRESS, MANAGER_ADDRESS],
-          },           
         },
       },
       log: true,
       skipIfAlreadyDeployed: false,     // do not change
   });
-*/
 
+  console.log("ArkreenMiner deployed to %s: ", hre.network.name, ArkreenMiner.address);
 
-  console.log("Deploying: ", CONTRACTS.AMinerV10, deployer);  
+//  console.log("Deploying: ", CONTRACTS.AMinerV10, deployer);  
 
   /* // Verification is difficult in this deployment mode 
   const ArkreenMinerV10Factory = await ethers.getContractFactory("ArkreenMinerV10");
@@ -79,6 +79,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   await ArkreenMinerV10.deployed();
   */
 
+  /*
   const ArkreenMinerV10 = await deploy(CONTRACTS.AMinerV10, {
       from: deployer,
       args: [],
@@ -87,12 +88,17 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   });
 
   console.log("ArkreenMiner deployed to %s: ", hre.network.name, ArkreenMinerV10.address);
+*/
 
 };
 
 // 2023/04/20: yarn deploy:matic:AMinerV10 
 // Add two new ABIs: RemoteMinerOnboardNative and RemoteMinerOnboardApproved 
 // 0x2DEe917Da0AF2ed006FEf069Ebf2B558E27c26B5
+
+// 2023/04/28: yarn deploy:matic_test:AMinerV10 
+// Deployed in Polygon test for delvelopment environment
+// 0xC329FeB90E42B42731Fe60CaD43873f02027499A
 
 export default func;
 func.tags = ["AMinerV10"];

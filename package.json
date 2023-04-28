@@ -32,7 +32,7 @@
     "deploy:matic_test:gMiner": "hardhat --network matic_test deploy --tags gMiner",
     "deploy:matic_test:gMinerU": "hardhat --network matic_test deploy --tags gMinerU",
     "deploy:matic_test:AMiner": "hardhat --network matic_test deploy --tags AMiner",
-    "deploy:matic_test:AMinerV10": "hardhat --network matic_test deploy --tags AMinerV10",
+    "deploy:matic_test:AMinerV10": "hardhat --network matic_test deploy --tags AMinerV10 --reset",
     "deploy:matic_test:AMinerUV10": "hardhat --network matic_test deploy --tags AMinerUV10",
     "deploy:matic_test:AMinerV10X": "hardhat --network matic_test deploy --tags AMinerV10X --reset",
     "deploy:matic_test:AMinerV10XD": "hardhat --network matic_test deploy --tags AMinerV10XD",
