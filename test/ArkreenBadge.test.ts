@@ -52,7 +52,7 @@ describe("ArkreenBadge", () => {
 
       const ArkreenMinerFactory = await ethers.getContractFactory("ArkreenMiner")
       const arkreenMiner = await upgrades.deployProxy(ArkreenMinerFactory,
-                                        [AKREToken.address, manager.address, register_authority.address]) as ArkreenMiner
+                                        [AKREToken.address, AKREToken.address, manager.address, register_authority.address]) as ArkreenMiner
 
       await arkreenMiner.deployed()
  
@@ -81,9 +81,9 @@ describe("ArkreenBadge", () => {
       await AKREToken.connect(maker1).approve(arkreenMiner.address, expandTo18Decimals(10000))
 
       // set formal launch
-      const lastBlock = await ethers.provider.getBlock('latest')
-      await arkreenMiner.setLaunchTime(lastBlock.timestamp+5)
-      await time.increaseTo(lastBlock.timestamp+5)
+//      const lastBlock = await ethers.provider.getBlock('latest')
+//      await arkreenMiner.setLaunchTime(lastBlock.timestamp+5)
+//      await time.increaseTo(lastBlock.timestamp+5)
 
       const payer = maker1.address
       const nonce = await AKREToken.nonces(payer)
@@ -104,8 +104,7 @@ describe("ArkreenBadge", () => {
       await arkreenMiner.ManageManufactures([payer], true)     
 
       let DTUMiner = randomAddresses(1)[0]
-      await arkreenMiner.connect(manager).MinerOnboard(
-                owner1.address, DTUMiner, gameMiner, MinerType.StandardMiner, payer, signature)
+      await arkreenMiner.connect(manager).RemoteMinerOnboardInBatch([owner1.address], [DTUMiner])
 
       await arkreenRegistry.addRECIssuer(manager.address, arkreenRECToken.address, "Arkreen Issuer")
       await arkreenRegistry.setRECIssuance(arkreenRECIssuance.address)

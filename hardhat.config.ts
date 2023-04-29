@@ -151,7 +151,7 @@ const config: HardhatUserConfig = {
     artifacts: "./artifacts",
     cache: "./cache",
     sources: "./contracts",
-    tests: "./test",
+    tests: "./test",   // GreenBTC
     deploy: "./deploy/script",
     deployments: "./deployments",
   },

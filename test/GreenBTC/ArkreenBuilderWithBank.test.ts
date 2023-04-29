@@ -6,7 +6,7 @@ import { ArkreenRECIssuanceExt__factory } from "../../typechain";
 
 import {
     ArkreenTokenTest,
-    ArkreenMinerV10,
+    ArkreenMiner,
     ArkreenRECIssuance,
     ArkreenRECIssuanceExt,
     ArkreenRegistry,
@@ -42,7 +42,7 @@ describe("ArkreenBuilderWithBank", () => {
     let privateKeyMaker:        string
 
     let AKREToken:                    ArkreenTokenTest
-    let arkreenMiner:                 ArkreenMinerV10
+    let arkreenMiner:                 ArkreenMiner
     let arkreenRegistry:              ArkreenRegistry
     let arkreenRECIssuance:           ArkreenRECIssuance
     let arkreenRECIssuanceExt:        ArkreenRECIssuanceExt
@@ -77,9 +77,9 @@ describe("ArkreenBuilderWithBank", () => {
       const AKREToken = await AKRETokenFactory.deploy(10_000_000_000);
       await AKREToken.deployed();
 
-      const ArkreenMinerFactory = await ethers.getContractFactory("ArkreenMinerV10")
+      const ArkreenMinerFactory = await ethers.getContractFactory("ArkreenMiner")
       const arkreenMiner = await upgrades.deployProxy(ArkreenMinerFactory,
-                                        [AKREToken.address, manager.address, register_authority.address]) as ArkreenMinerV10
+                                        [AKREToken.address, AKREToken.address, manager.address, register_authority.address]) as ArkreenMiner
 
       await arkreenMiner.deployed()
  

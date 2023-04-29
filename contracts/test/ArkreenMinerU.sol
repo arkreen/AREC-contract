@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import "../ArkreenMinerV10X.sol";
+import "../ArkreenMiner.sol";
 
 // For testing of contract upgrading 
-contract ArkreenMinerV10XU is ArkreenMinerV10X
+contract ArkreenMinerU is ArkreenMiner
 {
     struct MinerMore {
         string         attribute;

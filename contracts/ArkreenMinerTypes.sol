@@ -2,11 +2,10 @@
 pragma solidity ^0.8.9;
 
 enum MinerType {
-    GameMiner,          // 0
-    LiteMiner,          // 1
-    StandardMiner,      // 2
-    virtualMiner,       // 3
-    APIMiner            // 4
+    SKIP_0,
+    SKIP_1,
+    StandardMiner,          // 2
+    RemoteMiner             // 3
 }
 
 enum MinerStatus {
@@ -38,7 +37,7 @@ struct Signature {
     bytes32     s;              
 }
 
-struct SigRegister {
+struct Sig {
     uint8       v;
     bytes32     r;
     bytes32     s;              
