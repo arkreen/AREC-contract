@@ -11,9 +11,6 @@ import "./interfaces/IERC20.sol";
 import "./interfaces/IERC20Permit.sol";
 import "./ArkreenMinerTypes.sol";
 
-// Import this file to use console.log
-// import "hardhat/console.sol";
-
 contract ArkreenMiner is 
     OwnableUpgradeable,
     UUPSUpgradeable,
@@ -21,11 +18,22 @@ contract ArkreenMiner is
 {
     using AddressUpgradeable for address;
 
-    // Public variables
+    // Constants
     string public constant NAME = 'Arkreen Miner';
     string public constant SYMBOL = 'AKREM';
 
-    address public tokenAKRE;                       // Token adddress of AKRE
+    // keccak256("RemoteMinerOnboard(address owner,address miners,address token,uint256 price,uint256 deadline)");
+    bytes32 public constant REMOTE_MINER_TYPEHASH = 0xE397EAA556C649D10F65393AC1D09D5AA50D72547C850822C207516865E89E32;  
+
+    // keccak256("StandardMinerOnboard(address owner,address miner,uint256 deadline)");
+    bytes32 public constant STANDARD_MINER_TYPEHASH = 0x73F94559854A7E6267266A158D1576CBCAFFD8AE930E61FB632F9EC576D2BB37;  
+
+    // Public variables
+    bytes32 public DOMAIN_SEPARATOR;
+    uint256 public totalStandardMiner;                  // Total amount of standard miner
+    string public baseURI;
+    address public tokenAKRE;                           // Token adddress of AKRE
+    address public tokenNative;                         // The wrapped token of the Native token, such as WETH, WMATIC
 
     // All registered miner manufactures
     mapping(address => bool) public AllManufactures;
@@ -35,27 +43,12 @@ contract ArkreenMiner is
 
     // All managers with various privilege
     mapping(uint256 => address) public AllManagers;
-     
-    bytes32 public DOMAIN_SEPARATOR;
 
     // Mapping from miner address to the respective token ID
     mapping(address => uint256) public AllMinersToken;
 
-    string public baseURI;
-
     // Miner white list mapping from miner address to miner type
     mapping(address => uint8) public whiteListMiner;
-
-    uint256 public totalStandardMiner;                              // Total amount of standard miner
-
-    address public tokenNative;                                     // The wrapped token of the Native token, such as WETH, WMATIC
-
-    // Constants
-    // keccak256("RemoteMinerOnboard(address owner,address miners,address token,uint256 price,uint256 deadline)");
-    bytes32 public constant REMOTE_MINER_TYPEHASH = 0xE397EAA556C649D10F65393AC1D09D5AA50D72547C850822C207516865E89E32;  
-
-    // keccak256("StandardMinerOnboard(address owner,address miner,uint256 deadline)");
-    bytes32 public constant STANDARD_MINER_TYPEHASH = 0x73F94559854A7E6267266A158D1576CBCAFFD8AE930E61FB632F9EC576D2BB37;  
 
     // Events
     event MinerOnboarded(address indexed owner, address indexed miner);
@@ -113,15 +106,15 @@ contract ArkreenMiner is
     {}
 
     /**
-     * @dev Onboarding a remote Miner with Native token (MATIC)
+     * @dev Onboarding a remote Miner paid with Native token (MATIC)
      * @param owner address receiving the remote miner
      * @param miner address of the remote miner onboarding
-     * @param permitMiner signature of miner register authority to confirm the miner address and price.  
+     * @param permitMiner signature of the miner register authority to confirm the miner address and price.  
      */
     function RemoteMinerOnboardNative(
         address     owner,
         address     miner,
-        Signature   calldata  permitMiner
+        Signature   memory  permitMiner
     ) external payable ensure(permitMiner.deadline) {
 
         // Check payment value
@@ -145,7 +138,7 @@ contract ArkreenMiner is
     function RemoteMinerOnboardApproved(
         address     owner,
         address     miner,
-        Signature   calldata  permitMiner
+        Signature   memory  permitMiner
     ) external ensure(permitMiner.deadline) {
 
         // Check for minting remote miner  
@@ -221,8 +214,8 @@ contract ArkreenMiner is
     function RemoteMinerOnboard(
         address     owner,
         address     miner,
-        Sig       calldata  permitMiner,
-        Signature calldata  permitToPay
+        Sig       memory  permitMiner,
+        Signature memory  permitToPay
     ) external ensure(permitToPay.deadline) {
 
         // Check miner is white listed  

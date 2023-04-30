@@ -237,7 +237,7 @@ describe("ArkreenMiner", () => {
       const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyRegister.slice(2), 'hex'))
       const signature: SigStruct = { v, r, s }  
       
-      await ArkreenMiner.connect(manager).UpdateMinerWhiteList(MinerType.StandardMiner, miners)       
+      await ArkreenMiner.connect(manager).UpdateMinerWhiteList(MinerType.StandardMiner, miners)  
       await expect(ArkreenMiner.connect(owner1).StandardMinerOnboard(receiver, miner, constants.MaxUint256, signature))
               .to.emit(ArkreenMiner, "StandardMinerOnboarded")
               .withArgs(receiver, miner);
