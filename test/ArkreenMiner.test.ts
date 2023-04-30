@@ -46,7 +46,7 @@ describe("ArkreenMiner", () => {
 
     const ArkreenMinerFactory = await ethers.getContractFactory("ArkreenMiner")
     // _tokenNative is set as AKREToken just for testing
-    ArkreenMiner = await upgrades.deployProxy(ArkreenMinerFactory,[AKREToken.address, AKREToken.address, manager.address, register_authority.address])
+    ArkreenMiner = await upgrades.deployProxy(ArkreenMinerFactory,[AKREToken.address, owner2.address, manager.address, register_authority.address])
     await ArkreenMiner.deployed()
 
     await AKREToken.transfer(owner1.address, expandTo18Decimals(10000))
@@ -479,18 +479,17 @@ describe("ArkreenMiner", () => {
       const lastBlock = await ethers.provider.getBlock('latest')
       const timestamp = lastBlock.timestamp
 
+      await ArkreenMiner.setNativeToken(owner2.address)                          // Just for test 
       const register_digest = getOnboardingRemoteMinerDigest(
                       'Arkreen Miner',
                       ArkreenMiner.address,
                       { owner: owner1.address, miner: miners[1], 
-                        token: AKREToken.address, price: minerPrice, deadline: BigNumber.from(timestamp + 600) }
+                        token: owner2.address, price: minerPrice, deadline: BigNumber.from(timestamp + 600) }
                     )
       await ArkreenMiner.setManager(Register_Authority, register_authority.address)
-      await ArkreenMiner.setNativeToken(AKREToken.address)                          // Just for test 
-
       const {v, r, s} = ecsign( Buffer.from(register_digest.slice(2), 'hex'), 
                                             Buffer.from(privateKeyRegister.slice(2), 'hex'))           
-      signature = { v, r, s, token: AKREToken.address, value: minerPrice, deadline: BigNumber.from(timestamp + 600) } 
+      signature = { v, r, s, token: owner2.address, value: minerPrice, deadline: BigNumber.from(timestamp + 600) } 
     });
 
     it("Onboarding Remote Miner Failed 1: Signature deadline checking ", async () => {
@@ -526,12 +525,12 @@ describe("ArkreenMiner", () => {
                       'Arkreen Miner',
                       ArkreenMiner.address,
                       { owner: owner1.address, miner: miners[1], 
-                        token: AKREToken.address, price: minerPrice, deadline: constants.MaxUint256 }
+                        token: owner2.address, price: minerPrice, deadline: constants.MaxUint256 }
                     )
 
       const {v,r,s} = ecsign( Buffer.from(register_digest.slice(2), 'hex'), 
                                             Buffer.from(privateKeyRegister.slice(2), 'hex'))           
-      const signature: SignatureStruct = { v, r, s, token: AKREToken.address, value:minerPrice, deadline: constants.MaxUint256 } 
+      const signature: SignatureStruct = { v, r, s, token: owner2.address, value:minerPrice, deadline: constants.MaxUint256 } 
 
       const signature_err: SignatureStruct = { ...signature, s: r } 
       await expect(ArkreenMiner.connect(manager).RemoteMinerOnboardNative(receiver, miners[1], signature_err, {value: minerPrice}))          
@@ -541,8 +540,6 @@ describe("ArkreenMiner", () => {
 
       const balanceMatic = await ethers.provider.getBalance(owner1.address)
       await expect(ArkreenMiner.connect(owner1).RemoteMinerOnboardNative(receiver,  miners[1], signature, {value: minerPrice}))
-              .to.emit(AKREToken, "Transfer")
-              .withArgs(owner1.address, ArkreenMiner.address, minerPrice)
               .to.emit(ArkreenMiner, "MinerOnboarded")
               .withArgs(receiver, miners[1]);
 
@@ -558,6 +555,12 @@ describe("ArkreenMiner", () => {
       expect(await ArkreenMiner.AllMinerInfo(minerNFT)).to.deep.eq(minerInfo);
       expect(await ArkreenMiner.AllMinersToken(miners[1])).to.deep.eq(minerNFT);
       expect(await ArkreenMiner.whiteListMiner(miners[1])).to.deep.eq(0);
+
+      // Withdraw 
+      const balanceBefore = await ethers.provider.getBalance(ArkreenMiner.address)
+      await ArkreenMiner.withdraw(owner2.address) // Native token address is fake
+      expect(balanceBefore).to.eq(minerPrice)
+      expect(await ethers.provider.getBalance(ArkreenMiner.address)).to.eq(0)
     })
   })
 

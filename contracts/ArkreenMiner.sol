@@ -167,7 +167,7 @@ contract ArkreenMiner is
     ) view internal {
 
         // Check miner is white listed  
-        require( (whiteListMiner[miner] == uint8(MinerType.RemoteMiner) ), 'Arkreen Miner: Wrong Miner');
+        require(whiteListMiner[miner] == uint8(MinerType.RemoteMiner), 'Arkreen Miner: Wrong Miner');
         require(AllMinersToken[miner] == 0, "Arkreen Miner: Miner Repeated");
 
         // Check signature
@@ -188,14 +188,14 @@ contract ArkreenMiner is
      */
     function _mintRemoteMiner( address owner, address miner) internal {
 
-        // Prepare to mint new Remote/Standard miner
+        // Prepare to mint new remote miner
         Miner memory newMiner;
         newMiner.mAddress = miner;
         newMiner.mType = MinerType.RemoteMiner;
         newMiner.mStatus = MinerStatus.Normal;
         newMiner.timestamp = uint32(block.timestamp);    
 
-        // mint new Remote/Standard miner
+        // mint new remote miner
         uint256 realMinerID = totalSupply() + 1;
         _safeMint(owner, realMinerID);
         AllMinersToken[miner] = realMinerID;
@@ -414,9 +414,14 @@ contract ArkreenMiner is
         if(receiver == address(0)) {
             receiver = _msgSender();
         }
-        uint256 balance = IERC20(token).balanceOf(address(this));
-        TransferHelper.safeTransfer(token, receiver, balance);
-    }
+
+        if(token == tokenNative) {
+            TransferHelper.safeTransferETH(receiver, address(this).balance);      
+        } else {
+            uint256 balance = IERC20(token).balanceOf(address(this));
+            TransferHelper.safeTransfer(token, receiver, balance);
+        }
+      }
 
     function tokenURI(uint256 tokenId) public view override returns (string memory){
         return super.tokenURI(tokenId);
