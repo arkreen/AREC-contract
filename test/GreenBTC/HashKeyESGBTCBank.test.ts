@@ -5,7 +5,7 @@ import { ethers, network, upgrades } from "hardhat";
 import { ArkreenRECIssuanceExt__factory } from "../../typechain";
 
 import {
-    ArkreenTokenTest,
+    ArkreenToken,
     ArkreenMiner,
     ArkreenRECIssuance,
     ArkreenRECIssuanceExt,
@@ -42,7 +42,7 @@ describe("HashKeyESGBTCBank", () => {
     let privateKeyOwner:        string
     let privateKeyMaker:        string
 
-    let AKREToken:                    ArkreenTokenTest
+    let AKREToken:                    ArkreenToken
     let arkreenMiner:                 ArkreenMiner
     let arkreenRegistry:              ArkreenRegistry
     let arkreenRECIssuance:           ArkreenRECIssuance
@@ -75,8 +75,8 @@ describe("HashKeyESGBTCBank", () => {
       let lastBlock = await ethers.provider.getBlock('latest')
       console.log("ArkreenRECBank", lastBlock.timestamp)
 
-      const AKRETokenFactory = await ethers.getContractFactory("ArkreenTokenTest");
-      const AKREToken = await AKRETokenFactory.deploy(10_000_000_000);
+      const AKRETokenFactory = await ethers.getContractFactory("ArkreenToken");
+      const AKREToken = await upgrades.deployProxy(AKRETokenFactory, [10_000_000_000, deployer.address,'','']) as ArkreenToken
       await AKREToken.deployed();
 
       const ArkreenMinerFactory = await ethers.getContractFactory("ArkreenMiner")

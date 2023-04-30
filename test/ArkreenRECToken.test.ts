@@ -4,7 +4,7 @@ import { constants, BigNumber, Contract } from 'ethers'
 import { ethers, network, upgrades } from "hardhat";
 
 import {
-    ArkreenTokenTest,
+    ArkreenToken,
     ArkreenMiner,
     ArkreenRECIssuance,
     ArkreenRegistry,
@@ -40,7 +40,7 @@ describe("ArkreenRECToken", () => {
     let privateKeyOwner:        string
     let privateKeyMaker:        string
 
-    let AKREToken:                    ArkreenTokenTest
+    let AKREToken:                    ArkreenToken
     let arkreenMiner:                 ArkreenMiner
     let arkreenRegistry:             ArkreenRegistry
     let arkreenRECIssuance:           ArkreenRECIssuance
@@ -50,8 +50,8 @@ describe("ArkreenRECToken", () => {
     const Miner_Manager       = 0         
 
     async function deployFixture() {
-      const AKRETokenFactory = await ethers.getContractFactory("ArkreenTokenTest");
-      const AKREToken = await AKRETokenFactory.deploy(10_000_000_000);
+      const AKRETokenFactory = await ethers.getContractFactory("ArkreenToken");
+      const AKREToken = await upgrades.deployProxy(AKRETokenFactory, [10_000_000_000, deployer.address,'','']) as ArkreenToken
       await AKREToken.deployed();
 
       const ArkreenMinerFactory = await ethers.getContractFactory("ArkreenMiner")
@@ -86,11 +86,6 @@ describe("ArkreenRECToken", () => {
 
       const miners = randomAddresses(2)
       await arkreenMiner.connect(manager).RemoteMinerOnboardInBatch([owner1.address, maker1.address], miners)
-
-      // set formal launch
-      const lastBlock = await ethers.provider.getBlock('latest')
-//      await arkreenMiner.setLaunchTime(lastBlock.timestamp+5)
-//      await time.increaseTo(lastBlock.timestamp+5)
 
       const payer = maker1.address
       await arkreenMiner.setManager(Miner_Manager, manager.address)

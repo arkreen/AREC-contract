@@ -8,7 +8,7 @@ import { ecsign } from 'ethereumjs-util'
 import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 import {
-  ArkreenTokenTest
+  ArkreenToken
 } from "../typechain";
 
 import {
@@ -28,7 +28,7 @@ describe("ArkreenMiner", () => {
   let maker1:     SignerWithAddress
   let maker2:     SignerWithAddress
 
-  let AKREToken:                      ArkreenTokenTest
+  let AKREToken:                      ArkreenToken
   let ArkreenMiner:        Contract
   let privateKeyManager:              string
   let privateKeyRegister:             string
@@ -40,19 +40,14 @@ describe("ArkreenMiner", () => {
   const Payment_Receiver    = 2
 
   async function deployFixture() {
-    const AKRETokenFactory = await ethers.getContractFactory("ArkreenTokenTest");
-    AKREToken = await AKRETokenFactory.deploy(10_000_000_000);
+    const AKRETokenFactory = await ethers.getContractFactory("ArkreenToken");
+    const AKREToken = await upgrades.deployProxy(AKRETokenFactory, [10_000_000_000, deployer.address,'','']) as ArkreenToken
     await AKREToken.deployed();
 
     const ArkreenMinerFactory = await ethers.getContractFactory("ArkreenMiner")
     // _tokenNative is set as AKREToken just for testing
     ArkreenMiner = await upgrades.deployProxy(ArkreenMinerFactory,[AKREToken.address, AKREToken.address, manager.address, register_authority.address])
     await ArkreenMiner.deployed()
-
-//  const ArkreenMinerFactoryV2 = await ethers.getContractFactory("ArkreenMinerV2");
-//  const ArkreenMinerV2 = await upgrades.upgradeProxy(ArkreenMiner.address, ArkreenMinerFactoryV2)
-//  await ArkreenMinerV2.deployed()    
-//  ArkreenMiner = ArkreenMinerV2
 
     await AKREToken.transfer(owner1.address, expandTo18Decimals(10000))
     await AKREToken.connect(owner1).approve(ArkreenMiner.address, expandTo18Decimals(10000))

@@ -5,7 +5,7 @@ import { ethers, network, upgrades } from "hardhat";
 import { ArkreenRECIssuanceExt__factory } from "../typechain";
 
 import {
-    ArkreenTokenTest,
+    ArkreenToken,
     ArkreenMiner,
     ArkreenRECIssuance,
     ArkreenRECIssuanceExt,
@@ -37,7 +37,7 @@ describe("ArkreenRECIssuance", () => {
     let privateKeyOwner:        string
     let privateKeyMaker:        string
 
-    let AKREToken:                    ArkreenTokenTest
+    let AKREToken:                    ArkreenToken
     let arkreenMiner:                 ArkreenMiner
     let arkreenRegistry:              ArkreenRegistry
     let arkreenRECIssuance:           ArkreenRECIssuance
@@ -51,8 +51,8 @@ describe("ArkreenRECIssuance", () => {
     const Miner_Manager       = 0         
 
     async function deployFixture() {
-      const AKRETokenFactory = await ethers.getContractFactory("ArkreenTokenTest");
-      const AKREToken = await AKRETokenFactory.deploy(10_000_000_000);
+      const AKRETokenFactory = await ethers.getContractFactory("ArkreenToken");
+      const AKREToken = await upgrades.deployProxy(AKRETokenFactory, [10_000_000_000, deployer.address,'','']) as ArkreenToken
       await AKREToken.deployed();
 
       const ArkreenMinerFactory = await ethers.getContractFactory("ArkreenMiner")
@@ -143,21 +143,21 @@ describe("ArkreenRECIssuance", () => {
    
     describe("ARECMintPrice related", () => {
 
-      let TokenA: ArkreenTokenTest
-      let TokenB: ArkreenTokenTest
-      let TokenC: ArkreenTokenTest
-      let TokenD: ArkreenTokenTest
+      let TokenA: ArkreenToken
+      let TokenB: ArkreenToken
+      let TokenC: ArkreenToken
+      let TokenD: ArkreenToken
       let arkreenRECIssuanceExt: ArkreenRECIssuanceExt
 
       beforeEach(async () => {
-        const ERC20Factory = await ethers.getContractFactory("ArkreenTokenTest");
-        TokenA = await ERC20Factory.deploy(10_000_000_000);
+        const ERC20Factory = await ethers.getContractFactory("ArkreenToken");
+        TokenA = await upgrades.deployProxy(ERC20Factory, [10_000_000_000, deployer.address,'','']) as ArkreenToken
         await TokenA.deployed();
-        TokenB = await ERC20Factory.deploy(10_000_000_000);
+        TokenB = await upgrades.deployProxy(ERC20Factory, [10_000_000_000, deployer.address,'','']) as ArkreenToken
         await TokenB.deployed();
-        TokenC = await ERC20Factory.deploy(10_000_000_000);
+        TokenC = await upgrades.deployProxy(ERC20Factory, [10_000_000_000, deployer.address,'','']) as ArkreenToken
         await TokenC.deployed();  
-        TokenD = await ERC20Factory.deploy(10_000_000_000);
+        TokenD = await upgrades.deployProxy(ERC20Factory, [10_000_000_000, deployer.address,'','']) as ArkreenToken
         await TokenD.deployed();     
         arkreenRECIssuanceExt = ArkreenRECIssuanceExt__factory.connect(arkreenRECIssuance.address, deployer);       
         
