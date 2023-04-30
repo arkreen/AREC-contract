@@ -50,7 +50,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { deployer } = await getNamedAccounts();
 
   /*
-  const ArkreenMiner = await deploy(CONTRACTS.AMinerV10, {
+  const ArkreenMiner = await deploy(CONTRACTS.AMiner, {
       from: deployer,
       proxy: {
         proxyContract: "UUPSProxy",
@@ -71,7 +71,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 */
 
 
-  console.log("Deploying: ", CONTRACTS.AMinerV10, deployer);  
+  console.log("Deploying: ", CONTRACTS.AMiner, deployer);  
 
   /* // Verification is difficult in this deployment mode 
   const ArkreenMinerV10Factory = await ethers.getContractFactory("ArkreenMinerV10");
@@ -79,7 +79,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   await ArkreenMinerV10.deployed();
   */
 
-  const ArkreenMinerV10 = await deploy(CONTRACTS.AMinerV10, {
+  const ArkreenMinerV10 = await deploy(CONTRACTS.AMiner, {
       from: deployer,
       args: [],
       log: true,

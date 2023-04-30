@@ -15,11 +15,13 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   }  else if(hre.network.name === 'goerli')  {
     AKREToken_ADDRESS = "0xf2D4C9C2A9018F398b229D812871bf2B316D50E1"
     MANAGER_ADDRESS   = "0xc99b92e8d827aa21cd3ff8fb9576316d90120191"
-  }    
-  else if(hre.network.name === 'matic_test')  {
+  } else if(hre.network.name === 'matic_test')  {
     AKREToken_ADDRESS = "0xf2D4C9C2A9018F398b229D812871bf2B316D50E1"
     MANAGER_ADDRESS   = "0xc99b92e8d827aa21cd3ff8fb9576316d90120191"
-  }    
+  } else if(hre.network.name === 'matic')  {
+    AKREToken_ADDRESS = "0x960C67B8526E6328b30Ed2c2fAeA0355BEB62A83"
+    MANAGER_ADDRESS   = "0x12ba3311431C0f29Ae8B1a57401342373C807D9B"
+  }      
 
   if (AKREToken_ADDRESS === undefined || MANAGER_ADDRESS === undefined) {
     console.log("AKREToken_ADDRESS or MANAGER_ADDRESS not set, Wrong Network Name")
@@ -42,47 +44,62 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   });
 */
 
-  console.log("Deploying ArkreenMiner...");  
-  const ArkreenMinerFactory = await ethers.getContractFactory("ArkreenMiner");
-  const ArkreenMiner_Upgrade = await ArkreenMinerFactory.deploy();
-  await ArkreenMiner_Upgrade.deployed();
-  console.log("New ArkreenMiner deployed to %s:", hre.network.name, ArkreenMiner_Upgrade.address);
-
-  if(hre.network.name === 'goerli') {
-    const MINER_PROXY_ADDRESS = "0xc097415d069b37fbeaae14cdda45bb40873cfe33"       // Need to check
-    const NEW_IMPLEMENTATION = ArkreenMiner_Upgrade.address
-
-    const [deployer] = await ethers.getSigners();
-    const ArkreenMinerFactory = ArkreenMiner__factory.connect(MINER_PROXY_ADDRESS, deployer);
-
-    const callData = ArkreenMinerFactory.interface.encodeFunctionData("postUpdate", 
-                                                [AKREToken_ADDRESS as string, MANAGER_ADDRESS as string])
-    const updateTx = await ArkreenMinerFactory.upgradeToAndCall(NEW_IMPLEMENTATION, callData)
-    await updateTx.wait()
-
-//    console.log("callData, update", callData, updateTx)
-//    console.log("ArkreenRegistry deployed to %s: ", hre.network.name, ArkreenMinerFactory.address);
-  } 
+//  const ArkreenMinerFactory = await ethers.getContractFactory("ArkreenMiner");
+//  const ArkreenMiner_Upgrade = await ArkreenMinerFactory.deploy();
+//  await ArkreenMiner_Upgrade.deployed();
 
   if(hre.network.name === 'matic_test') {
-    const MINER_PROXY_ADDRESS = "0xb8663edc9929d9135e7f6d50f7d3a97862554a72"       // Need to check
-    const NEW_IMPLEMENTATION = ArkreenMiner_Upgrade.address
+    const MINER_PROXY_ADDRESS = "0xC4f795514586275c799729aF5AE7113Bdb7ccc86"       // game miner in matic test net
+//  const NEW_IMPLEMENTATION =  "0x4EDe87d416e872376583E793ac26526c535267C5"        // Wrong
+    const NEW_IMPLEMENTATION =  "0x7693ad7e3a69b241322094b14fcaec233afb3e56"        // original 
+//  const NEW_IMPLEMENTATION =  "0x16a427a1a2012fdde0ccad2664d5f2981d52a2d2"        // restored
 
     const [deployer] = await ethers.getSigners();
     const ArkreenMinerFactory = ArkreenMiner__factory.connect(MINER_PROXY_ADDRESS, deployer);
 
-    const callData = ArkreenMinerFactory.interface.encodeFunctionData("postUpdate", 
-                                              [AKREToken_ADDRESS as string, MANAGER_ADDRESS as string])
-    const updateTx = await ArkreenMinerFactory.upgradeToAndCall(NEW_IMPLEMENTATION, callData)
+    console.log("New ArkreenMiner deployed to %s:", hre.network.name, NEW_IMPLEMENTATION);
+
+//  const callData = ArkreenMinerFactory.interface.encodeFunctionData("postUpdate", 
+//                                            [AKREToken_ADDRESS as string, MANAGER_ADDRESS as string])
+//  const updateTx = await ArkreenMinerFactory.upgradeToAndCall(NEW_IMPLEMENTATION, callData)
+    const updateTx = await ArkreenMinerFactory.upgradeTo(NEW_IMPLEMENTATION)
     await updateTx.wait()
 
-//    console.log("callData, update", callData, updateTx)
-//    console.log("ArkreenRegistry deployed to %s: ", hre.network.name, ArkreenMinerFactory.address);
+    console.log("Update Trx:", updateTx)
+    console.log("Game miner Updated: ", hre.network.name, ArkreenMinerFactory.address);
  } 
+
+  if(hre.network.name === 'matic') {
+    const MINER_PROXY_ADDRESS = "0xAc4da3681e51278f82288617c7185a7a119E5b7B"       // Miner Contract in matic mainnet
+//  const NEW_IMPLEMENTATION =  "0x8aA572eE9c7991dc059a2Ae18844858B1Eb274F0"       // original 
+//  const NEW_IMPLEMENTATION =  "0x2DEe917Da0AF2ed006FEf069Ebf2B558E27c26B5"       // 2023/04/20: Remote miner paid by USDT/MATIC 
+    const NEW_IMPLEMENTATION =  "0x8fb18Bb2B2ef751e14BD05d5aaCB5405a6944F8E"       // 2023/04/25: Add native token checking in RemoteMinerOnboardNative
+
+    const [deployer] = await ethers.getSigners();
+    const ArkreenMinerFactory = ArkreenMiner__factory.connect(MINER_PROXY_ADDRESS, deployer);
+
+    console.log("New ArkreenMiner deployed to %s:", hre.network.name, NEW_IMPLEMENTATION);
+
+//  const callData = ArkreenMinerFactory.interface.encodeFunctionData("postUpdate", 
+//                                            [AKREToken_ADDRESS as string, MANAGER_ADDRESS as string])
+//  const updateTx = await ArkreenMinerFactory.upgradeToAndCall(NEW_IMPLEMENTATION, callData)
+    const updateTx = await ArkreenMinerFactory.upgradeTo(NEW_IMPLEMENTATION)
+    await updateTx.wait()
+
+    console.log("Update Trx:", updateTx)
+    console.log("Game miner Updated: ", hre.network.name, ArkreenMinerFactory.address);
+  } 
 };
 
+// 2023/04/20: yarn deploy:matic:AMinerUV10 
+// 2023/04/20: Remote miner paid by USDT/MATIC
+// 0x2DEe917Da0AF2ed006FEf069Ebf2B558E27c26B5
+
+// 2023/04/25: yarn deploy:matic:AMinerUV10 
+// Add native token checking in RemoteMinerOnboardNative 
+// 0x8fb18Bb2B2ef751e14BD05d5aaCB5405a6944F8E
 
 export default func;
-func.tags = ["AMinerU"];
+func.tags = ["AMinerUV10"];
 
 
