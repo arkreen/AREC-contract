@@ -39,14 +39,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     } 
 
     if(hre.network.name === 'matic') {
-//    const PROXY_ADDRESS = "0x3d5531cF0bC2e8d0658fEc0D1a9995211Ac1f337"            // Need to check: Intenal test version
+      const PROXY_ADDRESS = "0x3d5531cF0bC2e8d0658fEc0D1a9995211Ac1f337"            // Need to check: Intenal test version
 //    const NEW_IMPLEMENTATION = '0x504fb898a5dc3cf99f237e62228d09f52ee64a7f'       // Update to support SBT
 //    const NEW_IMPLEMENTATION = '0xc9fc3571e419d8d24826b9bb518a4420a89b30cf'       // Upgrade to support solidify and offset traceback
+      const NEW_IMPLEMENTATION = '0x7Db78703C9B1561A5F0810c96449AFdE6eA9096b'       // 2023/03/03: Add a security check
 //    const NEW_IMPLEMENTATION = '0xC51678BFd8e108F12CC3e5cb80F3067Bd6aEd323'       // 2023/04/02: Upgrade to support updateCID
 //    const NEW_IMPLEMENTATION = '0x968848f24Aacfe2F3f2BD7169B7a1d5669091Eaf'       // 2023/04/18: Upgrade to remove the 3-day limitation of updateCertificate and SFT limitation
-
-      const PROXY_ADDRESS = "0x1e5132495cdaBac628aB9F5c306722e33f69aa24"            // Need to check: Normal release
-      const NEW_IMPLEMENTATION = '0xE6264Ed46380BBf28AEF18ECB2fD1F4C92aa59F5'       // 2023/04/18: Upgrade to remove the 3-day limitation of updateCertificate
+//    const NEW_IMPLEMENTATION = '0xE6264Ed46380BBf28AEF18ECB2fD1F4C92aa59F5'       // 2023/05/08: Re-Add SBT limitation
+ 
+//      const PROXY_ADDRESS = "0x1e5132495cdaBac628aB9F5c306722e33f69aa24"            // Need to check: Normal release
+//      const NEW_IMPLEMENTATION = '0xE6264Ed46380BBf28AEF18ECB2fD1F4C92aa59F5'       // 2023/04/18: Upgrade to remove the 3-day limitation of updateCertificate
       
       const [deployer] = await ethers.getSigners();
 
@@ -85,10 +87,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // Upgrade to support updateCID on Matic mainnet trial version
 
 // 2023/04/18: yarn deploy:matic:RECBadgeU
-// Upgrade to remove the 3-day limitation of updateCertificate and SFT limitation (Intenal test version)
+// Upgrade to remove the 3-day limitation of updateCertificate and SBT limitation (Intenal test version)
 
 // 2023/04/18: yarn deploy:matic:RECBadgeU
 // Upgrade to remove the 3-day limitation of updateCertificate (Normal release)
+
+// 2023/05/08: yarn deploy:matic:RECBadgeU
+// Re-add SBT limitation (Intenal test version)
+
+// 2023/05/09: yarn deploy:matic:RECBadgeU (Intenal test version)
+// Revert to 0x7Db78703C9B1561A5F0810c96449AFdE6eA9096b as new version is imcompatible
 
 func.tags = ["RECBadgeU"];
 
