@@ -57,6 +57,7 @@
     "deploy:matic_test:gAKRE2U": "hardhat --network matic_test deploy --tags gAKRE2U",
     "deploy:matic_test:RECBadgeD": "hardhat --network matic_test deploy --tags RECBadgeD",
     "deploy:matic_test:arkReward": "hardhat --network matic_test deploy --tags arkReward",
+    "deploy:matic_test:RECBadge": "hardhat --network matic_test deploy --tags RECBadge --reset",
 
     "deploy:matic_test:ABuilder": "hardhat --network matic_test deploy --tags ABuilder",
     "deploy:matic_test:HskBTC": "hardhat --network matic_test deploy --tags HskBTC --reset",

@@ -29,7 +29,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2023/04/02: Update to correct bug of cancelRECRequest
 // yarn deploy:matic_test:RECIssueExtD
-// 0x0babee40f62d946d5de5beec48c5c4c453c6b1f0
+// 0x0bABeE40F62D946d5DE5beEC48C5C4c453C6b1F0
 
 // 2023/04/02: Update to correct bug of cancelRECRequest
 // yarn deploy:matic:RECIssueExtD

@@ -3,7 +3,8 @@ import { DeployFunction } from "hardhat-deploy/types";
 import { ethers, upgrades } from "hardhat";
 import { CONTRACTS } from "../constants";
 //import {ArkreenRegistry__factory } from "../../typechain";
-import {HashKeyESGBTC__factory } from "../../typechain";
+//import {HashKeyESGBTC__factory } from "../../typechain";
+import {ArkreenRECIssuance__factory } from "../../typechain";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
@@ -27,6 +28,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //                                            [AKREToken_ADDRESS as string, MANAGER_ADDRESS as string])
 */
 
+/*
   const IMPLEMENTATION_ADDRESS  = "0x16F40BF24E7232056800b0601d6f36121f66ff44"        //2023/3/14: HashKeyESGBTC 
   const BUILDER_ADDRESS         = "0xa05a9677a9216401cf6800d28005b227f7a3cfae"        // ArkreenBuilder address
   const HART_ADDRESS            = "0x0999afb673944a7b8e1ef8eb0a7c6ffdc0b43e31"        // HashKey ART token address
@@ -45,10 +47,32 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       log: true,
       skipIfAlreadyDeployed: false,
   });
+*/  
+
+  // Proxy of ArkreenIssuance for dev environment
+  const IMPLEMENTATION_ADDRESS  = "0x51016EafbC75058391beEea156Ab6B8Ad9B92E52"        // 2023/05/09: ArkreenIssuance Implementation 
+  const AKREToken_ADDRESS       = "0x8Ab2299351585097101c91FE4b098d95c18D28a7"        // Arkreen Token
+  const REGISTRY_ADDRESS        = "0xfEcbD33525d9B869e5f3CaB895cd6D7A666209ee"        // ArkreenRegistry address
   
+  // 2023/05/09:  0x32Dbe18BBc2C752203b6e1bE87EdE5655A091dFa
+  const callData = ArkreenRECIssuance__factory.createInterface().encodeFunctionData("initialize",   // Create new ArkreenIssuance
+                                      [AKREToken_ADDRESS, REGISTRY_ADDRESS])                        // 2023/05/19
+  
+  console.log("IMPLEMENTATION_ADDRESS, deployer, callData", IMPLEMENTATION_ADDRESS, deployer, callData)
+
+  const UUPSProxyContract = await deploy(CONTRACTS.UUPSProxy, {
+      from: deployer,
+      args: [IMPLEMENTATION_ADDRESS, deployer, callData],
+      log: true,
+      skipIfAlreadyDeployed: false,
+  });
+
   console.log("UUPSProxy deployed to %s: ", hre.network.name, UUPSProxyContract.address);
 
 };
+
+// 2023/05/09:  yarn deploy:matic_test:UUPSProxy
+// Proxy:   0x32Dbe18BBc2C752203b6e1bE87EdE5655A091dFa
 
 export default func;
 func.tags = ["UUPSProxy"];

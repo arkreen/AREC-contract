@@ -16,7 +16,7 @@ import "./interfaces/IERC5192.sol";
 import "./ArkreenBadgeType.sol";  
 
 // Import this file to use console.log
-import "hardhat/console.sol";
+// import "hardhat/console.sol";
 
 contract ArkreenBadge is
     OwnableUpgradeable,
@@ -36,12 +36,6 @@ contract ArkreenBadge is
     event ArkreenRegistryUpdated(address newArkreenRegistry);
     event OffsetCertificateMinted(uint256 tokenId);
     event OffsetCertificateUpdated(uint256 tokenId);
-
-    // Modifiers
-    modifier ensure(uint deadline) {
-        require(deadline >= block.timestamp, 'ARB: EXPIRED');
-        _;
-    }
   
     modifier whenNotPaused() {
         require(!IPausable(arkreenRegistry).paused(), 'ARB: Paused');
