@@ -46,9 +46,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //////////////////////////////////////////////////////////////
 
   } else if(hre.network.name === 'matic')  {
-      AKREToken_ADDRESS = "0x960c67b8526e6328b30ed2c2faea0355beb62a83"
-      MANAGER_ADDRESS   = "0x12ba3311431C0f29Ae8B1a57401342373C807D9B"
-      REGISTER_ADDRESS  = "0x12ba3311431C0f29Ae8B1a57401342373C807D9B" 
+      // Internal UX version
+//      AKREToken_ADDRESS = "0x960c67b8526e6328b30ed2c2faea0355beb62a83"
+//      MANAGER_ADDRESS   = "0x12ba3311431C0f29Ae8B1a57401342373C807D9B"
+//      REGISTER_ADDRESS  = "0x12ba3311431C0f29Ae8B1a57401342373C807D9B" 
+//      WMATIC_ADDRESS    = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"          // WMATIC address      
+
+      // Open test version
+      AKREToken_ADDRESS = "0x21B101f5d61A66037634f7e1BeB5a733d9987D57"
+      MANAGER_ADDRESS   = "0x78993487b21b8cb8f0442f3ffcb0fc880da34905"
+      REGISTER_ADDRESS  = "0x78993487b21b8cb8f0442f3ffcb0fc880da34905" 
       WMATIC_ADDRESS    = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"          // WMATIC address      
   }    
 
@@ -108,6 +115,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // Deployed in Polygon test for delvelopment environment after removing Gaming miner
 // Proxy: 0x682e01f8ecc0524085F51CC7dFB54fDB8729ac22
 // Implementation: 0xc7A014f4b823788812A9Cd08D1c819e882b13b89
+
+// 2023/05/09: yarn deploy:matic:AMiner 
+// Deployed in Polygon mainnet for Open Testnet after removing Gaming miner
+// Proxy:           failed for low value
+// Implementation:  0x7a0Df5eFfdbb91DF24cb7F7dB2500ce9721a7A78
+
 
 export default func;
 func.tags = ["AMiner"];

@@ -104,6 +104,7 @@
     "deploy:matic:RECIssueD": "hardhat --network matic deploy --tags RECIssueD --reset",
     "deploy:matic:RECIssueU": "hardhat --network matic deploy --tags RECIssueU",
     "deploy:matic:RECToken": "hardhat --network matic deploy --tags RECToken",
+    "deploy:matic:RECTokenI": "hardhat --network matic deploy --tags RECTokenI",
     
     "deploy:matic:RECTokenD": "hardhat --network matic deploy --tags RECTokenD --reset",
     "deploy:matic:RECTokenU": "hardhat --network matic deploy --tags RECTokenU",

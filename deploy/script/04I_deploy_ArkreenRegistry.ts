@@ -116,6 +116,32 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
         console.log("ArkreenRegistry Initialized to %s: ", hre.network.name, ArkreenRegistryFactory.address);
 */
+        // 2023/05/10:   Update MinerContract address and Update AREC Issuer/Certifier address, remove old issuer address
+        const ArkreenMiner_address        = '0xbf8eF5D950F78eF8edBB8674a48cDACa675831Ae'
+        const ArkreenRECToken_address     = '0x58E4D14ccddD1E993e6368A8c5EAa290C95caFDF'
+
+        const Issuer_address              = '0xFedD52848Cb44dcDBA95df4cf2BCBD71D58df879'
+        const Issuer_name                 = 'Arkreen DAO REC Issuer'
+
+        const remove_Issuer_address       = '0xec9254677d252df0dCaEb067dFC8b4ea5F6edAfC'
+
+        const [deployer] = await ethers.getSigners();
+        const ArkreenRegistryFactory = ArkreenRegistry__factory.connect(ArkreenRegistry_address, deployer);
+
+        const updateTxMiner = await ArkreenRegistryFactory.setArkreenMiner(ArkreenMiner_address)
+        await updateTxMiner.wait()
+        console.log("ArkreenMiner Initialized: %s: ", hre.network.name, ArkreenMiner_address);        
+
+        const updateTxAddRECIssuer = await ArkreenRegistryFactory.addRECIssuer(Issuer_address, ArkreenRECToken_address, Issuer_name)
+        await updateTxAddRECIssuer.wait()
+        console.log("AddRECIssuer Initialized: %s: ", hre.network.name, Issuer_address, ArkreenRECToken_address, Issuer_name);        
+
+        const removeTxAddRECIssuer = await ArkreenRegistryFactory.removeRECIssuer(remove_Issuer_address)
+        await removeTxAddRECIssuer.wait()
+        console.log("AddRECIssuer removed: ", hre.network.name, remove_Issuer_address);        
+
+        console.log("ArkreenRegistry Initialized to %s: ", hre.network.name, ArkreenRegistryFactory.address);
+
         //////////////////////////////////////////////////
 /*        
         // 2023/04/04:  Matic mainnet Normal release
@@ -140,6 +166,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         await updateTxIssuance.wait()
 */
 
+/*
         // 2023/04/04:  Matic Mainnet Normal release
         //function manageAssetARECExt( uint256 idxAsset, uint256 flag, string calldata idAsset, address issuer, 
         //  address tokenREC, address tokenPay)
@@ -155,6 +182,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         await manageAssetARECExtTx.wait()
 
         console.log("ArkreenRegistry newAssetAREC is executed: %s: ", hre.network.name, ArkreenRegistry_address);
+*/        
 
     } 
 };
@@ -169,6 +197,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2023/05/09: Initialize ArkreenRegistry: setRECIssuance, setArkreenMiner, setArkreenRetirement, addRECIssuer
 // yarn deploy:matic_test:gRegistryI
+
+// 2023/05/10: Update MinerContract address and Update AREC Issuer/Certifier address, remove old issuer address
+// yarn deploy:matic:gRegistryI
 
 func.tags = ["gRegistryI"];
 

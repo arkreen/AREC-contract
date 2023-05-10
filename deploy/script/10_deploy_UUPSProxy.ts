@@ -2,9 +2,10 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { ethers, upgrades } from "hardhat";
 import { CONTRACTS } from "../constants";
-//import {ArkreenRegistry__factory } from "../../typechain";
-//import {HashKeyESGBTC__factory } from "../../typechain";
-import {ArkreenRECIssuance__factory } from "../../typechain";
+//import { ArkreenRegistry__factory } from "../../typechain";
+//import { HashKeyESGBTC__factory } from "../../typechain";
+//import { ArkreenRECIssuance__factory } from "../../typechain";
+import { ArkreenMiner__factory } from "../../typechain";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
@@ -49,15 +50,32 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   });
 */  
 
+/*
   // Proxy of ArkreenIssuance for dev environment
+  // 2023/05/09
   const IMPLEMENTATION_ADDRESS  = "0x51016EafbC75058391beEea156Ab6B8Ad9B92E52"        // 2023/05/09: ArkreenIssuance Implementation 
   const AKREToken_ADDRESS       = "0x8Ab2299351585097101c91FE4b098d95c18D28a7"        // Arkreen Token
   const REGISTRY_ADDRESS        = "0xfEcbD33525d9B869e5f3CaB895cd6D7A666209ee"        // ArkreenRegistry address
   
   // 2023/05/09:  0x32Dbe18BBc2C752203b6e1bE87EdE5655A091dFa
-  const callData = ArkreenRECIssuance__factory.createInterface().encodeFunctionData("initialize",   // Create new ArkreenIssuance
-                                      [AKREToken_ADDRESS, REGISTRY_ADDRESS])                        // 2023/05/19
+  const callData = ArkreenRECIssuance__factory.createInterface().encodeFunctnData("initialize",   // Create new ArkreenIssuance
+                                      [AKREToken_ADDRESS, REGISTRY_ADDRESS])                        // 2023/05/09
+*/
+
+  // Proxy of ArkreenMiner for Open testnet
+  // 2023/05/10
+  const IMPLEMENTATION_ADDRESS  = "0x7a0Df5eFfdbb91DF24cb7F7dB2500ce9721a7A78"    // 2023/05/10: ArkreenIssuance Implementation 
+
+  // Open test version
+  const AKREToken_ADDRESS = "0x21B101f5d61A66037634f7e1BeB5a733d9987D57"
+  const MANAGER_ADDRESS   = "0x78993487b21b8cb8f0442f3ffcb0fc880da34905"
+  const REGISTER_ADDRESS  = "0x78993487b21b8cb8f0442f3ffcb0fc880da34905" 
+  const WMATIC_ADDRESS    = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"          // WMATIC address    
   
+  // 2023/05/10:  0xbf8eF5D950F78eF8edBB8674a48cDACa675831Ae
+  const callData = ArkreenMiner__factory.createInterface().encodeFunctionData("initialize",     // Create new ArkreenIssuance
+                      [AKREToken_ADDRESS, WMATIC_ADDRESS, MANAGER_ADDRESS, REGISTER_ADDRESS])   // 2023/05/10
+
   console.log("IMPLEMENTATION_ADDRESS, deployer, callData", IMPLEMENTATION_ADDRESS, deployer, callData)
 
   const UUPSProxyContract = await deploy(CONTRACTS.UUPSProxy, {
@@ -67,12 +85,17 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       skipIfAlreadyDeployed: false,
   });
 
+
   console.log("UUPSProxy deployed to %s: ", hre.network.name, UUPSProxyContract.address);
 
 };
 
-// 2023/05/09:  yarn deploy:matic_test:UUPSProxy
+// 2023/05/09:  yarn deploy:matic_test:UUPSProxy:   ArkreenIssuance
 // Proxy:   0x32Dbe18BBc2C752203b6e1bE87EdE5655A091dFa
+
+// 2023/05/10:  yarn deploy:matic:UUPSProxy:   ArkreenMiner
+// Proxy:   0xbf8eF5D950F78eF8edBB8674a48cDACa675831Ae
+
 
 export default func;
 func.tags = ["UUPSProxy"];
