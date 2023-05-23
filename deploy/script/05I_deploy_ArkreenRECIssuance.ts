@@ -80,9 +80,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //    const tARKRE_TOKEN_ADDRESS = "0xA906175C2f72BB2D8d16427dda524CBD324Cc510"
 
       // 2023/04/04
-      const tARKRE_TOKEN_ADDRESS = "0x21B101f5d61A66037634f7e1BeB5a733d9987D57"
-      const updateTx = await ArkreenRECIssuanceExtFactory.setTokenAKRE(tARKRE_TOKEN_ADDRESS)
-      await updateTx.wait()          
+//    const tARKRE_TOKEN_ADDRESS = "0x21B101f5d61A66037634f7e1BeB5a733d9987D57"
+//    const updateTx = await ArkreenRECIssuanceExtFactory.setTokenAKRE(tARKRE_TOKEN_ADDRESS)
+//    await updateTx.wait()          
 
       /////////////////////////////////////////////////////////
 //    const REC_ISSUANCE_EXT_ADDRESS  = "0x677174509c37c91e6675f6203608195c456d8b13"        // 2023/03/22
@@ -95,12 +95,29 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
       /////////////////////////////////////////////////////////
 //    const AKREToken_ADDRESS         = "0x960C67B8526E6328b30Ed2c2fAeA0355BEB62A83"        // 2023/03/22: gAKRE
-//    const AKREToken_PRICE           = BigNumber.from(100000000000)                        // 2023/03/22: 10**11
+      const AKREToken_ADDRESS         = "0x21B101f5d61A66037634f7e1BeB5a733d9987D57"        // 2023/05/22: tAKRE
+
+    const AKREToken_PRICE           = BigNumber.from(100000000000)                        // 2023/03/22: 10**11
 
       // 2023/03/22
       // function updateARECMintPrice(address token, uint256 price)
 //    const updateTx = await ArkreenRECIssuanceExtFactory.updateARECMintPrice(AKREToken_ADDRESS, AKREToken_PRICE)
 //    await updateTx.wait()      
+
+      // 2023/05/22
+      // function updateARECMintPrice(address token, uint256 price)
+      console.log("ArkreenRECIssuance Update Mint Price:", hre.network.name, AKREToken_ADDRESS, AKREToken_PRICE);
+      const updateTx = await ArkreenRECIssuanceExtFactory.updateARECMintPrice(AKREToken_ADDRESS, AKREToken_PRICE)
+      await updateTx.wait()      
+
+      {
+        // 2023/05/22
+        // Remove the old gARKE
+        const AKREToken_ADDRESS_OLD = "0x960C67B8526E6328b30Ed2c2fAeA0355BEB62A83"        // 2023/05/22: gAKRE
+        console.log("ArkreenRECIssuance Remove Mint Price:", hre.network.name, AKREToken_ADDRESS_OLD);
+        const updateTx = await ArkreenRECIssuanceExtFactory.updateARECMintPrice(AKREToken_ADDRESS_OLD, 0)
+        await updateTx.wait()    
+      }
 
       //////////////////////////////////////////////////////
       // 2023/04/04
@@ -131,6 +148,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2023/05/09： Called updateARECMintPrice
 // yarn deploy:matic_test:RECIssueI
+
+// 2023/05/22： Called updateARECMintPrice: Add new tAKRE and remove old gAKRE
+// yarn deploy:matic:RECIssueI
+// Script always overtime, done by calling in explorer
 
 func.tags = ["RECIssueI"];
 
