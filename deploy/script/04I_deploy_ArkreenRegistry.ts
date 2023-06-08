@@ -42,15 +42,26 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         console.log("ArkreenRegistry newAssetAREC is executed: %s: ", hre.network.name, ArkreenRegistry_address);
 */
         // 2023/05/05:    Dev Environment
-        const ArkreenRegistry_address     = '0xfEcbD33525d9B869e5f3CaB895cd6D7A666209ee'
-        const ArkreenMiner_address        = '0x682e01f8ecc0524085F51CC7dFB54fDB8729ac22'
-        const ArkreenRECIssuance_address  = '0x32Dbe18BBc2C752203b6e1bE87EdE5655A091dFa'
-        const ArkreenRECToken_address     = '0x70FdFE7DA492080A8F0233F67C5B48D36d8ceE8b'
-        const ArkreenRECBadge_address     = '0x626f470Ae1427d01f0Fab4D79BC0c9748b07325d'
+        // const ArkreenRegistry_address     = '0xfEcbD33525d9B869e5f3CaB895cd6D7A666209ee'
+        // const ArkreenMiner_address        = '0x682e01f8ecc0524085F51CC7dFB54fDB8729ac22'
+        // const ArkreenRECIssuance_address  = '0x32Dbe18BBc2C752203b6e1bE87EdE5655A091dFa'
+        // const ArkreenRECToken_address     = '0x70FdFE7DA492080A8F0233F67C5B48D36d8ceE8b'
+        // const ArkreenRECBadge_address     = '0x626f470Ae1427d01f0Fab4D79BC0c9748b07325d'
 
-        const Issuer_address              = '0xF1CF65Dbfa9cCEe650a053E218F5788F63bDA60E'
+        // const Issuer_address              = '0xF1CF65Dbfa9cCEe650a053E218F5788F63bDA60E'
+        // const Issuer_name                 = 'Arkreen DAO REC Issuer'
+
+        // 2023/06/08:    Pre-Production
+        const ArkreenRegistry_address     = '0x4590B2d8251963E249967D1fa8122974dE574aC6'
+        const ArkreenMiner_address        = '0x1F742C5f32C071A9925431cABb324352C6e99953'
+        const ArkreenRECIssuance_address  = '0x9745918BAF66e3634502bF9a6C07AD320291D211'
+        const ArkreenRECToken_address     = '0x2cf7D8C6122a9026d875a8AF0967D8fd6648d9C4'
+        const ArkreenRECBadge_address     = '0x70A7981b5c9ca1a4250A0C9BBDC2141752deBeeb'
+
+        const Issuer_address              = '0x8EEb03d79B08dD763fA549fFA57e5ffF4350B13e'
         const Issuer_name                 = 'Arkreen DAO REC Issuer'
 
+        // 2023/06/08:
         const [deployer] = await ethers.getSigners();
         const ArkreenRegistryFactory = ArkreenRegistry__factory.connect(ArkreenRegistry_address, deployer);
 
@@ -200,6 +211,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2023/05/10: Update MinerContract address and Update AREC Issuer/Certifier address, remove old issuer address
 // yarn deploy:matic:gRegistryI
+
+// 2023/06/08: Initialize ArkreenRegistry: setRECIssuance, setArkreenMiner, setArkreenRetirement, addRECIssuer
+// for Pre-Production Env
+// yarn deploy:matic_test:gRegistryI
 
 func.tags = ["gRegistryI"];
 

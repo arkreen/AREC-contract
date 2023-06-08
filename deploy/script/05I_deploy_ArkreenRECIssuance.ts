@@ -2,7 +2,7 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { CONTRACTS } from "../constants";
 import { ethers } from "hardhat";
-import { ArkreenRECIssuanceExt__factory } from "../../typechain";
+//import { ArkreenRECIssuanceExt__factory } from "../../typechain";
 import { ArkreenRECIssuance__factory } from "../../typechain";
 import { BigNumber } from "ethers";
 
@@ -17,26 +17,31 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //    await ArkreenRECIssuance_Upgrade.deployed();
 
     if(hre.network.name === 'matic_test') {
+      
 //      const REC_ISSUANCE_ADDRESS = "0x95f56340889642a41b913c32d160d2863536e073"       // Need to check  // Simu mode
 //      const REC_ISSUANCE_ADDRESS = "0x7370c2166D7720c41F0931f0bbF67e10d00B0D18"       // Need to check  // Matic testnet
-        const REC_ISSUANCE_ADDRESS = "0x32Dbe18BBc2C752203b6e1bE87EdE5655A091dFa"       // Need to check  // Dev environment
+//      const REC_ISSUANCE_ADDRESS = "0x32Dbe18BBc2C752203b6e1bE87EdE5655A091dFa"       // Need to check  // Dev environment
+        const REC_ISSUANCE_ADDRESS = "0x9745918BAF66e3634502bF9a6C07AD320291D211"       // 2023/06/08: Pre-production Env
 
+        const [deployer] = await ethers.getSigners();
+        const ArkreenRECIssuanceFactory = ArkreenRECIssuance__factory.connect(REC_ISSUANCE_ADDRESS, deployer);          
+
+/*          
         // 2023/03/28
         // function setESGExtAddress(address addrESGExt)         
 //      const REC_ISSUANCE_EXT_ADDRESS  = "0x53abcbfc0818039bac5f72429af025eaf566b624"        // 2023/03/28, reuse simu deployment
 //      const REC_ISSUANCE_EXT_ADDRESS  = "0x0babee40f62d946d5de5beec48c5c4c453c6b1f0"        // 2023/04/02, bug in cancelRECRequest corrected
 //      const REC_ISSUANCE_EXT_ADDRESS  = "0x0babee40f62d946d5de5beec48c5c4c453c6b1f0"        // 2023/05/09, reuse for dev environment
-
-        const [deployer] = await ethers.getSigners();
-        const ArkreenRECIssuanceExtFactory = ArkreenRECIssuance__factory.connect(REC_ISSUANCE_ADDRESS, deployer);  
-/*              
+//      const REC_ISSUANCE_EXT_ADDRESS  = "0x0bABeE40F62D946d5DE5beEC48C5C4c453C6b1F0"        // 2023/06/08, reuse for dev environment
+        
+        // 2023/06/08 
         const updateTx = await ArkreenRECIssuanceExtFactory.setESGExtAddress(REC_ISSUANCE_EXT_ADDRESS)
         await updateTx.wait()     
 
         console.log("callData, update", updateTx)
         console.log("ArkreenRECIssuance: set MVP address to %s: ", hre.network.name, ArkreenRECIssuanceExtFactory.address,
                                                                     REC_ISSUANCE_EXT_ADDRESS );
-*/
+*/                                                                    
 
 //      const MVP_ADDRESS = "0x8d832f73D678cFd2dA04401b18973Ed146Db1ABA"                // (2023/2/26): Simu mode, MVP address, account 6
 
@@ -54,17 +59,21 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         await updateTx.wait()
 */        
 
-      // 2023/05/09
-      const AKREToken_ADDRESS         = "0x8Ab2299351585097101c91FE4b098d95c18D28a7"        // 2023/05/09: gAKRE
+      // 2023/05/09, 2023/06/08
+      // const AKREToken_ADDRESS      = "0x8Ab2299351585097101c91FE4b098d95c18D28a7"        // 2023/05/09: gAKRE
+      const AKREToken_ADDRESS         = "0xc83DEd2B70F25C0EB0ef1cDE993DEaA3fAE91314"        // 2023/06/08: tAKRE
+
+      // 2023/06/08
       const AKREToken_PRICE           = BigNumber.from(100000000000)                        // 2023/05/09: 10**11
 
+      // 2023/06/08
       // function updateARECMintPrice(address token, uint256 price)
-      const updateTx = await ArkreenRECIssuanceExtFactory.updateARECMintPrice(AKREToken_ADDRESS, AKREToken_PRICE)
+      const updateTx = await ArkreenRECIssuanceFactory.updateARECMintPrice(AKREToken_ADDRESS, AKREToken_PRICE)
       await updateTx.wait()      
 
-      console.log("ArkreenRECIssuance: updateARECMintPrice:", hre.network.name, ArkreenRECIssuanceExtFactory.address,
-                                                                  AKREToken_ADDRESS, AKREToken_PRICE );      
-                 
+      console.log("ArkreenRECIssuance: updateARECMintPrice:", hre.network.name, ArkreenRECIssuanceFactory.address,
+                                                                  AKREToken_ADDRESS, AKREToken_PRICE );   
+
     } 
 
     if(hre.network.name === 'matic') {
@@ -152,6 +161,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2023/05/22： Called updateARECMintPrice: Add new tAKRE and remove old gAKRE
 // yarn deploy:matic:RECIssueI
 // Script always overtime, done by calling in explorer
+
+// 2023/06/08： Called setESGExtAddress, Must call setESGExtAddress First
+// yarn deploy:matic_test:RECIssueI
+
+// 2023/06/08： Called updateARECMintPrice
+// yarn deploy:matic_test:RECIssueI
 
 func.tags = ["RECIssueI"];
 

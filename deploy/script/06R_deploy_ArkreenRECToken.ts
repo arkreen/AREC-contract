@@ -20,24 +20,31 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //    const SYMBOL    = 'HART'
 
       // 2023/05/09: Matic testnet, copy the simu implt of ArkreenRECToken
-      const IMPLEMENTATION_ADDRESS  = "0x19e9BAD19ca2696b509d938476ee4CF823538df4"  // 2023/05/09: Simu implt
-      const REGISTRY_ADDRESS   = "0xfEcbD33525d9B869e5f3CaB895cd6D7A666209ee"       // 2023/05/09:
-      const ISSUER_ADDRESS     = "0xF1CF65Dbfa9cCEe650a053E218F5788F63bDA60E"       // 2023/05/09: 
+      // const IMPLEMENTATION_ADDRESS  = "0x19e9BAD19ca2696b509d938476ee4CF823538df4"   // 2023/05/09: Simu implt
+      // const REGISTRY_ADDRESS   = "0xfEcbD33525d9B869e5f3CaB895cd6D7A666209ee"        // 2023/05/09:
+      // const ISSUER_ADDRESS     = "0xF1CF65Dbfa9cCEe650a053E218F5788F63bDA60E"        // 2023/05/09: 
+
+      // 2023/06/30: Matic testnet, copy the simu implt of ArkreenRECToken
+      const IMPLEMENTATION_ADDRESS  = "0x19e9BAD19ca2696b509d938476ee4CF823538df4"      // 2023/06/08: Simu implt
+      const REGISTRY_ADDRESS   = "0x4590B2d8251963E249967D1fa8122974dE574aC6"           // 2023/06/08:
+      const ISSUER_ADDRESS     = "0x8EEb03d79B08dD763fA549fFA57e5ffF4350B13e"           // 2023/06/08: 
+
       const ART_NAME  = ''
       const SYMBOL    = ''
 
-    const callData = ArkreenRECToken__factory.createInterface().encodeFunctionData("initialize", // Create new ArkreenRECToken
-                                        [REGISTRY_ADDRESS, ISSUER_ADDRESS, ART_NAME, SYMBOL])    // 2023/05/09
+      // 2023/06/08
+      const callData = ArkreenRECToken__factory.createInterface().encodeFunctionData("initialize", // Create new ArkreenRECToken
+                                          [REGISTRY_ADDRESS, ISSUER_ADDRESS, ART_NAME, SYMBOL])    // 2023/05/09 // 2023/06/08
 
-    console.log("IMPLEMENTATION_ADDRESS, deployer, callData", IMPLEMENTATION_ADDRESS, deployer, callData)
+      console.log("IMPLEMENTATION_ADDRESS, deployer, callData", IMPLEMENTATION_ADDRESS, deployer, callData)
 
-    const ArkreenRECToken = await deploy(CONTRACTS.UUPSProxy, {
-        from: deployer,
-        args: [IMPLEMENTATION_ADDRESS, deployer, callData],
-        log: true,
-        skipIfAlreadyDeployed: false,
-    });
-    console.log("ArkreenRECToken Proxy is deployed to %s: ", hre.network.name, ArkreenRECToken.address);
+      const ArkreenRECToken = await deploy(CONTRACTS.UUPSProxy, {
+          from: deployer,
+          args: [IMPLEMENTATION_ADDRESS, deployer, callData],
+          log: true,
+          skipIfAlreadyDeployed: false,
+      });
+      console.log("ArkreenRECToken Proxy is deployed to %s: ", hre.network.name, ArkreenRECToken.address);
 
   }   
   
@@ -75,6 +82,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2023/05/09: Deploy the ArkreenRECToken Proxy based on the implementation: 0x19e9BAD19ca2696b509d938476ee4CF823538df4
 // yarn deploy:matic_test:RECTokenR
 // 0x70FdFE7DA492080A8F0233F67C5B48D36d8ceE8b
+
+// 2023/06/08: Deploy the ArkreenRECToken Proxy based on the implementation: 0x19e9BAD19ca2696b509d938476ee4CF823538df4
+// for pre-production env
+// yarn deploy:matic_test:RECTokenR
+// 
 
 func.tags = ["RECTokenR"];
 

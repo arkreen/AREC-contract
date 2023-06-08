@@ -5,7 +5,8 @@ import { CONTRACTS } from "../constants";
 //import { ArkreenRegistry__factory } from "../../typechain";
 //import { HashKeyESGBTC__factory } from "../../typechain";
 //import { ArkreenRECIssuance__factory } from "../../typechain";
-import { ArkreenMiner__factory } from "../../typechain";
+//import { ArkreenMiner__factory } from "../../typechain";
+import { ArkreenBadge__factory } from "../../typechain";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
@@ -53,15 +54,23 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 /*
   // Proxy of ArkreenIssuance for dev environment
   // 2023/05/09
-  const IMPLEMENTATION_ADDRESS  = "0x51016EafbC75058391beEea156Ab6B8Ad9B92E52"        // 2023/05/09: ArkreenIssuance Implementation 
-  const AKREToken_ADDRESS       = "0x8Ab2299351585097101c91FE4b098d95c18D28a7"        // Arkreen Token
-  const REGISTRY_ADDRESS        = "0xfEcbD33525d9B869e5f3CaB895cd6D7A666209ee"        // ArkreenRegistry address
+  // const IMPLEMENTATION_ADDRESS  = "0x51016EafbC75058391beEea156Ab6B8Ad9B92E52"        // 2023/05/09: ArkreenIssuance Implementation 
+  // const AKREToken_ADDRESS       = "0x8Ab2299351585097101c91FE4b098d95c18D28a7"        // Arkreen Token
+  // const REGISTRY_ADDRESS        = "0xfEcbD33525d9B869e5f3CaB895cd6D7A666209ee"        // ArkreenRegistry address
+
+  // Proxy of ArkreenIssuance for pre-production
+  // 2023/06/08
+  const IMPLEMENTATION_ADDRESS  = "0x51016EafbC75058391beEea156Ab6B8Ad9B92E52"        // 2023/06/08: ArkreenIssuance Implementation 
+  const AKREToken_ADDRESS       = "0xc83DEd2B70F25C0EB0ef1cDE993DEaA3fAE91314"        // 2023/06/08: Arkreen Token
+  const REGISTRY_ADDRESS        = "0x4590B2d8251963E249967D1fa8122974dE574aC6"        // 2023/06/08: ArkreenRegistry address
   
   // 2023/05/09:  0x32Dbe18BBc2C752203b6e1bE87EdE5655A091dFa
-  const callData = ArkreenRECIssuance__factory.createInterface().encodeFunctnData("initialize",   // Create new ArkreenIssuance
-                                      [AKREToken_ADDRESS, REGISTRY_ADDRESS])                        // 2023/05/09
+  // 2023/06/08:  0x9745918BAF66e3634502bF9a6C07AD320291D211
+  const callData = ArkreenRECIssuance__factory.createInterface().encodeFunctionData("initialize",   // Create new ArkreenIssuance
+                                      [AKREToken_ADDRESS, REGISTRY_ADDRESS])                        // 2023/05/09 //2023/06/08
 */
 
+/*
   // Proxy of ArkreenMiner for Open testnet
   // 2023/05/10
   //  const IMPLEMENTATION_ADDRESS  = "0x7a0Df5eFfdbb91DF24cb7F7dB2500ce9721a7A78"    // 2023/05/10: ArkreenIssuance Implementation 
@@ -85,6 +94,22 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   // 2023/06/08:  0x1F742C5f32C071A9925431cABb324352C6e99953
   const callData = ArkreenMiner__factory.createInterface().encodeFunctionData("initialize",     // Create new ArkreenIssuance
                       [AKREToken_ADDRESS, WMATIC_ADDRESS, MANAGER_ADDRESS, REGISTER_ADDRESS])   // 2023/05/10 // 2023/06/08
+*/
+
+/*
+  // Proxy of ArkreenRegistry for pre-production
+  // 2023/06/08:  0x4590B2d8251963E249967D1fa8122974dE574aC6
+  const IMPLEMENTATION_ADDRESS  = "0xb60adb684A682835819a8b4Be2dB6163dEaB393C"    // 2023/06/08: ArkreenRegistry Implementation 
+  const callData = ArkreenRegistry__factory.createInterface().encodeFunctionData("initialize")     // Create new ArkreenRegistry
+*/
+
+  // Proxy of ArkreenBadge for pre-production
+  // 2023/06/08:  
+  const IMPLEMENTATION_ADDRESS  = "0xC15de762EB03644ad92d45091E52d840594c6CB2"    // 2023/06/08: ArkreenBadge Implementation 
+  const REGISTRY_ADDRESS        = "0x4590B2d8251963E249967D1fa8122974dE574aC6"    // 2023/06/08: ArkreenRegistry address
+  
+  // 2023/06/08:  0x70A7981b5c9ca1a4250A0C9BBDC2141752deBeeb
+  const callData = ArkreenBadge__factory.createInterface().encodeFunctionData("initialize",[REGISTRY_ADDRESS])     // Create new ArkreenBadge
 
   console.log("IMPLEMENTATION_ADDRESS, deployer, callData", IMPLEMENTATION_ADDRESS, deployer, callData)
 
@@ -107,6 +132,15 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2023/06/08:  yarn deploy:matic_test:UUPSProxy:   ArkreenMiner
 // Proxy:   0x1F742C5f32C071A9925431cABb324352C6e99953
+
+// 2023/06/08:  yarn deploy:matic_test:UUPSProxy:   ArkreenRegistry
+// Proxy:   0x4590B2d8251963E249967D1fa8122974dE574aC6
+
+// 2023/06/08:  yarn deploy:matic_test:UUPSProxy:   ArkreenIssuance
+// Proxy:   0x9745918BAF66e3634502bF9a6C07AD320291D211
+
+// 2023/06/08:  yarn deploy:matic_test:UUPSProxy:   ArkreenBadge
+// Proxy:   0x70A7981b5c9ca1a4250A0C9BBDC2141752deBeeb
 
 export default func;
 func.tags = ["UUPSProxy"];
