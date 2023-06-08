@@ -118,9 +118,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2023/05/09: yarn deploy:matic:AMiner 
 // Deployed in Polygon mainnet for Open Testnet after removing Gaming miner
-// Proxy:           failed for low value
+// Proxy:           failed for low value 
+// Proxy deployed:  0xbf8eF5D950F78eF8edBB8674a48cDACa675831Ae  (05/10)
 // Implementation:  0x7a0Df5eFfdbb91DF24cb7F7dB2500ce9721a7A78
-
 
 export default func;
 func.tags = ["AMiner"];
