@@ -15,9 +15,6 @@ import "./interfaces/IArkreenRECIssuance.sol";
 import "./interfaces/IERC5192.sol";
 import "./ArkreenBadgeType.sol";  
 
-// Import this file to use console.log
-// import "hardhat/console.sol";
-
 contract ArkreenBadge is
     OwnableUpgradeable,
     UUPSUpgradeable,
@@ -273,7 +270,7 @@ contract ArkreenBadge is
         string calldata offsetMessage
     ) external virtual {
         require(msg.sender == ownerOf(tokenId), 'ARB: Not Owner');
-//      require(block.timestamp < (certificates[tokenId].creationTime + 3 days), 'ARB: Time Elapsed');
+        require(block.timestamp < (certificates[tokenId].creationTime + 3 days), 'ARB: Time Elapsed');
 
         if (beneficiary != address(0)) {
             certificates[tokenId].beneficiary = beneficiary;
@@ -347,6 +344,11 @@ contract ArkreenBadge is
     function getOffsetActions(uint256 offsetId) external view virtual returns (OffsetAction memory) {
         return (offsetActions[offsetId]);
     }    
+    
+    /// @dev retrieve the offset detaild specified by OffsetDetailId
+    function getOffsetDetails(uint256 OffsetDetailId) external view virtual returns (OffsetDetail[] memory) {
+        return (OffsetDetails[OffsetDetailId]);
+    } 
 
     /**
      * @dev Get total offset amount of the specified NFT.        

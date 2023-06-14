@@ -423,6 +423,10 @@ describe("ArkreenRECToken", () => {
       const detail_0 = [1, expandTo18Decimals(500)]
       const detail_1 = [2, expandTo18Decimals(1000)]
 
+      const offsetDetails = await arkreenRetirement.getOffsetDetails(1)
+      expect(offsetDetails[0]).to.deep.equal(detail_0)
+      expect(offsetDetails[1]).to.deep.equal(detail_1)
+
       expect(await arkreenRetirement.OffsetDetails(1,0)).to.deep.equal(detail_0)
       expect(await arkreenRetirement.OffsetDetails(1,1)).to.deep.equal(detail_1)
 
@@ -473,6 +477,11 @@ describe("ArkreenRECToken", () => {
 
       expect(await arkreenRetirement.partialARECIDExt(arkreenRECToken.address)).to.equal(17)
       expect(await arkreenRetirement.partialAvailableAmountExt(arkreenRECToken.address)).to.equal(expandTo18Decimals(9000-3100))
+
+      const offsetDetails = await arkreenRetirement.getOffsetDetails(2)
+      expect(offsetDetails[2]).to.deep.equal(detail_0)
+      expect(offsetDetails[9]).to.deep.equal(detail_1)
+      expect(offsetDetails[15]).to.deep.equal(detail_2)
 
       expect(await arkreenRetirement.OffsetDetails(2,2)).to.deep.equal(detail_0)
       expect(await arkreenRetirement.OffsetDetails(2,9)).to.deep.equal(detail_1)
@@ -528,6 +537,11 @@ describe("ArkreenRECToken", () => {
       const detail_1 = [10, expandTo18Decimals(3000)]
       const detail_2 = [21, expandTo18Decimals(400)]
 
+      const offsetDetails = await arkreenRetirement.getOffsetDetails(2)
+      expect(offsetDetails[0]).to.deep.equal(detail_0)
+      expect(offsetDetails[8]).to.deep.equal(detail_1)
+      expect(offsetDetails[19]).to.deep.equal(detail_2)
+
       expect(await arkreenRetirement.OffsetDetails(2,0)).to.deep.equal(detail_0)
       expect(await arkreenRetirement.OffsetDetails(2,8)).to.deep.equal(detail_1)
       expect(await arkreenRetirement.OffsetDetails(2,19)).to.deep.equal(detail_2)
@@ -562,19 +576,19 @@ describe("ArkreenRECToken", () => {
 
       const tx_1 = await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(500))
       const receipt_1 = await tx_1.wait()
-      expect(receipt_1.gasUsed).to.eq("435586")  // 435300 432982 460991 461138 
+      expect(receipt_1.gasUsed).to.eq("435652")  // 435586 435300 432982 460991 461138 
 
       const tx_2 = await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(800))
       const receipt_2 = await tx_2.wait()
-      expect(receipt_2.gasUsed).to.eq("422158")  // 414450 442460 442607 423814
+      expect(receipt_2.gasUsed).to.eq("422268")  // 422158 414450 442460 442607 423814
 
       const tx_3 = await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(200))
       const receipt_3 = await tx_3.wait()
-      expect(receipt_3.gasUsed).to.eq("207824")  // 204554 204554      
+      expect(receipt_3.gasUsed).to.eq("207868")  // 207824 204554 204554      
 
       const tx = await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(66000))
       const receipt = await tx.wait()
-      expect(receipt.gasUsed).to.eq("2190925")  // 2753332 2756125 
+      expect(receipt.gasUsed).to.eq("2191827")  // 2190925 2753332 2756125 
     });
   })
 
