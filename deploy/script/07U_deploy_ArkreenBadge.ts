@@ -11,7 +11,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   
     if(hre.network.name === 'matic_test') {
 //      Simulation test      
-        const PROXY_ADDRESS = "0x5C653b445BE2bdEB6f8f3CD099FC801865Cab835"       // Need to check: Simu mode
+//      const PROXY_ADDRESS = "0x5C653b445BE2bdEB6f8f3CD099FC801865Cab835"       // Need to check: Simu mode
 
 //      const NEW_IMPLEMENTATION = '0x6f4fff7faa238cd68f03de75b8906e23dbd95f30'   // Need to check
 //      const NEW_IMPLEMENTATION = '0xA82E33A80f8c6A0dC66678956F8dC3b27928F036'   // Update to support SBT
@@ -19,12 +19,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //      const NEW_IMPLEMENTATION = '0xD12E75566CeAa2bA669EDEbBA524359D7564b2c5'   // 2023/02/26: Upgrade to support HashKey ESG BTC
 //      const NEW_IMPLEMENTATION = '0x619f4a175B17C51cC11e7afB85e50a78b3899900'   // 2023/03/02: Upgrade to fix the Isser checking problem
 //      const NEW_IMPLEMENTATION = '0x2cc8fFc86eAbdAA486d5408C8813813eb60b507a'   // 2023/03/03: Upgrade to trace back based on asset type while offsetting
-        const NEW_IMPLEMENTATION = '0x8Cd3372C871A6D9F8777B54483d6c27377C128eF'   // 2023/06/14: Upgrade to add ABI getOffsetDetails
+//      const NEW_IMPLEMENTATION = '0x8Cd3372C871A6D9F8777B54483d6c27377C128eF'   // 2023/06/14: Upgrade to add ABI getOffsetDetails
 
 //      MATIC Test
 //      const PROXY_ADDRESS = "0xe07968E3b0D64B99EA3653Dd925a850eBb9a3Bb9"       // Need to check: Matic testnet
+//      const PROXY_ADDRESS = "0x626f470Ae1427d01f0Fab4D79BC0c9748b07325d"       // Need to check: Matic testnet, Dev environment
+        const PROXY_ADDRESS = "0x70A7981b5c9ca1a4250A0C9BBDC2141752deBeeb"       // Need to check: Matic testnet, Pre-production
+
 //      const NEW_IMPLEMENTATION = '0xA82E33A80f8c6A0dC66678956F8dC3b27928F036'   // Update to support SBT
 //      const NEW_IMPLEMENTATION = '0x2cc8fFc86eAbdAA486d5408C8813813eb60b507a'   // 2023/03/28: Upgrade based on simu implementation
+        const NEW_IMPLEMENTATION = '0x8Cd3372C871A6D9F8777B54483d6c27377C128eF'   // 2023/06/14: Upgrade to add ABI getOffsetDetails
 
         const  ArkreenBadgeFactory = ArkreenBadge__factory.connect(PROXY_ADDRESS, deployer);
 
@@ -100,6 +104,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // Revert to 0x7Db78703C9B1561A5F0810c96449AFdE6eA9096b as new version is imcompatible
 
 // 2023/06/14: yarn deploy:matic_test:RECBadgeU (Simu test version)
+// Upgrade to add ABI getOffsetDetails
+
+// 2023/06/17: yarn deploy:matic_test:RECBadgeU (Dev env version)
+// Upgrade to add ABI getOffsetDetails
+
+// 2023/06/17: yarn deploy:matic_test:RECBadgeU (Pre-Production)
 // Upgrade to add ABI getOffsetDetails
 
 func.tags = ["RECBadgeU"];
