@@ -30,7 +30,9 @@ import { Web3Provider } from "@ethersproject/providers";
 const MASK_OFFSET = BigNumber.from('0x8000000000000000')
 const MASK_DETAILS = BigNumber.from('0xC000000000000000')
 const initPoolPrice = expandTo18Decimals(1).div(5)
-const BidStartTime: number = 1687190400   // 2023/06/20 00/00/00
+//const BidStartTime: number = 1687190400   // 2023/06/20 00/00/00
+//const BidStartTime: number = Math.floor(Date.now()/1000) + 3 *24 * 3600 + 1200
+
 const OPEN_BID_DURATION: number =  (3600 * 24 * 14)
 const rateTriggerArbitrage: number = 10
 
@@ -104,8 +106,11 @@ describe("ArkreenBuilder", () => {
       await Feswa.deployed();
 
       // Get Factory address
-      const FeswFactoryAddress = Contract.getContractAddress({ from: wallet.address, nonce: 2 })
-      const FeswRouterAddress = Contract.getContractAddress({ from: wallet.address, nonce: 5 })
+      const nonce = await ethers.provider.getTransactionCount(wallet.address)  
+      const FeswFactoryAddress = Contract.getContractAddress({ from: wallet.address, nonce: nonce + 1 })
+      const FeswRouterAddress = Contract.getContractAddress({ from: wallet.address, nonce: nonce + 4 })
+
+      const BidStartTime: number = lastBlock.timestamp + 1200
 
       // deploy FeSwap NFT contract
       // const FeswaNFT = await deployContract(wallet, FeswaNFTCode, [Feswa.address, FeswFactoryAddress, BidStartTime], overrides)

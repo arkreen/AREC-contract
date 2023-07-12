@@ -30,7 +30,8 @@ import FeSwapPair from '../../artifacts/contracts/Dex/FeSwapPair.sol/FeSwapPair.
 const MASK_OFFSET = BigNumber.from('0x8000000000000000')
 const MASK_DETAILS = BigNumber.from('0xC000000000000000')
 const initPoolPrice = expandTo18Decimals(1).div(5)
-const BidStartTime: number = 1687190400   // 2023/06/20 00/00/00
+//const BidStartTime: number = 1687190400   // 2023/06/20 00/00/00
+//const BidStartTime: number = Math.floor(Date.now()/1000) + (3+14) *24 * 3600 + 2400
 const OPEN_BID_DURATION: number =  (3600 * 24 * 14)
 const rateTriggerArbitrage: number = 10
 
@@ -104,8 +105,11 @@ describe("HashKeyESGBTC", () => {
       await Feswa.deployed();
 
       // Get Factory address
-      const FeswFactoryAddress = Contract.getContractAddress({ from: wallet.address, nonce: 2 })
-      const FeswRouterAddress = Contract.getContractAddress({ from: wallet.address, nonce: 5 })
+      const nonce = await ethers.provider.getTransactionCount(wallet.address)  
+      const FeswFactoryAddress = Contract.getContractAddress({ from: wallet.address, nonce: nonce + 1 })
+      const FeswRouterAddress = Contract.getContractAddress({ from: wallet.address, nonce: nonce + 4 })
+
+      const BidStartTime: number = lastBlock.timestamp + 1200
 
       // deploy FeSwap NFT contract
       // const FeswaNFT = await deployContract(wallet, FeswaNFTCode, [Feswa.address, FeswFactoryAddress, BidStartTime], overrides)
@@ -157,7 +161,6 @@ describe("HashKeyESGBTC", () => {
       await factoryFeswa.setRouterFeSwap(routerFeswa.address)
       // await factoryFeswa.createUpdatePair(tokenA.address, tokenB.address, pairOwner.address, rateTriggerArbitrage, overrides)
 
-//    await mineBlock(ethers.provider, BidStartTime + 1)
       await time.increaseTo(BidStartTime + 1)
       const tokenIDMatch = utils.keccak256( 
       utils.solidityPack( ['address', 'address', 'address'],
@@ -170,7 +173,6 @@ describe("HashKeyESGBTC", () => {
 
       // BidDelaying time out
       lastBlock = await ethers.provider.getBlock('latest')
-//    await mineBlock(ethers.provider, lastBlock.timestamp + OPEN_BID_DURATION + 1 ) 
       await time.increaseTo(lastBlock.timestamp + OPEN_BID_DURATION + 1)
 
       await FeswaNFT.connect(pairOwner).ManageFeswaPair(tokenIDMatch, pairOwner.address, rateTriggerArbitrage, 0 )

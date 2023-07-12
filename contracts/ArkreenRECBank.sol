@@ -2,7 +2,6 @@
 pragma solidity ^0.8.9;
 
 import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
-import '@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
 
 import "./libraries/TransferHelper.sol";
@@ -14,12 +13,12 @@ import "./interfaces/IWETH.sol";
 //import "hardhat/console.sol";
 
 struct IncomeInfo {
-    uint128     priceForSale;     // 1 ART -> X Payment token
-    uint128     amountReceived;     // Amount of payment token received
+    uint128     priceForSale;           // 1 ART -> X Payment token
+    uint128     amountReceived;         // Amount of payment token received
 }
 
 struct SaleInfo {
-    address     controller;                  // Address of the ART token controller
+    address     controller;             // Address of the ART token controller
     address     fundReceiver;           // Address of the receiver while withdrawing the sale income  
     uint128     amountDeposited;        // The amount of ART deposited to this bank contract
     uint128     amountSold;             // The amount of ART already sold out
@@ -38,23 +37,14 @@ contract ArkreenRECBank is
     OwnableUpgradeable,
     UUPSUpgradeable
 {
-    using AddressUpgradeable for address;
-
     // Public variables
     address public tokenNative;                                             // The wrapped token of the Native token, such as WETH, WMATIC
     mapping(address => bool) public forwarders;                             // All forwarders acceptable
     mapping(address => mapping(address => IncomeInfo)) public saleIncome;   // Mapping X-ART -> Payment Token -> SaleInfo, price zero means not-supported
     mapping(address => SaleInfo) public artSaleInfo;                        // All ART deposit and sale info. If deposit is zero, it means not-supported
 
-
     // Events
     event ARTSold(address indexed artToken, address indexed payToken, uint256 payAmount, uint256 artAmount);
-
-    // Modifiers
-    modifier ensure(uint deadline) {
-        require(deadline >= block.timestamp, 'ART: EXPIRED');
-        _;
-    }
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -97,7 +87,7 @@ contract ArkreenRECBank is
         address             tokenART,
         uint256             amountART,
         bool                isExactPay
-    ) external payable {               // Deadline will be checked by router, no need to check here. //ensure(permitToPay.deadline)
+    ) external payable {
 
         uint256 priceSale = saleIncome[tokenART][tokenNative].priceForSale;
         require (priceSale !=0, 'ARBK: Payment token not allowed');
@@ -105,7 +95,7 @@ contract ArkreenRECBank is
         uint256 amountPay =  msg.value;
         address receiver = _msgSender();
         if(isExactPay) {
-            uint256 amountARTReal = amountPay * (10**9) / priceSale;         // ART decimal is always 9, so hardcoded here
+            uint256 amountARTReal = amountPay * (10**9) / priceSale;                    // ART decimal is always 9, so hardcoded here
             require (amountARTReal >= amountART, 'ARBK: Get Less');
 
             saleIncome[tokenART][tokenNative].amountReceived += uint128(amountPay);     // Native Token already received
@@ -115,15 +105,15 @@ contract ArkreenRECBank is
 
             emit ARTSold(tokenART, tokenNative, amountARTReal, amountPay);
         } else {
-            uint256 amountPayReal = amountART * priceSale / (10**9);       // ART decimal is always 9, so hardcoded here
-            require (amountPay >= amountPayReal, 'ARBK: Pay Less');
+            uint256 amountPayReal = (amountART * priceSale + (10**9) -1) / (10**9);       // ART decimal is always 9, so hardcoded here
+            require (amountPay >= amountPayReal, 'ARBK: Pay Less');                       // amountPay plays as the maximum to pay
 
             saleIncome[tokenART][tokenNative].amountReceived += uint128(amountPayReal);
 
             TransferHelper.safeTransfer(tokenART, receiver, amountART);
             artSaleInfo[tokenART].amountSold += uint128(amountART);
 
-            if(amountPay > amountPayReal) TransferHelper.safeTransferETH(msg.sender, amountPay-amountPayReal);
+            if(amountPay > amountPayReal) TransferHelper.safeTransferETH(msg.sender, amountPay - amountPayReal);
 
             emit ARTSold(tokenART, tokenNative, amountART, amountPayReal);
         }
@@ -154,27 +144,30 @@ contract ArkreenRECBank is
         bool                isExactPay
     ) internal {
 
+        // priceSale: 1 ART = priceSale (Payment Tokens), for example:
+        // 1 ART = 5 USDC, priceSale = 5 000 000
+        // 1 ART = 8 MATIC, priceSale = 8 * (10**18), as decial of MATIC is 18 
         uint256 priceSale = saleIncome[tokenART][tokenPay].priceForSale;
-        require (priceSale !=0, 'ARBK: Payment token not allowed');
+        require (priceSale != 0, 'ARBK: Payment token not allowed');
         
         if(isExactPay) {
-            uint256 amountARTReal = amountPay * (10**9) / priceSale;         // ART decimal is always 9, so hardcoded here
-            require (amountARTReal >= amountART, 'ARBK: Get Less');
-
+            uint256 amountARTReal = amountPay * (10**9) / priceSale;          // ART decimal is always 9, so hardcoded here
+            require (amountARTReal >= amountART, 'ARBK: Get Less');           // amountART is the minimum ART desired to receive
 
             TransferHelper.safeTransferFrom(tokenPay, payer, address(this), amountPay);
-            saleIncome[tokenART][tokenPay].amountReceived += uint128(amountPay);
+            saleIncome[tokenART][tokenPay].amountReceived += uint128(amountPay);    // Assmume never overflow, as it is big as (3.4 *10**20)
 
             TransferHelper.safeTransfer(tokenART, receiver, amountARTReal);
             artSaleInfo[tokenART].amountSold += uint128(amountARTReal);
 
             emit ARTSold(tokenART, tokenPay, amountARTReal, amountPay);
         } else {
-            uint256 amountPayReal = amountART * priceSale / (10**9);       // ART decimal is always 9, so hardcoded here
-            require (amountPayReal <= amountPay, 'ARBK: Pay Less');
+            // The minimum payment is 1 (Payment Token) to avoid attack buying very small amount of ART tokens
+            uint256 amountPayReal = (amountART * priceSale + (10**9) -1 ) / (10**9);    // ART decimal is always 9, so hardcoded here            
+            require (amountPayReal <= amountPay, 'ARBK: Pay Less');                     // amountPay is the maximum payment 
 
             TransferHelper.safeTransferFrom(tokenPay, payer, address(this), amountPayReal);
-            saleIncome[tokenART][tokenPay].amountReceived += uint128(amountPayReal);
+            saleIncome[tokenART][tokenPay].amountReceived += uint128(amountPayReal);    // Assmume never overflow
 
             TransferHelper.safeTransfer(tokenART, receiver, amountART);
             artSaleInfo[tokenART].amountSold += uint128(amountART);
