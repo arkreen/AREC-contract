@@ -263,7 +263,7 @@ contract ArkreenBuilder is
         }
 
         uint256 amountOffset = amountART;  
-        if(isExact)  amountOffset = IERC20(tokenART).balanceOf(address(this));
+        if(isExact)  amountOffset = IERC20(tokenART).balanceOf(address(this));    // Pleae do not send ART to this contract
  
         // commitOffset(uint256 amount): 0xe8fef571
         bytes memory callData = abi.encodeWithSelector(0xe8fef571, amountOffset);
@@ -314,7 +314,6 @@ contract ArkreenBuilder is
           address[] memory swapPath = new address[](2);
           swapPath[0] = tokenPay;
           swapPath[1] = tokenART;
-
 
           if(modeAction & 0x01 != 0x00) {
               IFeSwapRouter(routerSwap).swapExactTokensForTokens(amountPay, amountART, swapPath, address(this), deadline);
