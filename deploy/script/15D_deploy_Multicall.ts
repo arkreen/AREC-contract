@@ -24,7 +24,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2023/07/19
 // deploy:matic_test:MulticallD
-// 
+// 0x3a004D2777F3099f428ec45593636BcA69515B85
 
 func.tags = ["MulticallD"];
 
