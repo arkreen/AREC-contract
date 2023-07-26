@@ -34,7 +34,7 @@ contract ArkreenRegistryStorage {
     
     // REC issuers
     uint256 public numIssuers;
-    mapping(address => IssuerStatus) public recIssuers;
+    mapping(address => IssuerStatus) public recIssuers;     // REC issuer -> IssuerStatus
     mapping(address => address) public tokenRECs;           // mapping token to issuer
     mapping(uint256 => address) public allIssuers;          // All Issuers
     uint256 public numAsset;

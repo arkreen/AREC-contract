@@ -44,7 +44,10 @@ contract ArkreenRECBank is
     mapping(address => SaleInfo) public artSaleInfo;                        // All ART deposit and sale info. If deposit is zero, it means not-supported
 
     // Events
-    event ARTSold(address indexed artToken, address indexed payToken, uint256 payAmount, uint256 artAmount);
+    event ARTSold(address indexed artToken, address indexed payToken, uint256 artAmount, uint256 payAmount);
+    event ARTPriceChanged(address indexed artToken, address indexed payToken, uint256 newPrice);   
+    event Deposit(address indexed artToken, uint256 amountDeposit);    
+    event Withdraw(address indexed artToken, address indexed payToken, uint256 balance);   
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -185,6 +188,7 @@ contract ArkreenRECBank is
     function changeSalePrice(address artToken, address buyInToken, uint256 price ) external {
         require (msg.sender == artSaleInfo[artToken].controller, "ARBK: Not allowed");
         saleIncome[artToken][buyInToken].priceForSale = uint128(price);
+        emit ARTPriceChanged(artToken, buyInToken, price);    
     }  
 
     /**
@@ -224,6 +228,7 @@ contract ArkreenRECBank is
 
         TransferHelper.safeTransferFrom(artToken, msg.sender, address(this), amountDeposit);
         artSaleInfo[artToken].amountDeposited = uint128(amount);
+        emit Deposit(artToken, amountDeposit);
     }  
 
     /**
@@ -239,11 +244,14 @@ contract ArkreenRECBank is
 
         uint256 balance = saleIncome[artToken][payToken].amountReceived;
         if (payToken == tokenNative) {
+            uint256 amountNative=  IERC20(tokenNative).balanceOf(address(this));
+            IWETH(tokenNative).withdraw(amountNative);
             TransferHelper.safeTransferETH(receiver, balance);
         }    
         else {
             TransferHelper.safeTransfer(payToken, receiver, balance);
         }
+        emit Withdraw(artToken, payToken, balance);    
     }
 
     /**
