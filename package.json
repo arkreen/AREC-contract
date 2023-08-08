@@ -93,6 +93,7 @@
     "deploy:matic_test:MulticallD": "hardhat --network matic_test deploy --tags MulticallD",
     "deploy:matic_test:ArtBankD": "hardhat --network matic_test deploy --tags ArtBankD",
     "deploy:matic_test:ArtBankU": "hardhat --network matic_test deploy --tags ArtBankU",
+    "deploy:matic_test:RECTokenI": "hardhat --network matic_test deploy --tags RECTokenI",
 
     "deploy:matic:gAKRE": "hardhat --network matic deploy --tags gAKRE",
     "deploy:matic:arkReward": "hardhat --network matic deploy --tags arkReward",
