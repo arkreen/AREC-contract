@@ -90,7 +90,7 @@ contract ArkreenRegistry is
         // the mapping from tokenREC to recIssuers are kept
     }
 
-    function isRECIssuer(address issuer) external virtual returns(bool) {
+    function isRECIssuer(address issuer) external view virtual returns(bool) {
         return recIssuers[issuer].added;
     }
 

@@ -66,6 +66,10 @@ contract ArkreenRECBank is
     function _authorizeUpgrade(address newImplementation) internal virtual override onlyOwner
     {}    
 
+    receive() external payable {
+        assert(msg.sender == tokenNative); // only accept WMATIC via fallback from the WMATIC contract
+    }  
+
     function buyART(
         address             tokenPay,
         address             tokenART,
