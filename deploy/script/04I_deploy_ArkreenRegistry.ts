@@ -196,6 +196,64 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 */        
 
     } 
+
+    if(hre.network.name === 'celo_test') {
+      // 2023/08/21:  celo testnet
+      const ArkreenRegistry_address     = '0x572e9B8B210414b2D76ddf578925D769D96982E6'
+      const issuer                      = "0x576Ab950B8B3B18b7B53F7edd8A47986a44AE6F4"
+      // const tokenREC                 = "0x58Ac4e54a70b98960Ed5ecF9B9A2cd1AE83879Db"
+      const tokenHART                   = "0x57Fe6324538CeDd43D78C975118Ecf8c137fC8B2"
+      const tokenPay                    = "0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1"    // cUSD
+
+//    const ArkreenMiner_address        = '0x1F742C5f32C071A9925431cABb324352C6e99953'    // No miner contract for Celo
+//    const ArkreenRECToken_address     = '0x2cf7D8C6122a9026d875a8AF0967D8fd6648d9C4'    // No ART Token for Celo
+      const ArkreenRECIssuance_address  = '0x66e9c20DE3711e7C8c886d461aACd6E092E161BE'
+      const ArkreenRECBadge_address     = '0x9b5EE14b0B23876F39747747b227dDe12B62143d'
+
+//    const Issuer_address              = '0x576Ab950B8B3B18b7B53F7edd8A47986a44AE6F4'
+//    const Issuer_name                 = 'Arkreen DAO REC Issuer'
+
+/*      
+      // 2023/08/21:    New asset
+      const idAsset =   "AREC_ESG_BTC"
+      const rateToIssue = BigNumber.from(2).mul(BigNumber.from(10).pow(17))     // 0.2 cUSD / 1MWh
+      const rateToLiquidize = 1000                                             // 10 %
+      const description = 	"I-REC ERC20 token to greenize the BTC mining power consumption."                        
+
+      const [deployer] = await ethers.getSigners();
+      const ArkreenRegistryFactory = ArkreenRegistry__factory.connect(ArkreenRegistry_address, deployer);
+
+//      function newAssetAREC(string calldata idAsset, address issuer, address tokenREC, address tokenPay,
+//                              uint128 rateToIssue, uint16 rateToLiquidize, string calldata description)
+      const updateTxIssuance = await ArkreenRegistryFactory.newAssetAREC(idAsset, issuer, tokenHART,
+                                                      tokenPay, rateToIssue, rateToLiquidize, description)
+      await updateTxIssuance.wait()
+      console.log("ArkreenRegistry newAssetAREC is executed: %s: ", hre.network.name, ArkreenRegistry_address);
+*/
+      
+      // 2023/08/25:    Celo_Test
+      const [deployer] = await ethers.getSigners();
+      const ArkreenRegistryFactory = ArkreenRegistry__factory.connect(ArkreenRegistry_address, deployer);
+
+      const updateTxIssuance = await ArkreenRegistryFactory.setRECIssuance(ArkreenRECIssuance_address)
+      await updateTxIssuance.wait()
+      console.log("ArkreenRECIssuance Initialized: %s: ", hre.network.name, ArkreenRECIssuance_address);
+
+//    const updateTxMiner = await ArkreenRegistryFactory.setArkreenMiner(ArkreenMiner_address)
+//    await updateTxMiner.wait()
+//    console.log("ArkreenMiner Initialized: %s: ", hre.network.name, ArkreenMiner_address);
+
+      const updateTxBadge = await ArkreenRegistryFactory.setArkreenRetirement(ArkreenRECBadge_address)
+      await updateTxBadge.wait()
+      console.log("updateTxBadge Initialized: %s: ", hre.network.name, ArkreenRECBadge_address);
+
+//    const updateTxAddRECIssuer = await ArkreenRegistryFactory.addRECIssuer(Issuer_address, ArkreenRECToken_address, Issuer_name)
+//    await updateTxAddRECIssuer.wait()
+//    console.log("AddRECIssuer Initialized: %s: ", hre.network.name, Issuer_address, ArkreenRECToken_address, Issuer_name);
+//    console.log("ArkreenRegistry Initialized to %s: ", hre.network.name, ArkreenRegistryFactory.address);
+
+  }
+
 };
 
 // 2023/03/28: call newAssetAREC for Matic testnet
@@ -215,6 +273,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2023/06/08: Initialize ArkreenRegistry: setRECIssuance, setArkreenMiner, setArkreenRetirement, addRECIssuer
 // for Pre-Production Env
 // yarn deploy:matic_test:gRegistryI
+
+// 2023/08/21: call newAssetAREC for celo testnet
+// yarn deploy:celo_test:gRegistryI
+
+// 2023/08/25: call setRECIssuance and setArkreenRetirement for celo testnet
+// yarn deploy:celo_test:gRegistryI
 
 func.tags = ["gRegistryI"];
 

@@ -146,8 +146,25 @@
     "deploy:matic:AMinerV10D": "hardhat --network matic deploy --tags AMinerV10D",  
 
     "deploy:matic:MulticallD": "hardhat --network matic deploy --tags MulticallD",  
-    
     "etherscan:matic": "hardhat --network matic etherscan-verify --api-key",
+
+    "deploy:celo_test:gRegistry": "hardhat --network celo_test deploy --tags gRegistry",
+
+    "deploy:celo_test:RECIssueExtD": "hardhat --network celo_test deploy --tags RECIssueExtD --reset",
+    "deploy:celo_test:RECIssue": "hardhat --network celo_test deploy --tags RECIssue",
+    "deploy:celo_test:RECIssueI": "hardhat --network celo_test deploy --tags RECIssueI", 
+    "deploy:celo_test:RECToken": "hardhat --network celo_test deploy --tags RECToken --reset",
+    "deploy:celo_test:RECBadge": "hardhat --network celo_test deploy --tags RECBadge --reset",
+    "deploy:celo_test:gRegistryI": "hardhat --network celo_test deploy --tags gRegistryI", 
+    "deploy:celo_test:ArtBank": "hardhat --network celo_test deploy --tags ArtBank",
+    "deploy:celo_test:ABuilder": "hardhat --network celo_test deploy --tags ABuilder",
+    "deploy:celo_test:ABuilderI": "hardhat --network celo_test deploy --tags ABuilderI",
+    "deploy:celo_test:ArtBankI": "hardhat --network celo_test deploy --tags ArtBankI",
+
+    "etherscan:celo_test": "hardhat --network celo_test etherscan-verify --api-url https://api-alfajores.celoscan.io --api-key",
+
+    "etherscan:celo": "hardhat --network celo etherscan-verify --api-url https://api.celoscan.io --api-key",
+
     "test": "hardhat test",
     "gas": "set REPORT_GAS=true && hardhat test",
     "coverage": "HARDHAT_DEPLOY_FIXTURE=true hardhat coverage",

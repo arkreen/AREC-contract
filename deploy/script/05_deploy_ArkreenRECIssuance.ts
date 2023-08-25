@@ -1,6 +1,7 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { CONTRACTS } from "../constants";
+import { constants } from "ethers";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
@@ -27,6 +28,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //    REGISTRY_ADDRESS    = "0x3E8A27dA0BF241f588141659cBb6Bd39717527F1"          // Version for test
       REGISTRY_ADDRESS    = "0xb17faCaCA106fB3D216923DB6CaBFC7C0517029d"          // 2023/3/23: Normal Release
     } 
+    else if(hre.network.name === 'celo_test')  {     // Simulation
+      AKREToken_ADDRESS   = constants.AddressZero
+      REGISTRY_ADDRESS   = "0x572e9B8B210414b2D76ddf578925D769D96982E6"
+    }
 
     const { deployments, getNamedAccounts } = hre;
     const { deploy } = deployments;
@@ -59,6 +64,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:RECIssue
 // Proxy:           0x954585adF9425F66a0a2FD8e10682EB7c4F1f1fD
 // Implementation:  0x345762D12F046F7c0EBDbBfDC1B068eEE2eF3fDC
+
+// 2023/08/21
+// yarn deploy:celo_test:RECIssue
+// Proxy:           0x66e9c20DE3711e7C8c886d461aACd6E092E161BE
+// Implementation:  0xc9865313b3EeB737C0061a578ca4Af722Add84CB
 
 func.tags = ["RECIssue"];
 

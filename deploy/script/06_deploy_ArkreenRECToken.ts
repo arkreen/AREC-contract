@@ -34,18 +34,20 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
       REGISTRY_ADDRESS   = "0xb17faCaCA106fB3D216923DB6CaBFC7C0517029d"       // 2023/03/22: Normal release
       ISSUER_ADDRESS     = "0xec9254677d252df0dCaEb067dFC8b4ea5F6edAfC"       // 2023/03/22: same as test version
-
+    }  else if(hre.network.name === 'celo_test')  {     // Celo test: 2023/08/21
+      REGISTRY_ADDRESS    = "0x572e9B8B210414b2D76ddf578925D769D96982E6"
+      ISSUER_ADDRESS      = "0x576Ab950B8B3B18b7B53F7edd8A47986a44AE6F4"
     } 
 
     const { deployments, getNamedAccounts } = hre;
     const { deploy } = deployments;
     const { deployer } = await getNamedAccounts();
 
-//  const ART_NAME = 'HashKey AREC Token'
-//  const SYMBOL = 'HART'
+    const ART_NAME = 'HashKey AREC Token'
+    const SYMBOL = 'HART'
 
-    const ART_NAME = ''         
-    const SYMBOL = ''
+    // const ART_NAME = ''         
+    // const SYMBOL = ''
 
     console.log("Deploying: ", CONTRACTS.RECToken, deployer);  
     const ArkreenRECToken = await deploy(CONTRACTS.RECToken, {
@@ -73,6 +75,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:RECToken
 // Proxy:           0x58E4D14ccddD1E993e6368A8c5EAa290C95caFDF
 // Implementation:  0xfE6B6fe2a965453c2B30f0E2159b346C61DbCA59
+
+// 2023/08/21
+// yarn deploy:celo_test:RECToken
+// Proxy:           0x57Fe6324538CeDd43D78C975118Ecf8c137fC8B2
+// Implementation:  0xeAe93E21ea6E3EfFB0a58d458fb8414be98e285e
 
 func.tags = ["RECToken"];
 

@@ -11,15 +11,18 @@ import "hardhat-contract-sizer"
 import "hardhat-gas-reporter"
 import "solidity-coverage"
 import "@openzeppelin/hardhat-upgrades"
-import { NetworkUserConfig } from "hardhat/types";
+//import { NetworkUserConfig } from "hardhat/types";
 
-import { config as dotEnvConfig } from "dotenv";
-dotEnvConfig();
+import { config as dotEnvConfig } from "dotenv"
+
+dotEnvConfig()
 
 function getAPIKey(network: string): string {
   let apiKey: string
   if((network === 'matic')||(network ==='matic_test')) {
     apiKey = process.env.POLYGONSCAN_API_KEY as string
+  } else if((network === 'celo')||(network ==='celo_test')) {
+    apiKey = process.env.CELOSCAN_API_KEY as string
   } else {
     apiKey = process.env.ETHERSCAN_API_KEY as string
   }
@@ -29,11 +32,17 @@ function getAPIKey(network: string): string {
 //  url = `https://polygon-mainnet.infura.io/v3/` + projectID
 //  url = `https://polygon-mumbai.infura.io/v3/` + projectID
 // https://rpc-mumbai.maticvigil.com
+// https://celo-mainnet.infura.io/v3/0ab4ce267db54906802cb43b24e5b0f7
+// https://celo-alfajores.infura.io/v3/0ab4ce267db54906802cb43b24e5b0f7
 
 function getURL(network:string): string {
   let url: string
   let projectID = process.env.PROJECT_ID
-  if(network === 'matic') {
+  if(network === 'celo') {
+    url = `https://celo-mainnet.infura.io/v3/` + projectID
+  } else if(network === 'celo_test') {
+    url = `https://celo-alfajores.infura.io/v3/` + projectID
+  } else if(network === 'matic') {
     url = `https://polygon-mainnet.infura.io/v3/` + projectID
   } else if(network === 'matic_test') {
     url = `https://rpc-mumbai.maticvigil.com`
@@ -46,6 +55,8 @@ function getURL(network:string): string {
   }
   return url
 }
+
+
 
 const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
@@ -63,7 +74,16 @@ const config: HardhatUserConfig = {
     rinkeby: {
       url: getURL("rinkeby"),
       accounts: [process.env.ETH_RINKEBY_PRIVATE_KEY as string],
-    },    
+    },
+    celo_test: {
+      url: getURL("celo_test"),
+      accounts: [process.env.MATIC_TESTNET_PRIVATE_KEY as string, process.env.MATIC_TESTNET_CONFIRM_KEY as string],
+    },
+    celo: {
+      url: getURL("celo"),
+      chainId: 137,
+      accounts: [process.env.MATIC_PRIVATE_KEY as string, process.env.MATIC_CONTROLLER_KEY as string],
+    },
     matic_test: {
       url: getURL("matic_test"),
       accounts: [process.env.MATIC_TESTNET_PRIVATE_KEY as string, process.env.MATIC_TESTNET_CONFIRM_KEY as string],
@@ -111,6 +131,8 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: {
+      celo:        getAPIKey("celo"),
+      celo_test:   getAPIKey("celo_test"),
       matic:        getAPIKey("matic"),
       matic_test:   getAPIKey("matic_test"),
       mainnet:      getAPIKey("mainnet"),
@@ -120,6 +142,22 @@ const config: HardhatUserConfig = {
       kovan:        getAPIKey("kovan"),
     },
     customChains: [
+      {
+        network: "celo",
+        chainId: 42220,
+        urls: {
+          apiURL: getURL("celo"),
+          browserURL: "https://celoscan.io/"
+        }
+      },
+      {
+        network: "celo_test",
+        chainId: 44787,
+        urls: {
+          apiURL: "https://api-alfajores.celoscan.io/",
+          browserURL: "https://alfajores.celoscan.io/"
+        }
+      },
       {
         network: "matic",
         chainId: 137,

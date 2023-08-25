@@ -11,7 +11,13 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     }
     else if(hre.network.name === 'matic')  {                                  // Matic Mainnet for test
       NATIVE_ADDRESS = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"           // WMATIC
+    }
+    else if(hre.network.name === 'celo_test')  {                              // Matic Mainnet for test
+      NATIVE_ADDRESS = "0xf194afdf50b03e69bd7d057c1aa9e10c9954e4c9"           // WMATIC
     } 
+    else if(hre.network.name === 'celo')  {                                   // Matic Mainnet for test
+      NATIVE_ADDRESS = "0x471EcE3750Da237f93B8E339c536989b8978a438"           // WMATIC
+    }  
 
     const { deployments, getNamedAccounts } = hre;
     const { deploy } = deployments;
@@ -46,6 +52,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:ArtBank
 // Proxy:           0xab65900A52f1DcB722CaB2e5342bB6b128630A28
 // Implementation:  0x4142668D4B26c643266F1787dB542535E13aCC52
+
+// 2023/08/25
+// yarn deploy:celo_test:ArtBank
+// Proxy:           0x827155A6fD0aac8AbE7beb4Ee1a95143255ed438
+// Implementation:  0x7423616B90049f0510B1723b2a460A3D462C7Ca6
 
 func.tags = ["ArtBank"];
 

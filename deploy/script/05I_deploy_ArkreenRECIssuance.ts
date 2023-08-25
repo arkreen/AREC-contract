@@ -2,7 +2,7 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { CONTRACTS } from "../constants";
 import { ethers } from "hardhat";
-//import { ArkreenRECIssuanceExt__factory } from "../../typechain";
+import { ArkreenRECIssuanceExt__factory } from "../../typechain";
 import { ArkreenRECIssuance__factory } from "../../typechain";
 import { BigNumber } from "ethers";
 
@@ -138,6 +138,42 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       console.log("callData, update", updateTx)
       console.log("ArkreenRECIssuance Updated to %s: ", hre.network.name, ArkreenRECIssuanceExtFactory.address);
   } 
+
+    if(hre.network.name === 'celo_test') {
+      
+        const REC_ISSUANCE_ADDRESS = "0x66e9c20DE3711e7C8c886d461aACd6E092E161BE"       // Celo testnet: 2023/08/21
+    
+        const [deployer] = await ethers.getSigners();
+        const ArkreenRECIssuanceFactory = ArkreenRECIssuance__factory.connect(REC_ISSUANCE_ADDRESS, deployer);         
+        const ArkreenRECIssuanceExtFactory = ArkreenRECIssuanceExt__factory.connect(REC_ISSUANCE_ADDRESS, deployer);    
+  
+/*        
+        // 2023/08/21
+        // function setESGExtAddress(address addrESGExt)
+        const REC_ISSUANCE_EXT_ADDRESS  = "0x42d4eff140e9903F682DC11931aD3E1437D7ACA1"        // 2023/08/21, addrESGExt
+            
+        // 2023/08/21 
+        const updateTx = await ArkreenRECIssuanceFactory.setESGExtAddress(REC_ISSUANCE_EXT_ADDRESS)
+        await updateTx.wait()
+    
+        console.log("callData, update", updateTx)
+        console.log("ArkreenRECIssuance: set Ext address to %s: ", hre.network.name, ArkreenRECIssuanceFactory.address,
+                                                                        REC_ISSUANCE_EXT_ADDRESS );
+           
+*/                                                                        
+        const MVP_ADDRESS1 = "0x364a71eE7a1C9EB295a4F4850971a1861E9d3c7D"               // (2023/8/25): Celo test MVP address, account 1
+        const MVP_ADDRESS2 = "0xB53B96e1eF29cB14313c18Fa6374AB87df59BcD9"               // (2023/8/25): Celo test MVP address, account 2
+        const MVP_ADDRESS3 = "0x576Ab950B8B3B18b7B53F7edd8A47986a44AE6F4"               // (2023/8/25): Celo test MVP address, account 3
+    
+        // function manageMVPAddress(bool op, address[] calldata listMVP) 
+        // 1. 2023/08/25
+        const updateTx = await ArkreenRECIssuanceExtFactory.manageMVPAddress(true, [MVP_ADDRESS1, MVP_ADDRESS2, MVP_ADDRESS3])
+        await updateTx.wait()
+
+        console.log("callData, update", updateTx)
+        console.log("ArkreenRECIssuance manageMVPAddress %s: ", hre.network.name, ArkreenRECIssuanceExtFactory.address, MVP_ADDRESS1, MVP_ADDRESS2, MVP_ADDRESS3);        
+  } 
+
 };
 
 // 2023/03/28： Called setESGExtAddress, Must call setESGExtAddress First
@@ -167,6 +203,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2023/06/08： Called updateARECMintPrice
 // yarn deploy:matic_test:RECIssueI
+
+// 2023/08/21： Called setESGExtAddress, Must call setESGExtAddress First
+// yarn deploy:celo_test:RECIssueI
+
+// 2023/08/25： Called manageMVPAddress to add 3 MVP addresses
+// yarn deploy:celo_test:RECIssueI
 
 func.tags = ["RECIssueI"];
 

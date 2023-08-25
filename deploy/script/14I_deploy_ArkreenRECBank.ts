@@ -24,7 +24,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     let USDC_ADDRESS
     let USDT_ADDRESS
-    let WMATIC_ADDRESS
+    let WNATIVE_ADDRESS
     let AKRE_ADDRESS
 
     let USDC_PRICE
@@ -43,7 +43,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
       USDC_ADDRESS    = "0x0FA8781a83E46826621b3BC094Ea2A0212e71B23"          // USDC address
       USDT_ADDRESS    = "0xD89EDB2B7bc5E80aBFD064403e1B8921004Cdb4b"          // USDT address
-      WMATIC_ADDRESS  = "0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889"          // WMATIC address
+      WNATIVE_ADDRESS  = "0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889"          // WMATIC address
       AKRE_ADDRESS    = "0x54e1c534f59343c56549c76d1bdccc8717129832"          // AKRE address
 
       USDC_PRICE      = BigNumber.from(2).mul(BigNumber.from(10).pow(6))      // 2 USDC, 10**6
@@ -76,7 +76,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
       // 2023/08/08
       const changeSalePriceMATIC = await ArkreenRECBankFactory.changeSalePrice(ART_AREC as string, 
-                                    WMATIC_ADDRESS as string, MATIC_PRICE as BigNumber)
+                                    WNATIVE_ADDRESS as string, MATIC_PRICE as BigNumber)
       await changeSalePriceMATIC.wait()   
       
       // 2023/08/08
@@ -106,7 +106,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
       USDC_ADDRESS      = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"          // USDC address
       USDT_ADDRESS      = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F"          // USDT address
-      WMATIC_ADDRESS    = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"          // WMATIC address
+      WNATIVE_ADDRESS    = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"          // WMATIC address
       AKRE_ADDRESS      = "0x21b101f5d61a66037634f7e1beb5a733d9987d57"          // tAKRE address
 
       USDC_PRICE =      BigNumber.from(50).mul(BigNumber.from(10).pow(5))       // 5 USDC
@@ -143,7 +143,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
       // 2023/04/10
       const changeSalePriceMATIC = await ArkreenRECBankFactory.connect(controller).changeSalePrice(HART_REC as string, 
-                                      WMATIC_ADDRESS as string, MATIC_PRICE as BigNumber)
+                                      WNATIVE_ADDRESS as string, MATIC_PRICE as BigNumber)
       await changeSalePriceMATIC.wait()   
 
         // tAKRE removed    
@@ -166,10 +166,74 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       console.log("ArkreenRECBank Price is updated: ", hre.network.name, new Date().toLocaleString(),
                                 ArkreenRECBankFactory.address,
                                 RECBANK_ADDRESS, HART_REC, ART_CONTROLLER, BUILDER_ADDRESS,
-                                [USDC_ADDRESS, USDT_ADDRESS, WMATIC_ADDRESS, AKRE_ADDRESS],
+                                [USDC_ADDRESS, USDT_ADDRESS, WNATIVE_ADDRESS, AKRE_ADDRESS],
                                 [USDC_PRICE, USDT_PRICE, MATIC_PRICE, AKRE_PRICE] );  
-    }                            
+    }          
+    
+    else if(hre.network.name === 'celo_test')  {        // Celo Testnet 2023/08/25
+      RECBANK_ADDRESS   = "0x827155A6fD0aac8AbE7beb4Ee1a95143255ed438"          // 2023/8/25
+      ART_CONTROLLER    = "0xB53B96e1eF29cB14313c18Fa6374AB87df59BcD9"          // HART_Controller
+      // ART_AREC          = "0xb0c9dd915f62d0a37792fd2ce497680e909d8c0f"       // AREC ART token
+      HART_REC          = "0x57Fe6324538CeDd43D78C975118Ecf8c137fC8B2"          // HART REC Token
 
+      BUILDER_ADDRESS   = "0xAC0B2E90b41a1b85520607e60dEf18B59e5a1c9F"          // ArkreenBuilder
+
+      USDC_ADDRESS    = "0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1"          // USDC address
+//    USDT_ADDRESS    = "0xD89EDB2B7bc5E80aBFD064403e1B8921004Cdb4b"          // USDT address
+      WNATIVE_ADDRESS  = "0xF194afDf50B03e69Bd7D057c1Aa9e10c9954E4C9"         // CELO native asset
+//    AKRE_ADDRESS    = "0x54e1c534f59343c56549c76d1bdccc8717129832"          // AKRE address
+
+      USDC_PRICE      = BigNumber.from(5).mul(BigNumber.from(10).pow(17))     // 0.5 USDC, 10**18
+//    USDT_PRICE      = BigNumber.from(5).mul(BigNumber.from(10).pow(17))     // 0.5 USDT, 10**18
+      MATIC_PRICE     = BigNumber.from(1).mul(BigNumber.from(10).pow(17))     // 0.1 Celo
+//    AKRE_PRICE      = expandTo18Decimals(200)                               // 200 AKRE
+   
+      const [deployer] = await ethers.getSigners();
+
+      // Approve HashKeyESGBTCContract to Tranfer-From the specified tokens
+      const ArkreenRECBankFactory = ArkreenRECBank__factory.connect(RECBANK_ADDRESS as string, deployer);
+     
+/*      
+      // 2023/08/25: 1/3, Called from Account 1
+      const addNewARTTRx = await ArkreenRECBankFactory.addNewART(HART_REC as string , ART_CONTROLLER as string);
+      await addNewARTTRx.wait()
+*/
+      
+/*
+      // Called by Account 2
+      // 2023/08/25
+      const changeSalePriceUSDSC = await ArkreenRECBankFactory.changeSalePrice(HART_REC as string, 
+                                    USDC_ADDRESS as string, USDC_PRICE as BigNumber)
+      await changeSalePriceUSDSC.wait()
+
+      // 2023/08/08
+      // const changeSalePriceUSDST = await ArkreenRECBankFactory.changeSalePrice(HART_REC as string, 
+      //                              USDT_ADDRESS as string, USDT_PRICE as BigNumber)
+      // await changeSalePriceUSDST.wait()
+
+      // 2023/08/25
+      const changeSalePriceMATIC = await ArkreenRECBankFactory.changeSalePrice(HART_REC as string, 
+                                    WNATIVE_ADDRESS as string, MATIC_PRICE as BigNumber)
+      await changeSalePriceMATIC.wait()   
+
+      // 2023/08/08
+      // const changeSalePriceAKRE = await ArkreenRECBankFactory.changeSalePrice(HART_REC as string, 
+      //                              AKRE_ADDRESS as string, AKRE_PRICE as BigNumber)
+      // await changeSalePriceAKRE.wait()
+*/
+      
+      // Need to use HART controler
+      // 2023/08/08: Approve RECBANK_ADDRESS, Called by Account 2
+      const ArkreenRECTokenFactory = ArkreenRECToken__factory.connect(HART_REC as string, deployer);
+      const approveTrx = await ArkreenRECTokenFactory.approve(RECBANK_ADDRESS as string, constants.MaxUint256)
+      await approveTrx.wait()
+
+      // 2023/08/08: Deposit HART
+      const depositARTTrx = await ArkreenRECBankFactory.depositART(HART_REC as string, 
+                                      BigNumber.from(300).mul(BigNumber.from(10).pow(9)))      // 300 HART
+      await depositARTTrx.wait()  
+    
+    }
 };
 
 
@@ -202,6 +266,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2023/08/08
 // yarn deploy:matic_test:ArtBankI (3/3)
 // Action: approve(RECBANK_ADDRESS), depositART(ART_AREC,300)
+
+// 2023/08/25
+// yarn deploy:celo_test:ArtBankI
+// Action: addNewART (1/3)
+
+// 2023/08/25
+// yarn deploy:celo_test:ArtBankI (2/3)
+// Action: changeSalePrice(USDC), changeSalePrice(WMATIC)  
 
 func.tags = ["ArtBankI"];
 
