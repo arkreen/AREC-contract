@@ -11,6 +11,9 @@ import "./interfaces/IERC20.sol";
 import "./interfaces/IERC20Permit.sol";
 import "./ArkreenMinerTypes.sol";
 
+// Import this file to use console.log
+import "hardhat/console.sol";
+
 contract ArkreenMiner is 
     OwnableUpgradeable,
     UUPSUpgradeable,
@@ -24,6 +27,9 @@ contract ArkreenMiner is
 
     // keccak256("RemoteMinerOnboard(address owner,address miners,address token,uint256 price,uint256 deadline)");
     bytes32 public constant REMOTE_MINER_TYPEHASH = 0xE397EAA556C649D10F65393AC1D09D5AA50D72547C850822C207516865E89E32;  
+
+    // keccak256("RemoteMinerOnboardBatch(address owner,address token,uint256 price,uint256 deadline)");
+    bytes32 public constant REMOTE_MINER_BATCH_TYPEHASH = 0x77B049462DCFD74927B88819D1A4003368FE599837D87CE4D46DD8ED0D7D77A9;  
 
     // keccak256("StandardMinerOnboard(address owner,address miner,uint256 deadline)");
     bytes32 public constant STANDARD_MINER_TYPEHASH = 0x73F94559854A7E6267266A158D1576CBCAFFD8AE930E61FB632F9EC576D2BB37;  
@@ -50,10 +56,25 @@ contract ArkreenMiner is
     // Miner white list mapping from miner address to miner type
     mapping(address => uint8) public whiteListMiner;
 
+    uint256 public totalSocketMiner;                  // Total amount of socket miner
+
+    // Miner white list for sales in batch, mapping from miner address to miner type
+    //mapping(address => uint8) public whiteListMinerBatch;
+    mapping(uint256 => address[]) private whiteListMinerBatch;
+    uint256 private whiteListBatchIndexHead;
+    uint256 private whiteListBatchIndexTail;
+    uint256 public  numberOfWhiteListBatch;
+
+    mapping(uint256 => address) private allWhiteListMinerBatch;
+    uint256 private allWhiteListBatchIndexHead;
+    uint256 private allWhiteListBatchIndexTail;
+
     // Events
     event MinerOnboarded(address indexed owner, address indexed miner);
+    event MinerOnboardedBatch(address indexed owner, uint8 numMiners);
     event StandardMinerOnboarded(address indexed owner, address indexed miner);
     event RemoteMinersInBatch(address[] owners, address[] miners);
+    event SocketMinerOnboarded(address indexed owner, address indexed miner);
     
     modifier ensure(uint256 deadline) {
         require(block.timestamp <= deadline, 'Arkreen Miner: EXPIRED');
@@ -130,6 +151,33 @@ contract ArkreenMiner is
     }    
 
     /**
+     * @dev Onboarding remote miners in batch, orderly fetched from the batch whitelist, paid with Native token (MATIC)
+     * @param owner address receiving the remote miners
+     * @param numMiners number of remote miners desired to purchase
+     * @param permitMiner signature of the miner register authority to confirm the owner and sales price.  
+     */
+
+    function RemoteMinerOnboardNativeBatch(
+        address     owner,
+        uint8       numMiners,
+        Signature   memory  permitMiner
+    ) external payable ensure(permitMiner.deadline) {
+
+        require((numMiners != 0) && (numMiners <= numberOfWhiteListBatch), "Arkreen Miner: Wrong Miner Number");
+
+        // Check payment value
+        require( (tokenNative != address(0)) && (tokenNative == permitMiner.token) && 
+                  (msg.value == numMiners * permitMiner.value), "Arkreen Miner: Payment error");
+
+        // Check for remote miner minting price  
+        _mintBatchCheckPrice(owner, permitMiner);
+
+        // mint new remote miners in batch
+        _mintRemoteMinerBatch(owner, numMiners);
+        emit MinerOnboardedBatch(owner, numMiners);
+    }    
+
+    /**
      * @dev Onboarding a remote miner while the payment has been approved
      * @param owner address receiving the remote miner
      * @param miner address of the remote miner onboarding
@@ -182,6 +230,27 @@ contract ArkreenMiner is
     }
 
     /**
+     * @dev Check the remote miner minting authorization, including owner and sale price
+     * @param owner address receiving the remote miners in batch
+     * @param permitMiner signature of miner register authority to confirm the owner address and price.  
+     */
+    function _mintBatchCheckPrice( 
+        address     owner,
+        Signature   memory  permitMiner
+    ) view internal {
+
+        // Check signature
+        // keccak256("RemoteMinerOnboardBatch(address owner,address token,uint256 price,uint256 deadline)");
+        bytes32 hashRegister = keccak256(abi.encode(REMOTE_MINER_BATCH_TYPEHASH, owner, 
+                                          permitMiner.token, permitMiner.value, permitMiner.deadline));
+        bytes32 digest = keccak256(abi.encodePacked('\x19\x01', DOMAIN_SEPARATOR, hashRegister));
+        address recoveredAddress = ecrecover(digest, permitMiner.v, permitMiner.r, permitMiner.s);
+  
+        require(recoveredAddress != address(0) && 
+                recoveredAddress == AllManagers[uint256(MinerManagerType.Register_Authority)], 'Arkreen Miner: INVALID_SIGNATURE');
+    }
+
+    /**
      * @dev mint a remote Miner
      * @param owner address receiving the remote miner
      * @param miner address of the remote miner onboarding
@@ -202,6 +271,54 @@ contract ArkreenMiner is
         AllMinerInfo[realMinerID] = newMiner;
 
         delete whiteListMiner[miner];
+    }
+
+
+    /**
+     * @dev mint a remote Miner
+     * @param owner address receiving the remote miner
+     * @param numMiners number of remote miners needed to mint
+     */
+    function _mintRemoteMinerBatch(address owner, uint8 numMiners) internal {
+        // Prepare to mint new remote miners
+        Miner memory newMiner;
+        newMiner.mType = MinerType.RemoteMiner;
+        newMiner.mStatus = MinerStatus.Normal;
+        newMiner.timestamp = uint32(block.timestamp);   
+
+        uint8 numberToMint = numMiners;
+        while(numberToMint > 0) {
+          address[] storage minerList = whiteListMinerBatch[whiteListBatchIndexHead];
+          uint256 minerAvailable = minerList.length;
+
+          while(minerAvailable > 0) {
+            minerAvailable -= 1;
+            address miner = minerList[minerAvailable];
+
+            // Check miner is not repeated
+            require(AllMinersToken[miner] == 0, "Arkreen Miner: Miner Repeated");
+
+            // mint new remote miner
+            uint256 realMinerID = totalSupply() + 1;
+            _safeMint(owner, realMinerID);
+            AllMinersToken[miner] = realMinerID;
+            newMiner.mAddress = miner;
+            AllMinerInfo[realMinerID] = newMiner;
+
+            minerList.pop();
+            if(minerAvailable == 0) {
+              delete whiteListMinerBatch[whiteListBatchIndexHead];  // ???    delete minerList;
+              whiteListBatchIndexHead += 1;
+            }
+            
+            // Check if the target number reached
+            numberToMint -= 1;
+            if(numberToMint == 0) break;
+          }
+        }
+
+        // if reached here, numMiners miners should have been minted
+        numberOfWhiteListBatch -= numMiners;
     }
 
     /**
@@ -254,7 +371,8 @@ contract ArkreenMiner is
         // Check the starndard address
         require(!miner.isContract(), 'Arkreen Miner: Not EOA Address');
         require(AllMinersToken[miner] == 0, "Arkreen Miner: Miner Repeated");
-        require( (whiteListMiner[miner] == uint8(MinerType.StandardMiner) ), 'Arkreen Miner: Wrong Miner');        
+        MinerType minerType = MinerType(whiteListMiner[miner]);
+        require((minerType == MinerType.StandardMiner) || (minerType == MinerType.SocketMiner), 'Arkreen Miner: Wrong Miner');        
 
         // Check signature
         bytes32 hashRegister = keccak256(abi.encode(STANDARD_MINER_TYPEHASH, owner, miner, deadline));
@@ -266,7 +384,7 @@ contract ArkreenMiner is
 
         Miner memory tmpMiner;
         tmpMiner.mAddress = miner;
-        tmpMiner.mType = MinerType.StandardMiner;
+        tmpMiner.mType = minerType;
         tmpMiner.mStatus = MinerStatus.Normal;
         tmpMiner.timestamp = uint32(block.timestamp);        
 
@@ -276,12 +394,16 @@ contract ArkreenMiner is
         AllMinersToken[miner] = minerID;
         AllMinerInfo[minerID] = tmpMiner;
 
-        // Increase the counter of total standard miner 
-        totalStandardMiner += 1;      
-        delete whiteListMiner[miner]; 
+        // Increase the counter of total standard/socket miner 
+        if(minerType == MinerType.StandardMiner) { 
+          totalStandardMiner += 1;
+          emit StandardMinerOnboarded(owner,  miner);   // emit onboarding event
+        } else {
+          totalSocketMiner += 1;
+          emit SocketMinerOnboarded(owner,  miner);
+        }
 
-        // emit onboarding event
-        emit StandardMinerOnboarded(owner,  miner);
+        delete whiteListMiner[miner]; 
     }
 
     /**
@@ -377,6 +499,25 @@ contract ArkreenMiner is
         require( whiteListMiner[tempAddress] == 0, 'Arkreen Miner: Miners Repeated');      
         whiteListMiner[tempAddress] = uint8(typeMiner);
       }
+    }
+
+    /**
+     * @dev Update the miner white list for batch sales. Only miners in the white list are allowed to onboard as an NFT.
+     * @param addressMiners List of the miners
+     */
+    function UpdateMinerWhiteListBatch(address[] calldata addressMiners) external onlyMinerManager {
+      whiteListMinerBatch[whiteListBatchIndexTail] = addressMiners;
+      whiteListBatchIndexTail += 1;
+      numberOfWhiteListBatch += addressMiners.length;
+    }
+
+    function UpdateMinerWhiteListBatchX(address[] calldata addressMiners) external onlyMinerManager {
+      uint256 indexStart = allWhiteListBatchIndexTail;
+      uint256 length = addressMiners.length;
+      for(uint256 index; index < length; index++) {
+        allWhiteListMinerBatch[indexStart + index] = addressMiners[index];
+      }
+      allWhiteListBatchIndexTail += length;
     }
 
     /**

@@ -4,8 +4,10 @@ pragma solidity ^0.8.9;
 enum MinerType {
     SKIP_0,
     SKIP_1,
-    StandardMiner,          // 2
-    RemoteMiner             // 3
+    StandardMiner,            // 2
+    RemoteMiner,              // 3
+    APIMiner,                 // 4
+    SocketMiner               // 5
 }
 
 enum MinerStatus {
