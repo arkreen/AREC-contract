@@ -49,15 +49,17 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //  await ArkreenMiner_Upgrade.deployed();
 
   if(hre.network.name === 'matic_test') {
-    const MINER_PROXY_ADDRESS = "0xC4f795514586275c799729aF5AE7113Bdb7ccc86"       // game miner in matic test net
+//  const MINER_PROXY_ADDRESS = "0xC4f795514586275c799729aF5AE7113Bdb7ccc86"       // game miner in matic test net
+//  const MINER_PROXY_ADDRESS = "0x682e01f8ecc0524085F51CC7dFB54fDB8729ac22"       // 2023/08/29: Miner in dev env
+    const MINER_PROXY_ADDRESS = "0x1F742C5f32C071A9925431cABb324352C6e99953"       // 2023/08/29: Miner in preduction env
+    
 //  const NEW_IMPLEMENTATION =  "0x4EDe87d416e872376583E793ac26526c535267C5"        // Wrong
-    const NEW_IMPLEMENTATION =  "0x7693ad7e3a69b241322094b14fcaec233afb3e56"        // original 
+//  const NEW_IMPLEMENTATION =  "0x7693ad7e3a69b241322094b14fcaec233afb3e56"        // original 
 //  const NEW_IMPLEMENTATION =  "0x16a427a1a2012fdde0ccad2664d5f2981d52a2d2"        // restored
+    const NEW_IMPLEMENTATION =  "0xF6c90184eB83a78F184f7bC883721F23519Da067"        // 2023/08/29: Upgrade to support: a) Socket Miner; 2) Batch sale for remote miner;
 
     const [deployer] = await ethers.getSigners();
     const ArkreenMinerFactory = ArkreenMiner__factory.connect(MINER_PROXY_ADDRESS, deployer);
-
-    console.log("New ArkreenMiner deployed to %s:", hre.network.name, NEW_IMPLEMENTATION);
 
 //  const callData = ArkreenMinerFactory.interface.encodeFunctionData("postUpdate", 
 //                                            [AKREToken_ADDRESS as string, MANAGER_ADDRESS as string])
@@ -66,7 +68,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     await updateTx.wait()
 
     console.log("Update Trx:", updateTx)
-    console.log("Game miner Updated: ", hre.network.name, ArkreenMinerFactory.address);
+    console.log("ArkreenMiner Updated to: ", hre.network.name, ArkreenMinerFactory.address, NEW_IMPLEMENTATION);
  } 
 
   if(hre.network.name === 'matic') {
@@ -98,6 +100,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2023/04/25: yarn deploy:matic:AMinerUV10 
 // Add native token checking in RemoteMinerOnboardNative 
 // 0x8fb18Bb2B2ef751e14BD05d5aaCB5405a6944F8E
+
+// 2023/08/29: yarn deploy:matic_test:AMinerUV10: For Dev Env. 
+// Upgrade to support: a) Socket Miner; 2) Batch sale for remote miner; 
+// new immplementaion: 0xF6c90184eB83a78F184f7bC883721F23519Da067
+
+// 2023/08/29: yarn deploy:matic_test:AMinerUV10: For preduction Env. 
+// Upgrade to support: a) Socket Miner; 2) Batch sale for remote miner; 
+// new immplementaion: 0xF6c90184eB83a78F184f7bC883721F23519Da067
 
 export default func;
 func.tags = ["AMinerUV10"];

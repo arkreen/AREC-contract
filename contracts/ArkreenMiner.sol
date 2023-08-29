@@ -11,9 +11,6 @@ import "./interfaces/IERC20.sol";
 import "./interfaces/IERC20Permit.sol";
 import "./ArkreenMinerTypes.sol";
 
-// Import this file to use console.log
-import "hardhat/console.sol";
-
 contract ArkreenMiner is 
     OwnableUpgradeable,
     UUPSUpgradeable,

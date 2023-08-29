@@ -79,14 +79,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   await ArkreenMinerV10.deployed();
   */
 
-  const ArkreenMinerV10 = await deploy(CONTRACTS.AMiner, {
+  const ArkreenMiner = await deploy(CONTRACTS.AMiner, {
       from: deployer,
       args: [],
       log: true,
       skipIfAlreadyDeployed: false,
   });
 
-  console.log("ArkreenMiner deployed to %s: ", hre.network.name, ArkreenMinerV10.address);
+  console.log("ArkreenMiner deployed to %s: ", hre.network.name, ArkreenMiner.address);
 
 };
 
@@ -97,6 +97,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2023/04/25: yarn deploy:matic:AMinerV10D 
 // Add native token checking in RemoteMinerOnboardNative 
 //  
+
+// 2023/08/29: yarn deploy:matic_test:AMinerV10D 
+// Upgrade to support: a) Socket Miner; 2) Batch sale for remote miner;
+// 0xF6c90184eB83a78F184f7bC883721F23519Da067
 
 export default func;
 func.tags = ["AMinerV10D"];
