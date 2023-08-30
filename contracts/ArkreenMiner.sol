@@ -25,11 +25,13 @@ contract ArkreenMiner is
     // keccak256("RemoteMinerOnboard(address owner,address miners,address token,uint256 price,uint256 deadline)");
     bytes32 public constant REMOTE_MINER_TYPEHASH = 0xE397EAA556C649D10F65393AC1D09D5AA50D72547C850822C207516865E89E32;  
 
-    // keccak256("RemoteMinerOnboardBatch(address owner,address token,uint256 price,uint256 deadline)");
-    bytes32 public constant REMOTE_MINER_BATCH_TYPEHASH = 0x77B049462DCFD74927B88819D1A4003368FE599837D87CE4D46DD8ED0D7D77A9;  
+    // keccak256("RemoteMinerOnboardBatch(address owner,uint256 quantity,address token,uint256 value,uint256 deadline)");
+    bytes32 public constant REMOTE_MINER_BATCH_TYPEHASH = 0x9E7E2F63BB8D2E99F3FA05B76080E528E9CA50746A4383CDF2803D633AFF18A6;  
 
     // keccak256("StandardMinerOnboard(address owner,address miner,uint256 deadline)");
     bytes32 public constant STANDARD_MINER_TYPEHASH = 0x73F94559854A7E6267266A158D1576CBCAFFD8AE930E61FB632F9EC576D2BB37;  
+
+    uint256 public constant MAX_BATCH_SALE = 50;
 
     // Public variables
     bytes32 public DOMAIN_SEPARATOR;
@@ -158,10 +160,10 @@ contract ArkreenMiner is
 
         // Check payment value
         require( (tokenNative != address(0)) && (tokenNative == permitMiner.token) && 
-                  (msg.value == numMiners * permitMiner.value), "Arkreen Miner: Payment error");
+                  (msg.value == permitMiner.value), "Arkreen Miner: Payment error");
 
         // Check for remote miner minting price  
-        _mintBatchCheckPrice(owner, permitMiner);
+        _mintBatchCheckPrice(owner, numMiners, permitMiner);
 
         // mint new remote miners in batch
         _mintRemoteMinerBatch(owner, numMiners);
@@ -206,14 +208,14 @@ contract ArkreenMiner is
     ) external ensure(permitMiner.deadline) {
 
         // Check for minting remote miner  
-        _mintBatchCheckPrice(owner, permitMiner);
+        _mintBatchCheckPrice(owner, numMiners, permitMiner);
 
         // mint new remote miner
         _mintRemoteMinerBatch(owner, numMiners);
 
         // Transfer onboarding fee
         address sender = _msgSender();
-        TransferHelper.safeTransferFrom(permitMiner.token, sender, address(this), numMiners * permitMiner.value);
+        TransferHelper.safeTransferFrom(permitMiner.token, sender, address(this), permitMiner.value);
 
         emit MinerOnboardedBatch(owner, numMiners);
     }
@@ -246,18 +248,23 @@ contract ArkreenMiner is
     }
 
     /**
-     * @dev Check the remote miner minting authorization, including owner and sale price
+     * @dev Check the remote miner minting authorization, including owner, quantity and sale value
      * @param owner address receiving the remote miners in batch
-     * @param permitMiner signature of miner register authority to confirm the owner address and price.  
+     * @param quantity quantity of remote miner for batch sale
+     * @param permitMiner signature of miner register authority to confirm the owner address and value.  
      */
     function _mintBatchCheckPrice( 
         address     owner,
+        uint8       quantity,
         Signature   memory  permitMiner
     ) view internal {
 
+        require((quantity != 0) && (quantity <= numberOfWhiteListBatch()), "Arkreen Miner: Wrong Miner Number");
+        require( quantity <= MAX_BATCH_SALE, 'Arkreen Miner: Quantity Too More');
+
         // Check signature
-        // keccak256("RemoteMinerOnboardBatch(address owner,address token,uint256 price,uint256 deadline)");
-        bytes32 hashRegister = keccak256(abi.encode(REMOTE_MINER_BATCH_TYPEHASH, owner, 
+        // keccak256("RemoteMinerOnboardBatch(address owner,uint256 quantity,address token,uint256 value,uint256 deadline)");
+        bytes32 hashRegister = keccak256(abi.encode(REMOTE_MINER_BATCH_TYPEHASH, owner, uint256(quantity),
                                           permitMiner.token, permitMiner.value, permitMiner.deadline));
         bytes32 digest = keccak256(abi.encodePacked('\x19\x01', DOMAIN_SEPARATOR, hashRegister));
         address recoveredAddress = ecrecover(digest, permitMiner.v, permitMiner.r, permitMiner.s);
@@ -371,13 +378,11 @@ contract ArkreenMiner is
         Signature memory  permitToPay
     ) external ensure(permitToPay.deadline) {
 
-        require((numMiners != 0) && (numMiners <= numberOfWhiteListBatch()), "Arkreen Miner: Wrong Miner Number");
-
         // Check miner is white listed  
-        Signature memory fullPermitMiner = Signature(permitToPay.token, permitToPay.value / numMiners , permitToPay.deadline,
+        Signature memory fullPermitMiner = Signature(permitToPay.token, permitToPay.value , permitToPay.deadline,
                                             permitMiner.v, permitMiner.r, permitMiner.s);
  
-        _mintBatchCheckPrice(owner, fullPermitMiner);
+        _mintBatchCheckPrice(owner, numMiners, fullPermitMiner);
 
         // Permit payment
         address sender = _msgSender();

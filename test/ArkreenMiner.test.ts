@@ -434,14 +434,14 @@ describe("ArkreenMiner", () => {
     it("Onboarding Remote Miner: Onboarding Remote miners in Batch", async () => {
       const miners = randomAddresses(10)
       await ArkreenMiner.connect(manager).UpdateMinerWhiteListBatch(miners) 
-      const minerPrice = expandTo18Decimals(2000)
+      const minerValue = expandTo18Decimals(2000).mul(3)
 
       const receiver = owner1.address
       const register_digest = getOnboardingRemoteMinerBatchDigest(
                       'Arkreen Miner',
                       ArkreenMiner.address,
-                      { owner: owner1.address,
-                        token: AKREToken.address, price: minerPrice, deadline: constants.MaxUint256 }
+                      { owner: owner1.address, quantity: BigNumber.from(3),
+                        token: AKREToken.address, price: minerValue, deadline: constants.MaxUint256 }
                     )
       await ArkreenMiner.setManager(Register_Authority, register_authority.address)
       const {v: rv, r: rr, s: rs} = ecsign( Buffer.from(register_digest.slice(2), 'hex'), 
@@ -451,12 +451,12 @@ describe("ArkreenMiner", () => {
       const nonce = await AKREToken.nonces(receiver)
       const digest = await getApprovalDigest(
                               AKREToken,
-                              { owner: receiver, spender: ArkreenMiner.address, value: minerPrice.mul(3) },
+                              { owner: receiver, spender: ArkreenMiner.address, value: minerValue },
                               nonce,
                               constants.MaxUint256
                             )
       const { v,r,s } = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyOwner.slice(2), 'hex'))
-      const signature: SignatureStruct = { v, r, s, token: AKREToken.address, value:minerPrice.mul(3), deadline: constants.MaxUint256 } 
+      const signature: SignatureStruct = { v, r, s, token: AKREToken.address, value:minerValue, deadline: constants.MaxUint256 } 
 
       const signature_err: SignatureStruct = { ...signature, s: rs } 
       await expect(ArkreenMiner.connect(manager).RemoteMinerOnboardBatch(receiver, 3, sig, signature_err))          
@@ -467,11 +467,11 @@ describe("ArkreenMiner", () => {
 
       await expect(ArkreenMiner.connect(owner1).RemoteMinerOnboardBatch(receiver, 3, sig, signature))
               .to.emit(AKREToken, "Transfer")
-              .withArgs(owner1.address, ArkreenMiner.address, minerPrice.mul(3))
+              .withArgs(owner1.address, ArkreenMiner.address, minerValue)
               .to.emit(ArkreenMiner, "MinerOnboardedBatch")
               .withArgs(receiver, 3);
-      expect(await AKREToken.balanceOf(owner1.address)).to.equal(balanceARKE.sub(minerPrice.mul(3)));
-      expect(await AKREToken.balanceOf(ArkreenMiner.address)).to.equal(balanceArkreenMiner.add(minerPrice.mul(3)));
+      expect(await AKREToken.balanceOf(owner1.address)).to.equal(balanceARKE.sub(minerValue));
+      expect(await AKREToken.balanceOf(ArkreenMiner.address)).to.equal(balanceArkreenMiner.add(minerValue));
       expect(await ArkreenMiner.totalSupply()).to.equal(3);
       expect(await ArkreenMiner.balanceOf(receiver)).to.equal(3);
 
@@ -594,7 +594,7 @@ describe("ArkreenMiner", () => {
     let payer: string
     let signature: SignatureStruct
 
-    const minerPrice = expandTo18Decimals(2000)
+    const minerValue = expandTo18Decimals(2000).mul(3)
 
     beforeEach(async () => {
       payer = maker1.address
@@ -604,13 +604,13 @@ describe("ArkreenMiner", () => {
       const register_digest = getOnboardingRemoteMinerBatchDigest(
                       'Arkreen Miner',
                       ArkreenMiner.address,
-                      { owner: owner1.address,
-                        token: AKREToken.address, price: minerPrice, deadline: BigNumber.from(timestamp + 600) }
+                      { owner: owner1.address, quantity: BigNumber.from(3),
+                        token: AKREToken.address, price: minerValue, deadline: BigNumber.from(timestamp + 600) }
                     )
       await ArkreenMiner.setManager(Register_Authority, register_authority.address)
       const {v, r, s} = ecsign( Buffer.from(register_digest.slice(2), 'hex'), 
                                             Buffer.from(privateKeyRegister.slice(2), 'hex'))           
-      signature = { v, r, s, token: AKREToken.address, value:minerPrice, deadline: BigNumber.from(timestamp + 600) } 
+      signature = { v, r, s, token: AKREToken.address, value:minerValue, deadline: BigNumber.from(timestamp + 600) } 
 
     });
 
@@ -630,19 +630,19 @@ describe("ArkreenMiner", () => {
     it("Onboarding Remote Miner: Onboarding a Remote miner", async () => {
       const miners = randomAddresses(10)
       await ArkreenMiner.connect(manager).UpdateMinerWhiteListBatch(miners) 
-      const minerPrice = expandTo18Decimals(2000)
+      const minerValue = expandTo18Decimals(2000).mul(3)
 
       const receiver = owner1.address
       const register_digest = getOnboardingRemoteMinerBatchDigest(
                       'Arkreen Miner',
                       ArkreenMiner.address,
-                      { owner: owner1.address,
-                        token: AKREToken.address, price: minerPrice, deadline: constants.MaxUint256 }
+                      { owner: owner1.address, quantity: BigNumber.from(3),
+                        token: AKREToken.address, price: minerValue, deadline: constants.MaxUint256 }
                     )
       await ArkreenMiner.setManager(Register_Authority, register_authority.address)
       const {v,r,s} = ecsign( Buffer.from(register_digest.slice(2), 'hex'), 
                                             Buffer.from(privateKeyRegister.slice(2), 'hex'))           
-      const signature: SignatureStruct = { v, r, s, token: AKREToken.address, value:minerPrice, deadline: constants.MaxUint256 } 
+      const signature: SignatureStruct = { v, r, s, token: AKREToken.address, value:minerValue, deadline: constants.MaxUint256 } 
 
       const signature_err: SignatureStruct = { ...signature, s: r } 
       await expect(ArkreenMiner.connect(manager).RemoteMinerOnboardApprovedBatch(receiver, 3, signature_err))          
@@ -653,12 +653,12 @@ describe("ArkreenMiner", () => {
 
       await expect(ArkreenMiner.connect(owner1).RemoteMinerOnboardApprovedBatch(receiver, 3, signature))
               .to.emit(AKREToken, "Transfer")
-              .withArgs(owner1.address, ArkreenMiner.address, minerPrice.mul(3))
+              .withArgs(owner1.address, ArkreenMiner.address, minerValue)
               .to.emit(ArkreenMiner, "MinerOnboardedBatch")
               .withArgs(receiver, 3);
 
-      expect(await AKREToken.balanceOf(owner1.address)).to.equal(balanceARKE.sub(minerPrice.mul(3)));
-      expect(await AKREToken.balanceOf(ArkreenMiner.address)).to.equal(balanceArkreenMiner.add(minerPrice.mul(3)));
+      expect(await AKREToken.balanceOf(owner1.address)).to.equal(balanceARKE.sub(minerValue));
+      expect(await AKREToken.balanceOf(ArkreenMiner.address)).to.equal(balanceArkreenMiner.add(minerValue));
       expect(await ArkreenMiner.totalSupply()).to.equal(3);
       expect(await ArkreenMiner.balanceOf(receiver)).to.equal(3);
 
@@ -790,7 +790,7 @@ describe("ArkreenMiner", () => {
     let payer: string
     let signature: SignatureStruct
 
-    const minerPrice = expandTo18Decimals(10)
+    const minerValue = expandTo18Decimals(30)
 
     beforeEach(async () => {
       payer = maker1.address
@@ -801,13 +801,13 @@ describe("ArkreenMiner", () => {
       const register_digest = getOnboardingRemoteMinerBatchDigest(
                       'Arkreen Miner',
                       ArkreenMiner.address,
-                      { owner: owner1.address,
-                        token: owner2.address, price: minerPrice, deadline: BigNumber.from(timestamp + 600) }
+                      { owner: owner1.address, quantity: BigNumber.from(3),
+                        token: owner2.address, price: minerValue, deadline: BigNumber.from(timestamp + 600) }
                     )
       await ArkreenMiner.setManager(Register_Authority, register_authority.address)
       const {v, r, s} = ecsign( Buffer.from(register_digest.slice(2), 'hex'), 
                                             Buffer.from(privateKeyRegister.slice(2), 'hex'))           
-      signature = { v, r, s, token: owner2.address, value: minerPrice, deadline: BigNumber.from(timestamp + 600) } 
+      signature = { v, r, s, token: owner2.address, value: minerValue, deadline: BigNumber.from(timestamp + 600) } 
     });
 
     it("Onboarding Remote Miner MATIC Batch Failed 1: Signature deadline checking ", async () => {
@@ -819,50 +819,50 @@ describe("ArkreenMiner", () => {
     it("Onboarding Remote Miner MATIC Batch Failed 2: Arkreen Miner: Payment error", async () => {
       const miners = randomAddresses(10)
       await ArkreenMiner.connect(manager).UpdateMinerWhiteListBatch(miners) 
-      await expect(ArkreenMiner.connect(manager).RemoteMinerOnboardNativeBatch(receiver, 1, signature, {value: minerPrice.div(2)}))        
+      await expect(ArkreenMiner.connect(manager).RemoteMinerOnboardNativeBatch(receiver, 3, signature, {value: minerValue.div(2)}))        
               .to.be.revertedWith("Arkreen Miner: Payment error")
     })
 
     it("Onboarding Remote Miner MATIC Batch Failed 3: Manager Signature checking", async () => {
       const miners = randomAddresses(10)
       await ArkreenMiner.connect(manager).UpdateMinerWhiteListBatch(miners) 
-      await expect(ArkreenMiner.connect(manager).RemoteMinerOnboardNativeBatch(receiver, 1, signature, {value: minerPrice}))          
+      await expect(ArkreenMiner.connect(manager).RemoteMinerOnboardNativeBatch(receiver, 3, signature, {value: minerValue}))          
               .to.be.revertedWith("Arkreen Miner: INVALID_SIGNATURE")
     })
 
     it("Onboarding Remote Miner MATIC Batch: Onboarding a Remote miner", async () => {
       const miners = randomAddresses(10)
       await ArkreenMiner.connect(manager).UpdateMinerWhiteListBatch(miners) 
-      const minerPrice = expandTo18Decimals(2)
+      const minerValue = expandTo18Decimals(2).mul(3)
 
       const receiver = owner1.address
       const register_digest = getOnboardingRemoteMinerBatchDigest(
                       'Arkreen Miner',
                       ArkreenMiner.address,
-                      { owner: owner1.address,
-                        token: owner2.address, price: minerPrice, deadline: constants.MaxUint256 }
+                      { owner: owner1.address, quantity: BigNumber.from(3),
+                        token: owner2.address, price: minerValue, deadline: constants.MaxUint256 }
                     )
 
       const {v,r,s} = ecsign( Buffer.from(register_digest.slice(2), 'hex'), 
                                             Buffer.from(privateKeyRegister.slice(2), 'hex'))           
-      const signature: SignatureStruct = { v, r, s, token: owner2.address, value:minerPrice, deadline: constants.MaxUint256 } 
+      const signature: SignatureStruct = { v, r, s, token: owner2.address, value:minerValue, deadline: constants.MaxUint256 } 
 
       const signature_err: SignatureStruct = { ...signature, s: r } 
-      await expect(ArkreenMiner.connect(manager).RemoteMinerOnboardNativeBatch(receiver, 3 , signature_err, {value: minerPrice.mul(3)}))          
+      await expect(ArkreenMiner.connect(manager).RemoteMinerOnboardNativeBatch(receiver, 3 , signature_err, {value: minerValue}))          
               .to.be.revertedWith("Arkreen Miner: INVALID_SIGNATURE")
 
-      await expect(ArkreenMiner.connect(manager).RemoteMinerOnboardNativeBatch(receiver, 30 , signature, {value: minerPrice.mul(3)}))          
+      await expect(ArkreenMiner.connect(manager).RemoteMinerOnboardNativeBatch(receiver, 30 , signature, {value: minerValue}))          
               .to.be.revertedWith("Arkreen Miner: Wrong Miner Number")
 
       const balanceArkreenMiner = await ethers.provider.getBalance(ArkreenMiner.address)
 
       const balanceMatic = await ethers.provider.getBalance(owner1.address)
-      await expect(ArkreenMiner.connect(owner1).RemoteMinerOnboardNativeBatch(receiver, 3, signature, {value: minerPrice.mul(3)}))
+      await expect(ArkreenMiner.connect(owner1).RemoteMinerOnboardNativeBatch(receiver, 3, signature, {value: minerValue}))
               .to.emit(ArkreenMiner, "MinerOnboardedBatch")
               .withArgs(receiver, 3);
 
-      expect(await ethers.provider.getBalance(owner1.address)).to.lt(balanceMatic.sub(minerPrice.mul(3)));
-      expect(await ethers.provider.getBalance(ArkreenMiner.address)).to.equal(balanceArkreenMiner.add(minerPrice.mul(3)));
+      expect(await ethers.provider.getBalance(owner1.address)).to.lt(balanceMatic.sub(minerValue));
+      expect(await ethers.provider.getBalance(ArkreenMiner.address)).to.equal(balanceArkreenMiner.add(minerValue));
       expect(await ArkreenMiner.totalSupply()).to.equal(3);
       expect(await ArkreenMiner.balanceOf(receiver)).to.equal(3);
 
@@ -888,24 +888,24 @@ describe("ArkreenMiner", () => {
     })
 
     it("Onboarding Remote Miner MATIC Batch: Onboarding a Remote miners: 50 ", async () => {
-      const minerPrice = expandTo18Decimals(2)
+      const minerValue = expandTo18Decimals(2).mul(5)
 
       const receiver = owner1.address
       const register_digest = getOnboardingRemoteMinerBatchDigest(
                       'Arkreen Miner',
                       ArkreenMiner.address,
-                      { owner: owner1.address,
-                        token: owner2.address, price: minerPrice, deadline: constants.MaxUint256 }
+                      { owner: owner1.address, quantity: BigNumber.from(5),
+                        token: owner2.address, price: minerValue, deadline: constants.MaxUint256 }
                     )
 
       const {v,r,s} = ecsign( Buffer.from(register_digest.slice(2), 'hex'), 
                                             Buffer.from(privateKeyRegister.slice(2), 'hex'))           
-      const signature: SignatureStruct = { v, r, s, token: owner2.address, value:minerPrice, deadline: constants.MaxUint256 } 
+      const signature: SignatureStruct = { v, r, s, token: owner2.address, value:minerValue, deadline: constants.MaxUint256 } 
 
       const miners1 = randomAddresses(10)
       await ArkreenMiner.connect(manager).UpdateMinerWhiteListBatch(miners1) 
 
-      await ArkreenMiner.connect(owner1).RemoteMinerOnboardNativeBatch(receiver, 5, signature, {value: minerPrice.mul(5)})
+      await ArkreenMiner.connect(owner1).RemoteMinerOnboardNativeBatch(receiver, 5, signature, {value: minerValue})
 
       let lastBlock = await ethers.provider.getBlock('latest')
       let timestamp = lastBlock.timestamp
@@ -922,7 +922,19 @@ describe("ArkreenMiner", () => {
       const miners3 = randomAddresses(25)
       await ArkreenMiner.connect(manager).UpdateMinerWhiteListBatch(miners3) 
 
-      await ArkreenMiner.connect(owner1).RemoteMinerOnboardNativeBatch(receiver, 40, signature, {value: minerPrice.mul(40)})
+      const minerValue1 = expandTo18Decimals(2).mul(40)
+      const register_digest1 = getOnboardingRemoteMinerBatchDigest(
+        'Arkreen Miner',
+        ArkreenMiner.address,
+        { owner: owner1.address, quantity: BigNumber.from(40),
+          token: owner2.address, price: minerValue1, deadline: constants.MaxUint256 }
+      )
+
+      const {v:v1, r:r1, s:s1} = ecsign( Buffer.from(register_digest1.slice(2), 'hex'), 
+      Buffer.from(privateKeyRegister.slice(2), 'hex'))           
+      const signature1: SignatureStruct = { v:v1, r:r1, s:s1, token: owner2.address, value:minerValue1, deadline: constants.MaxUint256 } 
+
+      await ArkreenMiner.connect(owner1).RemoteMinerOnboardNativeBatch(receiver, 40, signature1, {value: minerValue1})
 
       lastBlock = await ethers.provider.getBlock('latest')
       timestamp = lastBlock.timestamp
@@ -946,29 +958,53 @@ describe("ArkreenMiner", () => {
       expect(await ArkreenMiner.AllMinerInfo(40)).to.deep.eq(minerInfo40)
     })
 
-    it("Onboarding Remote Miner MATIC Batch: Onboarding a Remote miners: 50 ", async () => {
+    it("Onboarding Remote Miner MATIC Batch: Onboarding a Remote miners: Max checking ", async () => {
       const miners = randomAddresses(100)
       await ArkreenMiner.connect(manager).UpdateMinerWhiteListBatch(miners) 
-      const minerPrice = expandTo18Decimals(2)
+      const minerValue = expandTo18Decimals(2).mul(51)
 
       const receiver = owner1.address
       const register_digest = getOnboardingRemoteMinerBatchDigest(
                       'Arkreen Miner',
                       ArkreenMiner.address,
-                      { owner: owner1.address,
-                        token: owner2.address, price: minerPrice, deadline: constants.MaxUint256 }
+                      { owner: owner1.address, quantity: BigNumber.from(51),
+                        token: owner2.address, price: minerValue, deadline: constants.MaxUint256 }
                     )
 
       const {v,r,s} = ecsign( Buffer.from(register_digest.slice(2), 'hex'), 
                                             Buffer.from(privateKeyRegister.slice(2), 'hex'))           
-      const signature: SignatureStruct = { v, r, s, token: owner2.address, value:minerPrice, deadline: constants.MaxUint256 } 
+      const signature: SignatureStruct = { v, r, s, token: owner2.address, value:minerValue, deadline: constants.MaxUint256 } 
 
-      const tx = await ArkreenMiner.connect(owner1).RemoteMinerOnboardNativeBatch(receiver, 50, signature, {value: minerPrice.mul(50)})
+      await expect(ArkreenMiner.connect(owner1).RemoteMinerOnboardNativeBatch(receiver, 51, signature, {value: minerValue}))
+              .to.be.revertedWith("Arkreen Miner: Quantity Too More")
+    })
 
-      expect(await ArkreenMiner.numberOfWhiteListBatch()).to.deep.eq(50);
+    it("Onboarding Remote Miner MATIC Batch: Onboarding a Remote miners: 50 ", async () => {
+      const miners = randomAddresses(50)
+      await ArkreenMiner.connect(manager).UpdateMinerWhiteListBatch(miners) 
+      const minerValue = expandTo18Decimals(2).mul(50)
+
+      const receiver = owner1.address
+      const register_digest = getOnboardingRemoteMinerBatchDigest(
+                      'Arkreen Miner',
+                      ArkreenMiner.address,
+                      { owner: owner1.address, quantity: BigNumber.from(50),
+                        token: owner2.address, price: minerValue, deadline: constants.MaxUint256 }
+                    )
+
+      const {v,r,s} = ecsign( Buffer.from(register_digest.slice(2), 'hex'), 
+                                            Buffer.from(privateKeyRegister.slice(2), 'hex'))           
+      const signature: SignatureStruct = { v, r, s, token: owner2.address, value:minerValue, deadline: constants.MaxUint256 } 
+
+      const tx = await ArkreenMiner.connect(owner1).RemoteMinerOnboardNativeBatch(receiver, 50, signature, {value: minerValue})
+
+      expect(await ArkreenMiner.numberOfWhiteListBatch()).to.deep.eq(0);
 
       const receipt = await tx.wait()
-      expect(receipt.gasUsed).to.eq("8121659")  //8121659 8121568
+      expect(receipt.gasUsed).to.eq("8122040")  //8121659 8121568
+
+      await expect(ArkreenMiner.connect(owner1).RemoteMinerOnboardNativeBatch(receiver, 1, signature, {value: minerValue}))
+              .to.be.revertedWith("Arkreen Miner: Wrong Miner Number")
     })
   })
 

@@ -22,9 +22,9 @@ const REMOTE_REGISTER_TYPEHASH = utils.keccak256(
   utils.toUtf8Bytes('RemoteMinerOnboard(address owner,address miners,address token,uint256 price,uint256 deadline)')
 )
 
-// keccak256("RemoteMinerOnboardBatch(address owner,address token,uint256 price,uint256 deadline)");
+// keccak256("RemoteMinerOnboardBatch(address owner,uint256 quantity,address token,uint256 value,uint256 deadline)");
 const REMOTE_MINER_BATCH_TYPEHASH = utils.keccak256(
-  utils.toUtf8Bytes('RemoteMinerOnboardBatch(address owner,address token,uint256 price,uint256 deadline)')
+  utils.toUtf8Bytes('RemoteMinerOnboardBatch(address owner,uint256 quantity,address token,uint256 value,uint256 deadline)')
 )
 
 // keccak256("StandardMinerOnboard(address owner,address miner,uint256 deadline)");
@@ -313,6 +313,7 @@ export function getOnboardingRemoteMinerBatchDigest(
   contractAddress: string,
   approve: {
     owner: string
+    quantity: BigNumber
     token: string
     price: BigNumber
     deadline: BigNumber
@@ -329,8 +330,8 @@ export function getOnboardingRemoteMinerBatchDigest(
         DOMAIN_SEPARATOR,
         utils.keccak256(
           utils.defaultAbiCoder.encode(
-            ['bytes32', 'address', 'address', 'uint256', 'uint256'],
-            [REMOTE_MINER_BATCH_TYPEHASH, approve.owner, approve.token, approve.price, approve.deadline]
+            ['bytes32', 'address', 'uint256', 'address', 'uint256', 'uint256'],
+            [REMOTE_MINER_BATCH_TYPEHASH, approve.owner, approve.quantity, approve.token, approve.price, approve.deadline]
           )
         )
       ]

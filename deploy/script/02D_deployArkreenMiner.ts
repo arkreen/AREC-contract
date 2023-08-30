@@ -102,5 +102,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // Upgrade to support: a) Socket Miner; 2) Batch sale for remote miner;
 // 0xF6c90184eB83a78F184f7bC883721F23519Da067
 
+// 2023/08/30: yarn deploy:matic_test:AMinerV10D 
+// Upgrade to sign total value instead price for batch sales
+// 0xFE3423Fb2ef2f1403Cd64a78124ddC1329B6BF00
+
 export default func;
 func.tags = ["AMinerV10D"];
