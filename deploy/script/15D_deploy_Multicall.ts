@@ -30,6 +30,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // deploy:matic_test:MulticallD:  Address address to the returned data
 // 0x0836851450d157FeAb2c84850f7907Ab563006Be
 
+// 2023/08/30
+// deploy:celo_test:MulticallD:  deployed on Celo Testnet
+// 0xB8663EdC9929D9135E7f6D50f7d3A97862554a72
+
 func.tags = ["MulticallD"];
 
 export default func;

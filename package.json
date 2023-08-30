@@ -162,6 +162,7 @@
     "deploy:celo_test:ABuilder": "hardhat --network celo_test deploy --tags ABuilder",
     "deploy:celo_test:ABuilderI": "hardhat --network celo_test deploy --tags ABuilderI",
     "deploy:celo_test:ArtBankI": "hardhat --network celo_test deploy --tags ArtBankI",
+    "deploy:celo_test:MulticallD": "hardhat --network celo_test deploy --tags MulticallD",
 
     "etherscan:celo_test": "hardhat --network celo_test etherscan-verify --api-url https://api-alfajores.celoscan.io --api-key",
 
