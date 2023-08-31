@@ -39,6 +39,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:celo_test:RECIssueExtD
 // 0x42d4eff140e9903F682DC11931aD3E1437D7ACA1
 
+// 2023/08/31:
+// yarn deploy:celo_test:RECIssueExtD: Upgrade to support issuance payment with approved token
+// 0xCA308f3082729D5960f8726593F15686AA49FCbc
+
 func.tags = ["RECIssueExtD"];
 
 export default func;
