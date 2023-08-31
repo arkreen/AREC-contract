@@ -164,6 +164,7 @@
     "deploy:celo_test:ArtBankI": "hardhat --network celo_test deploy --tags ArtBankI",
     "deploy:celo_test:MulticallD": "hardhat --network celo_test deploy --tags MulticallD",
 
+    "confirmAuto:celo_test": "hardhat run --network celo_test ./deploy/confirmIssuance_celo.ts",
     "etherscan:celo_test": "hardhat --network celo_test etherscan-verify --api-url https://api-alfajores.celoscan.io --api-key",
 
     "etherscan:celo": "hardhat --network celo etherscan-verify --api-url https://api.celoscan.io --api-key",
