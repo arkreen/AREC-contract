@@ -133,7 +133,12 @@ contract ArkreenRECIssuance is
         require(IArkreenMiner(arkreenMiner).isOwner(sender), "AREC: Not Miner");        /// May Removed for testing ///
 
         // Check payment appoval
-        require( (permitToPay.token == tokenAKRE) || (paymentTokenPrice[permitToPay.token] != 0), "AREC: Wrong Payment Token");
+        uint256 rateToIssue = paymentTokenPrice[permitToPay.token];
+        require( (permitToPay.token == tokenAKRE) || (rateToIssue != 0), "AREC: Wrong Payment Token");
+
+        uint256 valuePayment = recRequest.amountREC * rateToIssue;   // Rate is caluated based 10**9
+        require( permitToPay.value >= valuePayment, "AREC: Low Payment Value");
+
         IERC20Permit(permitToPay.token).permit(sender, address(this), 
                         permitToPay.value, permitToPay.deadline, permitToPay.v, permitToPay.r, permitToPay.s);
 
@@ -156,13 +161,13 @@ contract ArkreenRECIssuance is
 
         allRECData[tokenId] = recData;
 
-        PayInfo memory payInfo = PayInfo({token: permitToPay.token, value: permitToPay.value});
+        PayInfo memory payInfo = PayInfo({token: permitToPay.token, value: valuePayment});
         allPayInfo[tokenId] = payInfo;
 
         emit RECRequested(sender, tokenId);
 
         // Transfer the REC mint fee
-        TransferHelper.safeTransferFrom(permitToPay.token, _msgSender(), address(this), permitToPay.value);
+        TransferHelper.safeTransferFrom(permitToPay.token, _msgSender(), address(this), valuePayment);
     }
 
     /**
@@ -378,30 +383,6 @@ contract ArkreenRECIssuance is
         emit RECLiquidized(owner, tokenId, amountREC);
     }
 
-    /**
-     * @dev restore the AREC NFT from Liquidized state to Certified state, called only by ART token contract
-     * @param tokenId Id of the AREC NFT to restore 
-     */
-    function restore( uint256 tokenId ) external whenNotPaused returns (bool){
-        // Check if the REC status
-        RECData storage recData = allRECData[tokenId];
-        require(recData.status == uint8(RECStatus.Liquidized), 'AREC: Not Liquidized');
-
-        address issuerREC = recData.issuer;
-        uint256 amountREC = recData.amountREC;
-        address tokenREC = IArkreenRegistry(arkreenRegistry).getRECToken(issuerREC, recData.idAsset);
-
-        // Only the ART contract can restore the AREC
-        require(msg.sender == tokenREC, 'AREC: Not Allowed');
-
-        // Modified the Liquidized REC amount
-        allRECLiquidized -= amountREC;
-
-        // Set the AREC status to be Liquidized
-        recData.status = uint8(RECStatus.Certified);
-        return true;
-    }
-
     /// @dev retrieve all AREC data
     function getRECData(uint256 tokenId) external view virtual returns (RECData memory) {
         return (allRECData[tokenId]);
@@ -517,7 +498,7 @@ contract ArkreenRECIssuance is
     function _baseURI() internal view virtual override returns (string memory) {
         return baseURI;
     }
-
+    
     /**
      * @dev Returns the URI for the given token.  
      */    
@@ -537,5 +518,5 @@ contract ArkreenRECIssuance is
         }
 
         return super.tokenURI(tokenId);
-    }
+    }  
 }

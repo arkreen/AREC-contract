@@ -18,7 +18,7 @@ import "./ArkreenRECIssuanceStorage.sol";
 import "./interfaces/IPausable.sol";
 
 // Import this file to use console.log
-//import "hardhat/console.sol";
+// import "hardhat/console.sol";
 
 contract ArkreenRECIssuanceExt is
     OwnableUpgradeable,
@@ -101,10 +101,12 @@ contract ArkreenRECIssuanceExt is
         uint256 valuePayment = amountREC * rateToIssue / ( 10**9);              // Rate is caluated based 10**9
         require( permitToPay.value >= valuePayment, "AREC: Low Payment Value");
 
-        IERC20Permit(permitToPay.token).permit(sender, address(this), 
-                        permitToPay.value, permitToPay.deadline, permitToPay.v, permitToPay.r, permitToPay.s);
+        if(permitToPay.value != 0) {
+          IERC20Permit(permitToPay.token).permit(sender, address(this), 
+                          permitToPay.value, permitToPay.deadline, permitToPay.v, permitToPay.r, permitToPay.s);
+        }
 
-        tokenId = totalSupply() + 1;        
+        tokenId = totalSupply() + 1;
         _safeMint(sender, tokenId);
 
         // Prepare REC data
@@ -112,18 +114,18 @@ contract ArkreenRECIssuanceExt is
         recData.issuer =  issuer;
         recData.minter = sender;
         recData.amountREC =  uint128(amountREC);
-        recData.status = uint8(RECStatus.Pending); 
+        recData.status = uint8(RECStatus.Pending);
         recData.idAsset = uint16(idAssetType);
 
         allRECData[tokenId] = recData;
 
-        PayInfo memory payInfo = PayInfo({token: permitToPay.token, value: permitToPay.value});
+        PayInfo memory payInfo = PayInfo({token: permitToPay.token, value: valuePayment});
         allPayInfo[tokenId] = payInfo;
 
         emit ESGBatchMinted(sender, tokenId);
 
         // Transfer the REC mint fee
-        TransferHelper.safeTransferFrom(permitToPay.token, _msgSender(), address(this), permitToPay.value);
+        TransferHelper.safeTransferFrom(permitToPay.token, _msgSender(), address(this), valuePayment);
     }
 
     /**
@@ -150,9 +152,9 @@ contract ArkreenRECIssuanceExt is
         RECData storage recData = allRECData[tokenID];
         require(recData.status <= uint8(RECStatus.Rejected), 'AREC: Wrong Status');
 
-        if(startTime != 0) recData.startTime = startTime;                        
+        if(startTime != 0) recData.startTime = startTime;
         if(endTime != 0) recData.endTime = endTime;
-        if(bytes(cID).length != 0) recData.cID = cID;                          
+        if(bytes(cID).length != 0) recData.cID = cID;
         if(bytes(region).length != 0) recData.region = region;
         if(bytes(url).length != 0) recData.url = url;
         if(bytes(memo).length != 0) recData.memo = memo;
@@ -175,7 +177,7 @@ contract ArkreenRECIssuanceExt is
         require(allRECData[tokenID].status == uint8(RECStatus.Rejected), 'AREC: Wrong Status');  
 
         allRECData[tokenID].status = uint8(RECStatus.Cancelled);
-        
+
         // Refund the request fee
         TransferHelper.safeTransfer(allPayInfo[tokenID].token, _msgSender(), allPayInfo[tokenID].value);
 
@@ -193,7 +195,7 @@ contract ArkreenRECIssuanceExt is
           address token = paymentTokens[index];
           ARECMintPrice[index].token = paymentTokens[index];
           ARECMintPrice[index].value = paymentTokenPrice[token];
-        }          
+        }
         return ARECMintPrice;
     }
 
@@ -233,7 +235,7 @@ contract ArkreenRECIssuanceExt is
                     recData.status = uint8(RECStatus.Retired);
                 } else {
                     uint256 amountREC = recData.amountREC;
-                    
+
                     // Modified the Liquidized REC amount
                     allRECLiquidized -= amountREC;
 
@@ -246,5 +248,5 @@ contract ArkreenRECIssuanceExt is
             }
         }
         super._beforeTokenTransfer(from, to, tokenId);
-    }    
+    }
 }

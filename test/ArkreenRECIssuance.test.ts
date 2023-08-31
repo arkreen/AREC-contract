@@ -15,7 +15,7 @@ import {
 } from "../typechain";
 
 import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { getApprovalDigest, expandTo18Decimals, randomAddresses, MinerType, RECStatus } from "./utils/utilities";
+import { getApprovalDigest, expandTo18Decimals, randomAddresses, MinerType, RECStatus, expandTo9Decimals } from "./utils/utilities";
 import { ecsign, fromRpcSig, ecrecover } from 'ethereumjs-util'
 import { RECRequestStruct, SignatureStruct, RECDataStruct } from "../typechain/contracts/ArkreenRECIssuance";
 
@@ -84,12 +84,12 @@ describe("ArkreenRECIssuance", () => {
       arkreenRetirement = await upgrades.deployProxy(ArkreenRetirementFactory,[arkreenRegistry.address]) as ArkreenBadge
       await arkreenRetirement.deployed()           
   
-      await AKREToken.transfer(owner1.address, expandTo18Decimals(10000))
-      await AKREToken.connect(owner1).approve(arkreenRECIssuance.address, expandTo18Decimals(10000))
-      await AKREToken.transfer(maker1.address, expandTo18Decimals(10000))
-      await AKREToken.connect(maker1).approve(arkreenRECIssuance.address, expandTo18Decimals(10000))
-      await AKREToken.connect(owner1).approve(arkreenMiner.address, expandTo18Decimals(10000))
-      await AKREToken.connect(maker1).approve(arkreenMiner.address, expandTo18Decimals(10000))
+      await AKREToken.transfer(owner1.address, expandTo18Decimals(100000))
+      await AKREToken.connect(owner1).approve(arkreenRECIssuance.address, expandTo18Decimals(100000))
+      await AKREToken.transfer(maker1.address, expandTo18Decimals(100000))
+      await AKREToken.connect(maker1).approve(arkreenRECIssuance.address, expandTo18Decimals(100000))
+      await AKREToken.connect(owner1).approve(arkreenMiner.address, expandTo18Decimals(100000))
+      await AKREToken.connect(maker1).approve(arkreenMiner.address, expandTo18Decimals(100000))
 
       const payer = maker1.address
 
@@ -238,12 +238,12 @@ describe("ArkreenRECIssuance", () => {
       let recMintRequest: RECRequestStruct 
       const startTime = 1564888526
       const endTime   = 1654888526
-      const mintFee = expandTo18Decimals(100)      
+      const mintFee = expandTo18Decimals(1000).mul(50)      
 
       beforeEach(async () => {
         recMintRequest = { 
           issuer: manager.address, startTime, endTime,
-          amountREC: BigNumber.from(1000), 
+          amountREC: expandTo9Decimals(1000), 
           cID: "bafybeihepmxz4ytc4ht67j73nzurkvsiuxhsmxk27utnopzptpo7wuigte", 
           region: 'Beijing',
           url:"", memo:""
@@ -305,12 +305,16 @@ describe("ArkreenRECIssuance", () => {
       it("ArkreenRECIssuance: mintRECRequest Normal", async () => {
         // Normal
         await arkreenRegistry.setArkreenMiner(arkreenMiner.address)        
+
+        const price0:BigNumber = expandTo18Decimals(50).div(expandTo9Decimals(1))
+        await arkreenRECIssuance.updateARECMintPrice(AKREToken.address, price0)       
+
         const balanceArkreenRECIssuance = await AKREToken.balanceOf(arkreenRECIssuance.address)
         await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
 
         let recData = [ manager.address,  "",  owner1.address,
                         startTime,  endTime,
-                        BigNumber.from(1000), 
+                        expandTo9Decimals(1000), 
                         BigNumber.from(RECStatus.Pending),
                         "bafybeihepmxz4ytc4ht67j73nzurkvsiuxhsmxk27utnopzptpo7wuigte", 
                         'Beijing',
@@ -352,7 +356,10 @@ describe("ArkreenRECIssuance", () => {
         signature = { v, r, s, token: AKREToken.address, value:mintFee, deadline: constants.MaxUint256 } 
 
         // Normal
-        await arkreenRegistry.setArkreenMiner(arkreenMiner.address)        
+        await arkreenRegistry.setArkreenMiner(arkreenMiner.address)   
+        const price0:BigNumber = expandTo18Decimals(50).div(expandTo9Decimals(1))
+        await arkreenRECIssuance.updateARECMintPrice(AKREToken.address, price0)
+
         await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
         tokenID = await arkreenRECIssuance.totalSupply()
       })
@@ -410,7 +417,10 @@ describe("ArkreenRECIssuance", () => {
         signature = { v, r, s, token: AKREToken.address, value:mintFee, deadline: constants.MaxUint256 } 
 
         // Normal
-        await arkreenRegistry.setArkreenMiner(arkreenMiner.address)        
+        await arkreenRegistry.setArkreenMiner(arkreenMiner.address)      
+        const price0:BigNumber = expandTo18Decimals(50).div(expandTo9Decimals(1))
+        await arkreenRECIssuance.updateARECMintPrice(AKREToken.address, price0)
+        
         await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
         tokenID = await arkreenRECIssuance.totalSupply()
       })
@@ -472,7 +482,10 @@ describe("ArkreenRECIssuance", () => {
         signature = { v, r, s, token: AKREToken.address, value:mintFee, deadline: constants.MaxUint256 } 
 
         // Normal
-        await arkreenRegistry.setArkreenMiner(arkreenMiner.address)        
+        await arkreenRegistry.setArkreenMiner(arkreenMiner.address)      
+        const price0:BigNumber = expandTo18Decimals(50).div(expandTo9Decimals(1))
+        await arkreenRECIssuance.updateARECMintPrice(AKREToken.address, price0)
+
         await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
         tokenID = await arkreenRECIssuance.totalSupply()
 
@@ -518,12 +531,12 @@ describe("ArkreenRECIssuance", () => {
       let recMintRequest: RECRequestStruct 
       const startTime = 1564888526
       const endTime   = 1654888526
-      const mintFee = expandTo18Decimals(100)    
+      const mintFee = expandTo18Decimals(1000).mul(50)    
 
       beforeEach(async () => {
         recMintRequest = { 
           issuer: manager.address, startTime, endTime,
-          amountREC: BigNumber.from(1000), 
+          amountREC: expandTo9Decimals(1000), 
           cID: "bafybeihepmxz4ytc4ht67j73nzurkvsiuxhsmxk27utnopzptpo7wuigte", 
           region: 'Beijing',
           url:"", memo:""
@@ -539,7 +552,10 @@ describe("ArkreenRECIssuance", () => {
         signature = { v, r, s, token: AKREToken.address, value:mintFee, deadline: constants.MaxUint256 } 
 
         // Normal
-        await arkreenRegistry.setArkreenMiner(arkreenMiner.address)        
+        await arkreenRegistry.setArkreenMiner(arkreenMiner.address)     
+        const price0:BigNumber = expandTo18Decimals(50).div(expandTo9Decimals(1))
+        await arkreenRECIssuance.updateARECMintPrice(AKREToken.address, price0)
+
         await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
         tokenID = await arkreenRECIssuance.totalSupply()
       })
@@ -565,18 +581,15 @@ describe("ArkreenRECIssuance", () => {
 
         let recData = [ manager.address,  "Serial12345678",  owner1.address,
                         startTime,  endTime,
-                        BigNumber.from(1000), 
+                        expandTo9Decimals(1000), 
                         BigNumber.from(RECStatus.Certified),
                         "bafybeihepmxz4ytc4ht67j73nzurkvsiuxhsmxk27utnopzptpo7wuigte", 
                         "Beijing", "", "", 0 ]
 
         expect(await arkreenRECIssuance.getRECData(tokenID)).to.deep.eq(recData);
-        expect(await arkreenRECIssuance.allRECByIssuer(manager.address)).to.deep.eq(BigNumber.from(1000));
-
-        expect(await arkreenRECIssuance.allRECByIssuer(manager.address)).to.deep.eq(BigNumber.from(1000));
-        expect(await arkreenRECIssuance.allRECIssued()).to.deep.eq(BigNumber.from(1000));
-        expect(await arkreenRECIssuance.paymentByIssuer(manager.address, AKREToken.address)).to.deep.eq(expandTo18Decimals(100));
-
+        expect(await arkreenRECIssuance.allRECByIssuer(manager.address)).to.deep.eq(expandTo9Decimals(1000));
+        expect(await arkreenRECIssuance.allRECIssued()).to.deep.eq(expandTo9Decimals(1000));
+        expect(await arkreenRECIssuance.paymentByIssuer(manager.address, AKREToken.address)).to.deep.eq(expandTo18Decimals(1000).mul(50));
         let payInfo = [constants.AddressZero, BigNumber.from(0)]
         expect(await arkreenRECIssuance.allPayInfo(tokenID)).to.deep.eq(payInfo);
 
@@ -592,13 +605,13 @@ describe("ArkreenRECIssuance", () => {
         
         let recMintRequest: RECRequestStruct = { 
           issuer: manager.address, startTime, endTime,
-          amountREC: expandTo18Decimals(1000), 
+          amountREC: expandTo9Decimals(1000), 
           cID: "bafybeihepmxz4ytc4ht67j73nzurkvsiuxhsmxk27utnopzptpo7wuigte",
           region: 'Beijing',
           url:"", memo:""
         } 
 
-        const mintFee = expandTo18Decimals(100)
+        const mintFee = expandTo18Decimals(1000).mul(50)
         const nonce1 = await AKREToken.nonces(owner1.address)
         const digest1 = await getApprovalDigest(
                                 AKREToken,
@@ -611,6 +624,9 @@ describe("ArkreenRECIssuance", () => {
         
         // Mint
         await arkreenRegistry.setArkreenMiner(arkreenMiner.address)
+        const price0:BigNumber = expandTo18Decimals(50).div(expandTo9Decimals(1))
+        await arkreenRECIssuance.updateARECMintPrice(AKREToken.address, price0)
+
         await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
         const tokenID = await arkreenRECIssuance.totalSupply()
 
@@ -637,7 +653,7 @@ describe("ArkreenRECIssuance", () => {
         const userActions = await arkreenRetirement.getUserEvents(owner1.address)
 
         const lastBlock = await ethers.provider.getBlock('latest')
-        const offsetAction = [owner1.address, manager.address, expandTo18Decimals(1000),
+        const offsetAction = [owner1.address, manager.address, expandTo9Decimals(1000),
                               tokenID, BigNumber.from(lastBlock.timestamp), false]
 
         expect(await arkreenRetirement.offsetActions(userActions[userActions.length-1])).to.deep.equal(offsetAction)
@@ -645,7 +661,7 @@ describe("ArkreenRECIssuance", () => {
         let recData: RECDataStruct = await arkreenRECIssuance.getRECData(tokenID)
         expect(recData.status).to.equal(BigNumber.from(RECStatus.Retired));      
         
-        expect(await arkreenRECIssuance.allRECRedeemed()).to.deep.eq(expandTo18Decimals(1000));
+        expect(await arkreenRECIssuance.allRECRedeemed()).to.deep.eq(expandTo9Decimals(1000));
        
       })
     })
@@ -659,13 +675,13 @@ describe("ArkreenRECIssuance", () => {
         
         let recMintRequest: RECRequestStruct = { 
           issuer: manager.address, startTime, endTime,
-          amountREC: expandTo18Decimals(1000), 
+          amountREC: expandTo9Decimals(1000), 
           cID: "bafybeihepmxz4ytc4ht67j73nzurkvsiuxhsmxk27utnopzptpo7wuigte",
           region: 'Beijing',
           url:"", memo:""
         } 
 
-        const mintFee = expandTo18Decimals(100)
+        const mintFee = expandTo18Decimals(1000).mul(50)
         const nonce1 = await AKREToken.nonces(owner1.address)
         const digest1 = await getApprovalDigest(
                                 AKREToken,
@@ -678,6 +694,9 @@ describe("ArkreenRECIssuance", () => {
         
         // Mint
         await arkreenRegistry.setArkreenMiner(arkreenMiner.address)
+        const price0:BigNumber = expandTo18Decimals(50).div(expandTo9Decimals(1))
+        await arkreenRECIssuance.updateARECMintPrice(AKREToken.address, price0)
+
         await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
         tokenID = await arkreenRECIssuance.totalSupply()
 
@@ -710,7 +729,7 @@ describe("ArkreenRECIssuance", () => {
         const userActions = await arkreenRetirement.getUserEvents(owner1.address)
 
         const lastBlock = await ethers.provider.getBlock('latest')
-        const offsetAction = [owner1.address, manager.address, expandTo18Decimals(1000),
+        const offsetAction = [owner1.address, manager.address, expandTo9Decimals(1000),
                               tokenID, BigNumber.from(lastBlock.timestamp), false]
 
         expect(await arkreenRetirement.offsetActions(userActions[userActions.length-1])).to.deep.equal(offsetAction)
@@ -718,7 +737,7 @@ describe("ArkreenRECIssuance", () => {
         let recData: RECDataStruct = await arkreenRECIssuance.getRECData(tokenID)
         expect(recData.status).to.equal(BigNumber.from(RECStatus.Retired));   
         
-        expect(await arkreenRECIssuance.allRECRedeemed()).to.deep.eq(expandTo18Decimals(1000));        
+        expect(await arkreenRECIssuance.allRECRedeemed()).to.deep.eq(expandTo9Decimals(1000));        
       })
 
       it("ArkreenRECIssuance: redeemFrom by approval", async () => {
@@ -757,13 +776,13 @@ describe("ArkreenRECIssuance", () => {
         
         let recMintRequest: RECRequestStruct = { 
           issuer: manager.address, startTime, endTime,
-          amountREC: expandTo18Decimals(1000), 
+          amountREC: expandTo9Decimals(1000), 
           cID: "bafybeihepmxz4ytc4ht67j73nzurkvsiuxhsmxk27utnopzptpo7wuigte",
           region: 'Beijing',
           url:"", memo:""
         } 
 
-        const mintFee = expandTo18Decimals(100)
+        const mintFee = expandTo18Decimals(1000).mul(50)
         const nonce1 = await AKREToken.nonces(owner1.address)
         const digest1 = await getApprovalDigest(
                                 AKREToken,
@@ -776,6 +795,9 @@ describe("ArkreenRECIssuance", () => {
         
         // Mint
         await arkreenRegistry.setArkreenMiner(arkreenMiner.address)
+        const price0:BigNumber = expandTo18Decimals(50).div(expandTo9Decimals(1))
+        await arkreenRECIssuance.updateARECMintPrice(AKREToken.address, price0)
+
         await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
         tokenID = await arkreenRECIssuance.totalSupply()
 
@@ -822,10 +844,10 @@ describe("ArkreenRECIssuance", () => {
         const offsetID = await arkreenRetirement.offsetCounter()
         const certId = await arkreenRetirement.totalSupply()
 
-        expect(await arkreenRECIssuance.allRECRedeemed()).to.deep.eq(expandTo18Decimals(1000));   
+        expect(await arkreenRECIssuance.allRECRedeemed()).to.deep.eq(expandTo9Decimals(1000));   
      
         const offsetRecord = [owner1.address, owner1.address, "Owner", "Alice", "Save Earcth", 
-                              BigNumber.from(lastBlock.timestamp), expandTo18Decimals(1000), [offsetID]]
+                              BigNumber.from(lastBlock.timestamp), expandTo9Decimals(1000), [offsetID]]
         expect(await arkreenRetirement.getCertificate(certId)).to.deep.equal(offsetRecord)
       })      
     })
@@ -838,13 +860,13 @@ describe("ArkreenRECIssuance", () => {
         
         let recMintRequest: RECRequestStruct = { 
           issuer: manager.address, startTime, endTime,
-          amountREC: expandTo18Decimals(1000), 
+          amountREC: expandTo9Decimals(1000), 
           cID: "bafybeihepmxz4ytc4ht67j73nzurkvsiuxhsmxk27utnopzptpo7wuigte",
           region: 'Beijing',
           url:"", memo:""
         } 
 
-        const mintFee = expandTo18Decimals(100)
+        const mintFee = expandTo18Decimals(1000).mul(50)
         const nonce1 = await AKREToken.nonces(owner1.address)
         const digest1 = await getApprovalDigest(
                                 AKREToken,
@@ -857,6 +879,9 @@ describe("ArkreenRECIssuance", () => {
         
         // Mint
         await arkreenRegistry.setArkreenMiner(arkreenMiner.address)
+        const price0:BigNumber = expandTo18Decimals(50).div(expandTo9Decimals(1))
+        await arkreenRECIssuance.updateARECMintPrice(AKREToken.address, price0)
+
         await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
         const tokenID = await arkreenRECIssuance.totalSupply()
 
@@ -874,15 +899,15 @@ describe("ArkreenRECIssuance", () => {
         // Normal
         await expect(arkreenRECIssuance.connect(owner1).liquidizeREC(tokenID))
                 .to.emit(arkreenRECIssuance, "RECLiquidized")
-                .withArgs(owner1.address, tokenID, expandTo18Decimals(1000))
+                .withArgs(owner1.address, tokenID, expandTo9Decimals(1000))
 
-        expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(expandTo18Decimals(1000));
+        expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(expandTo9Decimals(1000));
         expect(await arkreenRECIssuance.ownerOf(tokenID)).to.equal(arkreenRECToken.address);
       
         let recData: RECDataStruct = await arkreenRECIssuance.getRECData(tokenID)
         expect(recData.status).to.equal(BigNumber.from(RECStatus.Liquidized));
 
-        expect(await arkreenRECIssuance.allRECLiquidized()).to.deep.eq(expandTo18Decimals(1000));  
+        expect(await arkreenRECIssuance.allRECLiquidized()).to.deep.eq(expandTo9Decimals(1000));  
     });
   })
 
@@ -897,13 +922,13 @@ describe("ArkreenRECIssuance", () => {
       
       recMintRequest = { 
         issuer: manager.address, startTime, endTime,
-        amountREC: expandTo18Decimals(1000), 
+        amountREC: expandTo9Decimals(1000), 
         cID: "bafybeihepmxz4ytc4ht67j73nzurkvsiuxhsmxk27utnopzptpo7wuigte",
         region: 'Beijing',
         url:"", memo:""
       } 
 
-      const mintFee = expandTo18Decimals(100)
+      const mintFee = expandTo18Decimals(1000).mul(50)
       const nonce1 = await AKREToken.nonces(owner1.address)
       const digest1 = await getApprovalDigest(
                               AKREToken,
@@ -941,12 +966,12 @@ describe("ArkreenRECIssuance", () => {
     let signature: SignatureStruct
     const startTime = 1564888526
     const endTime   = 1654888526
-    const mintFee = expandTo18Decimals(100)
+    const mintFee = expandTo18Decimals(1000).mul(50)
 
     beforeEach(async () => {
       recMintRequest = { 
         issuer: manager.address, startTime, endTime,
-        amountREC: expandTo18Decimals(1000), 
+        amountREC: expandTo9Decimals(1000), 
         cID: "bafybeihepmxz4ytc4ht67j73nzurkvsiuxhsmxk27utnopzptpo7wuigte",
         region: 'Beijing',
         url:"", memo:""
@@ -964,6 +989,9 @@ describe("ArkreenRECIssuance", () => {
       
       // Mint
       await arkreenRegistry.setArkreenMiner(arkreenMiner.address)
+      const price0:BigNumber = expandTo18Decimals(50).div(expandTo9Decimals(1))
+      await arkreenRECIssuance.updateARECMintPrice(AKREToken.address, price0)    
+
       await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
       tokenID = await arkreenRECIssuance.totalSupply()
       await arkreenRECIssuance.connect(manager).certifyRECRequest(tokenID, "Serial12345678")
@@ -995,13 +1023,13 @@ describe("ArkreenRECIssuance", () => {
       
       recMintRequest = { 
         issuer: manager.address, startTime, endTime,
-        amountREC: expandTo18Decimals(1000), 
+        amountREC: expandTo9Decimals(1000), 
         cID: "bafybeihepmxz4ytc4ht67j73nzurkvsiuxhsmxk27utnopzptpo7wuigte",
         region: 'Beijing',
         url:"", memo:""
       } 
 
-      const mintFee = expandTo18Decimals(100)
+      const mintFee = expandTo18Decimals(1000).mul(50)
       const nonce1 = await AKREToken.nonces(owner1.address)
       const digest1 = await getApprovalDigest(
                               AKREToken,
@@ -1014,6 +1042,9 @@ describe("ArkreenRECIssuance", () => {
       
       // Mint
       await arkreenRegistry.setArkreenMiner(arkreenMiner.address)
+      const price0:BigNumber = expandTo18Decimals(50).div(expandTo9Decimals(1))
+      await arkreenRECIssuance.updateARECMintPrice(AKREToken.address, price0)
+
       await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
       tokenID = await arkreenRECIssuance.totalSupply()
     })

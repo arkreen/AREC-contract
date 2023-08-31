@@ -236,14 +236,14 @@ describe("HashKeyESGBTC", () => {
       const pairEEArt = new Contract(pairAddressEEArt, JSON.stringify(FeSwapPair.abi), ethers.provider).connect(wallet)
       const pairEAArt = new Contract(pairAddressEAArt, JSON.stringify(FeSwapPair.abi), ethers.provider).connect(wallet)
   
-      await AKREToken.transfer(owner1.address, expandTo18Decimals(10000))
-      await AKREToken.connect(owner1).approve(arkreenRECIssuance.address, expandTo18Decimals(10000))
+      await AKREToken.transfer(owner1.address, expandTo18Decimals(100000000))
+      await AKREToken.connect(owner1).approve(arkreenRECIssuance.address, expandTo18Decimals(100000000))
 
-      await AKREToken.transfer(maker1.address, expandTo18Decimals(10000))
-      await AKREToken.connect(maker1).approve(arkreenRECIssuance.address, expandTo18Decimals(10000))
+      await AKREToken.transfer(maker1.address, expandTo18Decimals(100000000))
+      await AKREToken.connect(maker1).approve(arkreenRECIssuance.address, expandTo18Decimals(100000000))
       
-      await AKREToken.connect(owner1).approve(arkreenMiner.address, expandTo18Decimals(10000))
-      await AKREToken.connect(maker1).approve(arkreenMiner.address, expandTo18Decimals(10000))
+      await AKREToken.connect(owner1).approve(arkreenMiner.address, expandTo18Decimals(100000000))
+      await AKREToken.connect(maker1).approve(arkreenMiner.address, expandTo18Decimals(100000000))
       
       await WETHPartner.transfer(maker1.address, expandTo18Decimals(1000000))
       await WETHPartner.transfer(owner1.address, expandTo18Decimals(1000000))
@@ -328,12 +328,12 @@ describe("HashKeyESGBTC", () => {
 
         let recMintRequest: RECRequestStruct = { 
           issuer: manager.address, region: 'Beijing', startTime, endTime,
-          amountREC: expandTo18Decimals(1000), 
+          amountREC: expandTo9Decimals(1000), 
           cID: "bafybeihepmxz4ytc4ht67j73nzurkvsiuxhsmxk27utnopzptpo7wuigte", 
           url:"", memo:""
         } 
   
-        const mintFee = expandTo18Decimals(100)
+        const mintFee = expandTo18Decimals(1000).mul(50)
         const nonce1 = await AKREToken.nonces(owner1.address)
         const digest1 = await getApprovalDigest(
                                 AKREToken,
@@ -347,7 +347,7 @@ describe("HashKeyESGBTC", () => {
         // Mint
         await arkreenRegistry.setArkreenMiner(arkreenMiner.address)
 //      await arkreenRECIssuance.managePaymentToken(AKREToken.address, true)
-        const price0:BigNumber = expandTo18Decimals(50)
+        const price0:BigNumber = expandTo18Decimals(50).div(expandTo9Decimals(1))
         await arkreenRECIssuance.updateARECMintPrice(AKREToken.address, price0)
         await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
   
@@ -366,13 +366,13 @@ describe("HashKeyESGBTC", () => {
   
         let recMintRequest: RECRequestStruct = { 
           issuer: manager.address, startTime, endTime,
-          amountREC: expandTo18Decimals(amountREC), 
+          amountREC: expandTo9Decimals(amountREC), 
           cID: "bafybeihepmxz4ytc4ht67j73nzurkvsiuxhsmxk27utnopzptpo7wuigte",
           region: 'Beijing',
           url:"", memo:""
         } 
   
-        const mintFee = expandTo18Decimals(100)
+        const mintFee = expandTo18Decimals(amountREC).mul(50)
         const nonce1 = await AKREToken.nonces(owner1.address)
         const digest1 = await getApprovalDigest(
                                 AKREToken,
@@ -396,13 +396,13 @@ describe("HashKeyESGBTC", () => {
         
         let recMintRequest: RECRequestStruct = { 
           issuer: manager.address, startTime, endTime,
-          amountREC: expandTo18Decimals(amountREC), 
+          amountREC: expandTo9Decimals(amountREC), 
           cID: "bafybeihepmxz4ytc4ht67j73nzurkvsiuxhsmxk27utnopzptpo7wuigte",
           region: 'Beijing',
           url:"", memo:""
         } 
   
-        const mintFee = expandTo18Decimals(100)
+        const mintFee = expandTo18Decimals(amountREC).mul(50)
         const nonce1 = await AKREToken.nonces(maker1.address)
         const digest1 = await getApprovalDigest(
                                 AKREToken,
@@ -458,7 +458,7 @@ describe("HashKeyESGBTC", () => {
       beforeEach(async () => {
         // Mint
         await arkreenRegistry.setArkreenMiner(arkreenMiner.address)
-        const price0:BigNumber = expandTo18Decimals(50)
+        const price0:BigNumber = expandTo18Decimals(50).div(expandTo9Decimals(1))
         await arkreenRECIssuance.updateARECMintPrice(AKREToken.address, price0)
         await mintAREC(5000)        // 2 :  45      // 1:1000
         await mintAREC(600)         // 3:   51

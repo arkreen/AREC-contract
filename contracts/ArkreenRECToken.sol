@@ -246,7 +246,6 @@ contract ArkreenRECToken is
                 preAREC = curAREC;
                 curAREC = allARECLiquidized[curAREC];
             } else {
-//              require(IArkreenRECIssuance(issuanceAREC).restore(curAREC), 'ART: Not Allowed');  // No need, status is changed by hooks
                 IArkreenRECIssuance(issuanceAREC).safeTransferFrom(address(this), solidifier, curAREC);
                 amount -= amountAREC;
                 solidifiedAmount += amountAREC;

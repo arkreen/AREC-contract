@@ -14,7 +14,7 @@ import {
 
 
 import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { getApprovalDigest, expandTo18Decimals, randomAddresses, MinerType, RECStatus } from "./utils/utilities";
+import { getApprovalDigest, expandTo18Decimals, randomAddresses, MinerType, RECStatus, expandTo9Decimals } from "./utils/utilities";
 import { ecsign, fromRpcSig, ecrecover } from 'ethereumjs-util'
 import { RECRequestStruct, SignatureStruct, RECDataStruct } from "../typechain/contracts/ArkreenRECIssuance";
 
@@ -73,12 +73,12 @@ describe("ArkreenBadge", () => {
       arkreenBadge = await upgrades.deployProxy(ArkreenRetirementFactory,[arkreenRegistry.address]) as ArkreenBadge
       await arkreenBadge.deployed()           
   
-      await AKREToken.transfer(owner1.address, expandTo18Decimals(10000))
-      await AKREToken.connect(owner1).approve(arkreenRECIssuance.address, expandTo18Decimals(10000))
-      await AKREToken.transfer(maker1.address, expandTo18Decimals(10000))
-      await AKREToken.connect(maker1).approve(arkreenRECIssuance.address, expandTo18Decimals(10000))
-      await AKREToken.connect(owner1).approve(arkreenMiner.address, expandTo18Decimals(10000))
-      await AKREToken.connect(maker1).approve(arkreenMiner.address, expandTo18Decimals(10000))
+      await AKREToken.transfer(owner1.address, expandTo18Decimals(100000))
+      await AKREToken.connect(owner1).approve(arkreenRECIssuance.address, expandTo18Decimals(100000))
+      await AKREToken.transfer(maker1.address, expandTo18Decimals(100000))
+      await AKREToken.connect(maker1).approve(arkreenRECIssuance.address, expandTo18Decimals(100000))
+      await AKREToken.connect(owner1).approve(arkreenMiner.address, expandTo18Decimals(100000))
+      await AKREToken.connect(maker1).approve(arkreenMiner.address, expandTo18Decimals(100000))
 
       const payer = maker1.address
       const nonce = await AKREToken.nonces(payer)
@@ -128,12 +128,12 @@ describe("ArkreenBadge", () => {
 
         let recMintRequest: RECRequestStruct = { 
           issuer: manager.address, region: 'Beijing', startTime, endTime,
-          amountREC: expandTo18Decimals(1000), 
+          amountREC: expandTo9Decimals(1000), 
           cID: "bafybeihepmxz4ytc4ht67j73nzurkvsiuxhsmxk27utnopzptpo7wuigte", 
           url:"", memo:""
         } 
   
-        const mintFee = expandTo18Decimals(100)
+        const mintFee = expandTo18Decimals(1000).mul(50)
         const nonce1 = await AKREToken.nonces(owner1.address)
         const digest1 = await getApprovalDigest(
                                 AKREToken,
@@ -147,7 +147,7 @@ describe("ArkreenBadge", () => {
         // Mint
         await arkreenRegistry.setArkreenMiner(arkreenMiner.address)
         //        await arkreenRECIssuance.managePaymentToken(AKREToken.address, true)
-        const price0:BigNumber = expandTo18Decimals(50)
+        const price0:BigNumber = expandTo18Decimals(50).div(expandTo9Decimals(1))
         await arkreenRECIssuance.updateARECMintPrice(AKREToken.address, price0)
 
         await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
@@ -188,13 +188,13 @@ describe("ArkreenBadge", () => {
         
         let recMintRequest: RECRequestStruct = { 
           issuer: manager.address, startTime, endTime,
-          amountREC: expandTo18Decimals(1000), 
+          amountREC: expandTo9Decimals(1000), 
           cID: "bafybeihepmxz4ytc4ht67j73nzurkvsiuxhsmxk27utnopzptpo7wuigte",
           region: 'Beijing',
           url:"", memo:""
         } 
 
-        const mintFee = expandTo18Decimals(100)
+        const mintFee = expandTo18Decimals(1000).mul(50)
         const nonce1 = await AKREToken.nonces(owner1.address)
         const digest1 = await getApprovalDigest(
                                 AKREToken,
@@ -208,7 +208,7 @@ describe("ArkreenBadge", () => {
         // Mint
         await arkreenRegistry.setArkreenMiner(arkreenMiner.address)
         //      await arkreenRECIssuance.managePaymentToken(AKREToken.address, true)
-        const price0:BigNumber = expandTo18Decimals(50)
+        const price0:BigNumber = expandTo18Decimals(50).div(expandTo9Decimals(1))
         await arkreenRECIssuance.updateARECMintPrice(AKREToken.address, price0)
 
         await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
@@ -222,14 +222,14 @@ describe("ArkreenBadge", () => {
       })
 
       it("registerOffset: Less Amount (redeem) ", async () => {
-        await arkreenBadge.setMinOffsetAmount(expandTo18Decimals(1000).add(1))
+        await arkreenBadge.setMinOffsetAmount(expandTo9Decimals(1000).add(1))
         await expect(arkreenRECIssuance.connect(owner1).redeem(tokenID))
                 .to.be.revertedWith("ARB: Less Amount")
       })
 
       it("registerOffset: Less Amount (offset) ", async () => {
-        await arkreenBadge.setMinOffsetAmount(expandTo18Decimals(10).add(1))
-        await expect(arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(10)))
+        await arkreenBadge.setMinOffsetAmount(expandTo9Decimals(10).add(1))
+        await expect(arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(10)))
                 .to.be.revertedWith("ARB: Less Amount")
       })
 
@@ -239,27 +239,27 @@ describe("ArkreenBadge", () => {
         const userActions = await arkreenBadge.getUserEvents(owner1.address)
 
         const lastBlock = await ethers.provider.getBlock('latest')
-        const offsetAction = [owner1.address, manager.address, expandTo18Decimals(1000),
+        const offsetAction = [owner1.address, manager.address, expandTo9Decimals(1000),
                               tokenID, BigNumber.from(lastBlock.timestamp), false]
         
         expect(await arkreenBadge.offsetActions(userActions[userActions.length-1])).to.deep.equal(offsetAction)
-        expect(await arkreenBadge.totalOffsetRegistered()).to.deep.eq(expandTo18Decimals(1000));                
+        expect(await arkreenBadge.totalOffsetRegistered()).to.deep.eq(expandTo9Decimals(1000));                
       })
 
       it("registerOffset: Normal (offset) ", async () => {
         const MASK_OFFSET = BigNumber.from('0x8000000000000000')
-        await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(10))
+        await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(10))
 
         const offsetID1 = await arkreenBadge.offsetCounter()
         const userActions = await arkreenBadge.getUserEvents(owner1.address)
         expect(offsetID1).to.equal(userActions[userActions.length-1])
 
         const lastBlock = await ethers.provider.getBlock('latest')
-        const offsetAction = [owner1.address, manager.address, expandTo18Decimals(10),
+        const offsetAction = [owner1.address, manager.address, expandTo9Decimals(10),
                                 MASK_OFFSET.add(1), BigNumber.from(lastBlock.timestamp), false]      // TokenId must be zero
         
         expect(await arkreenBadge.offsetActions(userActions[userActions.length-1])).to.deep.equal(offsetAction)
-        expect(await arkreenBadge.totalOffsetRegistered()).to.deep.eq(expandTo18Decimals(10));                
+        expect(await arkreenBadge.totalOffsetRegistered()).to.deep.eq(expandTo9Decimals(10));                
       })
     })
 
@@ -272,13 +272,13 @@ describe("ArkreenBadge", () => {
         
         let recMintRequest: RECRequestStruct = { 
           issuer: manager.address, startTime, endTime,
-          amountREC: expandTo18Decimals(1000), 
+          amountREC: expandTo9Decimals(1000), 
           cID: "bafybeihepmxz4ytc4ht67j73nzurkvsiuxhsmxk27utnopzptpo7wuigte",
           region: 'Beijing',
           url:"", memo:""
         } 
 
-        const mintFee = expandTo18Decimals(100)
+        const mintFee = expandTo18Decimals(1000).mul(50)
         const nonce1 = await AKREToken.nonces(owner1.address)
         const digest1 = await getApprovalDigest(
                                 AKREToken,
@@ -292,12 +292,11 @@ describe("ArkreenBadge", () => {
         // Mint
         await arkreenRegistry.setArkreenMiner(arkreenMiner.address)
         //      await arkreenRECIssuance.managePaymentToken(AKREToken.address, true)
-        const price0:BigNumber = expandTo18Decimals(50)
+        const price0:BigNumber = expandTo18Decimals(50).div(expandTo9Decimals(1))
         await arkreenRECIssuance.updateARECMintPrice(AKREToken.address, price0)        
         await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
         tokenID = await arkreenRECIssuance.totalSupply()
       })
-
       
       it("ArkreenBadge: onERC721Received Abnormal", async () => {
         await arkreenRECIssuance.connect(manager).certifyRECRequest(tokenID, "Serial12345678")   
@@ -316,31 +315,31 @@ describe("ArkreenBadge", () => {
       it("ArkreenBadge: onERC721Received Normal", async () => {
         await arkreenRECIssuance.connect(manager).certifyRECRequest(tokenID, "Serial12345678")   
         await arkreenRECIssuance.connect(owner1).redeem(tokenID)
-        expect(await arkreenBadge.totalRedeemed()).to.equals(expandTo18Decimals(1000));    
+        expect(await arkreenBadge.totalRedeemed()).to.equals(expandTo9Decimals(1000));    
       })      
 
       it("ArkreenBadge: onERC721Received Normal", async () => {
         await arkreenRECIssuance.connect(manager).certifyRECRequest(tokenID, "Serial12345678")  
         await arkreenRECIssuance.connect(owner1).setApprovalForAll(owner2.address,true)
         await arkreenRECIssuance.connect(owner2).redeemFrom(owner1.address, tokenID)
-        expect(await arkreenBadge.totalRedeemed()).to.equals(expandTo18Decimals(1000));    
+        expect(await arkreenBadge.totalRedeemed()).to.equals(expandTo9Decimals(1000));    
       })   
       
       it("ArkreenBadge: onERC721Received Normal", async () => {
         await arkreenRECIssuance.connect(manager).certifyRECRequest(tokenID, "Serial12345678")   
         await arkreenRECIssuance.connect(owner1).redeemAndMintCertificate(
                                         tokenID, owner1.address, "Owner","Alice","Save Earth")
-        expect(await arkreenBadge.totalRedeemed()).to.equals(expandTo18Decimals(1000));    
+        expect(await arkreenBadge.totalRedeemed()).to.equals(expandTo9Decimals(1000));    
       })   
     })    
 
     describe("mintCertificate", () => {
       it("ArkreenBadge: mintCertificate", async () => {
         // commitOffset
-        await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(10))
+        await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(10))
         const offsetID1 = await arkreenBadge.offsetCounter()
 
-        await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(10))
+        await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(10))
         const offsetID2 = await arkreenBadge.offsetCounter()
 
         // mintCertificate
@@ -353,10 +352,10 @@ describe("ArkreenBadge", () => {
         const lastBlock = await ethers.provider.getBlock('latest')
 
         const offsetRecord1 = [owner1.address, owner1.address, "Owner", "", "Save Earth", 
-                              BigNumber.from(lastBlock.timestamp), expandTo18Decimals(20), [offsetID1,offsetID2]]
+                              BigNumber.from(lastBlock.timestamp), expandTo9Decimals(20), [offsetID1,offsetID2]]
 
         expect(await arkreenBadge.getCertificate(certId)).to.deep.equal(offsetRecord1)    
-        expect(await arkreenBadge.totalOffsetRetired()).to.equal(expandTo18Decimals(20))  
+        expect(await arkreenBadge.totalOffsetRetired()).to.equal(expandTo9Decimals(20))  
         expect( await arkreenBadge.tokenURI(certId)).to.equal("https://www.arkreen.com/badge/1");     
         await arkreenBadge.setBaseURI("https://www.arkreen.com/offset/")
         expect( await arkreenBadge.tokenURI(certId)).to.equal("https://www.arkreen.com/offset/1"); 
@@ -372,13 +371,13 @@ describe("ArkreenBadge", () => {
     describe("updateCertificate", () => {
       it("ArkreenBadge: updateCertificate", async () => {
         // commitOffset
-        await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(10))
+        await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(10))
         const offsetID1 = await arkreenBadge.offsetCounter()
 
-        await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(10))
+        await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(10))
         const offsetID2 = await arkreenBadge.offsetCounter()
         
-        await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(10))
+        await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(10))
         const offsetID3 = await arkreenBadge.offsetCounter()
 
         // mintCertificate
@@ -398,7 +397,7 @@ describe("ArkreenBadge", () => {
                 .withArgs(certId)         // Here offsetActionId is same as tokenID 
 
         const offsetRecord2 = [owner1.address, owner1.address, "Kitty", "Alice", "Save Earth", 
-                              BigNumber.from(lastBlock.timestamp), expandTo18Decimals(30), [offsetID1,offsetID2,offsetID3]]
+                              BigNumber.from(lastBlock.timestamp), expandTo9Decimals(30), [offsetID1,offsetID2,offsetID3]]
 
         expect(await arkreenBadge.getCertificate(certId)).to.deep.equal(offsetRecord2)
 
@@ -412,13 +411,13 @@ describe("ArkreenBadge", () => {
 
       it("ArkreenBadge: attachOffsetEvents", async () => {
           // commitOffset
-        await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(10))
+        await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(10))
         const offsetID1 = await arkreenBadge.offsetCounter()
 
-        await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(10))
+        await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(10))
         const offsetID2 = await arkreenBadge.offsetCounter()
         
-        await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(10))
+        await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(10))
         const offsetID3 = await arkreenBadge.offsetCounter()
 
         // mintCertificate
@@ -427,7 +426,7 @@ describe("ArkreenBadge", () => {
         const certId = await arkreenBadge.totalSupply()
         const lastBlock = await ethers.provider.getBlock('latest')
 
-        expect(await arkreenBadge.totalOffsetRetired()).to.equal(expandTo18Decimals(20))
+        expect(await arkreenBadge.totalOffsetRetired()).to.equal(expandTo9Decimals(20))
 
         // attachOffsetEvents
         await arkreenBadge.connect(owner1).attachOffsetEvents(certId, [offsetID3])
@@ -435,7 +434,7 @@ describe("ArkreenBadge", () => {
         await expect(arkreenBadge.connect(owner1).attachOffsetEvents(certId, [offsetID3]))
                 .to.be.revertedWith("ARB: Already Claimed")
 
-        await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(10))
+        await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(10))
         const offsetID4 = await arkreenBadge.offsetCounter()
         
         // updateCertificate
@@ -447,7 +446,7 @@ describe("ArkreenBadge", () => {
                         .to.be.revertedWith("ARB: Time Elapsed")
 
         const offsetRecord2 = [owner1.address, owner1.address, "Owner", "", "Save Earth", 
-                              BigNumber.from(lastBlock.timestamp), expandTo18Decimals(30), [offsetID1,offsetID2,offsetID3]]
+                              BigNumber.from(lastBlock.timestamp), expandTo9Decimals(30), [offsetID1,offsetID2,offsetID3]]
 
         expect(await arkreenBadge.getCertificate(certId)).to.deep.equal(offsetRecord2)
       });
@@ -456,13 +455,13 @@ describe("ArkreenBadge", () => {
     describe("SBT Test", () => {
         it("ArkreenBadge: Locked event emitted", async () => {
               // commitOffset
-            await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(10))
+            await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(10))
             const offsetID1 = await arkreenBadge.offsetCounter()
 
-            await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(10))
+            await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(10))
             const offsetID2 = await arkreenBadge.offsetCounter()
             
-            await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(10))
+            await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(10))
             const offsetID3 = await arkreenBadge.offsetCounter()
 
             // mintCertificate
@@ -477,13 +476,13 @@ describe("ArkreenBadge", () => {
 
         it("ArkreenBadge: Transfer not allowed, ", async () => {
             // commitOffset
-          await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(10))
+          await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(10))
           const offsetID1 = await arkreenBadge.offsetCounter()
 
-          await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(10))
+          await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(10))
           const offsetID2 = await arkreenBadge.offsetCounter()
           
-          await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(10))
+          await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(10))
           const offsetID3 = await arkreenBadge.offsetCounter()
 
           // mintCertificate
@@ -501,13 +500,13 @@ describe("ArkreenBadge", () => {
 
         it("ArkreenBadge: locking status", async () => {
             // commitOffset
-          await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(10))
+          await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(10))
           const offsetID1 = await arkreenBadge.offsetCounter()
 
-          await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(10))
+          await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(10))
           const offsetID2 = await arkreenBadge.offsetCounter()
           
-          await arkreenRECToken.connect(owner1).commitOffset(expandTo18Decimals(10))
+          await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(10))
           const offsetID3 = await arkreenBadge.offsetCounter()
 
           // mintCertificate

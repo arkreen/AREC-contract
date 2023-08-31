@@ -49,10 +49,10 @@ describe("ArkreenMiner", () => {
     ArkreenMiner = await upgrades.deployProxy(ArkreenMinerFactory,[AKREToken.address, owner2.address, manager.address, register_authority.address])
     await ArkreenMiner.deployed()
 
-    await AKREToken.transfer(owner1.address, expandTo18Decimals(10000))
-    await AKREToken.connect(owner1).approve(ArkreenMiner.address, expandTo18Decimals(10000))
-    await AKREToken.transfer(maker1.address, expandTo18Decimals(10000))
-    await AKREToken.connect(maker1).approve(ArkreenMiner.address, expandTo18Decimals(10000))
+    await AKREToken.transfer(owner1.address, expandTo18Decimals(100000))
+    await AKREToken.connect(owner1).approve(ArkreenMiner.address, expandTo18Decimals(100000))
+    await AKREToken.transfer(maker1.address, expandTo18Decimals(100000))
+    await AKREToken.connect(maker1).approve(ArkreenMiner.address, expandTo18Decimals(100000))
 
     return {AKREToken, ArkreenMiner}
   }
