@@ -150,9 +150,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         // 2023/08/21
         // function setESGExtAddress(address addrESGExt)
         // const REC_ISSUANCE_EXT_ADDRESS  = "0x42d4eff140e9903F682DC11931aD3E1437D7ACA1"        // 2023/08/21, addrESGExt
-        const REC_ISSUANCE_EXT_ADDRESS  = "0xCA308f3082729D5960f8726593F15686AA49FCbc"           // 2023/08/31, addrESGExt    
+        // const REC_ISSUANCE_EXT_ADDRESS  = "0xCA308f3082729D5960f8726593F15686AA49FCbc"        // 2023/08/31, addrESGExt  
+        const REC_ISSUANCE_EXT_ADDRESS  = "0x31ad3b7DC83bc00C321E927dE11AD313eEB9C07e"           // 2023/08/31/02, addrESGExt  
 
-        // 2023/08/21, 2023/08/31
+        // 2023/08/21, 2023/08/31/01,  2023/08/31/02
         const updateTx = await ArkreenRECIssuanceFactory.setESGExtAddress(REC_ISSUANCE_EXT_ADDRESS)
         await updateTx.wait()
     
@@ -212,6 +213,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:celo_test:RECIssueI
 
 // 2023/08/31： Called setESGExtAddress, Set new delopyed ArkreenRECIssuanceExt address to support approved payment
+// yarn deploy:celo_test:RECIssueI
+
+// 2023/08/31/02： Called setESGExtAddress, Upgrade to skip payment value check while it is zero.
 // yarn deploy:celo_test:RECIssueI
 
 func.tags = ["RECIssueI"];

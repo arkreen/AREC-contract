@@ -99,9 +99,10 @@ contract ArkreenRECIssuanceExt is
         require( permitToPay.token == tokenPay, "AREC: Wrong Payment Token");
 
         uint256 valuePayment = amountREC * rateToIssue / ( 10**9);              // Rate is caluated based 10**9
-        require( permitToPay.value >= valuePayment, "AREC: Low Payment Value");
 
         if(permitToPay.value != 0) {
+          require( permitToPay.value >= valuePayment, "AREC: Low Payment Value");
+
           IERC20Permit(permitToPay.token).permit(sender, address(this), 
                           permitToPay.value, permitToPay.deadline, permitToPay.v, permitToPay.r, permitToPay.s);
         }
