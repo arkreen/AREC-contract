@@ -88,8 +88,10 @@ async function main() {
             moveSNForward = false
           )
         } else if(ARECNftInfo.status >= REC_STATUS.Certified && moveSNForward) {
+          console.log("Updated Confirmation: XXXXXXXXXXXX", moveSNForward, index, NewSerialNo, confirmInfoJson)
+
           confirmInfoJson.counter = index.toString().padStart(4,'0')
-          if (ARECNftInfo.serialNumber >= confirmInfoJson.SerialNo) {
+          if (Number(ARECNftInfo.serialNumber) > Number(confirmInfoJson.SerialNo)) {
             confirmInfoJson.SerialNo = ARECNftInfo.serialNumber
           }
 
