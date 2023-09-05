@@ -106,5 +106,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // Upgrade to sign total value instead price for batch sales
 // 0xFE3423Fb2ef2f1403Cd64a78124ddC1329B6BF00
 
+// 2023/09/05: yarn deploy:matic_test:AMinerV10D 
+// Upgrade to emit back all miner addresses in batch sales
+// 0x8aFFe644eD9ae6D9DEC5672cDd927dd8eF29d9EF
+
 export default func;
 func.tags = ["AMinerV10D"];

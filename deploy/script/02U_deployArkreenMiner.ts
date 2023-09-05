@@ -50,15 +50,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
   if(hre.network.name === 'matic_test') {
 //  const MINER_PROXY_ADDRESS = "0xC4f795514586275c799729aF5AE7113Bdb7ccc86"       // game miner in matic test net
-//  const MINER_PROXY_ADDRESS = "0x682e01f8ecc0524085F51CC7dFB54fDB8729ac22"       // 2023/08/29: Miner in dev env, 2023/08/30
-    const MINER_PROXY_ADDRESS = "0x1F742C5f32C071A9925431cABb324352C6e99953"       // 2023/08/29: Miner in preduction env, 2023/08/30
+//  const MINER_PROXY_ADDRESS = "0x682e01f8ecc0524085F51CC7dFB54fDB8729ac22"       // 2023/08/29: Miner in dev env, 2023/08/30, 2023/09/05
+    const MINER_PROXY_ADDRESS = "0x1F742C5f32C071A9925431cABb324352C6e99953"       // 2023/08/29: Miner in preduction env, 2023/08/30, 2023/09/05
     
 //  const NEW_IMPLEMENTATION =  "0x4EDe87d416e872376583E793ac26526c535267C5"        // Wrong
 //  const NEW_IMPLEMENTATION =  "0x7693ad7e3a69b241322094b14fcaec233afb3e56"        // original 
 //  const NEW_IMPLEMENTATION =  "0x16a427a1a2012fdde0ccad2664d5f2981d52a2d2"        // restored
 //  const NEW_IMPLEMENTATION =  "0xF6c90184eB83a78F184f7bC883721F23519Da067"        // 2023/08/29: Upgrade to support: a) Socket Miner; 2) Batch sale for remote miner;
-    const NEW_IMPLEMENTATION =  "0xFE3423Fb2ef2f1403Cd64a78124ddC1329B6BF00"        // 2023/08/30: Upgrade to sign total value instead price for batch sales
-
+//  const NEW_IMPLEMENTATION =  "0xFE3423Fb2ef2f1403Cd64a78124ddC1329B6BF00"        // 2023/08/30: Upgrade to sign total value instead price for batch sales
+    const NEW_IMPLEMENTATION =  "0x8aFFe644eD9ae6D9DEC5672cDd927dd8eF29d9EF"        // 2023/09/05: Upgrade to emit back all miner addresses in batch sales
+    
     const [deployer] = await ethers.getSigners();
     const ArkreenMinerFactory = ArkreenMiner__factory.connect(MINER_PROXY_ADDRESS, deployer);
 
@@ -117,6 +118,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2023/08/30: yarn deploy:matic_test:AMinerUV10: For preduction Env. 
 // Upgrade to sign total value instead price for batch sales
 // new immplementaion: 0xFE3423Fb2ef2f1403Cd64a78124ddC1329B6BF00
+
+// 2023/09/05: yarn deploy:matic_test:AMinerUV10: For Dev Env. 
+// Upgrade to emit back all miner addresses in batch sales 
+// new immplementaion: 0x8aFFe644eD9ae6D9DEC5672cDd927dd8eF29d9EF
+
+// 2023/09/05: yarn deploy:matic_test:AMinerUV10: For preduction Env. 
+// Upgrade to emit back all miner addresses in batch sales
+// new immplementaion: 0x8aFFe644eD9ae6D9DEC5672cDd927dd8eF29d9EF
 
 export default func;
 func.tags = ["AMinerUV10"];

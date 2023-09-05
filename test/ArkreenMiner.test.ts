@@ -469,7 +469,7 @@ describe("ArkreenMiner", () => {
               .to.emit(AKREToken, "Transfer")
               .withArgs(owner1.address, ArkreenMiner.address, minerValue)
               .to.emit(ArkreenMiner, "MinerOnboardedBatch")
-              .withArgs(receiver, 3);
+              .withArgs(receiver, miners.slice(0, 3));
       expect(await AKREToken.balanceOf(owner1.address)).to.equal(balanceARKE.sub(minerValue));
       expect(await AKREToken.balanceOf(ArkreenMiner.address)).to.equal(balanceArkreenMiner.add(minerValue));
       expect(await ArkreenMiner.totalSupply()).to.equal(3);
@@ -655,7 +655,7 @@ describe("ArkreenMiner", () => {
               .to.emit(AKREToken, "Transfer")
               .withArgs(owner1.address, ArkreenMiner.address, minerValue)
               .to.emit(ArkreenMiner, "MinerOnboardedBatch")
-              .withArgs(receiver, 3);
+              .withArgs(receiver, miners.slice(0, 3));
 
       expect(await AKREToken.balanceOf(owner1.address)).to.equal(balanceARKE.sub(minerValue));
       expect(await AKREToken.balanceOf(ArkreenMiner.address)).to.equal(balanceArkreenMiner.add(minerValue));
@@ -859,7 +859,7 @@ describe("ArkreenMiner", () => {
       const balanceMatic = await ethers.provider.getBalance(owner1.address)
       await expect(ArkreenMiner.connect(owner1).RemoteMinerOnboardNativeBatch(receiver, 3, signature, {value: minerValue}))
               .to.emit(ArkreenMiner, "MinerOnboardedBatch")
-              .withArgs(receiver, 3);
+              .withArgs(receiver, miners.slice(0, 3));
 
       expect(await ethers.provider.getBalance(owner1.address)).to.lt(balanceMatic.sub(minerValue));
       expect(await ethers.provider.getBalance(ArkreenMiner.address)).to.equal(balanceArkreenMiner.add(minerValue));
@@ -1001,7 +1001,7 @@ describe("ArkreenMiner", () => {
       expect(await ArkreenMiner.numberOfWhiteListBatch()).to.deep.eq(0);
 
       const receipt = await tx.wait()
-      expect(receipt.gasUsed).to.eq("8122040")  //8121659 8121568
+      expect(receipt.gasUsed).to.eq("8147380")  //8121659 8121568 8122040
 
       await expect(ArkreenMiner.connect(owner1).RemoteMinerOnboardNativeBatch(receiver, 1, signature, {value: minerValue}))
               .to.be.revertedWith("Arkreen Miner: Wrong Miner Number")

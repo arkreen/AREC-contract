@@ -64,7 +64,7 @@ contract ArkreenMiner is
 
     // Events
     event MinerOnboarded(address indexed owner, address indexed miner);
-    event MinerOnboardedBatch(address indexed owner, uint8 numMiners);
+    event MinerOnboardedBatch(address indexed owner, address[] minersBatch);
     event StandardMinerOnboarded(address indexed owner, address indexed miner);
     event RemoteMinersInBatch(address[] owners, address[] miners);
     event SocketMinerOnboarded(address indexed owner, address indexed miner);
@@ -166,8 +166,8 @@ contract ArkreenMiner is
         _mintBatchCheckPrice(owner, numMiners, permitMiner);
 
         // mint new remote miners in batch
-        _mintRemoteMinerBatch(owner, numMiners);
-        emit MinerOnboardedBatch(owner, numMiners);
+        address[] memory minersBatch = _mintRemoteMinerBatch(owner, numMiners);
+        emit MinerOnboardedBatch(owner, minersBatch);
     }    
 
     /**
@@ -211,13 +211,13 @@ contract ArkreenMiner is
         _mintBatchCheckPrice(owner, numMiners, permitMiner);
 
         // mint new remote miner
-        _mintRemoteMinerBatch(owner, numMiners);
+        address[] memory minersBatch = _mintRemoteMinerBatch(owner, numMiners);
 
         // Transfer onboarding fee
         address sender = _msgSender();
         TransferHelper.safeTransferFrom(permitMiner.token, sender, address(this), permitMiner.value);
 
-        emit MinerOnboardedBatch(owner, numMiners);
+        emit MinerOnboardedBatch(owner, minersBatch);
     }
 
     /**
@@ -296,16 +296,17 @@ contract ArkreenMiner is
         delete whiteListMiner[miner];
     }
 
-
     /**
      * @dev mint a remote Miner
      * @param owner address receiving the remote miner
      * @param numMiners number of remote miners needed to mint
      */
-    function _mintRemoteMinerBatch(address owner, uint8 numMiners) internal {
+    function _mintRemoteMinerBatch(address owner, uint8 numMiners) internal returns (address[] memory minerList) {
 
         // Prepare to mint new remote miners
         Miner memory newMiner;
+        minerList = new address[](numMiners);
+
         newMiner.mType = MinerType.RemoteMiner;
         newMiner.mStatus = MinerStatus.Normal;
         newMiner.timestamp = uint32(block.timestamp);   
@@ -314,6 +315,7 @@ contract ArkreenMiner is
 
         for(uint8 index; index < numMiners; index++) {
             address miner = whiteListMinerBatch[listHead +index];
+            minerList[index] = miner;
 
             // Check miner is not repeated
             require(AllMinersToken[miner] == 0, "Arkreen Miner: Miner Repeated");
@@ -390,12 +392,12 @@ contract ArkreenMiner is
                                         permitToPay.value, permitToPay.deadline, permitToPay.v, permitToPay.r, permitToPay.s);
 
         // mint new remote miner
-        _mintRemoteMinerBatch(owner, numMiners);
+        address[] memory minersBatch = _mintRemoteMinerBatch(owner, numMiners);
 
         // Transfer onboarding fee
         TransferHelper.safeTransferFrom(permitToPay.token, sender, address(this), permitToPay.value);
 
-        emit MinerOnboardedBatch(owner, numMiners);
+        emit MinerOnboardedBatch(owner, minersBatch);
     }
 
     /**
