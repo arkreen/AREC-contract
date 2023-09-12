@@ -64,7 +64,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
       // Called by Account 2
       // 2023/08/08, 2023/09/12
-      const changeSalePriceUSDSC = await ArkreenRECBankFactory.changeSalePrice(ART_AREC as string, 
+      const changeSalePriceUSDSC = await ArkreenRECBankFactory.changeSalePrice(HART_REC as string, 
                                     USDC_ADDRESS as string, USDC_PRICE as BigNumber)
       await changeSalePriceUSDSC.wait()
 
@@ -74,7 +74,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //      await changeSalePriceUSDST.wait()
 
       // 2023/08/08, 2023/09/12
-      const changeSalePriceMATIC = await ArkreenRECBankFactory.changeSalePrice(ART_AREC as string, 
+      const changeSalePriceMATIC = await ArkreenRECBankFactory.changeSalePrice(HART_REC as string, 
                                     WNATIVE_ADDRESS as string, MATIC_PRICE as BigNumber)
       await changeSalePriceMATIC.wait()   
       
@@ -276,7 +276,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // Action: changeSalePrice(USDC), changeSalePrice(WMATIC)  
 
 // 2023/09/12
-// yarn deploy:matic_test:ArtBankI
+// yarn deploy:matic_test:ArtBankI: ART
+// Action: changeSalePrice(USDC, 2*10**(-4)), changeSalePrice(WMATIC, 5*10**(-6))
+
+// 2023/09/12
+// yarn deploy:matic_test:ArtBankI: HART
 // Action: changeSalePrice(USDC, 2*10**(-4)), changeSalePrice(WMATIC, 5*10**(-6))
 
 func.tags = ["ArtBankI"];
