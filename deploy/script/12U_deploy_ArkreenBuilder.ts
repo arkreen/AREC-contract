@@ -2,6 +2,7 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { ethers } from "hardhat";
 import { ArkreenBuilder__factory } from "../../typechain";
+import { BigNumber } from "ethers";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   
@@ -16,7 +17,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     const [deployer] = await ethers.getSigners();
     const ArkreenBuilderFactory = ArkreenBuilder__factory.connect(ESG_BUILDER_ADDRESS, deployer);
-    const updateTx = await ArkreenBuilderFactory.upgradeTo(NEW_IMPLEMENTATION)
+    const updateTx = await ArkreenBuilderFactory.upgradeTo(NEW_IMPLEMENTATION, {gasPrice: BigNumber.from(10000000000)})
     await updateTx.wait()
 
   /*
@@ -24,10 +25,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const callData = ArkreenBuilderFactory.interface.encodeFunctionData("postUpdate", [ARKREEN_REC_BANK])
     const updateTx = await ArkreenBuilderFactory.upgradeToAndCall(NEW_IMPLEMENTATION, callData)
     await updateTx.wait()
-
+  */
     console.log("Update Trx:", updateTx)
     console.log("HashKey ESG BTC Updated: ", hre.network.name, ArkreenBuilderFactory.address, NEW_IMPLEMENTATION);
-  */    
+      
   } 
 };
 
