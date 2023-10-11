@@ -479,7 +479,85 @@ describe("ArkreenBuilder", () => {
         await mintAREC(3000)        // 19： 597
         await mintAREC(500)                   // 20:  602
         await mintARECMaker(2000000)          // 21:  602        
-        })
+      })
+
+      it("actionBuilderWithART", async () => {
+        await mintAREC(5000)          // 2
+        await arkreenRECToken.setClimateBuilder(arkreenBuilder.address)
+  
+        const amountART = expandTo9Decimals(10)
+        const ARECBefore = await arkreenRECToken.balanceOf(owner1.address)
+
+        await expect(arkreenBuilder.connect(owner1).actionBuilderWithART(arkreenRECToken.address, amountART, constants.MaxUint256))   
+                    .to.be.revertedWith("TransferHelper: TRANSFER_FROM_FAILED")     
+                 
+        await arkreenRECToken.connect(owner1).approve(arkreenBuilder.address, constants.MaxUint256)
+
+        await expect(arkreenBuilder.connect(owner1).actionBuilderWithART(arkreenRECToken.address, amountART, constants.MaxUint256))
+                            .to.emit(arkreenRECToken, 'Transfer')
+                            .withArgs(owner1.address, arkreenBuilder.address, amountART)
+                            .to.emit(arkreenRECToken, 'Transfer')
+                            .withArgs(arkreenBuilder.address, 0, amountART)
+                            .to.emit(arkreenRECToken, "OffsetFinished")
+                            .withArgs(owner1.address, amountART, 1)           
+
+        const actionID =1     
+        const lastBlock = await ethers.provider.getBlock('latest')     
+        const tokenID = BigNumber.from(1)
+        const action = [  owner1.address, manager.address, amountART,    // Manger is the issuer address
+                          tokenID.add(MASK_OFFSET), lastBlock.timestamp, false ]     // Offset action is claimed
+        expect(await arkreenRetirement.getOffsetActions(actionID)).to.deep.equal(action)
+        expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(ARECBefore.sub(amountART))
+
+      });       
+
+      it("actionBuilderBadgeWithART", async () => {
+        await mintAREC(5000)          // 2
+        await arkreenRECToken.setClimateBuilder(arkreenBuilder.address)
+  
+        const amountART = expandTo9Decimals(1000)
+        const ARECBefore = await arkreenRECToken.balanceOf(owner1.address)
+
+        const badgeInfo =  {
+                  beneficiary:    owner1.address,
+                  offsetEntityID: 'Owner1',
+                  beneficiaryID:  'Tester',
+                  offsetMessage:  "Just Testing"
+                }
+
+        // Abnormal transaction   
+        expect(arkreenBuilder.connect(owner1).actionBuilderBadgeWithART( arkreenRECToken.address, amountART, 
+                                                                          constants.MaxUint256, badgeInfo))   
+              .to.be.revertedWith("TransferHelper: TRANSFER_FROM_FAILED")     
+                                
+        await arkreenRECToken.connect(owner1).approve(arkreenBuilder.address, constants.MaxUint256)
+        await expect(arkreenBuilder.connect(owner1).actionBuilderBadgeWithART( arkreenRECToken.address, amountART, 
+                                                                                constants.MaxUint256, badgeInfo))
+                            .to.emit(arkreenRECToken, 'Transfer')
+                            .withArgs(owner1.address, arkreenBuilder.address, amountART)
+                            .to.emit(arkreenRECToken, 'Transfer')
+                            .withArgs(arkreenBuilder.address, 0, amountART)
+                            .to.emit(arkreenRECToken, "OffsetFinished")
+                            .withArgs(owner1.address, amountART, 1)     
+                            .to.emit(arkreenRetirement, "OffsetCertificateMinted")
+                            .withArgs(1)           
+                            .to.emit(arkreenRetirement, "Locked")
+                            .withArgs(1)
+
+        const actionID =1     
+        const lastBlock = await ethers.provider.getBlock('latest')     
+        
+        const tokenID = BigNumber.from(1)
+        const action = [  owner1.address, manager.address, amountART,    // Manger is the issuer address
+                          tokenID.add(MASK_OFFSET), lastBlock.timestamp, true ]     // Offset action is claimed
+        expect(await arkreenRetirement.getOffsetActions(actionID)).to.deep.equal(action)
+
+        const offsetRecord = [owner1.address, owner1.address, "Owner1", "Tester", "Just Testing", 
+                              BigNumber.from(lastBlock.timestamp), amountART, [actionID]]
+        const badgeID = 1                            
+        expect(await arkreenRetirement.getCertificate(badgeID)).to.deep.equal(offsetRecord)
+        expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(ARECBefore.sub(amountART))
+      });      
 
       it("ActionBuilder: Exact Payment Token with DEX", async () => {
         await mintAREC(5000)          // 2
@@ -1160,6 +1238,6 @@ describe("ArkreenBuilder", () => {
         expect(await arkreenRetirement.getCertificate(badgeID)).to.deep.equal(offsetRecord)
         expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(ARECBefore)   
       });      
-          
+
     })  
 });

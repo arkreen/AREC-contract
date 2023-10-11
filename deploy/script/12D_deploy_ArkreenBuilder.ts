@@ -20,8 +20,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 };
 
 // 2023/03/14
-// deploy:matic_test:ABuilderD
+// yarn deploy:matic_test:ABuilderD
 // 0x16dB479F500aeE6C1683955e0E34394fe81Be12d
+
+// 2023/10/11: deploy and verification
+// yarn deploy:matic_test:ABuilderD
+// 0xd320E323293d092d3dcC3533AF477cD14976C31B
 
 func.tags = ["ABuilderD"];
 

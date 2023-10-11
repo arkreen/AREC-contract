@@ -49,7 +49,9 @@ contract HashKeyESGBTC is
     mapping(uint256 => uint256) public levelOrder;      // Green Id -> level + order in level
     mapping(uint256 => string)  public cidBadge;        // Green Id -> cID
 
-     // Events
+    mapping(address => bool)  public whiteARTList;      // ART token -> true/false
+
+    // Events
 
     // Modifiers
     modifier ensure(uint deadline) {
@@ -130,7 +132,36 @@ contract HashKeyESGBTC is
 
         _actionBuilderBadge(abi.encodePacked(callData, actorGreenBTC));     // Pay back to msg.sender already
 
-    }    
+    }
+
+    /** 
+     * @dev Greenize BTC with specified ART token
+     * @param tokenART Address of the ART token, which should be whitelisted in the accepted list.
+     * @param bricksToGreen The brick ID list in the format of IDn || ... || ID2 || ID1, each of which is 12 bits
+     * @param deadline The deadline to cancel the transaction
+     * @param badgeInfo The information to be included for climate badge
+     */
+    function greenizeBTCWithART(
+        address             tokenART,
+        uint256             bricksToGreen,   
+        uint256             deadline,        
+        BadgeInfo calldata  badgeInfo
+    ) external ensure(deadline) {
+
+        require(whiteARTList[tokenART], "HSKESG: ART Not Accepted"); 
+
+        address actorGreenBTC = _msgSender();
+        uint256 amountART = _mintESGBadge(actorGreenBTC, bricksToGreen);
+
+        // Transfer payement 
+        TransferHelper.safeTransferFrom(tokenART, actorGreenBTC, address(this), amountART);
+
+        // actionBuilderBadgeWithART(address,uint256,uint256,(address,string,string,string)): 0x6E556DF8
+        bytes memory callData = abi.encodeWithSelector(0x6E556DF8, tokenART, amountART, deadline, badgeInfo);
+
+        _actionBuilderBadge(abi.encodePacked(callData, actorGreenBTC));
+    }
+
 
     /** 
      * @dev Greenize BTC with specified payment token
@@ -415,6 +446,18 @@ contract HashKeyESGBTC is
             TransferHelper.safeApprove(tokens[i], arkreenBuilder, type(uint256).max);
         }
     }       
+
+    /**
+     * @dev Add or remove the acceptable ART tokens
+     */
+    function mangeARTTokens(address[] calldata tokenARTList, bool addOrRemove) external onlyOwner {
+        for(uint256 i = 0; i < tokenARTList.length; i++) {
+            address tokenART = tokenARTList[0];
+
+            require(tokenART != address(0) && whiteARTList[tokenART] != addOrRemove, "HSKESG: Wrong ART Status");
+            whiteARTList[tokenART] = addOrRemove;
+        }
+    }      
 
     /** 
      * @dev Change the BaseURI

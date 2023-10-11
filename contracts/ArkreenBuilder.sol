@@ -65,6 +65,30 @@ contract ArkreenBuilder is
     }  
 
     /** 
+     * @dev Offset the specified amount of ART tokens to create a climate action.
+     * @param tokenART Address of the ART token. There may be serveral different ART tokens in AREC ecosystem.
+     * @param amountART Amount of the ART token to offset.
+     * @param deadline Deadline to handle the transaction.
+     */
+    function actionBuilderWithART(
+        address             tokenART,
+        uint256             amountART,
+        uint256             deadline
+    ) external ensure(deadline) {
+
+        // Transfer payement: bytes4(keccak256(bytes('transferFrom(address from ,address to ,uint256 amount)')));
+        bytes memory data1 = abi.encodeWithSelector(0x23b872dd, msg.sender, address(this), amountART);
+        (bool success, bytes memory data) = tokenART.call(abi.encodePacked(data1, address(this)));
+        require(success && (data.length == 0 || abi.decode(data, (bool))), 'TransferHelper: TRANSFER_FROM_FAILED');
+
+        // commitOffset(uint256 amount): 0xe8fef571
+        bytes memory callData = abi.encodeWithSelector(0xe8fef571, amountART);
+
+        _offsetART(tokenART, abi.encodePacked(callData, _msgSender()));
+    }
+   
+
+    /** 
      * @dev Buy the ART token with specified token, then offset the bought ART to create a climate action.
      * @param tokenPay The address of the token to pay for the ART token.
      * @param tokenART The address of the ART token. There may be serveral different ART tokens in AREC ecosystem.
@@ -146,6 +170,33 @@ contract ArkreenBuilder is
         TransferHelper.safeTransferFrom(permitToPay.token, payer, address(this), permitToPay.value);
         _actionBuilder(permitToPay.token, tokenART, permitToPay.value, amountART, modeAction, permitToPay.deadline);
     }
+
+    /** 
+     * @dev Offset the specified amount of ART tokens to create a climate action.
+     * @param tokenART Address of the ART token. There may be serveral different ART tokens in AREC ecosystem.
+     * @param amountART Amount of the ART token to offset.
+     * @param deadline Deadline to handle the transaction.
+     * @param badgeInfo The information to be included for climate badge.
+     */
+    function actionBuilderBadgeWithART(
+        address             tokenART,
+        uint256             amountART,
+        uint256             deadline,
+        BadgeInfo calldata  badgeInfo
+    ) external ensure(deadline) {
+
+        // Transfer payement: bytes4(keccak256(bytes('transferFrom(address,address,uint256)')));
+        bytes memory data1 = abi.encodeWithSelector(0x23b872dd, msg.sender, address(this), amountART);
+        (bool success, bytes memory data) = tokenART.call(abi.encodePacked(data1, address(this)));
+        require(success && (data.length == 0 || abi.decode(data, (bool))), 'TransferHelper: TRANSFER_FROM_FAILED');
+
+        // offsetAndMintCertificate(address beneficiary,string offsetEntityID,string beneficiaryID,string offsetMessage,uint256 amount)
+        // offsetAndMintCertificate(address,string,string,string,uint256): signature = 0x0fba6a8d
+        bytes memory callData = abi.encodeWithSelector(0x0fba6a8d, badgeInfo.beneficiary, badgeInfo.offsetEntityID, 
+                                            badgeInfo.beneficiaryID, badgeInfo.offsetMessage, amountART);
+
+        _offsetART(tokenART, abi.encodePacked(callData, _msgSender()));
+    }    
 
     /** 
      * @dev Buy the ART token, then offset the bought ART and mint a cliamte badge.
@@ -269,20 +320,8 @@ contract ArkreenBuilder is
         bytes memory callData = abi.encodeWithSelector(0xe8fef571, amountOffset);
 
         address payer = _msgSender();
-        (bool success, bytes memory returndata) = tokenART.call(abi.encodePacked(callData, payer));
-
-        if (!success) {
-            if (returndata.length > 0) {
-                // solhint-disable-next-line no-inline-assembly
-                assembly {
-                    let returndata_size := mload(returndata)
-                    revert(add(32, returndata), returndata_size)
-                }
-            } else {
-                revert("BLD: Error Call to commitOffset");
-            }
-        }
-  
+        _offsetART(tokenART, abi.encodePacked(callData, payer));
+ 
         // Repay more payment back  
         if(modeAction & 0x01 == 0x00) {        
             uint256 amountPayLeft = IERC20(tokenPay).balanceOf(address(this));
@@ -331,19 +370,7 @@ contract ArkreenBuilder is
                                             badgeInfo.beneficiaryID, badgeInfo.offsetMessage, amountOffset);
 
         address payer = _msgSender();
-        (bool success, bytes memory returndata) = tokenART.call(abi.encodePacked(callData, payer));
-
-        if (!success) {
-            if (returndata.length > 0) {
-                // solhint-disable-next-line no-inline-assembly
-                assembly {
-                    let returndata_size := mload(returndata)
-                    revert(add(32, returndata), returndata_size)
-                }
-            } else {
-                revert("BLD: Error Call to offsetAndMintCertificate");
-            }
-        }
+        _offsetART(tokenART, abi.encodePacked(callData, payer));
   
         // Repay more payment back  
         if(modeAction & 0x01 == 0x00) {      
@@ -355,6 +382,31 @@ contract ArkreenBuilder is
                 } else {
                     TransferHelper.safeTransfer(tokenPay, payer, amountPayLeft);
                 }
+            }
+        }
+    }
+
+    /** 
+     * @dev Call ART token contract to offset the ART token, and optoinally mint the climate badge according to calldata.
+     * @param tokenART Address of the ART token contract. 
+     * @param callData Calldata to call ART token.
+     */
+    function _offsetART(
+        address         tokenART,
+        bytes   memory  callData
+    ) internal {
+
+        (bool success, bytes memory returndata) = tokenART.call(abi.encodePacked(callData, _msgSender()));
+
+        if (!success) {
+            if (returndata.length > 0) {
+                // solhint-disable-next-line no-inline-assembly
+                assembly {
+                    let returndata_size := mload(returndata)
+                    revert(add(32, returndata), returndata_size)
+                }
+            } else {
+                revert("BLD: Error Call to offsetAndMintCertificate");
             }
         }
     }
