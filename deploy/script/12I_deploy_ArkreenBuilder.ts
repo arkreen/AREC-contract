@@ -24,7 +24,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //    HSKESG_ADDRESS  = "0x785dca2ca9a51513da1fef9f70e6b6ab02896f67"         // HashKeyESG Address        2023/03/14
 //    GREEN_BTC_ADDRESS  = "0x56DF27Ab91f7519becA1465293f61f9551844cb3"      // HashKeyESG Address        2023/09/07
 //    GREEN_BTC_ADDRESS  = "0xc9C744A220Ec238Bcf7798B43C9272622aF82997"      // HashKeyESG Address        2023/09/12
-      GREEN_BTC_ADDRESS  = "0x2BCCE98D208f9f45330006C24cbC756A0A7ddB3a"      // HashKeyESG Address        2023/10/13
+//    GREEN_BTC_ADDRESS  = "0x2BCCE98D208f9f45330006C24cbC756A0A7ddB3a"      // HashKeyESG Address        2023/10/13
+      GREEN_BTC_ADDRESS  = "0x8b6Bd79A3D627833c93108eCb651A41905c6568a"      // Green BTC Address         2023/10/17
 
       USDC_ADDRESS    = "0x0FA8781a83E46826621b3BC094Ea2A0212e71B23"        // USDC address
       USDT_ADDRESS    = "0xD89EDB2B7bc5E80aBFD064403e1B8921004Cdb4b"        // USDT address
@@ -135,6 +136,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2023/10/13
 // yarn deploy:matic_test:ABuilderI: Add GreenBTC address: 0x2BCCE98D208f9f45330006C24cbC756A0A7ddB3a
+// Action: mangeTrustedForwarder
+
+// 2023/10/17
+// yarn deploy:matic_test:ABuilderI: Add GreenBTC address: 0x8b6Bd79A3D627833c93108eCb651A41905c6568a
 // Action: mangeTrustedForwarder
 
 func.tags = ["ABuilderI"];
