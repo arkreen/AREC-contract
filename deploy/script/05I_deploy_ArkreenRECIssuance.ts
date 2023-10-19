@@ -81,8 +81,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       const REC_ISSUANCE_ADDRESS      = "0x954585adF9425F66a0a2FD8e10682EB7c4F1f1fD"        // 2023/03/22
 
       const [deployer] = await ethers.getSigners();
-      const ArkreenRECIssuanceExtFactory = ArkreenRECIssuance__factory.connect(REC_ISSUANCE_ADDRESS, deployer);
-//    const ArkreenRECIssuanceExtFactory = ArkreenRECIssuanceExt__factory.connect(REC_ISSUANCE_ADDRESS, deployer);           
+//    const ArkreenRECIssuanceExtFactory = ArkreenRECIssuance__factory.connect(REC_ISSUANCE_ADDRESS, deployer);
+      const ArkreenRECIssuanceExtFactory = ArkreenRECIssuanceExt__factory.connect(REC_ISSUANCE_ADDRESS, deployer);           
 
       /////////////////////////////////////////////////////////
       // 2023/04/02
@@ -103,16 +103,19 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //    await updateTx.wait()      
 
       /////////////////////////////////////////////////////////
+/*      
 //    const AKREToken_ADDRESS         = "0x960C67B8526E6328b30Ed2c2fAeA0355BEB62A83"        // 2023/03/22: gAKRE
       const AKREToken_ADDRESS         = "0x21B101f5d61A66037634f7e1BeB5a733d9987D57"        // 2023/05/22: tAKRE
 
-    const AKREToken_PRICE           = BigNumber.from(100000000000)                        // 2023/03/22: 10**11
+      const AKREToken_PRICE           = BigNumber.from(100000000000)                        // 2023/03/22: 10**11
 
       // 2023/03/22
       // function updateARECMintPrice(address token, uint256 price)
 //    const updateTx = await ArkreenRECIssuanceExtFactory.updateARECMintPrice(AKREToken_ADDRESS, AKREToken_PRICE)
 //    await updateTx.wait()      
+*/
 
+/*
       // 2023/05/22
       // function updateARECMintPrice(address token, uint256 price)
       console.log("ArkreenRECIssuance Update Mint Price:", hre.network.name, AKREToken_ADDRESS, AKREToken_PRICE);
@@ -127,13 +130,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         const updateTx = await ArkreenRECIssuanceExtFactory.updateARECMintPrice(AKREToken_ADDRESS_OLD, 0)
         await updateTx.wait()    
       }
+*/
 
       //////////////////////////////////////////////////////
-      // 2023/04/04
+      // 2023/04/04, 2023/10/18
       // function manageMVPAddress(bool op, address[] calldata listMVP) 
-//      const MVP_ADDRESS = "0x8bCe3621901909851ba5579060D9058Ef489a9EF"
-//      const updateTx = await ArkreenRECIssuanceExtFactory.manageMVPAddress(true, [MVP_ADDRESS])
-//      await updateTx.wait()
+      // const MVP_ADDRESS = "0x8bCe3621901909851ba5579060D9058Ef489a9EF"   // 2023/04/04
+      const MVP_ADDRESS = "0x1249B1eABcAE642CF3Cb1e512a0075CEe92769BE"      // 2023/10/18
+
+      const updateTx = await ArkreenRECIssuanceExtFactory.manageMVPAddress(true, [MVP_ADDRESS], {gasPrice: BigNumber.from(100_000_000_000)})
+      await updateTx.wait()
 
       console.log("callData, update", updateTx)
       console.log("ArkreenRECIssuance Updated to %s: ", hre.network.name, ArkreenRECIssuanceExtFactory.address);
@@ -175,7 +181,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         // function manageMVPAddress(bool op, address[] calldata listMVP) 
         // 1. 2023/08/25
 //        const updateTx = await ArkreenRECIssuanceExtFactory.manageMVPAddress(true, [MVP_ADDRESS1, MVP_ADDRESS2, MVP_ADDRESS3])
-        const updateTx = await ArkreenRECIssuanceExtFactory.manageMVPAddress(true, [MVP_ABBA])
+        const updateTx = await ArkreenRECIssuanceExtFactory.manageMVPAddress(true, [MVP_ABBA], {gasPrice: BigNumber.from(100_000_000_000)})
         await updateTx.wait()
 
         console.log("callData, update", updateTx)
@@ -231,6 +237,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2023/09/27： Called manageMVPAddress to add Abba 2 and MVP_TEST
 // yarn deploy:celo_test:RECIssueI
+
+// 2023/10/18： Called manageMVPAddress: 0x1249B1eABcAE642CF3Cb1e512a0075CEe92769BE
+// yarn deploy:matic:RECIssueI
 
 func.tags = ["RECIssueI"];
 

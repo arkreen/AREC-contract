@@ -49,15 +49,24 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   }   
   
   if(hre.network.name === 'matic') {    
-      // 2023/04/04: Matic mainnet, deploy HART based on ART implementation of ArkreenRECToken
+/*  
+    // 2023/04/04: Matic mainnet, deploy HART based on ART implementation of ArkreenRECToken
       const IMPLEMENTATION_ADDRESS  = "0xfE6B6fe2a965453c2B30f0E2159b346C61DbCA59"  // 2023/04/04: copy ART token
       const REGISTRY_ADDRESS   = "0xb17faCaCA106fB3D216923DB6CaBFC7C0517029d"       // 2023/04/04:
       const ISSUER_ADDRESS     = "0xec9254677d252df0dCaEb067dFC8b4ea5F6edAfC"       // 2023/04/04: same as test version
       const ART_NAME  = 'HashKey AREC Token'
       const SYMBOL    = 'HART'
+*/
+
+    // 2023/10/18: Matic mainnet, deploy CART based on ART implementation of ArkreenRECToken
+    const IMPLEMENTATION_ADDRESS  = "0xfE6B6fe2a965453c2B30f0E2159b346C61DbCA59"  // 2023/04/04: copy ART token
+    const REGISTRY_ADDRESS   = "0xb17faCaCA106fB3D216923DB6CaBFC7C0517029d"       // 2023/04/04:
+    const ISSUER_ADDRESS     = "0xaa65582453e121d463A51251E9d8C2BAd27ad99c"       // 2023/10/18
+    const ART_NAME  = 'Classic Based AREC Token'
+    const SYMBOL    = 'CART'
 
     const callData = ArkreenRECToken__factory.createInterface().encodeFunctionData("initialize", // Create new Hashkey ArkreenRECToken
-                                        [REGISTRY_ADDRESS, ISSUER_ADDRESS, ART_NAME, SYMBOL])    // 2023/04/04
+                                        [REGISTRY_ADDRESS, ISSUER_ADDRESS, ART_NAME, SYMBOL])    // 2023/10/18
 
     console.log("IMPLEMENTATION_ADDRESS, deployer, callData", IMPLEMENTATION_ADDRESS, deployer, callData)
 
@@ -86,7 +95,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2023/06/08: Deploy the ArkreenRECToken Proxy based on the implementation: 0x19e9BAD19ca2696b509d938476ee4CF823538df4
 // for pre-production env
 // yarn deploy:matic_test:RECTokenR
-// 
+
+// 2023/10/18: Deploy CART token Proxy based on the ART implementation
+// yarn deploy:matic:RECTokenR
+// 0x0D7899F2D36344ed21829D4EBC49CC0d335B4A06
 
 func.tags = ["RECTokenR"];
 

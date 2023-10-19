@@ -127,6 +127,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
         console.log("ArkreenRegistry Initialized to %s: ", hre.network.name, ArkreenRegistryFactory.address);
 */
+
+/*
         // 2023/05/10:   Update MinerContract address and Update AREC Issuer/Certifier address, remove old issuer address
         const ArkreenMiner_address        = '0xbf8eF5D950F78eF8edBB8674a48cDACa675831Ae'
         const ArkreenRECToken_address     = '0x58E4D14ccddD1E993e6368A8c5EAa290C95caFDF'
@@ -136,6 +138,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
         const remove_Issuer_address       = '0xec9254677d252df0dCaEb067dFC8b4ea5F6edAfC'
 
+        
         const [deployer] = await ethers.getSigners();
         const ArkreenRegistryFactory = ArkreenRegistry__factory.connect(ArkreenRegistry_address, deployer);
 
@@ -152,18 +155,25 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         console.log("AddRECIssuer removed: ", hre.network.name, remove_Issuer_address);        
 
         console.log("ArkreenRegistry Initialized to %s: ", hre.network.name, ArkreenRegistryFactory.address);
+*/        
 
         //////////////////////////////////////////////////
+       
 /*        
         // 2023/04/04:  Matic mainnet Normal release
         const issuer                      = "0xec9254677d252df0dCaEb067dFC8b4ea5F6edAfC"
         const tokenREC                    = "0x93b3bb6C51A247a27253c33F0d0C2FF1d4343214"
         const tokenPay                    = "0xA906175C2f72BB2D8d16427dda524CBD324Cc510"    // 2023/04/04:  tAKRE
+*/
+        // 2023/10/18:  Matic mainnet Normal release
+        const issuer                      = "0xaa65582453e121d463A51251E9d8C2BAd27ad99c"
+        const tokenREC                    = "0x0D7899F2D36344ed21829D4EBC49CC0d335B4A06"
+        const tokenPay                    = "0x21b101f5d61a66037634f7e1beb5a733d9987d57"    // 2023/10/18:  tAKRE
 
-        const idAsset =   "AREC_HSK_ESG_BTC"
+        const idAsset =  "Classic Based AREC Token"
         const rateToIssue = BigNumber.from(100).mul(BigNumber.from(10).pow(18))
         const rateToLiquidize = 1000
-        const description = 	"HashKey AREC ERC20 token based on redeemed I-REC."                        
+        const description = 	"Bridged AREC ERC20 token based on redeemed classic REC assets."                        
 
         const [deployer] = await ethers.getSigners();
         const ArkreenRegistryFactory = ArkreenRegistry__factory.connect(ArkreenRegistry_address, deployer);
@@ -171,11 +181,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //      function newAssetAREC(string calldata idAsset, address issuer, address tokenREC, address tokenPay,
 //                              uint128 rateToIssue, uint16 rateToLiquidize, string calldata description)
         const updateTxIssuance = await ArkreenRegistryFactory.newAssetAREC(idAsset, issuer, tokenREC,
-                                                        tokenPay, rateToIssue, rateToLiquidize, description)
+                                                        tokenPay, rateToIssue, rateToLiquidize, description, {gasPrice: BigNumber.from(100_000_000_000)})
                                                         
         console.log("updateTxIssuance", updateTxIssuance)
         await updateTxIssuance.wait()
-*/
+
+        console.log("ArkreenRegistry newAssetAREC is executed: %s: ", hre.network.name, ArkreenRegistry_address);
 
 /*
         // 2023/04/04:  Matic Mainnet Normal release
@@ -279,6 +290,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2023/08/25: call setRECIssuance and setArkreenRetirement for celo testnet
 // yarn deploy:celo_test:gRegistryI
+
+// 2023/10/18: call newAssetAREC for Matic mainnet: CART: 0x0D7899F2D36344ed21829D4EBC49CC0d335B4A06
+// yarn deploy:matic:gRegistryI
+
 
 func.tags = ["gRegistryI"];
 
