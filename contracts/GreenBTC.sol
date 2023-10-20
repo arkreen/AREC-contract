@@ -13,6 +13,9 @@ import "./libraries/TransferHelper.sol";
 
 import './interfaces/IGreenBTCImage.sol';
 
+// Import this file to use console.log
+// import "hardhat/console.sol";
+
 contract GreenBTC is 
     ContextUpgradeable,
     UUPSUpgradeable,
@@ -24,16 +27,16 @@ contract GreenBTC is
     using Strings for address;
     using FormattedStrings for uint256;
 
-    struct Green_BTC{
-        uint256 height;
-        uint256 ARTCount;
+    struct GreenBTCInfo{
+        uint128 height;
+        uint128 ARTCount;
         address beneficiary;
         uint8   greenType;
-        string  blockTime;
-        string  energyStr;
+        string  blockTime;          // For NFT display
+        string  energyStr;          // For NTT display
     }
 
-    struct NFT {
+    struct NFTStaus {
         address owner;
         uint64  blockHeight;
         bool    open;
@@ -47,13 +50,13 @@ contract GreenBTC is
         uint64 openHeight;      // The height of the block opening the NFT
     }
 
-    struct Sig_PARAM {
+    struct Sig {
         uint8       v;
         bytes32     r;
         bytes32     s;              
     }
 
-    struct TokenPay_PARAM{
+    struct PayInfo {
         address token;
         uint256 amount;
     }
@@ -79,23 +82,23 @@ contract GreenBTC is
 
     bytes32 public  _DOMAIN_SEPARATOR;
 
-    mapping (uint256 => Green_BTC)  public _dataGBTC;
-    mapping (uint256 => NFT)  public dataNFT;
+    mapping (uint256 => GreenBTCInfo)  public dataGBTC;
+    mapping (uint256 => NFTStaus)  public dataNFT;
 
     address public _manager;
     address public _authorizer;
 
     address public _greenBtcImageContract;
-    address public _arkreenBuilderContract;
-    address public _exchangeARTContract;//用于其他代币（usdc、usdt等）进行绿化时，兑换ART的地址
+    address public arkreenBuilderContract;
+    address public tokenCART;                // CART token is bought to greenize Bitcoin by default while some other token is paid.
 
     OpenInfo[] internal openingBoxList;      // Box in this list could be openned internally with just a trigger command 
     OpenInfo[] internal overtimeBoxList;     // Box in this list need to be revealed with external hash information
 
-    event GreenBitCoin(uint256 height,string energyStr,uint256 ARTCount,string blockTime,address beneficiary,uint8 greenType);
+    event GreenBitCoin(uint256 height, uint256 ARTCount, address beneficiary, uint8 greenType);
     event OpenBox(address openner, uint256 tokenID, uint256 blockNumber);
 
-    event RevealBoxes(uint256[] revealList);
+    event RevealBoxes(uint256[] revealList, bool[] wonList);
 
     modifier ensure(uint256 deadline) {
         require(deadline >= block.timestamp, 'GBTC: EXPIRED');
@@ -103,12 +106,17 @@ contract GreenBTC is
     }
 
     modifier onlyManager(){
-        require(msg.sender == _manager, 'GBTC: only manager allowed');
+        require(msg.sender == _manager, 'GBTC: Not Manager');
         _;
     }
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     //initialize
-    function initialize(address authorizer_, address arkreenBuilder_, address exchangeART_)
+    function initialize(address authorizer_, address builder, address cART)
         external
         virtual
         initializer
@@ -130,8 +138,8 @@ contract GreenBTC is
         // _manager = msg.sender;
         _manager = owner();
         _authorizer = authorizer_;
-        _arkreenBuilderContract = arkreenBuilder_;
-        _exchangeARTContract = exchangeART_;
+        arkreenBuilderContract = builder;
+        tokenCART = cART;
        
     }
 
@@ -159,15 +167,15 @@ contract GreenBTC is
     }
 
     function approveBuilder(address[] calldata tokens) public onlyManager {
-        require(_arkreenBuilderContract != address(0), "GBTC: No Builder");
+        require(arkreenBuilderContract != address(0), "GBTC: No Builder");
         for(uint256 i = 0; i < tokens.length; i++) {
-            TransferHelper.safeApprove(tokens[i], _arkreenBuilderContract, type(uint256).max);
+            TransferHelper.safeApprove(tokens[i], arkreenBuilderContract, type(uint256).max);
         }
     }   
 
-    // function authMintGreenBTCWithNative(Green_BTC calldata gbtc, Sig_PARAM calldata sig, BadgeInfo calldata badgeInfo, uint256 deadline) public  payable ensure(deadline) {
+    // function authMintGreenBTCWithNative(GreenBTCInfo calldata gbtc, Sig calldata sig, BadgeInfo calldata badgeInfo, uint256 deadline) public  payable ensure(deadline) {
 
-    //     require(_dataGBTC[gbtc.height].ARTCount == 0, "GBTC: only grey block can be mint");
+    //     require(dataGBTC[gbtc.height].ARTCount == 0, "GBTC: only grey block can be mint");
 
     //     //verify signature
     //     _authVerify(gbtc, sig);
@@ -191,48 +199,46 @@ contract GreenBTC is
     //         _mintNFT(gbtc);
     //     }
 
-    //     emit GreenBitCoin(gbtc.height, gbtc.energyStr, gbtc.cellCount, gbtc.blockTime,  gbtc.beneficiary, gbtc.greenType);
+    //     emit GreenBitCoin(gbtc.height, gbtc.cellCount, gbtc.beneficiary, gbtc.greenType);
     // }
 
-    function authMintGreenBTCWithApprove(Green_BTC calldata gbtc, Sig_PARAM calldata sig, BadgeInfo calldata badgeInfo, TokenPay_PARAM calldata tokenPay, uint256 deadline) public ensure(deadline){
+    function authMintGreenBTCWithApprove(
+        GreenBTCInfo    calldata gbtc, 
+        Sig             calldata sig, 
+        BadgeInfo       calldata badgeInfo, 
+        PayInfo         calldata payInfo,
+        uint256         deadline
+    ) external ensure(deadline) {
 
-        require(_dataGBTC[gbtc.height].ARTCount == 0, "GBTC: only grey block can be mint");
+        require(dataGBTC[gbtc.height].ARTCount == 0, "GBTC: Already Minted");
+       
+        _authVerify(gbtc, sig);                                         // verify signature
 
-        //verify signature
-        _authVerify(gbtc, sig);
+        TransferHelper.safeTransferFrom(payInfo.token, msg.sender, address(this), payInfo.amount);
 
-        //避免"CompilerError: Stack too deep."
-        {
-                TransferHelper.safeTransferFrom(tokenPay.token, msg.sender, address(this), tokenPay.amount);
+        // bit0 = 1: exact payment amount; bit1 = 1: ArkreenBank is used to get CART token
+        uint256 modeAction = 0x03;      
 
+        // actionBuilderBadge(address,address,uint256,uint256,uint256,uint256,(address,string,string,string)): 0x8D7FCEFD                                            
+        bytes memory callData = abi.encodeWithSelector( 0x8D7FCEFD, payInfo.token, tokenCART, payInfo.amount,
+                                                        gbtc.ARTCount, modeAction, deadline, badgeInfo);
 
-                uint128 price = _getPrice(_exchangeARTContract, tokenPay.token);
+        _actionBuilderBadge(abi.encodePacked(callData, gbtc.beneficiary));     // Pay back to msg.sender already ??
 
-                uint256 amountART = tokenPay.amount * (10**9) / price;
-                // uint256 amountART = tokenPay.amount * (10**9) /  (_getPrice(_tokenART, tokenPay.token));
+        _mintNFT(gbtc);
 
-                uint256 modeAction = 0x03; //   bit0 = 1; 用户付钱为定额，能换取多少ART由Bank合约的兑换价格决定
-                                            //  bit1 = 1; 表示需要去Bank合约去兑换ART
-                bytes memory callData = abi.encodeWithSelector(0x8D7FCEFD, tokenPay.token, _exchangeARTContract, tokenPay.amount,
-                                                                amountART, modeAction, deadline, badgeInfo);
-                _actionBuilderBadge(abi.encodePacked(callData, gbtc.beneficiary));     // Pay back to msg.sender already
-
-
-                _mintNFT(gbtc);
-        }
-
-        emit GreenBitCoin(gbtc.height, gbtc.energyStr, gbtc.ARTCount, gbtc.blockTime,  gbtc.beneficiary, gbtc.greenType);
+        emit GreenBitCoin(gbtc.height, gbtc.ARTCount, gbtc.beneficiary, gbtc.greenType);
     }
 
     function authMintGreenBTCWithART(
-        Green_BTC calldata gbtc, 
-        Sig_PARAM calldata sig, 
+        GreenBTCInfo calldata gbtc, 
+        Sig calldata sig, 
         BadgeInfo calldata badgeInfo,
         address tokenART, 
         uint256 amountART, 
         uint256 deadline)  public  ensure(deadline) 
     {
-        require(_dataGBTC[gbtc.height].ARTCount == 0, "GBTC: only grey block can be mint");
+        require(dataGBTC[gbtc.height].ARTCount == 0, "GBTC: only grey block can be mint");
         require(gbtc.ARTCount <= amountART, "GBTC: not enough ART"); 
         //verify signature
         _authVerify(gbtc, sig);
@@ -247,7 +253,7 @@ contract GreenBTC is
 
         _mintNFT(gbtc);
 
-        emit GreenBitCoin(gbtc.height, gbtc.energyStr, gbtc.ARTCount, gbtc.blockTime,  gbtc.beneficiary, gbtc.greenType);
+        emit GreenBitCoin(gbtc.height, gbtc.ARTCount, gbtc.beneficiary, gbtc.greenType);
     }
 
     /**
@@ -270,20 +276,30 @@ contract GreenBTC is
      * waiting for another revealing with hash value.
      */
     function revealBoxes() public {                                     // onlyManager?
-        uint256[] memory revealList = new uint256[](openingBoxList.length);
+
+        uint256 openingListLength = openingBoxList.length;
+
+        uint256[] memory revealList = new uint256[](openingListLength);
+        bool[] memory wonList = new bool[](openingListLength);
+        OpenInfo[] memory skipList = new OpenInfo[](openingListLength);
 
         uint256 revealCount;
-        for (uint256 index = 0; index < openingBoxList.length; index++) {
+        uint256 skipCount;
 
+        for (uint256 index = 0; index < openingListLength; index++) {
             OpenInfo memory openInfo = openingBoxList[index];
-            uint256 openHeight = openInfo.openHeight + 1;               // Hash of the next block determining the result
             uint256 tokenID = openInfo.tokenID;
+            uint256 openHeight = openInfo.openHeight + 1;               // Hash of the next block determining the result
 
-            if(openHeight >= (block.number - 256)) {
-                address owner = ownerOf(tokenID);
-                uint256 random = uint256(keccak256(abi.encodePacked(tokenID, owner, blockhash(openHeight))));
+            if (block.number <= openHeight) {
+                skipList[skipCount++] = openInfo;
+            } else if ( block.number <= openHeight + 256 ) {
+                uint256 random = uint256(keccak256(abi.encodePacked(tokenID, ownerOf(tokenID), blockhash(openHeight))));
 
-                if((random % 100) < RATE_WINNING) dataNFT[tokenID].won = true;
+                if ((random % 100) < RATE_WINNING) { 
+                  dataNFT[tokenID].won = true;
+                  wonList[revealCount] = true;
+                }
 
                 dataNFT[tokenID].reveal = true;
                 dataNFT[tokenID].hash = random;
@@ -296,12 +312,21 @@ contract GreenBTC is
             } 
         }
 
-        // Set the final reveal length
-        assembly {
-            mstore(revealList, revealCount)
+        delete openingBoxList;                                          // delete the while list
+
+        for (uint256 index = 0; index < skipCount; index++) {           // Also works for empty skipList
+            openingBoxList.push(skipList[index]);
         }
 
-        emit RevealBoxes(revealList);
+        // Set the final reveal length if necessary
+        if (revealCount < openingListLength) {
+          assembly {
+              mstore(revealList, revealCount)
+              mstore(wonList, revealCount)
+          }
+        }
+
+        emit RevealBoxes(revealList, wonList);
     }
 
     /**
@@ -309,12 +334,13 @@ contract GreenBTC is
      * @param tokenList All the token IDs of the NFT to be revealed.
      * @param hashList All the hash values of the block next after to block the NFT is minted.
      */
-    function revealBoxes(uint256[] calldata tokenList, uint256[] calldata hashList) public onlyManager {
+    function revealBoxesWithHash(uint256[] calldata tokenList, uint256[] calldata hashList) public onlyManager {
 
         uint256 lengthReveal = hashList.length; 
         require( tokenList.length == lengthReveal,  "GBTC: Wrong Length" );
 
         uint256[] memory revealList = new uint256[](overtimeBoxList.length);
+        bool[] memory wonList = new bool[](overtimeBoxList.length);
 
         uint256 revealCount;
         for (uint256 index = 0; index < lengthReveal; index++) {
@@ -325,7 +351,10 @@ contract GreenBTC is
 
             uint256 random = uint256(keccak256(abi.encodePacked(tokenID, owner, hashList[index])));
 
-            if((random % 100) < RATE_WINNING) dataNFT[tokenID].won = true;
+            if((random % 100) < RATE_WINNING) {
+                dataNFT[tokenID].won = true;
+                wonList[revealCount] = true;
+            }
 
             dataNFT[tokenID].reveal = true;
             dataNFT[tokenID].hash = random;
@@ -333,9 +362,9 @@ contract GreenBTC is
             // Remove the revealed item by replacing with the last item
             uint256 overtimeLast = overtimeBoxList.length - 1;
             if( indexOvertime < overtimeLast) {
-                OpenInfo memory openInfo = openingBoxList[overtimeLast];
+                OpenInfo memory openInfo = overtimeBoxList[overtimeLast];
                 overtimeBoxList[indexOvertime] = openInfo;
-                dataNFT[overtimeLast].hash = indexOvertime;
+                dataNFT[openInfo.tokenID].hash = indexOvertime;
             }
             overtimeBoxList.pop();
 
@@ -347,7 +376,7 @@ contract GreenBTC is
             mstore(revealList, revealCount)     
         }
 
-        emit RevealBoxes(revealList);
+        emit RevealBoxes(revealList, wonList);
     }
 
     /**
@@ -357,14 +386,14 @@ contract GreenBTC is
         return openingBoxList;
     }
 
-    function GetOvertimeBoxList() public view returns (OpenInfo[] memory) {
+    function getOvertimeBoxList() public view returns (OpenInfo[] memory) {
         return overtimeBoxList;
     }
 
     function tokenURI(uint256 tokenId) public view override returns (string memory){
 
         // require(tokenId <= _totalCount && tokenId != 0, "invalid token id");
-        require(_dataGBTC[tokenId].height != 0, "GBTC: no such token minted");
+        require(dataGBTC[tokenId].height != 0, "GBTC: no such token minted");
 
         string memory svgData;
         if(dataNFT[tokenId].open == false){
@@ -392,7 +421,7 @@ contract GreenBTC is
 
     function isUnPacking(uint256 tokenID) public view returns(bool, bool) {
 
-        if(_dataGBTC[tokenID].ARTCount == 0){
+        if(dataGBTC[tokenID].ARTCount == 0){
             return (false, false);
         }else{
             return (true, dataNFT[tokenID].open);
@@ -402,12 +431,12 @@ contract GreenBTC is
     function _svg_open_Data(uint256 tokenId) internal view  returns(string memory openData){
         if(dataNFT[tokenId].won){
 
-            //此处使用staticcall模式进行调用，原因：_imageContract合约的getCertificateSVGBytes函数使用struct Green_BTC
+            //此处使用staticcall模式进行调用，原因：_imageContract合约的getCertificateSVGBytes函数使用struct GreenBTCInfo
             //作为参数，如果不使用staticcall，则必须在本合约、接口合约、目标合约之间协调struct Green_BTC的定义。本合约不希望
             //将struct Green_BTC的定义独立出去(至少目前不希望)，所以此处使用staticcall进行处理，虽然稍显繁琐，但保留本合约的
             //独立性，以及灵活性。
             bytes4 selector = bytes4(keccak256("getCertificateSVGBytes((uint256,uint256,address,uint8,string,string))"));
-            bytes memory callData = abi.encodeWithSelector(selector, _dataGBTC[tokenId]);
+            bytes memory callData = abi.encodeWithSelector(selector, dataGBTC[tokenId]);
 
             (bool success, bytes memory returndata) = _greenBtcImageContract.staticcall(callData);
             require(success, "GBTC: call image contract failed");
@@ -442,43 +471,25 @@ contract GreenBTC is
 
     }
 
+    function _mintNFT(GreenBTCInfo calldata gbtc) internal {
 
-    function _mintNFT(Green_BTC calldata gbtc) internal {
+        dataGBTC[gbtc.height] = gbtc;
 
-        require(_dataGBTC[gbtc.height].ARTCount == 0, "GBTC: only grey block can be mint");
-        // require(dataNFT[gbtc.height].owner == address(0), "only owner can open box");
-
-        Green_BTC memory green_btc = Green_BTC({
-            height:         gbtc.height,
-            energyStr:      gbtc.energyStr,
-            ARTCount:       gbtc.ARTCount,
-            blockTime:      gbtc.blockTime,
-            beneficiary:    gbtc.beneficiary,
-            greenType:      gbtc.greenType
-        });
-
-        _dataGBTC[gbtc.height] = green_btc;
-
-        NFT memory nft = NFT({
-            owner:          gbtc.beneficiary,
-            blockHeight:    uint64(gbtc.height),
-            open:           false,
-            reveal:         false,
-            won:            false,
-            hash:           0
-        });
+        NFTStaus memory nft;
+        nft.owner = gbtc.beneficiary;
+        nft.blockHeight = uint64(gbtc.height);
         dataNFT[gbtc.height] = nft;
 
         _mint(gbtc.beneficiary, gbtc.height);
     }
 
-    function _authVerify(Green_BTC calldata gbtc, Sig_PARAM calldata sig) internal view {
+    function _authVerify(GreenBTCInfo calldata gbtc, Sig calldata sig) internal view {
 
         bytes32 greenBTCHash = keccak256(abi.encode(_GREEN_BTC_TYPEHASH, gbtc.height, gbtc.energyStr, gbtc.ARTCount, gbtc.blockTime, gbtc.beneficiary, gbtc.greenType));
         bytes32 digest = keccak256(abi.encodePacked('\x19\x01', _DOMAIN_SEPARATOR, greenBTCHash));
         address recoveredAddress = ecrecover(digest, sig.v, sig.r, sig.s);
 
-        require(recoveredAddress == _authorizer, "GBTC: invalid singature");
+        require(recoveredAddress == _authorizer, "GBTC: Invalid Singature");
     }
 
     // function _exchangeForTokenNative(uint256 amount) internal {
@@ -502,7 +513,7 @@ contract GreenBTC is
     // }
 
     function _actionBuilderBadge(bytes memory callData) internal {
-        (bool success, bytes memory returndata) = _arkreenBuilderContract.call(callData);
+        (bool success, bytes memory returndata) = arkreenBuilderContract.call(callData);
 
          if (!success) {
             if (returndata.length > 0) {
@@ -524,7 +535,7 @@ contract GreenBTC is
         bytes4 selector = bytes4(keccak256("artBank()"));
         bytes memory callData = abi.encodeWithSelector(selector);
 
-        (bool success, bytes memory returndata) = _arkreenBuilderContract.staticcall(callData);
+        (bool success, bytes memory returndata) = arkreenBuilderContract.staticcall(callData);
         require(success, "GBTC: get artBank address failed");
         banker = abi.decode(returndata, (address));
         
