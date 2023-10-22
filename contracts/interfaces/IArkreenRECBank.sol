@@ -33,4 +33,9 @@ interface IArkreenRECBank {
         bool                isExactPay,
         Signature calldata  permitToPay
     ) external;
+
+    function saleIncome(
+        address             tokenART,
+        address             tokenPay     
+    ) external view returns (uint128 priceForSale, uint128 amountReceived);
 }

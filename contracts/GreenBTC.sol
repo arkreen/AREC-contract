@@ -11,10 +11,11 @@ import '@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol';
 import "./libraries/FormattedStrings.sol";
 import "./libraries/TransferHelper.sol";
 
+import "./interfaces/IWETH.sol";
 import './interfaces/IGreenBTCImage.sol';
-
-// Import this file to use console.log
-// import "hardhat/console.sol";
+import './interfaces/IArkreenBuilder.sol';
+import './interfaces/IArkreenRECBank.sol';
+import './GreenBTCType.sol';
 
 contract GreenBTC is 
     ContextUpgradeable,
@@ -27,73 +28,30 @@ contract GreenBTC is
     using Strings for address;
     using FormattedStrings for uint256;
 
-    struct GreenBTCInfo{
-        uint128 height;
-        uint128 ARTCount;
-        address beneficiary;
-        uint8   greenType;
-        string  blockTime;          // For NFT display
-        string  energyStr;          // For NTT display
-    }
-
-    struct NFTStaus {
-        address owner;
-        uint64  blockHeight;
-        bool    open;
-        bool    reveal;
-        bool    won;
-        uint256 hash;
-    }
-
-    struct OpenInfo {
-        uint64 tokenID;         // The token ID of the NFT opened
-        uint64 openHeight;      // The height of the block opening the NFT
-    }
-
-    struct Sig {
-        uint8       v;
-        bytes32     r;
-        bytes32     s;              
-    }
-
-    struct PayInfo {
-        address token;
-        uint256 amount;
-    }
-
-    struct BadgeInfo {
-        address     beneficiary;
-        string      offsetEntityID;
-        string      beneficiaryID;
-        string      offsetMessage;
-    }
-
     //keccak256("GreenBitCoin(uint256 height,string energyStr,uint256 artCount,string blockTime,address beneficiary,uint8 greenType)");
-    bytes32 constant _GREEN_BTC_TYPEHASH = 0x2cc287d531f97592968321a2680791d868f5cafdc02c8f9f059c431e7ef0f086;
-    string  constant  _name = "GreenBTC";
-    string  constant  _symbol = "GBTC";
-    string  constant  _version = "1";
+    bytes32 constant GREEN_BTC_TYPEHASH = 0x2cc287d531f97592968321a2680791d868f5cafdc02c8f9f059c431e7ef0f086;
+    string  constant NAME = "GreenBTC";
+    string  constant SYMBOL = "GBTC";
+    string  constant VERSION = "1";
 
-    uint256 constant  RATE_WINNING  = 20;  
-
-    // address constant _arkreenBuilder = 0xA05A9677a9216401CF6800d28005b227F7A3cFae;
-    // address constant _tokenNative = 0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889;
-    // address constant _tokenART = 0x0999AFb673944a7B8E1Ef8eb0a7c6FFDc0b43E31;
+    uint256 constant RATE_WINNING  = 20;  
 
     bytes32 public  _DOMAIN_SEPARATOR;
 
+    address public manager;
+    address public authorizer;
+
+    address public greenBtcImage;
+    address public arkreenBuilder;
+    address public tokenCART;                       // CART token is bought to greenize Bitcoin by default while some other token is paid.
+    address public tokenNative;              
+
+    OpenInfo[] internal openingBoxList;             // Box in this list could be openned internally with just a trigger command 
+    OpenInfo[] internal overtimeBoxList;            // Box in this list need to be revealed with external hash information
+
     mapping (uint256 => GreenBTCInfo)  public dataGBTC;
     mapping (uint256 => NFTStaus)  public dataNFT;
-
-    address public _manager;
-    address public _authorizer;
-
-    address public _greenBtcImageContract;
-    address public arkreenBuilderContract;
-    address public tokenCART;                // CART token is bought to greenize Bitcoin by default while some other token is paid.
-
-    OpenInfo[] internal openingBoxList;      // Box in this list could be openned internally with just a trigger command 
-    OpenInfo[] internal overtimeBoxList;     // Box in this list need to be revealed with external hash information
+    mapping(address => bool) public whiteARTList;   // ART token -> true/false
 
     event GreenBitCoin(uint256 height, uint256 ARTCount, address beneficiary, uint8 greenType);
     event OpenBox(address openner, uint256 tokenID, uint256 blockNumber);
@@ -106,7 +64,7 @@ contract GreenBTC is
     }
 
     modifier onlyManager(){
-        require(msg.sender == _manager, 'GBTC: Not Manager');
+        require(msg.sender == manager, 'GBTC: Not Manager');
         _;
     }
 
@@ -116,108 +74,123 @@ contract GreenBTC is
     }
 
     //initialize
-    function initialize(address authorizer_, address builder, address cART)
+    function initialize(address authorizer_, address builder, address cART, address native)
         external
         virtual
         initializer
     {
         __UUPSUpgradeable_init();
         __Ownable_init_unchained();
-        __ERC721_init_unchained(_name, _symbol);
+        __ERC721_init_unchained(NAME, SYMBOL);
 
         _DOMAIN_SEPARATOR = keccak256(
             abi.encode(
                 keccak256('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)'),
-                keccak256(bytes(_name)),
-                keccak256(bytes(_version)),
+                keccak256(bytes(NAME)),
+                keccak256(bytes(VERSION)),
                 block.chainid,
                 address(this)
             )
         );  
 
-        // _manager = msg.sender;
-        _manager = owner();
-        _authorizer = authorizer_;
-        arkreenBuilderContract = builder;
-        tokenCART = cART;
-       
+        // manager = msg.sender;
+        manager         = owner();
+        authorizer      = authorizer_;
+        arkreenBuilder  = builder;
+        tokenCART       = cART;
+        tokenNative     = native;
     }
 
     function _authorizeUpgrade(address newImplementation) internal virtual override onlyOwner
     {}
 
     function setManager(address newManager) public onlyOwner{
-        require(newManager != address(0), "GBTC: address 0 is not allowed"); 
-        _manager = newManager;
+        require(newManager != address(0), "GBTC: Zero Address"); 
+        manager = newManager;
     }
 
     function setAuthorizer(address newAuthAddress) public onlyManager {
-        require(newAuthAddress != address(0), "GBTC: address 0 is not allowed"); 
-        _authorizer = newAuthAddress;
+        require(newAuthAddress != address(0), "GBTC: Zero Address"); 
+        authorizer = newAuthAddress;
     }
 
-    function setImageContractAddress(address newImageContractAddress) public onlyManager {
-        require(newImageContractAddress != address(0), 'GBTC: address 0 is not allowed');
-        _greenBtcImageContract = newImageContractAddress;
+    function setImageContract(address newImageContract) public onlyManager {
+        require(newImageContract != address(0), 'GBTC: Zero Address');
+        greenBtcImage = newImageContract;
     }
 
-    function setExchangeARTContractAddress(address newExchangeARTContract) public onlyManager {
-        require(newExchangeARTContract != address(0), 'GBTC: address 0 is not allowed');
-        _greenBtcImageContract = newExchangeARTContract;
+    function setCARTContract(address newCARTToken) public onlyManager {
+        require(newCARTToken != address(0), 'GBTC: Zero Address');
+        tokenCART = newCARTToken;
     }
 
+    /**
+     * @dev Approve the tokens which can be transferred from this GreenBTC contract by arkreenBuilder
+     * @param tokens The token list
+     */
     function approveBuilder(address[] calldata tokens) public onlyManager {
-        require(arkreenBuilderContract != address(0), "GBTC: No Builder");
+        require(arkreenBuilder != address(0), "GBTC: No Builder");
         for(uint256 i = 0; i < tokens.length; i++) {
-            TransferHelper.safeApprove(tokens[i], arkreenBuilderContract, type(uint256).max);
+            TransferHelper.safeApprove(tokens[i], arkreenBuilder, type(uint256).max);
         }
     }   
 
-    // function authMintGreenBTCWithNative(GreenBTCInfo calldata gbtc, Sig calldata sig, BadgeInfo calldata badgeInfo, uint256 deadline) public  payable ensure(deadline) {
+    /** 
+     * @dev Greenize BTC with the native token
+     * @param gbtc Bitcoin block info to be greenized
+     * @param sig Signature of the authority to Bitcoin block info
+     * @param badgeInfo Information that will logged in Arkreen climate badge
+     * @param deadline The deadline to cancel the transaction
+     */
+    function authMintGreenBTCWithNative(
+        GreenBTCInfo    calldata gbtc,
+        Sig             calldata sig,
+        BadgeInfo       calldata badgeInfo,
+        uint256                  deadline
+    ) public payable ensure(deadline) {
 
-    //     require(dataGBTC[gbtc.height].ARTCount == 0, "GBTC: only grey block can be mint");
-
-    //     //verify signature
-    //     _authVerify(gbtc, sig);
-
-    //     //exchange for warp matic from tokenNative contract
-    //     _exchangeForTokenNative(msg.value);
+        require(dataGBTC[gbtc.height].ARTCount == 0, "GBTC: Already Minted");
         
-    //     //避免"CompilerError: Stack too deep."
-    //     {
-    //         uint128 price = _getPrice(_tokenART, _tokenNative);
+        _authVerify(gbtc, sig);                         //verify signature
 
-    //         uint256 amountART = msg.value * (10**9) / price;
-    //         // uint256 amountART = msg.value * (10**9) / (_getPrice(_tokenART, _tokenNative));
+        IWETH(tokenNative).deposit{value: msg.value}(); // Wrap MATIC to WMATIC 
 
-    //         uint256 modeAction = 0x03; //   bit0 = 1; 用户付钱为定额，能换取多少ART由Bank合约的兑换价格决定，实验中需要2个ART，根据兑换价格，需要0.1个matic
-    //                                     //  bit1 = 1; 表示需要去Bank合约去兑换ART
-    //         bytes memory callData = abi.encodeWithSelector(0x8D7FCEFD, _tokenNative, _tokenART, msg.value,
-    //                                                         amountART, modeAction, deadline, badgeInfo);
-    //         _actionBuilderBadge(abi.encodePacked(callData, gbtc.beneficiary));     // Pay back to msg.sender already
+        uint256 modeAction = 0x03;                      // bit0 = 1: exact payment amount; bit1 = 1: ArkreenBank is used to get CART token
 
-    //         _mintNFT(gbtc);
-    //     }
+        // actionBuilderBadge(address,address,uint256,uint256,uint256,uint256,(address,string,string,string)): 0x8D7FCEFD                                            
+        bytes memory callData = abi.encodeWithSelector( 0x8D7FCEFD, tokenNative, tokenCART, msg.value,
+                                                        gbtc.ARTCount, modeAction, deadline, badgeInfo);
 
-    //     emit GreenBitCoin(gbtc.height, gbtc.cellCount, gbtc.beneficiary, gbtc.greenType);
-    // }
+        _actionBuilderBadge(abi.encodePacked(callData, gbtc.beneficiary));     // Pay back to msg.sender already
 
+        _mintNFT(gbtc);
+
+        emit GreenBitCoin(gbtc.height, gbtc.ARTCount, gbtc.beneficiary, gbtc.greenType);
+    }
+
+    /** 
+     * @dev Greenize BTC with the token/amount that the user has approved
+     * @param gbtc Bitcoin block info to be greenized
+     * @param sig Signature of the authority to Bitcoin block info
+     * @param badgeInfo Information that will logged in Arkreen climate badge
+     * @param payInfo Address and amount of the token that will be used to pay for offsetting ART
+     * @param deadline The deadline to cancel the transaction
+     */
     function authMintGreenBTCWithApprove(
         GreenBTCInfo    calldata gbtc, 
         Sig             calldata sig, 
         BadgeInfo       calldata badgeInfo, 
         PayInfo         calldata payInfo,
-        uint256         deadline
+        uint256                  deadline
     ) external ensure(deadline) {
 
         require(dataGBTC[gbtc.height].ARTCount == 0, "GBTC: Already Minted");
        
-        _authVerify(gbtc, sig);                                         // verify signature
+        _authVerify(gbtc, sig);                         // verify signature
 
         TransferHelper.safeTransferFrom(payInfo.token, msg.sender, address(this), payInfo.amount);
 
-        // bit0 = 1: exact payment amount; bit1 = 1: ArkreenBank is used to get CART token
-        uint256 modeAction = 0x03;      
+        uint256 modeAction = 0x03;                      // bit0 = 1: exact payment amount; bit1 = 1: ArkreenBank is used to get CART token
 
         // actionBuilderBadge(address,address,uint256,uint256,uint256,uint256,(address,string,string,string)): 0x8D7FCEFD                                            
         bytes memory callData = abi.encodeWithSelector( 0x8D7FCEFD, payInfo.token, tokenCART, payInfo.amount,
@@ -230,20 +203,28 @@ contract GreenBTC is
         emit GreenBitCoin(gbtc.height, gbtc.ARTCount, gbtc.beneficiary, gbtc.greenType);
     }
 
+    /** 
+     * @dev Greenize BTC with specified ART token
+     * @param gbtc Bitcoin block info to be greenized
+     * @param sig Signature of the authority to Bitcoin block info
+     * @param badgeInfo Information that will logged in Arkreen climate badge
+     * @param tokenART Address of the ART token, which should be whitelisted in the accepted list.
+     * @param deadline The deadline to cancel the transaction
+     */
     function authMintGreenBTCWithART(
-        GreenBTCInfo calldata gbtc, 
-        Sig calldata sig, 
-        BadgeInfo calldata badgeInfo,
-        address tokenART, 
-        uint256 amountART, 
-        uint256 deadline)  public  ensure(deadline) 
-    {
-        require(dataGBTC[gbtc.height].ARTCount == 0, "GBTC: only grey block can be mint");
-        require(gbtc.ARTCount <= amountART, "GBTC: not enough ART"); 
-        //verify signature
-        _authVerify(gbtc, sig);
+        GreenBTCInfo    calldata gbtc, 
+        Sig             calldata sig, 
+        BadgeInfo       calldata badgeInfo,
+        address                  tokenART, 
+        uint256                  deadline
+    )  public  ensure(deadline) {
 
-        // Transfer payement 
+        require(dataGBTC[gbtc.height].ARTCount == 0, "GBTC: Already Minted");
+        require(whiteARTList[tokenART], "GBTC: ART Not Accepted"); 
+
+        _authVerify(gbtc, sig);                                                 // verify signature
+
+        uint256  amountART = gbtc.ARTCount;
         TransferHelper.safeTransferFrom(tokenART, msg.sender, address(this), amountART);
 
         // actionBuilderBadgeWithART(address,uint256,uint256,(address,string,string,string)): 0x6E556DF8
@@ -258,6 +239,7 @@ contract GreenBTC is
 
     /**
      * @dev Open the Green Bitcoin box, only thw owner of the box acceptable.
+     * @param tokenID ID of the NFT token to be opened
      */
     function openBox(uint256 tokenID) public {
         require(msg.sender == ownerOf(tokenID), "GBTC: Not Owner");
@@ -386,39 +368,44 @@ contract GreenBTC is
         return openingBoxList;
     }
 
+    /**
+     * @dev Return all the boxes waiting for revealing with hash value
+     */
     function getOvertimeBoxList() public view returns (OpenInfo[] memory) {
         return overtimeBoxList;
     }
 
+    /**
+     * @dev See {IERC721Metadata-tokenURI}.
+     */
     function tokenURI(uint256 tokenId) public view override returns (string memory){
 
-        // require(tokenId <= _totalCount && tokenId != 0, "invalid token id");
-        require(dataGBTC[tokenId].height != 0, "GBTC: no such token minted");
+        require(dataGBTC[tokenId].height != 0, "GBTC: Not Minted");
 
         string memory svgData;
-        if(dataNFT[tokenId].open == false){
-            svgData = _svg_unopen_Data(tokenId);
-        }else{
-            svgData = _svg_open_Data(tokenId);
+        if(dataNFT[tokenId].open == false) { 
+            svgData = IGreenBTCImage(greenBtcImage).getBlindBoxSVGBytes(tokenId);
+        } else {
+            if(dataNFT[tokenId].won) {
+                svgData = IGreenBTCImage(greenBtcImage).getCertificateSVGBytes(dataGBTC[tokenId]);    
+            } else {
+                svgData = IGreenBTCImage(greenBtcImage).getGreenTreeSVGBytes();
+            }            
         }
-        
 
         bytes memory dataURI = abi.encodePacked(
-            "{",
-            '"name": "Green BTC #',
+            '{"name": "Green BTC #',
             tokenId.toString(),
-            '",',
-            '"description": "GreenBTC: Green Bit Coin",',
-            '"image": "',
-            "data:image/svg+xml;base64,",
+            '","description": "GreenBTC: Green Bit Coin","image": "data:image/svg+xml;base64,',
             svgData,
-            '"'
-            "}"
+            '"}'
         );
         return string(abi.encodePacked("data:application/json;base64,", Base64.encode(dataURI)));
     }
 
-
+    /**
+     * @dev Return if the specified token is sold and openned
+     */
     function isUnPacking(uint256 tokenID) public view returns(bool, bool) {
 
         if(dataGBTC[tokenID].ARTCount == 0){
@@ -428,49 +415,10 @@ contract GreenBTC is
         }
     }
 
-    function _svg_open_Data(uint256 tokenId) internal view  returns(string memory openData){
-        if(dataNFT[tokenId].won){
-
-            //此处使用staticcall模式进行调用，原因：_imageContract合约的getCertificateSVGBytes函数使用struct GreenBTCInfo
-            //作为参数，如果不使用staticcall，则必须在本合约、接口合约、目标合约之间协调struct Green_BTC的定义。本合约不希望
-            //将struct Green_BTC的定义独立出去(至少目前不希望)，所以此处使用staticcall进行处理，虽然稍显繁琐，但保留本合约的
-            //独立性，以及灵活性。
-            bytes4 selector = bytes4(keccak256("getCertificateSVGBytes((uint256,uint256,address,uint8,string,string))"));
-            bytes memory callData = abi.encodeWithSelector(selector, dataGBTC[tokenId]);
-
-            (bool success, bytes memory returndata) = _greenBtcImageContract.staticcall(callData);
-            require(success, "GBTC: call image contract failed");
-            openData = abi.decode(returndata, (string));
-
-
-        }else{
-
-            // bytes4 selector = bytes4(keccak256("getGreenTreeSVGBytes()"));
-            // bytes memory callData = abi.encodeWithSelector(selector);
-
-            // (bool success, bytes memory returndata) = _imageContract.staticcall(callData);
-            // require(success, "call image contract failed");
-            // openData = abi.decode(returndata, (string));
-
-            openData = IGreenBTCImage(_greenBtcImageContract).getGreenTreeSVGBytes();
-        }
-        
-
-    }
-
-    function _svg_unopen_Data(uint256 tokenId ) internal view returns(string memory){
-
-        // bytes4 selector = bytes4(keccak256("getBlindBoxSVGBytes(uint256)"));
-        // bytes memory callData = abi.encodeWithSelector(selector, tokenId);
-
-        // (bool success, bytes memory returndata) = _imageContract.staticcall(callData);
-        // require(success, "call image contract failed");
-        // return abi.decode(returndata, (string));
-
-        return IGreenBTCImage(_greenBtcImageContract).getBlindBoxSVGBytes(tokenId);
-
-    }
-
+    /**
+     * @dev Mint the GreenBTC NFT based on the GreenBTC info
+     * @param gbtc Green BTC information
+     */
     function _mintNFT(GreenBTCInfo calldata gbtc) internal {
 
         dataGBTC[gbtc.height] = gbtc;
@@ -483,37 +431,40 @@ contract GreenBTC is
         _mint(gbtc.beneficiary, gbtc.height);
     }
 
+    /**
+     * @dev Verify the signature of authority based on the GreenBTC info
+     * @param gbtc Green BTC information
+     * @param sig Signature of the authority
+     */
     function _authVerify(GreenBTCInfo calldata gbtc, Sig calldata sig) internal view {
 
-        bytes32 greenBTCHash = keccak256(abi.encode(_GREEN_BTC_TYPEHASH, gbtc.height, gbtc.energyStr, gbtc.ARTCount, gbtc.blockTime, gbtc.beneficiary, gbtc.greenType));
+        bytes32 greenBTCHash = keccak256(abi.encode(GREEN_BTC_TYPEHASH, gbtc.height, gbtc.energyStr, gbtc.ARTCount, gbtc.blockTime, gbtc.beneficiary, gbtc.greenType));
         bytes32 digest = keccak256(abi.encodePacked('\x19\x01', _DOMAIN_SEPARATOR, greenBTCHash));
         address recoveredAddress = ecrecover(digest, sig.v, sig.r, sig.s);
 
-        require(recoveredAddress == _authorizer, "GBTC: Invalid Singature");
+        require(recoveredAddress == authorizer, "GBTC: Invalid Singature");
     }
 
-    // function _exchangeForTokenNative(uint256 amount) internal {
+    /**
+     * @dev Add or remove the acceptable ART tokens
+     * @param tokenARTList ART list to add or rmeove
+     * @param addOrRemove = 0, to remove; = 1, to add
+     */
+    function mangeARTTokens(address[] calldata tokenARTList, bool addOrRemove) external onlyOwner {
+        for(uint256 i = 0; i < tokenARTList.length; i++) {
+            address tokenART = tokenARTList[i];
 
-    //     bytes4 selector = bytes4(keccak256("deposit()"));
-    //     bytes memory callData = abi.encodeWithSelector(selector);
+            require(tokenART != address(0) && whiteARTList[tokenART] != addOrRemove, "HSKESG: Wrong ART Status");
+            whiteARTList[tokenART] = addOrRemove;
+        }
+    }   
 
-    //     (bool success, bytes memory returndata) = _tokenNative.call{value: amount}(callData);
-
-    //      if (!success) {
-    //         if (returndata.length > 0) {
-    //             // solhint-disable-next-line no-inline-assembly
-    //             assembly {
-    //                 let returndata_size := mload(returndata)
-    //                 revert(add(32, returndata), returndata_size)
-    //             }
-    //         } else {
-    //             revert("GBTC: Error Call to deposit");
-    //         }
-    //     }    
-    // }
-
+    /**
+     * @dev Call arkreenBuilder with the specified calldata
+     * @param callData Call data passed to arkreenBuilder
+     */
     function _actionBuilderBadge(bytes memory callData) internal {
-        (bool success, bytes memory returndata) = arkreenBuilderContract.call(callData);
+        (bool success, bytes memory returndata) = arkreenBuilder.call(callData);
 
          if (!success) {
             if (returndata.length > 0) {
@@ -528,35 +479,13 @@ contract GreenBTC is
         }        
     }
 
-    function _getPrice(address tokenART, address tokenPay) internal view returns(uint128) {
-
-        address banker;
-
-        bytes4 selector = bytes4(keccak256("artBank()"));
-        bytes memory callData = abi.encodeWithSelector(selector);
-
-        (bool success, bytes memory returndata) = arkreenBuilderContract.staticcall(callData);
-        require(success, "GBTC: get artBank address failed");
-        banker = abi.decode(returndata, (address));
-        
-
-        // address tokenART = 0x0999AFb673944a7B8E1Ef8eb0a7c6FFDc0b43E31;
-        // address tokenPay = 0x0FA8781a83E46826621b3BC094Ea2A0212e71B23;
-        // address tokenPay = 0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889;
-
-        selector = bytes4(keccak256("saleIncome(address,address)"));
-        callData = abi.encodeWithSelector(selector, tokenART, tokenPay);
-
-        (success, returndata) = banker.staticcall(callData);
-        require(success, "GBTC: get price failed");
-        (uint128 price, ) = abi.decode(returndata, (uint128, uint128));
-
-        return price;
-        
+    /**
+     * @dev Get the price and sold amount of the specified ART versus the payment token 
+     * @param tokenART ART token
+     * @param tokenPay Payment token
+     */
+    function getPrice(address tokenART, address tokenPay) external view returns(uint128 price, uint128 received) {
+        address artBank = IArkreenBuilder(arkreenBuilder).artBank();
+        (price, received) = IArkreenRECBank(artBank).saleIncome(tokenART, tokenPay);
     }
-
-
-
-
-
 }

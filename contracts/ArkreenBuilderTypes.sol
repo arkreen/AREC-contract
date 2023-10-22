@@ -22,8 +22,8 @@ struct SigRegister {
 }
 
 struct BadgeInfo {
-        address     beneficiary;
-        string      offsetEntityID;
-        string      beneficiaryID;
-        string      offsetMessage;
+    address     beneficiary;
+    string      offsetEntityID;
+    string      beneficiaryID;
+    string      offsetMessage;
 }

@@ -17,6 +17,7 @@ import {
     GreenBTC,
     WETH9,
     ERC20F,
+    GreenBTCImage
 } from "../../typechain";
 
 import { time, loadFixture, mine } from "@nomicfoundation/hardhat-network-helpers";
@@ -59,6 +60,7 @@ describe("GreenBTC Test Campaign", () => {
     let arkreenBuilder:               ArkreenBuilder
     let arkreenRECBank:               ArkreenRECBank
     let greenBitcoin:                 GreenBTC
+    let greenBTCImage:                GreenBTCImage
 
     let WETH:                         WETH9
     let tokenA:                       ERC20F
@@ -161,9 +163,14 @@ describe("GreenBTC Test Campaign", () => {
       
       const GreenBTCFactory = await ethers.getContractFactory("GreenBTC");
       greenBitcoin = await upgrades.deployProxy(GreenBTCFactory,
-                              [ register_authority.address, arkreenBuilder.address, arkreenRECTokenESG.address]) as GreenBTC
+                              [ register_authority.address, arkreenBuilder.address, 
+                                arkreenRECTokenESG.address, WETH.address ]) as GreenBTC
       await greenBitcoin.deployed();
       await greenBitcoin.approveBuilder([AKREToken.address, WETH.address])
+              
+      const GreenBTCImageFactory = await ethers.getContractFactory("GreenBTCImage");
+      greenBTCImage = await GreenBTCImageFactory.deploy()
+      await greenBTCImage.deployed();  
 
       return { AKREToken, arkreenMiner, arkreenRegistry, arkreenRECIssuance, arkreenRECToken, arkreenRECTokenESG, 
                arkreenRetirement, arkreenRECIssuanceExt, arkreenRECBank, WETH, tokenA }
@@ -193,6 +200,38 @@ describe("GreenBTC Test Campaign", () => {
     }); 
 
     describe("GreenBTC Test", () => {
+
+      let tokenID: BigNumber
+
+      async function mintAREC(amountREC: number) {
+        const startTime = 1564888526
+        const endTime   = 1654888526
+  
+        let recMintRequest: RECRequestStruct = { 
+          issuer: manager.address, startTime, endTime,
+          amountREC: expandTo9Decimals(amountREC), 
+          cID: "bafybeihepmxz4ytc4ht67j73nzurkvsiuxhsmxk27utnopzptpo7wuigte",
+          region: 'Beijing',
+          url:"", memo:""
+        } 
+  
+        const mintFee = expandTo18Decimals(amountREC).mul(50)
+        const nonce1 = await AKREToken.nonces(owner1.address)
+        const digest1 = await getApprovalDigest(
+                                AKREToken,
+                                { owner: owner1.address, spender: arkreenRECIssuance.address, value: mintFee },
+                                nonce1,
+                                constants.MaxUint256
+                              )
+        const { v,r,s } = ecsign(Buffer.from(digest1.slice(2), 'hex'), Buffer.from(privateKeyOwner.slice(2), 'hex'))
+        const signature: SignatureStruct = { v, r, s, token: AKREToken.address, value:mintFee, deadline: constants.MaxUint256 } 
+        
+        await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
+        tokenID = await arkreenRECIssuance.totalSupply()
+  
+        await arkreenRECIssuance.connect(manager).certifyRECRequest(tokenID, "Serial12345678")
+        await arkreenRECIssuance.connect(owner1).liquidizeREC(tokenID)
+      }
 
       beforeEach(async () => {
         {
@@ -265,6 +304,282 @@ describe("GreenBTC Test Campaign", () => {
       });
 
       ///////////////////////////////////////////
+
+      it("GreenBTC Test: authMintGreenBTCWithART", async () => {
+        await arkreenRECBank.addNewART( arkreenRECToken.address,  maker1.address)
+        await arkreenRECBank.addNewART( arkreenRECTokenESG.address,  maker2.address)  
+        
+        await arkreenRECBank.connect(maker1).depositART( arkreenRECToken.address,  expandTo9Decimals(9000))
+        await arkreenRECBank.connect(maker2).depositART( arkreenRECTokenESG.address,  expandTo9Decimals(9000))
+
+        await arkreenRECToken.setClimateBuilder(arkreenBuilder.address)
+        await arkreenRECTokenESG.setClimateBuilder(arkreenBuilder.address)
+
+        const badgeInfo =  {
+          beneficiary:    owner1.address,
+          offsetEntityID: 'Owner1',
+          beneficiaryID:  'Tester',
+          offsetMessage:  "Just Testing"
+        }    
+
+        const greenBTCInfo =  {
+            height: BigNumber.from(12345),
+            ARTCount: expandTo9Decimals(12),  // 12 HART
+            beneficiary: owner2.address,
+            greenType: 1,
+            blockTime: 'Apr 26, 2009 10:25 PM UTC',
+            energyStr: '12.234 MWh'
+        }
+
+        const amountART = expandTo9Decimals(12)
+        const artTokenESGBefore = await arkreenRECTokenESG.balanceOf(owner1.address) 
+
+        // const receiver = owner1.address
+        const register_digest = getGreenBitcoinDigest(
+                        'GreenBTC',
+                        greenBitcoin.address,
+                        { height:       greenBTCInfo.height,
+                          energyStr:    greenBTCInfo.energyStr,
+                          artCount:     greenBTCInfo.ARTCount,
+                          blockTime:    greenBTCInfo.blockTime,
+                          beneficiary:  greenBTCInfo.beneficiary,
+                          greenType:    greenBTCInfo.greenType
+                        }
+                      )
+  
+        const {v,r,s} = ecsign( Buffer.from(register_digest.slice(2), 'hex'), 
+                                              Buffer.from(privateKeyRegister.slice(2), 'hex'))           
+
+        await arkreenBuilder.mangeTrustedForwarder(greenBitcoin.address, true)
+
+        // Error: Check dealine
+        const dealineBlock = await ethers.provider.getBlock('latest')
+        await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithART( greenBTCInfo, {v,r,s}, 
+                                          badgeInfo, arkreenRECTokenESG.address, dealineBlock.timestamp-1 ))
+                    .to.be.revertedWith("GBTC: EXPIRED")    
+
+        // Error: Check ART is whitelisted
+        await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithART( greenBTCInfo, {v,r:s,s},
+                                          badgeInfo, arkreenRECTokenESG.address, constants.MaxUint256 ))
+                    .to.be.revertedWith("GBTC: ART Not Accepted")    
+                    
+        await greenBitcoin.mangeARTTokens([arkreenRECToken.address, arkreenRECTokenESG.address], true)
+
+        // Error: Check signature of Green Bitcoin info      
+        await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithART( greenBTCInfo, {v,r:s,s},
+                                          badgeInfo, arkreenRECTokenESG.address, constants.MaxUint256 ))
+                    .to.be.revertedWith("GBTC: Invalid Singature")    
+
+        // Error: user need to approve greenBitcoin
+        await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithART( greenBTCInfo, {v,r,s}, 
+                                                    badgeInfo, arkreenRECTokenESG.address, constants.MaxUint256 ))
+                    .to.be.revertedWith("TransferHelper: TRANSFER_FROM_FAILED")   
+                    
+        await arkreenRECTokenESG.connect(owner1).approve(greenBitcoin.address, constants.MaxUint256)  
+        
+        // Error: approveBuilder need to approve greenBitcoin
+        await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithART( greenBTCInfo, {v,r,s}, 
+                                                    badgeInfo, arkreenRECTokenESG.address, constants.MaxUint256 ))
+                    .to.be.revertedWith("TransferHelper: TRANSFER_FROM_FAILED")   
+
+        await greenBitcoin.approveBuilder([arkreenRECToken.address, arkreenRECTokenESG.address])
+
+        // Normal: authMintGreenBTCWithNative   
+        await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithART( greenBTCInfo, {v,r,s}, 
+                                                    badgeInfo, arkreenRECTokenESG.address, constants.MaxUint256 ))
+                      .to.emit(arkreenRECTokenESG, 'Transfer')
+                      .withArgs(owner1.address, arkreenBuilder.address, expandTo9Decimals(12))                                                       
+                      .to.emit(arkreenRECTokenESG, 'Transfer')
+                      .withArgs(arkreenBuilder.address, arkreenRECBank.address, expandTo9Decimals(12))                                                 
+                      .to.emit(greenBitcoin, 'Transfer')
+                      .withArgs(0, owner2.address, 12345)                                                 
+                      .to.emit(greenBitcoin, 'GreenBitCoin')
+                      .withArgs(12345, expandTo9Decimals(12), owner2.address, 1)                                                 
+
+        const actionID =1     
+        const lastBlock = await ethers.provider.getBlock('latest')
+        
+        const tokenID = await arkreenRECIssuance.totalSupply()
+        const action = [  owner2.address, maker1.address, amountART,                // Manger is the issuer address
+                          tokenID.add(MASK_OFFSET), lastBlock.timestamp, true ]     // Offset action is claimed
+        expect(await arkreenRetirement.getOffsetActions(actionID)).to.deep.equal(action)
+
+        const offsetRecord = [owner2.address, owner1.address, "Owner1", "Tester", "Just Testing", 
+                              BigNumber.from(lastBlock.timestamp), amountART, [actionID]]
+        const badgeID = 1                            
+        expect(await arkreenRetirement.getCertificate(badgeID)).to.deep.equal(offsetRecord)
+
+        expect(await arkreenRECTokenESG.balanceOf(owner1.address)).to.equal(artTokenESGBefore.sub(expandTo9Decimals(12)))
+
+        // Check dataGBTC
+        const _dataGBTC = [ BigNumber.from(12345), expandTo9Decimals(12), owner2.address, 1,
+                            'Apr 26, 2009 10:25 PM UTC', '12.234 MWh']
+
+        expect(await greenBitcoin.dataGBTC(12345)).to.deep.equal(_dataGBTC)
+
+        // Check dataGBTC
+        const _dataNFT = [owner2.address, 12345, false, false, false, 0]
+        expect(await greenBitcoin.dataNFT(12345)).to.deep.equal(_dataNFT)
+
+        // Check NFT ID and owner
+        expect(await greenBitcoin.ownerOf(12345)).to.equal(owner2.address)
+
+        // Error: authMintGreenBTCWithNative                     
+        await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithNative( greenBTCInfo, {v,r,s}, 
+                                                    badgeInfo, constants.MaxUint256))
+                      .to.be.revertedWith("GBTC: Already Minted")       
+                      
+        // Normal: authMintGreenBTCWithNative: arkreenRECToken   
+        {
+          const greenBTCInfo =  {
+            height: BigNumber.from(23456),
+            ARTCount: expandTo9Decimals(13),  // 12 HART
+            beneficiary: owner2.address,
+            greenType: 1,
+            blockTime: 'Apr 26, 2009 10:25 PM UTC',
+            energyStr: '12.234 MWh'
+          }
+          
+          // const receiver = owner1.address
+          const register_digest = getGreenBitcoinDigest(
+                          'GreenBTC',
+                          greenBitcoin.address,
+                          { height:       greenBTCInfo.height,
+                            energyStr:    greenBTCInfo.energyStr,
+                            artCount:     greenBTCInfo.ARTCount,
+                            blockTime:    greenBTCInfo.blockTime,
+                            beneficiary:  greenBTCInfo.beneficiary,
+                            greenType:    greenBTCInfo.greenType
+                          }
+                        )
+    
+          const {v,r,s} = ecsign( Buffer.from(register_digest.slice(2), 'hex'), 
+                                                Buffer.from(privateKeyRegister.slice(2), 'hex'))  
+
+          const artTokenESGBefore = await arkreenRECToken.balanceOf(owner1.address) 
+          await arkreenRECToken.connect(owner1).approve(greenBitcoin.address, constants.MaxUint256)  
+          await greenBitcoin.connect(owner1).authMintGreenBTCWithART( greenBTCInfo, {v,r,s}, 
+                                                      badgeInfo, arkreenRECToken.address, constants.MaxUint256 )     
+
+          expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(artTokenESGBefore.sub(expandTo9Decimals(13)))                                                      
+        }                                             
+
+      });      
+
+      it("GreenBTC Test: authMintGreenBTCWithNative", async () => {
+        await arkreenRECBank.addNewART( arkreenRECToken.address,  maker1.address)
+        await arkreenRECBank.addNewART( arkreenRECTokenESG.address,  maker2.address)  
+        
+        await arkreenRECBank.connect(maker1).depositART( arkreenRECToken.address,  expandTo9Decimals(9000))
+        await arkreenRECBank.connect(maker2).depositART( arkreenRECTokenESG.address,  expandTo9Decimals(9000))
+
+        await arkreenRECToken.setClimateBuilder(arkreenBuilder.address)
+        await arkreenRECTokenESG.setClimateBuilder(arkreenBuilder.address)
+
+        const badgeInfo =  {
+          beneficiary:    owner1.address,
+          offsetEntityID: 'Owner1',
+          beneficiaryID:  'Tester',
+          offsetMessage:  "Just Testing"
+        }    
+
+        const greenBTCInfo =  {
+            height: BigNumber.from(12345),
+            ARTCount: expandTo9Decimals(12),  // 12 HART
+            beneficiary: owner2.address,
+            greenType: 1,
+            blockTime: 'Apr 26, 2009 10:25 PM UTC',
+            energyStr: '12.234 MWh'
+        }
+
+        await arkreenRECBank.connect(maker2).changeSalePrice( arkreenRECTokenESG.address, WETH.address, expandTo18Decimals(2)) // 2 MATIC   
+
+        const amountART = expandTo9Decimals(12)
+
+        const ARECBefore = await arkreenRECTokenESG.balanceOf(arkreenRECBank.address) 
+        const WMATICBefore = await WETH.balanceOf(greenBitcoin.address) 
+
+        // const receiver = owner1.address
+        const register_digest = getGreenBitcoinDigest(
+                        'GreenBTC',
+                        greenBitcoin.address,
+                        { height:       greenBTCInfo.height,
+                          energyStr:    greenBTCInfo.energyStr,
+                          artCount:     greenBTCInfo.ARTCount,
+                          blockTime:    greenBTCInfo.blockTime,
+                          beneficiary:  greenBTCInfo.beneficiary,
+                          greenType:    greenBTCInfo.greenType
+                        }
+                      )
+  
+        const {v,r,s} = ecsign( Buffer.from(register_digest.slice(2), 'hex'), 
+                                              Buffer.from(privateKeyRegister.slice(2), 'hex'))           
+
+        await arkreenBuilder.mangeTrustedForwarder(greenBitcoin.address, true)
+
+        // Error: Check dealine
+        const dealineBlock = await ethers.provider.getBlock('latest')
+        await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithNative( greenBTCInfo, {v,r,s}, 
+                                          badgeInfo, dealineBlock.timestamp-1, {value: expandTo18Decimals(24)}))
+                    .to.be.revertedWith("GBTC: EXPIRED")    
+
+        // Error: Check signature of Green Bitcoin info      
+        await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithNative( greenBTCInfo, {v,r:s,s},
+                                          badgeInfo, constants.MaxUint256, {value: expandTo18Decimals(24)}))
+                    .to.be.revertedWith("GBTC: Invalid Singature")    
+
+        // Error: More ART required, so pay less
+        await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithNative( greenBTCInfo, {v,r,s}, 
+                                                    badgeInfo, constants.MaxUint256, {value: expandTo18Decimals(24).sub(1)}))
+                    .to.be.revertedWith("ARBK: Get Less")                        
+
+        // Normal: authMintGreenBTCWithNative   
+        await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithNative( greenBTCInfo, {v,r,s}, 
+                                                    badgeInfo, constants.MaxUint256, {value: expandTo18Decimals(24)}))
+                      .to.emit(arkreenRECTokenESG, 'Transfer')
+                      .withArgs(arkreenBuilder.address, arkreenRECBank.address, expandTo9Decimals(12))                                                 
+                      .to.emit(arkreenRECBank, 'ARTSold')
+                      .withArgs(arkreenRECTokenESG.address, WETH.address, expandTo9Decimals(12), expandTo18Decimals(24))   
+                      .to.emit(greenBitcoin, 'Transfer')
+                      .withArgs(0, owner2.address, 12345)                                                 
+                      .to.emit(greenBitcoin, 'GreenBitCoin')
+                      .withArgs(12345, expandTo9Decimals(12), owner2.address, 1)                                                 
+
+        const actionID =1     
+        const lastBlock = await ethers.provider.getBlock('latest')
+        
+        const tokenID = await arkreenRECIssuance.totalSupply()
+        const action = [  owner2.address, maker1.address, amountART,                // Manger is the issuer address
+                          tokenID.add(MASK_OFFSET), lastBlock.timestamp, true ]     // Offset action is claimed
+        expect(await arkreenRetirement.getOffsetActions(actionID)).to.deep.equal(action)
+
+        const offsetRecord = [owner2.address, owner1.address, "Owner1", "Tester", "Just Testing", 
+                              BigNumber.from(lastBlock.timestamp), amountART, [actionID]]
+        const badgeID = 1                            
+        expect(await arkreenRetirement.getCertificate(badgeID)).to.deep.equal(offsetRecord)
+
+        expect(await arkreenRECTokenESG.balanceOf(arkreenRECBank.address)).to.equal(ARECBefore.sub(expandTo9Decimals(12)))
+        expect(await WETH.balanceOf(greenBitcoin.address)).to.equal(WMATICBefore)
+
+        // Check dataGBTC
+        const _dataGBTC = [ BigNumber.from(12345), expandTo9Decimals(12), owner2.address, 1,
+                            'Apr 26, 2009 10:25 PM UTC', '12.234 MWh']
+
+        expect(await greenBitcoin.dataGBTC(12345)).to.deep.equal(_dataGBTC)
+
+        // Check dataGBTC
+        const _dataNFT = [owner2.address, 12345, false, false, false, 0]
+        expect(await greenBitcoin.dataNFT(12345)).to.deep.equal(_dataNFT)
+
+        // Check NFT ID and owner
+        expect(await greenBitcoin.ownerOf(12345)).to.equal(owner2.address)
+
+        // Error: authMintGreenBTCWithNative                     
+        await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithNative( greenBTCInfo, {v,r,s}, 
+                                                    badgeInfo, constants.MaxUint256))
+                      .to.be.revertedWith("GBTC: Already Minted")                  
+
+      });
 
       it("GreenBTC Test: authMintGreenBTCWithApprove", async () => {
 
@@ -964,6 +1279,81 @@ describe("GreenBTC Test Campaign", () => {
                                             
       });
 
-    })  
 
+      it("GreenBTC Test: tokenURI", async () => {
+
+        await arkreenRECBank.addNewART( arkreenRECToken.address,  maker1.address)
+        await arkreenRECBank.addNewART( arkreenRECTokenESG.address,  maker2.address)  
+        
+        await arkreenRECBank.connect(maker1).depositART( arkreenRECToken.address,  expandTo9Decimals(9000))
+        await arkreenRECBank.connect(maker2).depositART( arkreenRECTokenESG.address,  expandTo9Decimals(9000))
+
+        await arkreenRECToken.setClimateBuilder(arkreenBuilder.address)
+        await arkreenRECTokenESG.setClimateBuilder(arkreenBuilder.address)
+
+        const badgeInfo =  {
+          beneficiary:    owner1.address,
+          offsetEntityID: 'Owner1',
+          beneficiaryID:  'Tester',
+          offsetMessage:  "Just Testing"
+        }    
+
+        const greenBTCInfo =  {
+            height: BigNumber.from(12345),
+            ARTCount: expandTo9Decimals(12),  // 12 HART
+            beneficiary: owner2.address,
+            greenType: 1,
+            blockTime: 'Apr 26, 2009 10:25 PM UTC',
+            energyStr: '12.234 MWh'
+        }
+
+        await AKREToken.approve(arkreenBuilder.address, constants.MaxUint256)    
+          
+        await arkreenRECBank.connect(maker2).changeSalePrice( arkreenRECTokenESG.address, AKREToken.address, expandTo18Decimals(10))
+
+        const amountPay = expandTo18Decimals(200)
+
+        // const receiver = owner1.address
+        const register_digest = getGreenBitcoinDigest(
+                        'GreenBTC',
+                        greenBitcoin.address,
+                        { height:       greenBTCInfo.height,
+                          energyStr:    greenBTCInfo.energyStr,
+                          artCount:     greenBTCInfo.ARTCount,
+                          blockTime:    greenBTCInfo.blockTime,
+                          beneficiary:  greenBTCInfo.beneficiary,
+                          greenType:    greenBTCInfo.greenType
+                        }
+                      )
+  
+        const {v,r,s} = ecsign( Buffer.from(register_digest.slice(2), 'hex'), 
+                                              Buffer.from(privateKeyRegister.slice(2), 'hex'))           
+
+        await arkreenBuilder.mangeTrustedForwarder(greenBitcoin.address, true)
+        await AKREToken.connect(owner1).approve(greenBitcoin.address, constants.MaxUint256)      
+        
+        // Mining 256 blocks to increase block height to to avoid internal panic !!!!!!!!!!!!!!!!
+        await mine(256)
+
+        // Normal: authMintGreenBTCWithApprove                     
+        await greenBitcoin.connect(owner1).authMintGreenBTCWithApprove( greenBTCInfo, {v,r,s}, badgeInfo, 
+                                            {token: AKREToken.address, amount: amountPay}, constants.MaxUint256)                                            
+
+        await greenBitcoin.setImageContract(greenBTCImage.address)
+
+        const uri1 = await greenBitcoin.tokenURI(12345)
+        console.log(uri1,' \r\n')
+
+        await greenBitcoin.connect(owner2).openBox(12345)
+        const uri2 = await greenBitcoin.tokenURI(12345)
+        console.log(uri2, '\r\n')
+
+        await mine(1)
+
+        await greenBitcoin.revealBoxes()
+        const uri3 = await greenBitcoin.tokenURI(12345)
+        console.log(uri3, '\r\n')
+
+      });
+    })  
 });

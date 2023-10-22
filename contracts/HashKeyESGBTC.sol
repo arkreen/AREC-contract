@@ -452,7 +452,7 @@ contract HashKeyESGBTC is
      */
     function mangeARTTokens(address[] calldata tokenARTList, bool addOrRemove) external onlyOwner {
         for(uint256 i = 0; i < tokenARTList.length; i++) {
-            address tokenART = tokenARTList[0];
+            address tokenART = tokenARTList[i];
 
             require(tokenART != address(0) && whiteARTList[tokenART] != addOrRemove, "HSKESG: Wrong ART Status");
             whiteARTList[tokenART] = addOrRemove;

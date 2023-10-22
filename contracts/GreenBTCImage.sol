@@ -4,26 +4,18 @@ pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/utils/Base64.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
+
 import "./libraries/FormattedStrings.sol";
 import "./libraries/TransferHelper.sol";
 
+import './GreenBTCType.sol';
 
-contract GreenBTCImage{
-
-
+contract GreenBTCImage {
+ 
+    using Strings for uint128;
     using Strings for uint256;
     using Strings for address;
     using FormattedStrings for uint256;
-    
-    struct Green_BTC{
-        uint256 height;
-        uint256 cellCount;
-        address beneficiary;
-        uint8   greenType;
-        string  blockTime;
-        string  energyStr;
-    }
-
 
     function _decimalTruncate(string memory _str, uint256 decimalDigits) internal pure returns (string memory) {
         bytes memory strBytes = bytes(_str);
@@ -47,7 +39,7 @@ contract GreenBTCImage{
         return string(result);
     }
 
-    function getCertificateSVGBytes(Green_BTC calldata gbtc) external pure returns(string memory){
+    function getCertificateSVGBytes(GreenBTCInfo calldata gbtc) external pure returns(string memory){
 
         string memory turncateEnergy = _decimalTruncate(gbtc.energyStr, 3);
 
@@ -84,7 +76,7 @@ contract GreenBTCImage{
     }
 
 
-    function getGreenTreeSVGBytes() external pure returns(string memory){
+    function getGreenTreeSVGBytes() external pure returns(string memory) {
         // bytes memory imgBytes = abi.encodePacked(
         //     '<svg width="320" height="320" viewBox="0 0 320 320" fill="none" xmlns="http://www.w3.org/2000/svg">'
         //     '<rect x="160" y="40" width="20" height="20" fill="#8BF887"/>'
