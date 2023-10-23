@@ -384,7 +384,7 @@ describe("GreenBTC Test Campaign", () => {
 
         await greenBitcoin.approveBuilder([arkreenRECToken.address, arkreenRECTokenESG.address])
 
-        // Normal: authMintGreenBTCWithNative   
+        // Normal: authMintGreenBTCWithART   
         await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithART( greenBTCInfo, {v,r,s}, 
                                                     badgeInfo, arkreenRECTokenESG.address, constants.MaxUint256 ))
                       .to.emit(arkreenRECTokenESG, 'Transfer')
@@ -424,12 +424,12 @@ describe("GreenBTC Test Campaign", () => {
         // Check NFT ID and owner
         expect(await greenBitcoin.ownerOf(12345)).to.equal(owner2.address)
 
-        // Error: authMintGreenBTCWithNative                     
-        await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithNative( greenBTCInfo, {v,r,s}, 
-                                                    badgeInfo, constants.MaxUint256))
+        // Error: authMintGreenBTCWithART                     
+        await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithART( greenBTCInfo, {v,r,s}, 
+                                                    badgeInfo, arkreenRECToken.address, constants.MaxUint256))
                       .to.be.revertedWith("GBTC: Already Minted")       
                       
-        // Normal: authMintGreenBTCWithNative: arkreenRECToken   
+        // Normal: authMintGreenBTCWithART: arkreenRECToken   
         {
           const greenBTCInfo =  {
             height: BigNumber.from(23456),
@@ -535,11 +535,11 @@ describe("GreenBTC Test Campaign", () => {
 
         // Normal: authMintGreenBTCWithNative   
         await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithNative( greenBTCInfo, {v,r,s}, 
-                                                    badgeInfo, constants.MaxUint256, {value: expandTo18Decimals(24)}))
+                                                    badgeInfo, constants.MaxUint256, {value: expandTo18Decimals(30)}))
                       .to.emit(arkreenRECTokenESG, 'Transfer')
                       .withArgs(arkreenBuilder.address, arkreenRECBank.address, expandTo9Decimals(12))                                                 
                       .to.emit(arkreenRECBank, 'ARTSold')
-                      .withArgs(arkreenRECTokenESG.address, WETH.address, expandTo9Decimals(12), expandTo18Decimals(24))   
+                      .withArgs(arkreenRECTokenESG.address, WETH.address, expandTo9Decimals(12), expandTo18Decimals(30))   
                       .to.emit(greenBitcoin, 'Transfer')
                       .withArgs(0, owner2.address, 12345)                                                 
                       .to.emit(greenBitcoin, 'GreenBitCoin')
@@ -981,6 +981,9 @@ describe("GreenBTC Test Campaign", () => {
        
         const openingBoxList2 = await greenBitcoin.getOpeningBoxList()
         expect(openingBoxList2.length).to.equal(0)  
+
+        // Check list is empty                
+        await expect(greenBitcoin.revealBoxes()).to.be.revertedWith("GBTC: Empty List")           
                                             
       });
 
@@ -1273,12 +1276,17 @@ describe("GreenBTC Test Campaign", () => {
         const overtimeBoxList2 = await greenBitcoin.getOvertimeBoxList() 
         expect(overtimeBoxList2.length).to.equal(2)
 
+        await expect(greenBitcoin.revealBoxesWithHash([23456], [tx2.hash]))
+                .to.be.revertedWith("'GBTC: Wrong Overtime Status")    
+
         await greenBitcoin.revealBoxesWithHash([12345, 34567], [tx1.hash, tx3.hash])
         const overtimeBoxList3 = await greenBitcoin.getOvertimeBoxList() 
-        expect(overtimeBoxList3.length).to.equal(0)         
+        expect(overtimeBoxList3.length).to.equal(0)  
+
+        await expect(greenBitcoin.revealBoxesWithHash([12345, 34567], [tx1.hash, tx3.hash]))
+                .to.be.revertedWith("GBTC: Empty Overtime List")    
                                             
       });
-
 
       it("GreenBTC Test: tokenURI", async () => {
 
@@ -1340,6 +1348,8 @@ describe("GreenBTC Test Campaign", () => {
                                             {token: AKREToken.address, amount: amountPay}, constants.MaxUint256)                                            
 
         await greenBitcoin.setImageContract(greenBTCImage.address)
+
+        await expect(greenBitcoin.tokenURI(12340)).to.be.revertedWith("GBTC: Not Minted")    
 
         const uri1 = await greenBitcoin.tokenURI(12345)
         console.log(uri1,' \r\n')

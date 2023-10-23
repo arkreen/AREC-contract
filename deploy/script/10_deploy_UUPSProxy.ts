@@ -6,8 +6,9 @@ import { CONTRACTS } from "../constants";
 //import { HashKeyESGBTC__factory } from "../../typechain";
 //import { ArkreenRECIssuance__factory } from "../../typechain";
 //import { ArkreenMiner__factory } from "../../typechain";
-import { ArkreenBadge__factory } from "../../typechain";
-import { ArkreenBuilder__factory } from "../../typechain";
+//import { ArkreenBadge__factory } from "../../typechain";
+//import { ArkreenBuilder__factory } from "../../typechain";
+import { GreenBTC__factory } from "../../typechain";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
@@ -123,6 +124,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   });
 */
 
+/*
   // Proxy of ArkreenBuilder
   // 2023/08/25:  
   const IMPLEMENTATION_ADDRESS  = "0xC15de762EB03644ad92d45091E52d840594c6CB2"    // 2023/08/25: ArkreenBadge Implementation 
@@ -141,6 +143,29 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       log: true,
       skipIfAlreadyDeployed: false,
   });
+*/
+
+  // Proxy of GreenBTC
+  // 2023/10/23:  
+  const IMPLEMENTATION_ADDRESS  = "0x6240d9780Ac11ccE9A9C269Eb68dFB1eA39eAa05"  // 2023/10/23: GreenBTC Implementation 
+  const AUTHORIZER_ADDRESS  = "0x2df522C2bF3E570caA22FBBd06d1A120B4Dc29a8"      // Authorizeried address
+  const BUILDER_ADDRESS     = "0xa05a9677a9216401cf6800d28005b227f7a3cfae"      // ArkreenBuilder address
+  const CART_ADDRESS        = "0x0999afb673944a7b8e1ef8eb0a7c6ffdc0b43e31"      // HashKey ART token address
+  const WMATIC_ADDRESS      = "0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889"      // WMATIC address    
+  
+  // 2023/10/23:  0x8cc0b065318acf3ac761fe5a19caf68074034006
+  const callData = GreenBTC__factory.createInterface().encodeFunctionData("initialize", 
+                    [AUTHORIZER_ADDRESS, BUILDER_ADDRESS, CART_ADDRESS, WMATIC_ADDRESS])     // Create new GreenBTC
+
+  console.log("IMPLEMENTATION_ADDRESS, deployer, callData", IMPLEMENTATION_ADDRESS, deployer, callData)
+
+  const UUPSProxyContract = await deploy(CONTRACTS.UUPSProxy, {
+      from: deployer,
+      args: [IMPLEMENTATION_ADDRESS, deployer, callData],
+      log: true,
+      skipIfAlreadyDeployed: false,
+  });
+
 
   console.log("UUPSProxy deployed to %s: ", hre.network.name, UUPSProxyContract.address);
 
@@ -163,6 +188,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2023/06/08:  yarn deploy:matic_test:UUPSProxy:   ArkreenBadge
 // Proxy:   0x70A7981b5c9ca1a4250A0C9BBDC2141752deBeeb
+
+// 2023/10/23:  yarn deploy:matic_test:UUPSProxy:   GreenBTC
+// Proxy:   0x8cc0b065318acf3ac761fe5a19caf68074034006
 
 export default func;
 func.tags = ["UUPSProxy"];

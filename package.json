@@ -99,6 +99,7 @@
 
     "deploy:matic_test:GreenBTCD": "hardhat --network matic_test deploy --tags GreenBTCD",
     "deploy:matic_test:GreenBTCI": "hardhat --network matic_test deploy --tags GreenBTCI",    
+    "deploy:matic_test:GreenBTCImageD": "hardhat --network matic_test deploy --tags GreenBTCImageD",    
 
     "deploy:matic:gAKRE": "hardhat --network matic deploy --tags gAKRE",
     "deploy:matic:arkReward": "hardhat --network matic deploy --tags arkReward",

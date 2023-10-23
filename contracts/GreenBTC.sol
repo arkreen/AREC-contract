@@ -36,7 +36,7 @@ contract GreenBTC is
 
     uint256 constant RATE_WINNING  = 20;  
 
-    bytes32 public  _DOMAIN_SEPARATOR;
+    bytes32 public  DOMAIN_SEPARATOR;
 
     address public manager;
     address public authorizer;
@@ -83,7 +83,7 @@ contract GreenBTC is
         __Ownable_init_unchained();
         __ERC721_init_unchained(NAME, SYMBOL);
 
-        _DOMAIN_SEPARATOR = keccak256(
+        DOMAIN_SEPARATOR = keccak256(
             abi.encode(
                 keccak256('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)'),
                 keccak256(bytes(NAME)),
@@ -260,6 +260,7 @@ contract GreenBTC is
     function revealBoxes() public {                                     // onlyManager?
 
         uint256 openingListLength = openingBoxList.length;
+        require (openingListLength != 0, 'GBTC: Empty List');
 
         uint256[] memory revealList = new uint256[](openingListLength);
         bool[] memory wonList = new bool[](openingListLength);
@@ -321,16 +322,23 @@ contract GreenBTC is
         uint256 lengthReveal = hashList.length; 
         require( tokenList.length == lengthReveal,  "GBTC: Wrong Length" );
 
-        uint256[] memory revealList = new uint256[](overtimeBoxList.length);
-        bool[] memory wonList = new bool[](overtimeBoxList.length);
+        uint256 overtimeListLength = overtimeBoxList.length;
+        require (overtimeListLength != 0, 'GBTC: Empty Overtime List');
+
+        uint256[] memory revealList = new uint256[](overtimeListLength);
+        bool[] memory wonList = new bool[](overtimeListLength);
 
         uint256 revealCount;
         for (uint256 index = 0; index < lengthReveal; index++) {
 
             uint256 tokenID = tokenList[index];
-            address owner = ownerOf(tokenID);
+
+            // Can not repeat revealing, and can not reveal while not opened
+            require(dataNFT[tokenID].open != dataNFT[tokenID].reveal, 'GBTC: Wrong Overtime Status' );  
+
             uint256 indexOvertime = dataNFT[tokenID].hash;                  // hash is re-used to store the index in overtime list
 
+            address owner = ownerOf(tokenID);
             uint256 random = uint256(keccak256(abi.encodePacked(tokenID, owner, hashList[index])));
 
             if((random % 100) < RATE_WINNING) {
@@ -396,7 +404,7 @@ contract GreenBTC is
         bytes memory dataURI = abi.encodePacked(
             '{"name": "Green BTC #',
             tokenId.toString(),
-            '","description": "GreenBTC: Green Bit Coin","image": "data:image/svg+xml;base64,',
+            '","description": "GreenBTC: Green Bitcoin","image": "data:image/svg+xml;base64,',
             svgData,
             '"}'
         );
@@ -439,7 +447,7 @@ contract GreenBTC is
     function _authVerify(GreenBTCInfo calldata gbtc, Sig calldata sig) internal view {
 
         bytes32 greenBTCHash = keccak256(abi.encode(GREEN_BTC_TYPEHASH, gbtc.height, gbtc.energyStr, gbtc.ARTCount, gbtc.blockTime, gbtc.beneficiary, gbtc.greenType));
-        bytes32 digest = keccak256(abi.encodePacked('\x19\x01', _DOMAIN_SEPARATOR, greenBTCHash));
+        bytes32 digest = keccak256(abi.encodePacked('\x19\x01', DOMAIN_SEPARATOR, greenBTCHash));
         address recoveredAddress = ecrecover(digest, sig.v, sig.r, sig.s);
 
         require(recoveredAddress == authorizer, "GBTC: Invalid Singature");
