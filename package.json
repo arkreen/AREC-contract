@@ -84,6 +84,8 @@
 
     "verify:matic_test": "npx hardhat verify --network matic_test <ADDRESS> <PARAMS>",
     "confirmAuto:matic_test": "hardhat run --network matic_test ./deploy/confirmIssuance.ts",
+    "GreenBTCTest": "hardhat run --network matic_test ./deploy/imageTest.ts",
+
     "claim:matic_test": "hardhat run --network matic_test ./deploy/matic-gatherer-v2.ts",
 
     "deploy:matic_test:all": "hardhat --network matic_test deploy",
@@ -170,6 +172,7 @@
 
     "allowance:celo_test": "hardhat run --network celo_test ./deploy/allowance_manager.ts",
     "confirmAuto:celo_test": "hardhat run --network celo_test ./deploy/confirmIssuance_celo.ts",
+   
     "etherscan:celo_test": "hardhat --network celo_test etherscan-verify --api-url https://api-alfajores.celoscan.io --api-key",
 
     "etherscan:celo": "hardhat --network celo etherscan-verify --api-url https://api.celoscan.io --api-key",
