@@ -27,7 +27,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //    GREEN_BTC_ADDRESS  = "0x2BCCE98D208f9f45330006C24cbC756A0A7ddB3a"      // HashKeyESG Address        2023/10/13
 //    GREEN_BTC_ADDRESS  = "0x8b6Bd79A3D627833c93108eCb651A41905c6568a"      // Green BTC Address         2023/10/17
 //    GREEN_BTC_ADDRESS  = "0x26fa0cc54eC938DB5919b0ABc8353016f3BD81b1"      // Green BTC Address         2023/10/20
-      GREEN_BTC_ADDRESS  = "0x8Cc0B065318ACf3Ac761FE5A19Caf68074034006"      // Green BTC Address         2023/10/23
+//    GREEN_BTC_ADDRESS  = "0x8Cc0B065318ACf3Ac761FE5A19Caf68074034006"      // Green BTC Address         2023/10/23
+      GREEN_BTC_ADDRESS  = "0x770cB90378Cb59665BbF623a72b90f427701C825"      // Green BTC Address         2023/10/24
 
       USDC_ADDRESS    = "0x0FA8781a83E46826621b3BC094Ea2A0212e71B23"        // USDC address
       USDT_ADDRESS    = "0xD89EDB2B7bc5E80aBFD064403e1B8921004Cdb4b"        // USDT address
@@ -73,7 +74,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
                                                     BUILDER_ADDRESS, HSKESG_ADDRESS );    
 */
 
-    // 2023/09/07, 2023/09/12, 2023/10/13
+    // 2023/09/07, 2023/09/12, 2023/10/13, 2023/10/23, 2023/10/24
     console.log("ArkreenBuilder mangeTrustedForwarder:", BUILDER_ADDRESS, GREEN_BTC_ADDRESS, deployer.address)
     const ArkreenBuilderFactory = ArkreenBuilder__factory.connect(BUILDER_ADDRESS as string, deployer);
 
@@ -150,6 +151,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2023/10/23
 // yarn deploy:matic_test:ABuilderI: Add GreenBTC address: 0x8Cc0B065318ACf3Ac761FE5A19Caf68074034006
+// Action: mangeTrustedForwarder
+
+// 2023/10/24
+// yarn deploy:matic_test:ABuilderI: Add GreenBTC address: 0x770cB90378Cb59665BbF623a72b90f427701C825
 // Action: mangeTrustedForwarder
 
 func.tags = ["ABuilderI"];

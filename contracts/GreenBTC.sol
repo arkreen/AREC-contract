@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/utils/Base64.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
-import '@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol';
+import '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol';
 
 import "./libraries/FormattedStrings.sol";
@@ -21,7 +21,7 @@ contract GreenBTC is
     ContextUpgradeable,
     UUPSUpgradeable,
     OwnableUpgradeable,
-    ERC721Upgradeable
+    ERC721EnumerableUpgradeable
 {
 
     using Strings for uint256;
@@ -394,7 +394,7 @@ contract GreenBTC is
         if(dataNFT[tokenId].open == false) { 
             svgData = IGreenBTCImage(greenBtcImage).getBlindBoxSVGBytes(tokenId);
         } else {
-            if(dataNFT[tokenId].won) {
+            if(!dataNFT[tokenId].won) {
                 svgData = IGreenBTCImage(greenBtcImage).getCertificateSVGBytes(dataGBTC[tokenId]);    
             } else {
                 svgData = IGreenBTCImage(greenBtcImage).getGreenTreeSVGBytes();

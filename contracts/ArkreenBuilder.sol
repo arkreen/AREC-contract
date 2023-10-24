@@ -20,7 +20,7 @@ import "./interfaces/IFeSwapRouter.sol";
 import "./interfaces/IArkreenRECToken.sol";
 
 // Import this file to use console.log
-// import "hardhat/console.sol";
+import "hardhat/console.sol";
 
 contract ArkreenBuilder is
     OwnableUpgradeable,
@@ -378,7 +378,8 @@ contract ArkreenBuilder is
             if(amountPayLeft > 0) {
                 if(tokenPay == tokenNative) {
                     IWETH(tokenNative).withdraw(amountPayLeft);
-                    TransferHelper.safeTransferETH(payer, amountPayLeft);               
+                    TransferHelper.safeTransferETH(payer, amountPayLeft);
+                    console.log("33333333333", payer, amountPayLeft);               
                 } else {
                     TransferHelper.safeTransfer(tokenPay, payer, amountPayLeft);
                 }

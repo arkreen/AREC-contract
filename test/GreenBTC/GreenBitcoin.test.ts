@@ -499,6 +499,15 @@ describe("GreenBTC Test Campaign", () => {
         const ARECBefore = await arkreenRECTokenESG.balanceOf(arkreenRECBank.address) 
         const WMATICBefore = await WETH.balanceOf(greenBitcoin.address) 
 
+        /*
+        const WMATICBeforeOwner1 = await WETH.balanceOf(owner1.address) 
+        const WMATICBeforeBuidler = await WETH.balanceOf(arkreenBuilder.address) 
+        const MATICOwnerBefore = await ethers.provider.getBalance(owner1.address)
+        const WMATICBeforeBank = await WETH.balanceOf(arkreenRECBank.address) 
+        const WMATICBeforeOwner2 = await WETH.balanceOf(owner2.address) 
+        const MATICBeforeOwner2 = await ethers.provider.getBalance(owner2.address)
+        */
+
         // const receiver = owner1.address
         const register_digest = getGreenBitcoinDigest(
                         'GreenBTC',
@@ -531,15 +540,16 @@ describe("GreenBTC Test Campaign", () => {
         // Error: More ART required, so pay less
         await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithNative( greenBTCInfo, {v,r,s}, 
                                                     badgeInfo, constants.MaxUint256, {value: expandTo18Decimals(24).sub(1)}))
-                    .to.be.revertedWith("ARBK: Get Less")                        
+                  .to.be.revertedWith("ARBK: Get Less")         
+//                .to.be.revertedWith("ARBK: Pay Less")         
 
         // Normal: authMintGreenBTCWithNative   
         await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithNative( greenBTCInfo, {v,r,s}, 
-                                                    badgeInfo, constants.MaxUint256, {value: expandTo18Decimals(30)}))
+                                                    badgeInfo, constants.MaxUint256, {value: expandTo18Decimals(24)}))
                       .to.emit(arkreenRECTokenESG, 'Transfer')
                       .withArgs(arkreenBuilder.address, arkreenRECBank.address, expandTo9Decimals(12))                                                 
                       .to.emit(arkreenRECBank, 'ARTSold')
-                      .withArgs(arkreenRECTokenESG.address, WETH.address, expandTo9Decimals(12), expandTo18Decimals(30))   
+                      .withArgs(arkreenRECTokenESG.address, WETH.address, expandTo9Decimals(12), expandTo18Decimals(24))   
                       .to.emit(greenBitcoin, 'Transfer')
                       .withArgs(0, owner2.address, 12345)                                                 
                       .to.emit(greenBitcoin, 'GreenBitCoin')
@@ -560,6 +570,31 @@ describe("GreenBTC Test Campaign", () => {
 
         expect(await arkreenRECTokenESG.balanceOf(arkreenRECBank.address)).to.equal(ARECBefore.sub(expandTo9Decimals(12)))
         expect(await WETH.balanceOf(greenBitcoin.address)).to.equal(WMATICBefore)
+
+        /*
+        const WMATICAfter = await WETH.balanceOf(greenBitcoin.address)
+        console.log("QQQQQQQQQQ", WMATICBefore, WMATICAfter)
+
+        const WMATICAftreOwner1 = await WETH.balanceOf(owner1.address) 
+        console.log("PPPPPPPPPPPPPP", WMATICBeforeOwner1, WMATICAftreOwner1)
+
+        const WMATICAftreBuilder = await WETH.balanceOf(arkreenBuilder.address) 
+        console.log("WWWWWWWWWWWWWWWWW", WMATICBeforeBuidler, WMATICAftreBuilder)
+
+        const MATICOwnerAfter = await ethers.provider.getBalance(owner1.address)
+        console.log("KKKKKKKKKKKKKKKKK", MATICOwnerBefore, MATICOwnerAfter)
+
+        const WMATICAfterBank = await WETH.balanceOf(arkreenRECBank.address) 
+        console.log("LLLLLLLLLLLLLLLLLL", WMATICBeforeBank, WMATICAfterBank)
+
+        const WMATICAftreOwner2 = await WETH.balanceOf(owner2.address) 
+        console.log("VVVVVVVVVVVVVV", WMATICBeforeOwner2, WMATICAftreOwner2)
+
+        const MATICAftreOwner2 = await ethers.provider.getBalance(owner2.address)
+        console.log("XXXXXXXXXXXX", MATICBeforeOwner2, MATICAftreOwner2)
+
+        console.log("MMMMMMMMMMM", owner1.address, owner2.address, arkreenBuilder.address, arkreenRECBank.address, greenBitcoin.address)
+        */
 
         // Check dataGBTC
         const _dataGBTC = [ BigNumber.from(12345), expandTo9Decimals(12), owner2.address, 1,
