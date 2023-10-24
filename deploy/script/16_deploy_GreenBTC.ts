@@ -47,20 +47,20 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 
 // 2023/10/20
-// deploy:matic_test:GreenBTCD    : Matic testnet
+// deploy:matic_test:GreenBTC    : Matic testnet
 // Proxy:         0x26fa0cc54eC938DB5919b0ABc8353016f3BD81b1         
 // Implementaion: 0xd915BAaC892Ed6FAE994dDcBF940574eECdbdD1f
 
 // 2023/10/23
-// yarn deploy:matic_test:GreenBTCD    : Re-deploy on Matic testnet, as much code adjustment
+// yarn deploy:matic_test:GreenBTC    : Re-deploy on Matic testnet, as much code adjustment
 // Proxy:         0x8cc0b065318acf3ac761fe5a19caf68074034006         
 // Implementaion: 0x6240d9780Ac11ccE9A9C269Eb68dFB1eA39eAa05
 
 // 2023/10/24
-// yarn deploy:matic_test:GreenBTCD    : Re-deploy on Matic testnet, as changed to be kind of ERC721EnumerableUpgradeable
+// yarn deploy:matic_test:GreenBTC    : Re-deploy on Matic testnet, as changed to be kind of ERC721EnumerableUpgradeable
 // Proxy:         0x770cb90378cb59665bbf623a72b90f427701c825         
 // Implementaion: 0x8ca0016B53D16E1712145937C36f009C4f7d493B
 
-func.tags = ["GreenBTCD"];
+func.tags = ["GreenBTC"];
 
 export default func;

@@ -391,14 +391,14 @@ contract GreenBTC is
         require(dataGBTC[tokenId].height != 0, "GBTC: Not Minted");
 
         string memory svgData;
-        if(dataNFT[tokenId].open == false) { 
+        if(dataNFT[tokenId].open == false || dataNFT[tokenId].reveal == false) { 
             svgData = IGreenBTCImage(greenBtcImage).getBlindBoxSVGBytes(tokenId);
         } else {
-            if(!dataNFT[tokenId].won) {
-                svgData = IGreenBTCImage(greenBtcImage).getCertificateSVGBytes(dataGBTC[tokenId]);    
-            } else {
+            if(dataNFT[tokenId].won) {
                 svgData = IGreenBTCImage(greenBtcImage).getGreenTreeSVGBytes();
-            }            
+            } else {
+                svgData = IGreenBTCImage(greenBtcImage).getCertificateSVGBytes(dataGBTC[tokenId]);    
+            }      
         }
 
         bytes memory dataURI = abi.encodePacked(
