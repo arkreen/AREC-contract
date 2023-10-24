@@ -186,7 +186,7 @@ contract GreenBTC is
 
         require(dataGBTC[gbtc.height].ARTCount == 0, "GBTC: Already Minted");
        
-        _authVerify(gbtc, sig);                         // verify signature
+        // _authVerify(gbtc, sig);                         // verify signature // Remove for test
 
         TransferHelper.safeTransferFrom(payInfo.token, msg.sender, address(this), payInfo.amount);
 
@@ -386,6 +386,7 @@ contract GreenBTC is
     /**
      * @dev See {IERC721Metadata-tokenURI}.
      */
+/*     
     function tokenURI(uint256 tokenId) public view override returns (string memory){
 
         require(dataGBTC[tokenId].height != 0, "GBTC: Not Minted");
@@ -410,6 +411,70 @@ contract GreenBTC is
         );
         return string(abi.encodePacked("data:application/json;base64,", Base64.encode(dataURI)));
     }
+*/
+
+    function setLuck(uint256 tokenId) public onlyManager {
+        dataNFT[tokenId].won = true;
+    }
+
+    function tokenURI(uint256 tokenId) public view override returns (string memory){
+
+        require(dataGBTC[tokenId].height != 0, "GBTC: Not Minted");
+
+        string memory svgData;
+        if(dataNFT[tokenId].open == false) { 
+            svgData = IGreenBTCImage(greenBtcImage).getBlindBoxSVGBytes(tokenId);
+        } else {
+            if(!dataNFT[tokenId].won) {
+                svgData = IGreenBTCImage(greenBtcImage).getCertificateSVGBytes(dataGBTC[tokenId]);    
+            } else {
+                svgData = IGreenBTCImage(greenBtcImage).getGreenTreeSVGBytes();
+            }            
+        }
+
+        bytes memory dataURI;
+        if(dataNFT[tokenId].open == false) { 
+            dataURI = abi.encodePacked(
+              '{"name": "Green BTC #',
+              tokenId.toString(),
+              '","description": "GreenBTC: Green Bitcoin"',
+              '"attributes": [{"trait_type": "Status","value": "Sealed"},{"trait_type": "Height","value": "',
+              tokenId.toString(),
+              '"}]',
+              '"image": "data:image/svg+xml;base64,',
+              svgData,
+              '"}'
+          );
+        } else if(!dataNFT[tokenId].won) {
+            dataURI = abi.encodePacked(
+              '{"name": "Green BTC #',
+              tokenId.toString(),
+              '","description": "GreenBTC: Green Bitcoin"',
+              '"attributes": [{"trait_type": "Status","value": "Opened"},{"trait_type": "Height","value": "',
+              tokenId.toString(),
+              '"}, {"trait_type": "Power","value": "12.354 MWh"}, {"trait_type": "Location","value": "Beijing"}]',
+              '"image": "data:image/svg+xml;base64,',
+              svgData,
+              '"}'
+            );
+        } else {
+            dataURI = abi.encodePacked(
+              '{"name": "Green BTC #',
+              tokenId.toString(),
+              '","description": "GreenBTC: Green Bitcoin"',
+              '"attributes": [{"trait_type": "Status","value": "Opened"},{"trait_type": "Height","value": "',
+              tokenId.toString(),
+              '"}, {"trait_type": "Power","value": "25.666 MWh"}, {"trait_type": "Location","value": "Singapore"}, ',
+              '{"trait_type": "Hat","value": "Cowboy hat"}, {"trait_type": "T-Shirt","value": "Suit Vest"}]',
+              '"image": "data:image/svg+xml;base64,',
+              svgData,
+              '"}'
+            );
+        }
+
+        return string(abi.encodePacked("data:application/json;base64,", Base64.encode(dataURI)));
+    }
+
 
     /**
      * @dev Return if the specified token is sold and openned

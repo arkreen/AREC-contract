@@ -61,6 +61,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // Proxy:         0x770cb90378cb59665bbf623a72b90f427701c825         
 // Implementaion: 0x8ca0016B53D16E1712145937C36f009C4f7d493B
 
+// 2023/10/24: 2
+// yarn deploy:matic_test:GreenBTCD    : Re-deploy on Matic testnet, for Metedata test
+// Proxy:         0x80218fCa50363E3B31A93bB29bEe7ABafc157137         
+// Implementaion: 0xdECecFaD04560501cc08fd279b13F4502C622500
+
 func.tags = ["GreenBTCD"];
 
 export default func;

@@ -148,7 +148,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   // Proxy of GreenBTC
   // 2023/10/23:  
   //const IMPLEMENTATION_ADDRESS  = "0x6240d9780Ac11ccE9A9C269Eb68dFB1eA39eAa05"  // 2023/10/23: GreenBTC Implementation 
-  const IMPLEMENTATION_ADDRESS  = "0x8ca0016B53D16E1712145937C36f009C4f7d493B"    // 2023/10/24: GreenBTC Implementation 
+  //const IMPLEMENTATION_ADDRESS  = "0x8ca0016B53D16E1712145937C36f009C4f7d493B"  // 2023/10/24: GreenBTC Implementation 
+  const IMPLEMENTATION_ADDRESS  = "0xdECecFaD04560501cc08fd279b13F4502C622500"    // 2023/10/24: GreenBTC Implementation : 2 test
+  
   const AUTHORIZER_ADDRESS  = "0x2df522C2bF3E570caA22FBBd06d1A120B4Dc29a8"        // Authorizeried address
   const BUILDER_ADDRESS     = "0xa05a9677a9216401cf6800d28005b227f7a3cfae"        // ArkreenBuilder address
   const CART_ADDRESS        = "0x0999afb673944a7b8e1ef8eb0a7c6ffdc0b43e31"        // HashKey ART token address
@@ -195,6 +197,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2023/10/24:  yarn deploy:matic_test:UUPSProxy:   GreenBTC
 // Proxy:   0x770cB90378Cb59665BbF623a72b90f427701C825
+
+// 2023/10/24:  yarn deploy:matic_test:UUPSProxy:   GreenBTC: 0xdECecFaD04560501cc08fd279b13F4502C622500
+// Proxy:   0x80218fCa50363E3B31A93bB29bEe7ABafc157137
 
 export default func;
 func.tags = ["UUPSProxy"];
