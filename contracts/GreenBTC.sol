@@ -30,11 +30,9 @@ contract GreenBTC is
 
     //keccak256("GreenBitCoin(uint256 height,string energyStr,uint256 artCount,string blockTime,address beneficiary,uint8 greenType)");
     bytes32 constant GREEN_BTC_TYPEHASH = 0x2cc287d531f97592968321a2680791d868f5cafdc02c8f9f059c431e7ef0f086;
-    string  constant NAME = "GreenBTC";
-    string  constant SYMBOL = "GBTC";
+    string  constant NAME = "Green BTC Club";
+    string  constant SYMBOL = "GBC";
     string  constant VERSION = "1";
-
-    uint256 constant RATE_WINNING  = 20;  
 
     bytes32 public  DOMAIN_SEPARATOR;
 
@@ -52,6 +50,8 @@ contract GreenBTC is
     mapping (uint256 => GreenBTCInfo)  public dataGBTC;
     mapping (uint256 => NFTStaus)  public dataNFT;
     mapping(address => bool) public whiteARTList;   // ART token -> true/false
+
+    uint256 public luckyRate;  
 
     event GreenBitCoin(uint256 height, uint256 ARTCount, address beneficiary, uint8 greenType);
     event OpenBox(address openner, uint256 tokenID, uint256 blockNumber);
@@ -99,6 +99,7 @@ contract GreenBTC is
         arkreenBuilder  = builder;
         tokenCART       = cART;
         tokenNative     = native;
+        luckyRate       = 5;
     }
 
     function _authorizeUpgrade(address newImplementation) internal virtual override onlyOwner
@@ -122,6 +123,11 @@ contract GreenBTC is
     function setCARTContract(address newCARTToken) public onlyManager {
         require(newCARTToken != address(0), 'GBTC: Zero Address');
         tokenCART = newCARTToken;
+    }
+
+    function setLuckyRate(uint256 newRate) public onlyManager {
+        require(newRate <= 20, 'GBTC: Too More');
+        luckyRate = newRate;
     }
 
     /**
@@ -279,7 +285,7 @@ contract GreenBTC is
             } else if ( block.number <= openHeight + 256 ) {
                 uint256 random = uint256(keccak256(abi.encodePacked(tokenID, ownerOf(tokenID), blockhash(openHeight))));
 
-                if ((random % 100) < RATE_WINNING) { 
+                if ((random % 100) < luckyRate) { 
                   dataNFT[tokenID].won = true;
                   wonList[revealCount] = true;
                 }
@@ -341,7 +347,7 @@ contract GreenBTC is
             address owner = ownerOf(tokenID);
             uint256 random = uint256(keccak256(abi.encodePacked(tokenID, owner, hashList[index])));
 
-            if((random % 100) < RATE_WINNING) {
+            if((random % 100) < luckyRate) {
                 dataNFT[tokenID].won = true;
                 wonList[revealCount] = true;
             }
@@ -402,9 +408,9 @@ contract GreenBTC is
         }
 
         bytes memory dataURI = abi.encodePacked(
-            '{"name": "Green BTC #',
+            '{"name":"Green BTC #',
             tokenId.toString(),
-            '","description": "GreenBTC: Green Bitcoin","image": "data:image/svg+xml;base64,',
+            '","description":"Green BTC Club","image":"data:image/svg+xml;base64,',
             svgData,
             '"}'
         );

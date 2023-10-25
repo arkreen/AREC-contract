@@ -336,7 +336,7 @@ describe("GreenBTC Test Campaign", () => {
 
         // const receiver = owner1.address
         const register_digest = getGreenBitcoinDigest(
-                        'GreenBTC',
+                        'Green BTC Club',
                         greenBitcoin.address,
                         { height:       greenBTCInfo.height,
                           energyStr:    greenBTCInfo.energyStr,
@@ -442,7 +442,7 @@ describe("GreenBTC Test Campaign", () => {
           
           // const receiver = owner1.address
           const register_digest = getGreenBitcoinDigest(
-                          'GreenBTC',
+                          'Green BTC Club',
                           greenBitcoin.address,
                           { height:       greenBTCInfo.height,
                             energyStr:    greenBTCInfo.energyStr,
@@ -510,7 +510,7 @@ describe("GreenBTC Test Campaign", () => {
 
         // const receiver = owner1.address
         const register_digest = getGreenBitcoinDigest(
-                        'GreenBTC',
+                        'Green BTC Club',
                         greenBitcoin.address,
                         { height:       greenBTCInfo.height,
                           energyStr:    greenBTCInfo.energyStr,
@@ -654,7 +654,7 @@ describe("GreenBTC Test Campaign", () => {
 
         // const receiver = owner1.address
         const register_digest = getGreenBitcoinDigest(
-                        'GreenBTC',
+                        'Green BTC Club',
                         greenBitcoin.address,
                         { height:       greenBTCInfo.height,
                           energyStr:    greenBTCInfo.energyStr,
@@ -767,7 +767,7 @@ describe("GreenBTC Test Campaign", () => {
 
         // const receiver = owner1.address
         const register_digest = getGreenBitcoinDigest(
-                        'GreenBTC',
+                        'Green BTC Club',
                         greenBitcoin.address,
                         { height:       greenBTCInfo.height,
                           energyStr:    greenBTCInfo.energyStr,
@@ -823,7 +823,7 @@ describe("GreenBTC Test Campaign", () => {
           
           // const receiver = owner1.address
           const register_digest = getGreenBitcoinDigest(
-                          'GreenBTC',
+                          'Green BTC Club',
                           greenBitcoin.address,
                           { height:       greenBTCInfo.height,
                             energyStr:    greenBTCInfo.energyStr,
@@ -889,7 +889,7 @@ describe("GreenBTC Test Campaign", () => {
 
         // const receiver = owner1.address
         const register_digest = getGreenBitcoinDigest(
-                        'GreenBTC',
+                        'Green BTC Club',
                         greenBitcoin.address,
                         { height:       greenBTCInfo.height,
                           energyStr:    greenBTCInfo.energyStr,
@@ -936,7 +936,7 @@ describe("GreenBTC Test Campaign", () => {
           
           // const receiver = owner1.address
           const register_digest = getGreenBitcoinDigest(
-                          'GreenBTC',
+                          'Green BTC Club',
                           greenBitcoin.address,
                           { height:       greenBTCInfo.height,
                             energyStr:    greenBTCInfo.energyStr,
@@ -967,7 +967,7 @@ describe("GreenBTC Test Campaign", () => {
           
           // const receiver = owner1.address
           const register_digest = getGreenBitcoinDigest(
-                          'GreenBTC',
+                          'Green BTC Club',
                           greenBitcoin.address,
                           { height:       greenBTCInfo.height,
                             energyStr:    greenBTCInfo.energyStr,
@@ -1057,7 +1057,7 @@ describe("GreenBTC Test Campaign", () => {
 
         // const receiver = owner1.address
         const register_digest = getGreenBitcoinDigest(
-                        'GreenBTC',
+                        'Green BTC Club',
                         greenBitcoin.address,
                         { height:       greenBTCInfo.height,
                           energyStr:    greenBTCInfo.energyStr,
@@ -1106,7 +1106,7 @@ describe("GreenBTC Test Campaign", () => {
           
           // const receiver = owner1.address
           const register_digest = getGreenBitcoinDigest(
-                          'GreenBTC',
+                          'Green BTC Club',
                           greenBitcoin.address,
                           { height:       greenBTCInfo.height,
                             energyStr:    greenBTCInfo.energyStr,
@@ -1137,7 +1137,7 @@ describe("GreenBTC Test Campaign", () => {
           
           // const receiver = owner1.address
           const register_digest = getGreenBitcoinDigest(
-                          'GreenBTC',
+                          'Green BTC Club',
                           greenBitcoin.address,
                           { height:       greenBTCInfo.height,
                             energyStr:    greenBTCInfo.energyStr,
@@ -1168,7 +1168,7 @@ describe("GreenBTC Test Campaign", () => {
           
           // const receiver = owner1.address
           const register_digest = getGreenBitcoinDigest(
-                          'GreenBTC',
+                          'Green BTC Club',
                           greenBitcoin.address,
                           { height:       greenBTCInfo.height,
                             energyStr:    greenBTCInfo.energyStr,
@@ -1205,7 +1205,7 @@ describe("GreenBTC Test Campaign", () => {
           
           // const receiver = owner1.address
           const register_digest = getGreenBitcoinDigest(
-                          'GreenBTC',
+                          'Green BTC Club',
                           greenBitcoin.address,
                           { height:       greenBTCInfo.height,
                             energyStr:    greenBTCInfo.energyStr,
@@ -1237,7 +1237,7 @@ describe("GreenBTC Test Campaign", () => {
           
           // const receiver = owner1.address
           const register_digest = getGreenBitcoinDigest(
-                          'GreenBTC',
+                          'Green BTC Club',
                           greenBitcoin.address,
                           { height:       greenBTCInfo.height,
                             energyStr:    greenBTCInfo.energyStr,
@@ -1358,7 +1358,7 @@ describe("GreenBTC Test Campaign", () => {
 
         // const receiver = owner1.address
         const register_digest = getGreenBitcoinDigest(
-                        'GreenBTC',
+                        'Green BTC Club',
                         greenBitcoin.address,
                         { height:       greenBTCInfo.height,
                           energyStr:    greenBTCInfo.energyStr,

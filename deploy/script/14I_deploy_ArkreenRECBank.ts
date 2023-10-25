@@ -19,6 +19,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     let RECBANK_ADDRESS
     let ART_AREC
     let HART_REC      
+    let CART_AREC
+    let CART_CONTROLLER
+
     let ART_CONTROLLER
     let BUILDER_ADDRESS
 
@@ -100,8 +103,13 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     else if(hre.network.name === 'matic')  {        // Matic Mainnet
       RECBANK_ADDRESS   = "0xab65900A52f1DcB722CaB2e5342bB6b128630A28"          // HashKey ESG BTC address
+
       ART_CONTROLLER    = "0x8bCe3621901909851ba5579060D9058Ef489a9EF"
       HART_REC          = "0x93b3bb6C51A247a27253c33F0d0C2FF1d4343214"
+
+      CART_AREC         = "0x0D7899F2D36344ed21829D4EBC49CC0d335B4A06"
+      CART_CONTROLLER   = "0x1249B1eABcAE642CF3Cb1e512a0075CEe92769BE"
+
       BUILDER_ADDRESS   = "0x7073Ea8C9B0612F3C3FE604425E2af7954c4c92e"          // ArkreenBuilder
 
       USDC_ADDRESS      = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"          // USDC address
@@ -115,6 +123,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //    AKRE_PRICE =      expandTo18Decimals(200)                                 // 200 AKRE
    
       const [deployer, controller] = await ethers.getSigners();
+      const defaultGasPrice = BigNumber.from(100000000000)
 
       console.log("Deployer and controller are", deployer.address, controller.address)
 
@@ -130,6 +139,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   //    const addNewARTTRx = await ArkreenRECBankFactory.addNewART(HART_REC as string , ART_CONTROLLER as string);
   //    await addNewARTTRx.wait()
 
+      // 2023/10/25, addNewART CART
+      const addNewARTTRx = await ArkreenRECBankFactory.addNewART(CART_AREC, CART_CONTROLLER, {gasPrice: defaultGasPrice});
+      await addNewARTTRx.wait()
+
       // Called by controller, Account 2
       // 2023/04/06,  2023/04/10
   //    const changeSalePriceUSDSC = await ArkreenRECBankFactory.connect(controller).changeSalePrice(HART_REC as string, 
@@ -141,11 +154,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   //                                    USDT_ADDRESS as string, USDT_PRICE as BigNumber)
   //    await changeSalePriceUSDST.wait()
 
+/*
       // 2023/04/10
       const changeSalePriceMATIC = await ArkreenRECBankFactory.connect(controller).changeSalePrice(HART_REC as string, 
                                       WNATIVE_ADDRESS as string, MATIC_PRICE as BigNumber)
       await changeSalePriceMATIC.wait()   
-
+*/
         // tAKRE removed    
   //    const changeSalePriceAKRE = await ArkreenRECBankFactory.changeSalePrice(HART_REC as string, 
   //                                    AKRE_ADDRESS as string, AKRE_PRICE as BigNumber)
@@ -282,6 +296,15 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2023/09/12
 // yarn deploy:matic_test:ArtBankI: HART
 // Action: changeSalePrice(USDC, 2*10**(-4)), changeSalePrice(WMATIC, 5*10**(-6))
+
+// 2023/10/25
+// yarn deploy:matic:ArtBankI:          // addNewART
+// Action: addNewART
+
+// 2023/10/25: Manually : 
+// 1. changeSalePrice (USDC/CART, USDT/CART)
+// 2. Approve(RECBANK_ADDRESS) (CART)
+// 3. Deposit CART
 
 func.tags = ["ArtBankI"];
 

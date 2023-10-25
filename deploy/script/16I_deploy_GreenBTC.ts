@@ -16,6 +16,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     // let WMATIC_ADDRESS
     // let AKRE_ADDRESS
 
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6000000000) : BigNumber.from(50000000000)
+
     if(hre.network.name === 'matic_test')  {    
       // 2023/10/20, Test Net Simulation 
       //GREENBTC_ADDRESS  = "0x26fa0cc54eC938DB5919b0ABc8353016f3BD81b1"    // 2023/10/20 GreenBTC address
@@ -30,13 +32,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       ART_ADDRESS     = "0x0999afb673944a7b8e1ef8eb0a7c6ffdc0b43e31"        // ART address, use CART_ADDRESS
 
       //IMAGE_ADDRESS   = "0xC75501B7410Ff630A205245998E0CC9C4f8840ee"      // Image address
-      IMAGE_ADDRESS     = "0x27a30F0B401cC5Cd7bb5477E4fA290CeDFfA8cc7"      // 2023/10/23: Image address
+      //IMAGE_ADDRESS   = "0x27a30F0B401cC5Cd7bb5477E4fA290CeDFfA8cc7"      // 2023/10/23: Image address
+      IMAGE_ADDRESS     = "0xc44ab5E1C00f9df586b80DDbAF00220974a97bC5"      // 2023/10/25: Lucky Image changed
+      
       MANAGER_ADDRESS   = "0xBAeF5d8EfA74d3cff297D88c433D7B5d90bf0e49"      // 2023/10/23: Image address
 
       const [deployer] = await ethers.getSigners();
 
       const GreenBTCFactory = GreenBTC__factory.connect(GREENBTC_ADDRESS as string, deployer);
 
+/*      
       // 2023/10/20, 2023/10/23, 2023/10/24
       // Approve GreenBTCContract to Tranfer-From the specified tokens
       const approveRouterTx = await GreenBTCFactory.approveBuilder(
@@ -44,24 +49,32 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       await approveRouterTx.wait()
       console.log("GreenBTCContract approveBuilder is executed: %s: ", hre.network.name, GREENBTC_ADDRESS, 
                                         [USDC_ADDRESS, ART_ADDRESS] );
-                                        
-      // 2023/10/21, 2023/10/23, 2023/10/24
+*/                                        
+      // 2023/10/21, 2023/10/23, 2023/10/24, 2023/10/25
       // Set Image Contract address
-      const setImageContractTx = await GreenBTCFactory.setImageContract(IMAGE_ADDRESS, {gasPrice: BigNumber.from(5000000000)})
+      const setImageContractTx = await GreenBTCFactory.setImageContract(IMAGE_ADDRESS, {gasPrice: defaultGasPrice})
       await setImageContractTx.wait()
       console.log("GreenBTCContract setImageContract is executed: %s: ", hre.network.name, IMAGE_ADDRESS);
-
+/*
       //  2023/10/23, 2023/10/24
       // Set Manager address
-      const setManagerTx = await GreenBTCFactory.setManager(MANAGER_ADDRESS, {gasPrice: BigNumber.from(5000000000)})
+      const setManagerTx = await GreenBTCFactory.setManager(MANAGER_ADDRESS, {gasPrice: defaultGasPrice})
       await setManagerTx.wait()
       console.log("GreenBTCContract setImageContract is executed: %s: ", hre.network.name, MANAGER_ADDRESS);
 
       //  2023/10/23, 2023/10/24
       // Set mangeARTTokens
-      const mangeARTTokensTx = await GreenBTCFactory.mangeARTTokens([ART_ADDRESS], true, {gasPrice: BigNumber.from(5000000000)})
+      const mangeARTTokensTx = await GreenBTCFactory.mangeARTTokens([ART_ADDRESS], true, {gasPrice: defaultGasPrice})
       await mangeARTTokensTx.wait()
       console.log("GreenBTCContract setImageContract is executed: %s: ", hre.network.name, ART_ADDRESS);
+*/      
+/*
+      // 2023/10/25
+      // Set setLuckyRate
+      const setLuckyRateTx = await GreenBTCFactory.setLuckyRate(20, {gasPrice: defaultGasPrice})
+      await setLuckyRateTx.wait()
+      console.log("GreenBTCContract setImageContract is executed: %s: ", hre.network.name, ART_ADDRESS);
+*/
 
     }
     else if(hre.network.name === 'matic')  {        // Matic Mainnet
@@ -104,6 +117,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:GreenBTCI
 
 // 2023/10/24: call approveBuilder, setImageContract, setManager, mangeARTTokens
+// yarn deploy:matic_test:GreenBTCI
+
+// 2023/10/25: call setLuckyRate
+// yarn deploy:matic_test:GreenBTCI
+
+// 2023/10/25: call setImageContract
 // yarn deploy:matic_test:GreenBTCI
 
 func.tags = ["GreenBTCI"];
