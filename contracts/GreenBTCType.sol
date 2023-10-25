@@ -11,12 +11,12 @@ struct GreenBTCInfo {
 }
 
 struct NFTStaus {
-    address     owner;
+    address     opener;
     uint64      blockHeight;
     bool        open;
     bool        reveal;
     bool        won;
-    uint256     hash;
+    uint256     seed;
 }
 
 struct OpenInfo {

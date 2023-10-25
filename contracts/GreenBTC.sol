@@ -74,7 +74,7 @@ contract GreenBTC is
     }
 
     //initialize
-    function initialize(address authorizer_, address builder, address cART, address native)
+    function initialize(address authority, address builder, address cART, address native)
         external
         virtual
         initializer
@@ -94,7 +94,7 @@ contract GreenBTC is
         );  
 
         manager         = owner();
-        authorizer      = authorizer_;
+        authorizer      = authority;
         arkreenBuilder  = builder;
         tokenCART       = cART;
         tokenNative     = native;
@@ -254,6 +254,7 @@ contract GreenBTC is
         openingBoxList.push(openInfo);
 
         dataNFT[tokenID].open = true;
+        dataNFT[tokenID].opener = msg.sender;
 
         emit OpenBox(msg.sender, tokenID, block.number);
     }
@@ -282,7 +283,8 @@ contract GreenBTC is
             if (block.number <= openHeight) {
                 skipList[skipCount++] = openInfo;
             } else if ( block.number <= openHeight + 256 ) {
-                uint256 random = uint256(keccak256(abi.encodePacked(tokenID, ownerOf(tokenID), blockhash(openHeight))));
+                address owner = dataNFT[tokenID].opener;
+                uint256 random = uint256(keccak256(abi.encodePacked(tokenID, owner, blockhash(openHeight))));
 
                 if ((random % 100) < luckyRate) { 
                   dataNFT[tokenID].won = true;
@@ -290,13 +292,13 @@ contract GreenBTC is
                 }
 
                 dataNFT[tokenID].reveal = true;
-                dataNFT[tokenID].hash = random;
+                dataNFT[tokenID].seed = random;
 
                 revealList[revealCount++] = tokenID;                    // Prepare for return data 
 
             } else {
                 overtimeBoxList.push(openInfo);
-                dataNFT[tokenID].hash = overtimeBoxList.length - 1;     // Save index to make it easy to reveal with hash value
+                dataNFT[tokenID].seed = overtimeBoxList.length - 1;     // Save index to make it easy to reveal with hash value
             } 
         }
 
@@ -341,9 +343,9 @@ contract GreenBTC is
             // Can not repeat revealing, and can not reveal while not opened
             require(dataNFT[tokenID].open != dataNFT[tokenID].reveal, 'GBTC: Wrong Overtime Status' );  
 
-            uint256 indexOvertime = dataNFT[tokenID].hash;                  // hash is re-used to store the index in overtime list
+            uint256 indexOvertime = dataNFT[tokenID].seed;          // seed is re-used to store the index in overtime list
 
-            address owner = ownerOf(tokenID);
+            address owner = dataNFT[tokenID].opener;
             uint256 random = uint256(keccak256(abi.encodePacked(tokenID, owner, hashList[index])));
 
             if((random % 100) < luckyRate) {
@@ -352,14 +354,14 @@ contract GreenBTC is
             }
 
             dataNFT[tokenID].reveal = true;
-            dataNFT[tokenID].hash = random;
+            dataNFT[tokenID].seed = random;
 
             // Remove the revealed item by replacing with the last item
             uint256 overtimeLast = overtimeBoxList.length - 1;
             if( indexOvertime < overtimeLast) {
                 OpenInfo memory openInfo = overtimeBoxList[overtimeLast];
                 overtimeBoxList[indexOvertime] = openInfo;
-                dataNFT[openInfo.tokenID].hash = indexOvertime;
+                dataNFT[openInfo.tokenID].seed = indexOvertime;
             }
             overtimeBoxList.pop();
 
@@ -437,7 +439,7 @@ contract GreenBTC is
         dataGBTC[gbtc.height] = gbtc;
 
         NFTStaus memory nft;
-        nft.owner = gbtc.beneficiary;
+        nft.opener = gbtc.beneficiary;
         nft.blockHeight = uint64(gbtc.height);
         dataNFT[gbtc.height] = nft;
 
