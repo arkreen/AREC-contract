@@ -34,7 +34,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2023/10/25: 2
 // yarn deploy:matic_test:GreenBTCD:  upgrade luckyRate to be modifiable
-// Implemenation:   
+// Implemenation:   0x1DBB6623A6cF8b12bd1FB4A138D7FE11b1ec5f2e
+
+// 2023/10/25: 3
+// yarn deploy:matic_test:GreenBTCD:  // upgrade: contrac managed by owner ; 2) Reveal only manager.
+// Implemenation:  0x71CfBEAC18B738C5Cc34515C0316495A6CDf7231
+
 
 func.tags = ["GreenBTCD"];
 
