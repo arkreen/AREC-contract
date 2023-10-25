@@ -405,7 +405,7 @@ contract GreenBTC is
         bytes memory dataURI = abi.encodePacked(
             '{"name": "Green BTC #',
             tokenId.toString(),
-            '","description": "GreenBTC: Green Bitcoin","image": "data:image/svg+xml;base64,',
+            '","description": "Green BTC Club","image": "data:image/svg+xml;base64,',
             svgData,
             '"}'
         );
@@ -435,38 +435,38 @@ contract GreenBTC is
         bytes memory dataURI;
         if(dataNFT[tokenId].open == false) { 
             dataURI = abi.encodePacked(
-              '{"name": "Green BTC #',
+              '{"name":"Green BTC #',
               tokenId.toString(),
-              '","description": "GreenBTC: Green Bitcoin"',
-              '"attributes": [{"trait_type": "Status","value": "Sealed"},{"trait_type": "Height","value": "',
+              '","description":"Green BTC Club",',
+              '"attributes":[{"trait_type":"Status","value":"Sealed"},{"trait_type":"Height","value":"',
               tokenId.toString(),
-              '"}]',
-              '"image": "data:image/svg+xml;base64,',
+              '"}],',
+              '"image":"data:image/svg+xml;base64,',
               svgData,
               '"}'
           );
         } else if(!dataNFT[tokenId].won) {
             dataURI = abi.encodePacked(
-              '{"name": "Green BTC #',
+              '{"name":"Green BTC #',
               tokenId.toString(),
-              '","description": "GreenBTC: Green Bitcoin"',
-              '"attributes": [{"trait_type": "Status","value": "Opened"},{"trait_type": "Height","value": "',
+              '","description":"Green BTC Club",',
+              '"attributes":[{"trait_type":"Status","value":"Opened"},{"trait_type":"Height","value":"',
               tokenId.toString(),
-              '"}, {"trait_type": "Power","value": "12.354 MWh"}, {"trait_type": "Location","value": "Beijing"}]',
-              '"image": "data:image/svg+xml;base64,',
+              '"},{"trait_type":"Power","value":"12.354 MWh"},{"trait_type":"Location","value":"Beijing"}],',
+              '"image":"data:image/svg+xml;base64,',
               svgData,
               '"}'
             );
         } else {
             dataURI = abi.encodePacked(
-              '{"name": "Green BTC #',
+              '{"name":"Green BTC #',
               tokenId.toString(),
-              '","description": "GreenBTC: Green Bitcoin"',
-              '"attributes": [{"trait_type": "Status","value": "Opened"},{"trait_type": "Height","value": "',
+              '","description":"Green BTC Club",',
+              '"attributes":[{"trait_type":"Status","value":"Lucky"},{"trait_type":"Height","value":"',
               tokenId.toString(),
-              '"}, {"trait_type": "Power","value": "25.666 MWh"}, {"trait_type": "Location","value": "Singapore"}, ',
-              '{"trait_type": "Hat","value": "Cowboy hat"}, {"trait_type": "T-Shirt","value": "Suit Vest"}]',
-              '"image": "data:image/svg+xml;base64,',
+              '"},{"trait_type":"Power","value":"25.666 MWh"},{"trait_type":"Location","value":"Singapore"},',
+              '{"trait_type":"Hat","value":"Cowboy hat"},{"trait_type":"T-Shirt","value":"Suit Vest"}],',
+              '"image":"data:image/svg+xml;base64,',
               svgData,
               '"}'
             );
