@@ -93,7 +93,6 @@ contract GreenBTC is
             )
         );  
 
-        // manager = msg.sender;
         manager         = owner();
         authorizer      = authorizer_;
         arkreenBuilder  = builder;
@@ -110,22 +109,22 @@ contract GreenBTC is
         manager = newManager;
     }
 
-    function setAuthorizer(address newAuthAddress) public onlyManager {
+    function setAuthorizer(address newAuthAddress) public onlyOwner {
         require(newAuthAddress != address(0), "GBTC: Zero Address"); 
         authorizer = newAuthAddress;
     }
 
-    function setImageContract(address newImageContract) public onlyManager {
+    function setImageContract(address newImageContract) public onlyOwner {
         require(newImageContract != address(0), 'GBTC: Zero Address');
         greenBtcImage = newImageContract;
     }
 
-    function setCARTContract(address newCARTToken) public onlyManager {
+    function setCARTContract(address newCARTToken) public onlyOwner {
         require(newCARTToken != address(0), 'GBTC: Zero Address');
         tokenCART = newCARTToken;
     }
 
-    function setLuckyRate(uint256 newRate) public onlyManager {
+    function setLuckyRate(uint256 newRate) public onlyOwner {
         require(newRate <= 20, 'GBTC: Too More');
         luckyRate = newRate;
     }
@@ -134,12 +133,12 @@ contract GreenBTC is
      * @dev Approve the tokens which can be transferred from this GreenBTC contract by arkreenBuilder
      * @param tokens The token list
      */
-    function approveBuilder(address[] calldata tokens) public onlyManager {
+    function approveBuilder(address[] calldata tokens) public onlyOwner {
         require(arkreenBuilder != address(0), "GBTC: No Builder");
         for(uint256 i = 0; i < tokens.length; i++) {
             TransferHelper.safeApprove(tokens[i], arkreenBuilder, type(uint256).max);
         }
-    }   
+    }
 
     /** 
      * @dev Greenize BTC with the native token
@@ -263,7 +262,7 @@ contract GreenBTC is
      * @dev Reveal all the opened boxes stored internally. All overtime boxes will be moved to another list. 
      * waiting for another revealing with hash value.
      */
-    function revealBoxes() public {                                     // onlyManager?
+    function revealBoxes() public onlyManager {
 
         uint256 openingListLength = openingBoxList.length;
         require (openingListLength != 0, 'GBTC: Empty List');
