@@ -12,9 +12,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     let IMAGE_ADDRESS
     let ART_ADDRESS
     let MANAGER_ADDRESS
-    // let USDT_ADDRESS
-    // let WMATIC_ADDRESS
-    // let AKRE_ADDRESS
+    let USDT_ADDRESS
+    let WMATIC_ADDRESS
+    let AKRE_ADDRESS
 
     const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6000000000) : BigNumber.from(50000000000)
 
@@ -78,17 +78,27 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     }
     else if(hre.network.name === 'matic')  {        // Matic Mainnet
+      
+//    GREENBTC_ADDRESS  = "0xfe9341218c7Fcb6DA1eC131a72f914B7C724F200"      // GreenBTC address: HashKey Green BTC
+      GREENBTC_ADDRESS  = "0x770cB90378Cb59665BbF623a72b90f427701C825"      // 2023/10/26 !!!!
 
-/*      
-      GREENBTC_ADDRESS    = "0xfe9341218c7Fcb6DA1eC131a72f914B7C724F200"        // GreenBTC address
+      USDC_ADDRESS      = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"      // USDC address
+      USDT_ADDRESS      = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F"      // USDT address
+      WMATIC_ADDRESS    = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"      // WMATIC address
+      AKRE_ADDRESS      = "0x21b101f5d61a66037634f7e1beb5a733d9987d57"      // tAKRE address
 
-      USDC_ADDRESS      = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"          // USDC address
-      USDT_ADDRESS      = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F"          // USDT address
-      WMATIC_ADDRESS    = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"          // WMATIC address
-      AKRE_ADDRESS      = "0x21b101f5d61a66037634f7e1beb5a733d9987d57"          // tAKRE address
+      CART_ADDRESS    = "0x0D7899F2D36344ed21829D4EBC49CC0d335B4A06"        // CART address
+      ART_ADDRESS     = "0x58E4D14ccddD1E993e6368A8c5EAa290C95caFDF"        // ART address
+
+      IMAGE_ADDRESS     = "0xc44ab5E1C00f9df586b80DDbAF00220974a97bC5"      // 2023/10/25: Lucky Image changed !!!
+      
+      MANAGER_ADDRESS   = "0xbEBE239CA18BacA579F5B82c1c290fc951FB954C"      // 2023/10/26: Manager address
 
       const [deployer] = await ethers.getSigners();
-     
+
+      const GreenBTCFactory = GreenBTC__factory.connect(GREENBTC_ADDRESS as string, deployer);
+
+/*      
       // 2023/04/10
       // Approve HashKeyESGBTCContract to Tranfer-From the specified tokens
       const HashKeyESGBTCFactory = HashKeyESGBTC__factory.connect(ESGBTC_ADDRESS as string, deployer);
@@ -100,6 +110,43 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       console.log("HashKeyESGBTCContract approveBuilder is executed: %s: ", hre.network.name, ESGBTC_ADDRESS, 
                                 [USDC_ADDRESS, USDT_ADDRESS, WMATIC_ADDRESS, AKRE_ADDRESS] );                                
 */
+
+ 
+      // 2023/10/26
+      // Approve GreenBTCContract to Tranfer-From the specified tokens
+      const approveRouterTx = await GreenBTCFactory.approveBuilder(
+                                        [USDC_ADDRESS, USDT_ADDRESS, ART_ADDRESS] )
+      await approveRouterTx.wait()
+      console.log("GreenBTCContract approveBuilder is executed: %s: ", hre.network.name, GREENBTC_ADDRESS, 
+                                        [USDC_ADDRESS, USDT_ADDRESS, ART_ADDRESS] );
+                                        
+      // 2023/10/21, 2023/10/23, 2023/10/24, 2023/10/25
+      // Set Image Contract address
+      const setImageContractTx = await GreenBTCFactory.setImageContract(IMAGE_ADDRESS, {gasPrice: defaultGasPrice})
+      await setImageContractTx.wait()
+      console.log("GreenBTCContract setImageContract is executed: %s: ", hre.network.name, IMAGE_ADDRESS);
+/*
+      //  2023/10/23, 2023/10/24
+      // Set Manager address
+      const setManagerTx = await GreenBTCFactory.setManager(MANAGER_ADDRESS, {gasPrice: defaultGasPrice})
+      await setManagerTx.wait()
+      console.log("GreenBTCContract setImageContract is executed: %s: ", hre.network.name, MANAGER_ADDRESS);
+
+      //  2023/10/23, 2023/10/24
+      // Set mangeARTTokens
+      const mangeARTTokensTx = await GreenBTCFactory.mangeARTTokens([ART_ADDRESS], true, {gasPrice: defaultGasPrice})
+      await mangeARTTokensTx.wait()
+      console.log("GreenBTCContract setImageContract is executed: %s: ", hre.network.name, ART_ADDRESS);
+*/      
+/*
+      // 2023/10/25
+      // Set setLuckyRate
+      const setLuckyRateTx = await GreenBTCFactory.setLuckyRate(20, {gasPrice: defaultGasPrice})
+      await setLuckyRateTx.wait()
+      console.log("GreenBTCContract setImageContract is executed: %s: ", hre.network.name, ART_ADDRESS);
+*/
+
+
     } 
                               
 };

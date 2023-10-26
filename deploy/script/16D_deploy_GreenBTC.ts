@@ -40,6 +40,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:GreenBTCD:  // upgrade: contrac managed by owner ; 2) Reveal only manager.
 // Implemenation:  0x71CfBEAC18B738C5Cc34515C0316495A6CDf7231
 
+// 2023/10/26: :  change beneficiary to minter, greenType is used to flag ART type
+// yarn deploy:matic_test:GreenBTCD
+// Implemenation:  0xc2f3A5b34D7Ed23297C57597001d82904191454D
+
 
 func.tags = ["GreenBTCD"];
 

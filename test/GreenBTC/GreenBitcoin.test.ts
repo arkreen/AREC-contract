@@ -325,7 +325,7 @@ describe("GreenBTC Test Campaign", () => {
         const greenBTCInfo =  {
             height: BigNumber.from(12345),
             ARTCount: expandTo9Decimals(12),  // 12 HART
-            beneficiary: owner2.address,
+            minter: owner2.address,
             greenType: 1,
             blockTime: 'Apr 26, 2009 10:25 PM UTC',
             energyStr: '12.234 MWh'
@@ -342,7 +342,7 @@ describe("GreenBTC Test Campaign", () => {
                           energyStr:    greenBTCInfo.energyStr,
                           artCount:     greenBTCInfo.ARTCount,
                           blockTime:    greenBTCInfo.blockTime,
-                          beneficiary:  greenBTCInfo.beneficiary,
+                          minter:       greenBTCInfo.minter,
                           greenType:    greenBTCInfo.greenType
                         }
                       )
@@ -418,7 +418,7 @@ describe("GreenBTC Test Campaign", () => {
         expect(await greenBitcoin.dataGBTC(12345)).to.deep.equal(_dataGBTC)
 
         // Check dataGBTC
-        const _dataNFT = [owner2.address, 12345, false, false, false, 0]
+        const _dataNFT = [constants.AddressZero, 12345, false, false, false, 0]
         expect(await greenBitcoin.dataNFT(12345)).to.deep.equal(_dataNFT)
 
         // Check NFT ID and owner
@@ -434,7 +434,7 @@ describe("GreenBTC Test Campaign", () => {
           const greenBTCInfo =  {
             height: BigNumber.from(23456),
             ARTCount: expandTo9Decimals(13),  // 12 HART
-            beneficiary: owner2.address,
+            minter: owner2.address,
             greenType: 1,
             blockTime: 'Apr 26, 2009 10:25 PM UTC',
             energyStr: '12.234 MWh'
@@ -448,7 +448,7 @@ describe("GreenBTC Test Campaign", () => {
                             energyStr:    greenBTCInfo.energyStr,
                             artCount:     greenBTCInfo.ARTCount,
                             blockTime:    greenBTCInfo.blockTime,
-                            beneficiary:  greenBTCInfo.beneficiary,
+                            minter:       greenBTCInfo.minter,
                             greenType:    greenBTCInfo.greenType
                           }
                         )
@@ -486,7 +486,7 @@ describe("GreenBTC Test Campaign", () => {
         const greenBTCInfo =  {
             height: BigNumber.from(12345),
             ARTCount: expandTo9Decimals(12),  // 12 HART
-            beneficiary: owner2.address,
+            minter: owner2.address,
             greenType: 1,
             blockTime: 'Apr 26, 2009 10:25 PM UTC',
             energyStr: '12.234 MWh'
@@ -516,7 +516,7 @@ describe("GreenBTC Test Campaign", () => {
                           energyStr:    greenBTCInfo.energyStr,
                           artCount:     greenBTCInfo.ARTCount,
                           blockTime:    greenBTCInfo.blockTime,
-                          beneficiary:  greenBTCInfo.beneficiary,
+                          minter:       greenBTCInfo.minter,
                           greenType:    greenBTCInfo.greenType
                         }
                       )
@@ -603,7 +603,7 @@ describe("GreenBTC Test Campaign", () => {
         expect(await greenBitcoin.dataGBTC(12345)).to.deep.equal(_dataGBTC)
 
         // Check dataGBTC
-        const _dataNFT = [owner2.address, 12345, false, false, false, 0]
+        const _dataNFT = [constants.AddressZero, 12345, false, false, false, 0]
         expect(await greenBitcoin.dataNFT(12345)).to.deep.equal(_dataNFT)
 
         // Check NFT ID and owner
@@ -637,7 +637,7 @@ describe("GreenBTC Test Campaign", () => {
         const greenBTCInfo =  {
             height: BigNumber.from(12345),
             ARTCount: expandTo9Decimals(12),  // 12 HART
-            beneficiary: owner2.address,
+            minter: owner2.address,
             greenType: 1,
             blockTime: 'Apr 26, 2009 10:25 PM UTC',
             energyStr: '12.234 MWh'
@@ -660,7 +660,7 @@ describe("GreenBTC Test Campaign", () => {
                           energyStr:    greenBTCInfo.energyStr,
                           artCount:     greenBTCInfo.ARTCount,
                           blockTime:    greenBTCInfo.blockTime,
-                          beneficiary:  greenBTCInfo.beneficiary,
+                          minter:       greenBTCInfo.minter,
                           greenType:    greenBTCInfo.greenType
                         }
                       )
@@ -719,7 +719,7 @@ describe("GreenBTC Test Campaign", () => {
         expect(await greenBitcoin.dataGBTC(12345)).to.deep.equal(_dataGBTC)
 
         // Check dataGBTC
-        const _dataNFT = [owner2.address, 12345, false, false, false, 0]
+        const _dataNFT = [constants.AddressZero, 12345, false, false, false, 0]
         expect(await greenBitcoin.dataNFT(12345)).to.deep.equal(_dataNFT)
 
         // Check NFT ID and owner
@@ -753,7 +753,7 @@ describe("GreenBTC Test Campaign", () => {
         const greenBTCInfo =  {
             height: BigNumber.from(12345),
             ARTCount: expandTo9Decimals(12),  // 12 HART
-            beneficiary: owner2.address,
+            minter: owner2.address,
             greenType: 1,
             blockTime: 'Apr 26, 2009 10:25 PM UTC',
             energyStr: '12.234 MWh'
@@ -773,7 +773,7 @@ describe("GreenBTC Test Campaign", () => {
                           energyStr:    greenBTCInfo.energyStr,
                           artCount:     greenBTCInfo.ARTCount,
                           blockTime:    greenBTCInfo.blockTime,
-                          beneficiary:  greenBTCInfo.beneficiary,
+                          minter:       greenBTCInfo.minter,
                           greenType:    greenBTCInfo.greenType
                         }
                       )
@@ -789,7 +789,11 @@ describe("GreenBTC Test Campaign", () => {
                                             {token: AKREToken.address, amount: amountPay}, constants.MaxUint256)                                            
 
         // Error: More ART required, so pay less
-        await expect(greenBitcoin.connect(owner1).openBox(12345)).to.be.revertedWith("GBTC: Not Owner")     
+        await expect(greenBitcoin.connect(owner1).openBox(12345)).to.be.revertedWith("GBTC: Not Owner")   
+
+        // Check dataGBTC, not opened
+        const _dataNFT0 = [constants.AddressZero, 12345, false, false, false, 0]
+        expect(await greenBitcoin.dataNFT(12345)).to.deep.equal(_dataNFT0)      
         
         const lastBlock0 = await ethers.provider.getBlock('latest')
         
@@ -815,7 +819,7 @@ describe("GreenBTC Test Campaign", () => {
           const greenBTCInfo =  {
             height: BigNumber.from(23456),
             ARTCount: expandTo9Decimals(13),  // 13 HART
-            beneficiary: owner2.address,
+            minter: owner2.address,
             greenType: 1,
             blockTime: 'Apr 26, 2012 10:25 PM UTC',
             energyStr: '13.234 MWh'
@@ -829,7 +833,7 @@ describe("GreenBTC Test Campaign", () => {
                             energyStr:    greenBTCInfo.energyStr,
                             artCount:     greenBTCInfo.ARTCount,
                             blockTime:    greenBTCInfo.blockTime,
-                            beneficiary:  greenBTCInfo.beneficiary,
+                            minter:       greenBTCInfo.minter,
                             greenType:    greenBTCInfo.greenType
                           }
                         )
@@ -875,7 +879,7 @@ describe("GreenBTC Test Campaign", () => {
         const greenBTCInfo =  {
             height: BigNumber.from(12345),
             ARTCount: expandTo9Decimals(12),  // 12 HART
-            beneficiary: owner2.address,
+            minter: owner2.address,
             greenType: 1,
             blockTime: 'Apr 26, 2009 10:25 PM UTC',
             energyStr: '12.234 MWh'
@@ -895,7 +899,7 @@ describe("GreenBTC Test Campaign", () => {
                           energyStr:    greenBTCInfo.energyStr,
                           artCount:     greenBTCInfo.ARTCount,
                           blockTime:    greenBTCInfo.blockTime,
-                          beneficiary:  greenBTCInfo.beneficiary,
+                          minter:       greenBTCInfo.minter,
                           greenType:    greenBTCInfo.greenType
                         }
                       )
@@ -928,7 +932,7 @@ describe("GreenBTC Test Campaign", () => {
           const greenBTCInfo =  {
             height: BigNumber.from(23456),
             ARTCount: expandTo9Decimals(13),  // 13 HART
-            beneficiary: owner2.address,
+            minter: owner2.address,
             greenType: 1,
             blockTime: 'Apr 26, 2012 10:25 PM UTC',
             energyStr: '13.234 MWh'
@@ -942,7 +946,7 @@ describe("GreenBTC Test Campaign", () => {
                             energyStr:    greenBTCInfo.energyStr,
                             artCount:     greenBTCInfo.ARTCount,
                             blockTime:    greenBTCInfo.blockTime,
-                            beneficiary:  greenBTCInfo.beneficiary,
+                            minter:       greenBTCInfo.minter,
                             greenType:    greenBTCInfo.greenType
                           }
                         )
@@ -959,7 +963,7 @@ describe("GreenBTC Test Campaign", () => {
           const greenBTCInfo =  {
             height: BigNumber.from(34567),
             ARTCount: expandTo9Decimals(14),  // 14 HART
-            beneficiary: owner2.address,
+            minter: owner2.address,
             greenType: 1,
             blockTime: 'Apr 26, 2013 10:25 PM UTC',
             energyStr: '14.234 MWh'
@@ -973,7 +977,7 @@ describe("GreenBTC Test Campaign", () => {
                             energyStr:    greenBTCInfo.energyStr,
                             artCount:     greenBTCInfo.ARTCount,
                             blockTime:    greenBTCInfo.blockTime,
-                            beneficiary:  greenBTCInfo.beneficiary,
+                            minter:       greenBTCInfo.minter,
                             greenType:    greenBTCInfo.greenType
                           }
                         )
@@ -1043,7 +1047,7 @@ describe("GreenBTC Test Campaign", () => {
         const greenBTCInfo =  {
             height: BigNumber.from(12345),
             ARTCount: expandTo9Decimals(12),  // 12 HART
-            beneficiary: owner2.address,
+            minter: owner2.address,
             greenType: 1,
             blockTime: 'Apr 26, 2009 10:25 PM UTC',
             energyStr: '12.234 MWh'
@@ -1063,7 +1067,7 @@ describe("GreenBTC Test Campaign", () => {
                           energyStr:    greenBTCInfo.energyStr,
                           artCount:     greenBTCInfo.ARTCount,
                           blockTime:    greenBTCInfo.blockTime,
-                          beneficiary:  greenBTCInfo.beneficiary,
+                          minter:       greenBTCInfo.minter,
                           greenType:    greenBTCInfo.greenType
                         }
                       )
@@ -1098,7 +1102,7 @@ describe("GreenBTC Test Campaign", () => {
           const greenBTCInfo =  {
             height: BigNumber.from(23456),
             ARTCount: expandTo9Decimals(13),  // 13 HART
-            beneficiary: owner2.address,
+            minter: owner2.address,
             greenType: 1,
             blockTime: 'Apr 26, 2012 10:25 PM UTC',
             energyStr: '13.234 MWh'
@@ -1112,7 +1116,7 @@ describe("GreenBTC Test Campaign", () => {
                             energyStr:    greenBTCInfo.energyStr,
                             artCount:     greenBTCInfo.ARTCount,
                             blockTime:    greenBTCInfo.blockTime,
-                            beneficiary:  greenBTCInfo.beneficiary,
+                            minter:       greenBTCInfo.minter,
                             greenType:    greenBTCInfo.greenType
                           }
                         )
@@ -1129,7 +1133,7 @@ describe("GreenBTC Test Campaign", () => {
           const greenBTCInfo =  {
             height: BigNumber.from(34567),
             ARTCount: expandTo9Decimals(14),  // 14 HART
-            beneficiary: owner2.address,
+            minter: owner2.address,
             greenType: 1,
             blockTime: 'Apr 26, 2013 10:25 PM UTC',
             energyStr: '14.234 MWh'
@@ -1143,7 +1147,7 @@ describe("GreenBTC Test Campaign", () => {
                             energyStr:    greenBTCInfo.energyStr,
                             artCount:     greenBTCInfo.ARTCount,
                             blockTime:    greenBTCInfo.blockTime,
-                            beneficiary:  greenBTCInfo.beneficiary,
+                            minter:       greenBTCInfo.minter,
                             greenType:    greenBTCInfo.greenType
                           }
                         )
@@ -1160,7 +1164,7 @@ describe("GreenBTC Test Campaign", () => {
           const greenBTCInfo =  {
             height: BigNumber.from(34568),
             ARTCount: expandTo9Decimals(18),  // 14 HART
-            beneficiary: owner2.address,
+            minter: owner2.address,
             greenType: 1,
             blockTime: 'Apr 26, 2013 10:25 PM UTC',
             energyStr: '18.234 MWh'
@@ -1174,7 +1178,7 @@ describe("GreenBTC Test Campaign", () => {
                             energyStr:    greenBTCInfo.energyStr,
                             artCount:     greenBTCInfo.ARTCount,
                             blockTime:    greenBTCInfo.blockTime,
-                            beneficiary:  greenBTCInfo.beneficiary,
+                            minter:       greenBTCInfo.minter,
                             greenType:    greenBTCInfo.greenType
                           }
                         )
@@ -1197,7 +1201,7 @@ describe("GreenBTC Test Campaign", () => {
           const greenBTCInfo =  {
             height: BigNumber.from(45678),
             ARTCount: expandTo9Decimals(15),  // 14 HART
-            beneficiary: owner2.address,
+            minter: owner2.address,
             greenType: 1,
             blockTime: 'Apr 26, 2014 10:25 PM UTC',
             energyStr: '15.234 MWh'
@@ -1211,7 +1215,7 @@ describe("GreenBTC Test Campaign", () => {
                             energyStr:    greenBTCInfo.energyStr,
                             artCount:     greenBTCInfo.ARTCount,
                             blockTime:    greenBTCInfo.blockTime,
-                            beneficiary:  greenBTCInfo.beneficiary,
+                            minter:       greenBTCInfo.minter,
                             greenType:    greenBTCInfo.greenType
                           }
                         )
@@ -1229,7 +1233,7 @@ describe("GreenBTC Test Campaign", () => {
           const greenBTCInfo =  {
             height: BigNumber.from(56789),
             ARTCount: expandTo9Decimals(16),  // 14 HART
-            beneficiary: owner2.address,
+            minter: owner2.address,
             greenType: 1,
             blockTime: 'Apr 26, 2015 10:25 PM UTC',
             energyStr: '16.234 MWh'
@@ -1243,7 +1247,7 @@ describe("GreenBTC Test Campaign", () => {
                             energyStr:    greenBTCInfo.energyStr,
                             artCount:     greenBTCInfo.ARTCount,
                             blockTime:    greenBTCInfo.blockTime,
-                            beneficiary:  greenBTCInfo.beneficiary,
+                            minter:       greenBTCInfo.minter,
                             greenType:    greenBTCInfo.greenType
                           }
                         )
@@ -1344,7 +1348,7 @@ describe("GreenBTC Test Campaign", () => {
         const greenBTCInfo =  {
             height: BigNumber.from(12345),
             ARTCount: expandTo9Decimals(12),  // 12 HART
-            beneficiary: owner2.address,
+            minter: owner2.address,
             greenType: 1,
             blockTime: 'Apr 26, 2009 10:25 PM UTC',
             energyStr: '12.234 MWh'
@@ -1364,7 +1368,7 @@ describe("GreenBTC Test Campaign", () => {
                           energyStr:    greenBTCInfo.energyStr,
                           artCount:     greenBTCInfo.ARTCount,
                           blockTime:    greenBTCInfo.blockTime,
-                          beneficiary:  greenBTCInfo.beneficiary,
+                          minter:       greenBTCInfo.minter,
                           greenType:    greenBTCInfo.greenType
                         }
                       )

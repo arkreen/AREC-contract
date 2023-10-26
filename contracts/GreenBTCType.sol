@@ -4,13 +4,13 @@ pragma solidity ^0.8.9;
 struct GreenBTCInfo {
     uint128     height;
     uint128     ARTCount;
-    address     beneficiary;
-    uint8       greenType;
+    address     minter;             // Minter of the respective NFT
+    uint8       greenType;          // High nibble:  ART type: 0, CART, 1, Arkreen ART; Low nibble: mint type, 1: system, 2: user;  
     string      blockTime;          // For NFT display
     string      energyStr;          // For NTT display
 }
 
-struct NFTStaus {
+struct NFTStatus {
     address     opener;
     uint64      blockHeight;
     bool        open;

@@ -28,8 +28,8 @@ contract GreenBTC is
     using Strings for address;
     using FormattedStrings for uint256;
 
-    //keccak256("GreenBitCoin(uint256 height,string energyStr,uint256 artCount,string blockTime,address beneficiary,uint8 greenType)");
-    bytes32 constant GREEN_BTC_TYPEHASH = 0x2cc287d531f97592968321a2680791d868f5cafdc02c8f9f059c431e7ef0f086;
+    //keccak256("GreenBitCoin(uint256 height,string energyStr,uint256 artCount,string blockTime,address minter,uint8 greenType)");
+    bytes32 constant GREEN_BTC_TYPEHASH = 0xE645798FE54DB29ED50FD7F01A05DE6D1C5A65FAC8902DCFD7427B30FBD87C24;
     string  constant NAME = "Green BTC Club";
     string  constant SYMBOL = "GBC";
     string  constant VERSION = "1";
@@ -48,12 +48,12 @@ contract GreenBTC is
     OpenInfo[] internal overtimeBoxList;            // Box in this list need to be revealed with external hash information
 
     mapping (uint256 => GreenBTCInfo)  public dataGBTC;
-    mapping (uint256 => NFTStaus)  public dataNFT;
+    mapping (uint256 => NFTStatus)  public dataNFT;
     mapping(address => bool) public whiteARTList;   // ART token -> true/false
 
     uint256 public luckyRate;  
 
-    event GreenBitCoin(uint256 height, uint256 ARTCount, address beneficiary, uint8 greenType);
+    event GreenBitCoin(uint256 height, uint256 ARTCount, address minter, uint8 greenType);
     event OpenBox(address openner, uint256 tokenID, uint256 blockNumber);
 
     event RevealBoxes(uint256[] revealList, bool[] wonList);
@@ -166,11 +166,11 @@ contract GreenBTC is
         bytes memory callData = abi.encodeWithSelector( 0x8D7FCEFD, tokenNative, tokenCART, msg.value,
                                                         gbtc.ARTCount, modeAction, deadline, badgeInfo);
 
-        _actionBuilderBadge(abi.encodePacked(callData, gbtc.beneficiary));     // Pay back to msg.sender already
+        _actionBuilderBadge(abi.encodePacked(callData, gbtc.minter));     // Pay back to msg.sender already
 
         _mintNFT(gbtc);
 
-        emit GreenBitCoin(gbtc.height, gbtc.ARTCount, gbtc.beneficiary, gbtc.greenType);
+        emit GreenBitCoin(gbtc.height, gbtc.ARTCount, gbtc.minter, gbtc.greenType);
     }
 
     /** 
@@ -201,11 +201,11 @@ contract GreenBTC is
         bytes memory callData = abi.encodeWithSelector( 0x8D7FCEFD, payInfo.token, tokenCART, payInfo.amount,
                                                         gbtc.ARTCount, modeAction, deadline, badgeInfo);
 
-        _actionBuilderBadge(abi.encodePacked(callData, gbtc.beneficiary));     // Pay back to msg.sender already ??
+        _actionBuilderBadge(abi.encodePacked(callData, gbtc.minter));     // Pay back to msg.sender already ??
 
         _mintNFT(gbtc);
 
-        emit GreenBitCoin(gbtc.height, gbtc.ARTCount, gbtc.beneficiary, gbtc.greenType);
+        emit GreenBitCoin(gbtc.height, gbtc.ARTCount, gbtc.minter, gbtc.greenType);
     }
 
     /** 
@@ -235,11 +235,11 @@ contract GreenBTC is
         // actionBuilderBadgeWithART(address,uint256,uint256,(address,string,string,string)): 0x6E556DF8
         bytes memory callData = abi.encodeWithSelector(0x6E556DF8, tokenART, amountART, deadline, badgeInfo);
 
-        _actionBuilderBadge(abi.encodePacked(callData, gbtc.beneficiary));
+        _actionBuilderBadge(abi.encodePacked(callData, gbtc.minter));
 
         _mintNFT(gbtc);
 
-        emit GreenBitCoin(gbtc.height, gbtc.ARTCount, gbtc.beneficiary, gbtc.greenType);
+        emit GreenBitCoin(gbtc.height, gbtc.ARTCount, gbtc.minter, gbtc.greenType);
     }
 
     /**
@@ -393,24 +393,24 @@ contract GreenBTC is
     /**
      * @dev See {IERC721Metadata-tokenURI}.
      */
-    function tokenURI(uint256 tokenId) public view override returns (string memory){
+    function tokenURI(uint256 tokenID) public view override returns (string memory){
 
-        require(dataGBTC[tokenId].height != 0, "GBTC: Not Minted");
+        require(dataGBTC[tokenID].height != 0, "GBTC: Not Minted");
 
         string memory svgData;
-        if(dataNFT[tokenId].open == false || dataNFT[tokenId].reveal == false) { 
-            svgData = IGreenBTCImage(greenBtcImage).getBlindBoxSVGBytes(tokenId);
+        if(dataNFT[tokenID].open == false || dataNFT[tokenID].reveal == false) { 
+            svgData = IGreenBTCImage(greenBtcImage).getBlindBoxSVGBytes(tokenID);
         } else {
-            if(dataNFT[tokenId].won) {
+            if(dataNFT[tokenID].won) {
                 svgData = IGreenBTCImage(greenBtcImage).getGreenTreeSVGBytes();
             } else {
-                svgData = IGreenBTCImage(greenBtcImage).getCertificateSVGBytes(dataGBTC[tokenId]);    
+                svgData = IGreenBTCImage(greenBtcImage).getCertificateSVGBytes(ownerOf(tokenID), dataGBTC[tokenID]);    
             }      
         }
 
         bytes memory dataURI = abi.encodePacked(
             '{"name":"Green BTC #',
-            tokenId.toString(),
+            tokenID.toString(),
             '","description":"Green BTC Club","image":"data:image/svg+xml;base64,',
             svgData,
             '"}'
@@ -438,12 +438,11 @@ contract GreenBTC is
 
         dataGBTC[gbtc.height] = gbtc;
 
-        NFTStaus memory nft;
-        nft.opener = gbtc.beneficiary;
+        NFTStatus memory nft;
         nft.blockHeight = uint64(gbtc.height);
         dataNFT[gbtc.height] = nft;
 
-        _mint(gbtc.beneficiary, gbtc.height);
+        _mint(gbtc.minter, gbtc.height);
     }
 
     /**
@@ -453,7 +452,7 @@ contract GreenBTC is
      */
     function _authVerify(GreenBTCInfo calldata gbtc, Sig calldata sig) internal view {
 
-        bytes32 greenBTCHash = keccak256(abi.encode(GREEN_BTC_TYPEHASH, gbtc.height, gbtc.energyStr, gbtc.ARTCount, gbtc.blockTime, gbtc.beneficiary, gbtc.greenType));
+        bytes32 greenBTCHash = keccak256(abi.encode(GREEN_BTC_TYPEHASH, gbtc.height, gbtc.energyStr, gbtc.ARTCount, gbtc.blockTime, gbtc.minter, gbtc.greenType));
         bytes32 digest = keccak256(abi.encodePacked('\x19\x01', DOMAIN_SEPARATOR, greenBTCHash));
         address recoveredAddress = ecrecover(digest, sig.v, sig.r, sig.s);
 

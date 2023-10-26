@@ -185,6 +185,9 @@ const config: HardhatUserConfig = {
     runOnCompile:       false,
     disambiguatePaths:  false,
   },
+  mocha: {
+    timeout: 1000000
+  },
   paths: {
     artifacts: "./artifacts",
     cache: "./cache",

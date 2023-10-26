@@ -39,9 +39,13 @@ contract GreenBTCImage {
         return string(result);
     }
 
-    function getCertificateSVGBytes(GreenBTCInfo calldata gbtc) external pure returns(string memory){
+    function getCertificateSVGBytes(address owner, GreenBTCInfo calldata gbtc) external pure returns(string memory){
 
         string memory turncateEnergy = _decimalTruncate(gbtc.energyStr, 3);
+
+        string memory artFlag = ((gbtc.greenType & 0xF0) == 0x10) 
+            ? '<text x="15" y="135" class="prefix__medium">*ART</text>'
+            : '';
 
         bytes memory imgBytes = abi.encodePacked(
             '<svg width="300" height="300" xmlns="http://www.w3.org/2000/svg" font-family="Courier New">'
@@ -60,10 +64,11 @@ contract GreenBTCImage {
             '<text x="110" y="115" class="prefix__medium">',
             turncateEnergy,
             '  kWh'
-            '</text>'
+            '</text>',
+            artFlag,
             '<text x="15" y="210" class="prefix__medium">OWNER:</text>'
             '<text x="15" y="230" font-size="9">',
-            gbtc.beneficiary.toHexString(),
+            owner.toHexString(),
             '</text>'
             '<g opacity=".25" fill="#FFC736">'
             '<path d="M223.859 16.717h-.26V0H203.51v16.717h-20.096v123.824h20.096v16.733h20.089v-16.733h.26v-26.773H210.2V90.342h13.659V63.57H210.2V43.49h13.659V16.717zM236.579 63.57h17.148c5.547 0 10.044-4.495 10.044-10.04 0-5.545-4.497-10.04-10.044-10.04h-17.148V0h20.071v16.832c18.974 1.489 33.907 17.35 33.907 36.698a36.655 36.655 0 01-8.866 23.957 38.316 38.316 0 018.866 24.568c0 19.7-14.809 35.943-33.907 38.214v17.005h-20.071v-43.506h15.473c6.473 0 11.719-5.244 11.719-11.713 0-6.469-5.246-11.713-11.719-11.713h-15.473V63.57z" />'

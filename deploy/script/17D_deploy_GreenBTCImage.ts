@@ -30,6 +30,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:GreenBTCImageD:
 // 0xc44ab5E1C00f9df586b80DDbAF00220974a97bC5
 
+// 2023/10/26: Add ART flag, and shown owner 
+// yarn deploy:matic_test:GreenBTCImageD
+// 0x99C26b45949073a73b98b568de399B1569fe008c
+
 func.tags = ["GreenBTCImageD"];
 
 export default func;

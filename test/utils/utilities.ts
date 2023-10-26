@@ -33,10 +33,10 @@ const STANDARD_REGISTER_TYPEHASH = utils.keccak256(
   utils.toUtf8Bytes('StandardMinerOnboard(address owner,address miner,uint256 deadline)')
 )
 
-// keccak256("GreenBitCoin(uint256 height,string energyStr,uint256 artCount,string blockTime,address beneficiary,uint8 greenType)");
-// 2CC287D531F97592968321A2680791D868F5CAFDC02C8F9F059C431E7EF0F086
+// keccak256("GreenBitCoin(uint256 height,string energyStr,uint256 artCount,string blockTime,address minter,uint8 greenType)");
+// 0xE645798FE54DB29ED50FD7F01A05DE6D1C5A65FAC8902DCFD7427B30FBD87C24
 const GREEN_BTC_TYPEHASH = utils.keccak256(
-  utils.toUtf8Bytes('GreenBitCoin(uint256 height,string energyStr,uint256 artCount,string blockTime,address beneficiary,uint8 greenType)')
+  utils.toUtf8Bytes('GreenBitCoin(uint256 height,string energyStr,uint256 artCount,string blockTime,address minter,uint8 greenType)')
 )
 
 export function expandTo9Decimals(n: number): BigNumber {
@@ -413,7 +413,7 @@ export function getGreenBitcoinDigest(
     energyStr:    string
     artCount:     BigNumber
     blockTime:    string
-    beneficiary:  string
+    minter:       string
     greenType:    number
   }
 ): string {
@@ -428,7 +428,7 @@ export function getGreenBitcoinDigest(
         utils.keccak256(
           utils.defaultAbiCoder.encode(
             ['bytes32', 'uint256', 'string', 'uint256', 'string', 'address', 'uint8'],
-            [GREEN_BTC_TYPEHASH, approve.height, approve.energyStr, approve.artCount, approve.blockTime, approve.beneficiary, approve.greenType]
+            [GREEN_BTC_TYPEHASH, approve.height, approve.energyStr, approve.artCount, approve.blockTime, approve.minter, approve.greenType]
           )
         )
       ]

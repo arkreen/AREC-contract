@@ -16,7 +16,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       WMATIC_ADDRESS    = "0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889"        // WMATIC address      
     }
     else if(hre.network.name === 'matic')  {        // Matic Mainnet for test
-      AUTHORIZER_ADDRESS  = "0x2df522C2bF3E570caA22FBBd06d1A120B4Dc29a8"      // Authorizeried address
+      AUTHORIZER_ADDRESS  = "0x0dE4fB23694c1532815Ad90fd1689c7234242FE3"      // Authorizeried address
       BUILDER_ADDRESS     = "0x7073Ea8C9B0612F3C3FE604425E2af7954c4c92e"
       CART_ADDRESS        = "0x0D7899F2D36344ed21829D4EBC49CC0d335B4A06"
       WMATIC_ADDRESS      = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"        // WMATIC address         
@@ -60,6 +60,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:GreenBTC    : Re-deploy on Matic testnet, as changed to be kind of ERC721EnumerableUpgradeable
 // Proxy:         0x770cb90378cb59665bbf623a72b90f427701c825         
 // Implementaion: 0x8ca0016B53D16E1712145937C36f009C4f7d493B
+
+// 2023/10/26
+// yarn deploy:matic:GreenBTC    
+// Proxy:                  
+// Implementaion:
 
 func.tags = ["GreenBTC"];
 
