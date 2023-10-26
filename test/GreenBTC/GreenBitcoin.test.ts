@@ -326,7 +326,7 @@ describe("GreenBTC Test Campaign", () => {
             height: BigNumber.from(12345),
             ARTCount: expandTo9Decimals(12),  // 12 HART
             minter: owner2.address,
-            greenType: 1,
+            greenType: 0x12,
             blockTime: 'Apr 26, 2009 10:25 PM UTC',
             energyStr: '12.234 MWh'
         }
@@ -362,8 +362,16 @@ describe("GreenBTC Test Campaign", () => {
         await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithART( greenBTCInfo, {v,r:s,s},
                                           badgeInfo, arkreenRECTokenESG.address, constants.MaxUint256 ))
                     .to.be.revertedWith("GBTC: ART Not Accepted")    
-                    
-        await greenBitcoin.mangeARTTokens([arkreenRECToken.address, arkreenRECTokenESG.address], true)
+        
+        await greenBitcoin.mangeARTTokens([arkreenRECToken.address, arkreenRECTokenESG.address], true)                    
+
+        // Error: Check ART Type
+        greenBTCInfo.greenType = 0x02
+        await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithART( greenBTCInfo, {v,r:s,s},
+                                          badgeInfo, arkreenRECTokenESG.address, constants.MaxUint256 ))
+                    .to.be.revertedWith("GBTC: Wrong ART Type")    
+
+        greenBTCInfo.greenType = 0x12      
 
         // Error: Check signature of Green Bitcoin info      
         await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithART( greenBTCInfo, {v,r:s,s},
@@ -394,11 +402,11 @@ describe("GreenBTC Test Campaign", () => {
                       .to.emit(greenBitcoin, 'Transfer')
                       .withArgs(0, owner2.address, 12345)                                                 
                       .to.emit(greenBitcoin, 'GreenBitCoin')
-                      .withArgs(12345, expandTo9Decimals(12), owner2.address, 1)                                                 
+                      .withArgs(12345, expandTo9Decimals(12), owner2.address, 0x12)                                                 
 
         const actionID =1     
         const lastBlock = await ethers.provider.getBlock('latest')
-        
+
         const tokenID = await arkreenRECIssuance.totalSupply()
         const action = [  owner2.address, maker1.address, amountART,                // Manger is the issuer address
                           tokenID.add(MASK_OFFSET), lastBlock.timestamp, true ]     // Offset action is claimed
@@ -412,7 +420,7 @@ describe("GreenBTC Test Campaign", () => {
         expect(await arkreenRECTokenESG.balanceOf(owner1.address)).to.equal(artTokenESGBefore.sub(expandTo9Decimals(12)))
 
         // Check dataGBTC
-        const _dataGBTC = [ BigNumber.from(12345), expandTo9Decimals(12), owner2.address, 1,
+        const _dataGBTC = [ BigNumber.from(12345), expandTo9Decimals(12), owner2.address, 0x12,
                             'Apr 26, 2009 10:25 PM UTC', '12.234 MWh']
 
         expect(await greenBitcoin.dataGBTC(12345)).to.deep.equal(_dataGBTC)
@@ -435,7 +443,7 @@ describe("GreenBTC Test Campaign", () => {
             height: BigNumber.from(23456),
             ARTCount: expandTo9Decimals(13),  // 12 HART
             minter: owner2.address,
-            greenType: 1,
+            greenType: 0x12,
             blockTime: 'Apr 26, 2009 10:25 PM UTC',
             energyStr: '12.234 MWh'
           }

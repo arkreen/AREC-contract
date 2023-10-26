@@ -226,6 +226,7 @@ contract GreenBTC is
 
         require(dataGBTC[gbtc.height].ARTCount == 0, "GBTC: Already Minted");
         require(whiteARTList[tokenART], "GBTC: ART Not Accepted"); 
+        require((gbtc.greenType & 0xF0) == 0x10, "GBTC: Wrong ART Type");
 
         _authVerify(gbtc, sig);                                                 // verify signature
 
@@ -395,7 +396,7 @@ contract GreenBTC is
      */
     function tokenURI(uint256 tokenID) public view override returns (string memory){
 
-        require(dataGBTC[tokenID].height != 0, "GBTC: Not Minted");
+        require(dataGBTC[tokenID].minter != address(0), "GBTC: Not Minted");
 
         string memory svgData;
         if(dataNFT[tokenID].open == false || dataNFT[tokenID].reveal == false) { 
@@ -435,6 +436,8 @@ contract GreenBTC is
      * @param gbtc Green BTC information
      */
     function _mintNFT(GreenBTCInfo calldata gbtc) internal {
+
+        require(gbtc.minter != address(0), 'GBTC: Zero Minter');
 
         dataGBTC[gbtc.height] = gbtc;
 

@@ -44,6 +44,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:GreenBTCD
 // Implemenation:  0xc2f3A5b34D7Ed23297C57597001d82904191454D
 
+// 2023/10/26:2:  Add ART type check, and check minter is not zero
+// yarn deploy:matic_test:GreenBTCD
+// Implemenation:  0x9a1FC5338303b7E675a9cFfA2050aa7300760b5F
 
 func.tags = ["GreenBTCD"];
 

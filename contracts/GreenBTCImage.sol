@@ -44,8 +44,8 @@ contract GreenBTCImage {
         string memory turncateEnergy = _decimalTruncate(gbtc.energyStr, 3);
 
         string memory artFlag = ((gbtc.greenType & 0xF0) == 0x10) 
-            ? '<text x="15" y="135" class="prefix__medium">*ART</text>'
-            : '';
+                                  ? '<text x="15" y="135" class="prefix__medium">*ART</text>' 
+                                  : '';
 
         bytes memory imgBytes = abi.encodePacked(
             '<svg width="300" height="300" xmlns="http://www.w3.org/2000/svg" font-family="Courier New">'
@@ -60,7 +60,7 @@ contract GreenBTCImage {
             '<text x="110" y="95" class="prefix__medium">',
             gbtc.height.toString(),
             '</text>'
-            '<text x="15" y="115" class="prefix__medium">POWER&gt;</text>'
+            '<text x="15" y="115" class="prefix__medium">ENERGY&gt;</text>'
             '<text x="110" y="115" class="prefix__medium">',
             turncateEnergy,
             '  kWh'

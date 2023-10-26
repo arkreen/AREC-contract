@@ -33,8 +33,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
       //IMAGE_ADDRESS   = "0xC75501B7410Ff630A205245998E0CC9C4f8840ee"      // Image address
       //IMAGE_ADDRESS   = "0x27a30F0B401cC5Cd7bb5477E4fA290CeDFfA8cc7"      // 2023/10/23: Image address
-      IMAGE_ADDRESS     = "0xc44ab5E1C00f9df586b80DDbAF00220974a97bC5"      // 2023/10/25: Lucky Image changed
-      
+      //IMAGE_ADDRESS   = "0xc44ab5E1C00f9df586b80DDbAF00220974a97bC5"      // 2023/10/25: Lucky Image changed
+      //IMAGE_ADDRESS   = "0x99C26b45949073a73b98b568de399B1569fe008c"      // 2023/10/26: Add ART flag
+      IMAGE_ADDRESS  = "0x5b92c6E11A98F76CF20d878A79150A09bB24C24f"         // 2023/10/26: POWER -> ENERGY in image contract
+
       MANAGER_ADDRESS   = "0xBAeF5d8EfA74d3cff297D88c433D7B5d90bf0e49"      // 2023/10/23: Image address
 
       const [deployer] = await ethers.getSigners();
@@ -170,6 +172,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:GreenBTCI
 
 // 2023/10/25: call setImageContract
+// yarn deploy:matic_test:GreenBTCI
+
+// 2023/10/26: call setImageContract
+// yarn deploy:matic_test:GreenBTCI
+
+// 2023/10/26: call setImageContract:  0x5b92c6E11A98F76CF20d878A79150A09bB24C24f
 // yarn deploy:matic_test:GreenBTCI
 
 func.tags = ["GreenBTCI"];
