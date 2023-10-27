@@ -148,13 +148,26 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   // Proxy of GreenBTC
   // 2023/10/23:  
   //const IMPLEMENTATION_ADDRESS  = "0x6240d9780Ac11ccE9A9C269Eb68dFB1eA39eAa05"  // 2023/10/23: GreenBTC Implementation 
-  const IMPLEMENTATION_ADDRESS  = "0x8ca0016B53D16E1712145937C36f009C4f7d493B"    // 2023/10/24: GreenBTC Implementation 
+  //const IMPLEMENTATION_ADDRESS  = "0x8ca0016B53D16E1712145937C36f009C4f7d493B"    // 2023/10/24: GreenBTC Implementation 
+
+  const IMPLEMENTATION_ADDRESS  = "0x85304b15f0762c0b2752C60e29D04843b17D79c7"    // 2023/10/27: GreenBTC Mainnet 
+  
+/*  
+  // Polygon Test net
   const AUTHORIZER_ADDRESS  = "0x2df522C2bF3E570caA22FBBd06d1A120B4Dc29a8"        // Authorizeried address
   const BUILDER_ADDRESS     = "0xa05a9677a9216401cf6800d28005b227f7a3cfae"        // ArkreenBuilder address
   const CART_ADDRESS        = "0x0999afb673944a7b8e1ef8eb0a7c6ffdc0b43e31"        // HashKey ART token address
   const WMATIC_ADDRESS      = "0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889"        // WMATIC address    
+*/
+
+  // Polygon mainnet  
+  const AUTHORIZER_ADDRESS  = "0x0dE4fB23694c1532815Ad90fd1689c7234242FE3"        // Authorizeried address
+  const BUILDER_ADDRESS     = "0x7073Ea8C9B0612F3C3FE604425E2af7954c4c92e"
+  const CART_ADDRESS        = "0x0D7899F2D36344ed21829D4EBC49CC0d335B4A06"
+  const WMATIC_ADDRESS      = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"        // WMATIC address 
   
   // 2023/10/23:  0x8cc0b065318acf3ac761fe5a19caf68074034006
+  // 
   const callData = GreenBTC__factory.createInterface().encodeFunctionData("initialize", 
                     [AUTHORIZER_ADDRESS, BUILDER_ADDRESS, CART_ADDRESS, WMATIC_ADDRESS])     // Create new GreenBTC
 
@@ -166,7 +179,6 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       log: true,
       skipIfAlreadyDeployed: false,
   });
-
 
   console.log("UUPSProxy deployed to %s: ", hre.network.name, UUPSProxyContract.address);
 
@@ -195,6 +207,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2023/10/24:  yarn deploy:matic_test:UUPSProxy:   GreenBTC
 // Proxy:   0x770cB90378Cb59665BbF623a72b90f427701C825
+
+// 2023/10/27:  GreenBTC
+// yarn deploy:matic:UUPSProxy
+// Proxy:   0xDf51F3DCD849f116948A5B23760B1ca0B5425BdE
+
+
 
 export default func;
 func.tags = ["UUPSProxy"];

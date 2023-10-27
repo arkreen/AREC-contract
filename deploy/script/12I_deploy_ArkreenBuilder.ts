@@ -20,8 +20,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const defaultGasPrice = (hre.network.name === 'matic_test') 
                           ? BigNumber.from(6000000000) 
                           : (hre.network.name === 'matic')
-                          ? BigNumber.from(100000000000)
-                          : BigNumber.from(100000000000)
+                          ? BigNumber.from(200000000000)
+                          : BigNumber.from(200000000000)
 
     if(hre.network.name === 'matic_test')  {  
 
@@ -49,8 +49,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       HART_ADDRESS      = "0x93b3bb6C51A247a27253c33F0d0C2FF1d4343214"          // HART Address
       CART_ADDRESS      = "0x0D7899F2D36344ed21829D4EBC49CC0d335B4A06"          // HART Address
       
-      HSKESG_ADDRESS    = "0xfe9341218c7Fcb6DA1eC131a72f914B7C724F200"          // HashKeyESG Address    
-
+      HSKESG_ADDRESS    = "0xfe9341218c7Fcb6DA1eC131a72f914B7C724F200"          // HashKeyESG Address   
+      GREEN_BTC_ADDRESS = "0xDf51F3DCD849f116948A5B23760B1ca0B5425BdE"          // Green BTC Address    2023/10/27
+ 
       USDC_ADDRESS      = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"          // USDC address
       USDT_ADDRESS      = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F"          // USDT address
       WNATIVE_ADDRESS    = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"          // WMATIC address
@@ -68,12 +69,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     const [deployer] = await ethers.getSigners();
     
+/*    
     // 2023/04/05, 2023/08/25:Celo_test, 2023/10/25: Matic Mainnet: CART 
     // Set ArkreenBuilder address to the HART token contract
     const ArkreenRECTokenFactory = ArkreenRECToken__factory.connect(CART_ADDRESS as string, deployer);
     const setClimateBuilderTx = await ArkreenRECTokenFactory.setClimateBuilder( BUILDER_ADDRESS as string, {gasPrice: defaultGasPrice})
     await setClimateBuilderTx.wait()
     console.log(" Set ArkreenBuilder address to the HART token contract: ", hre.network.name, BUILDER_ADDRESS, CART_ADDRESS );
+*/
 
 /*
     // 2023/3/15, 2023/04/05
@@ -85,16 +88,15 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
                                                     BUILDER_ADDRESS, HSKESG_ADDRESS );    
 */
 
-/*
+
     // 2023/09/07, 2023/09/12, 2023/10/13, 2023/10/23, 2023/10/24
     console.log("ArkreenBuilder mangeTrustedForwarder:", BUILDER_ADDRESS, GREEN_BTC_ADDRESS, deployer.address)
     const ArkreenBuilderFactory = ArkreenBuilder__factory.connect(BUILDER_ADDRESS as string, deployer);
 
-    const mangeTrustedForwarderTx = await ArkreenBuilderFactory.mangeTrustedForwarder(GREEN_BTC_ADDRESS as string, true, {gasPrice: BigNumber.from(5000000000)})
+    const mangeTrustedForwarderTx = await ArkreenBuilderFactory.mangeTrustedForwarder(GREEN_BTC_ADDRESS as string, true, { gasPrice: defaultGasPrice })
     await mangeTrustedForwarderTx.wait()
     console.log("ArkreenBuilder mangeTrustedForwarder is executed: ", hre.network.name, new Date().toLocaleString(),
                                                     BUILDER_ADDRESS, GREEN_BTC_ADDRESS );    
-*/
 
     // Approve the DEX Router to Tranfer-From the specified tokens
     // const ArkreenBuilderFactory = ArkreenBuilder__factory.connect(BUILDER_ADDRESS as string, deployer);
@@ -169,6 +171,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // Action: mangeTrustedForwarder
 
 // 2023/10/25
+// yarn deploy:matic:ABuilderI:   // setClimateBuilder(CART_ADDRESS),
+// Action: setClimateBuilder
+
+// 2023/10/27
 // yarn deploy:matic:ABuilderI:   // setClimateBuilder(CART_ADDRESS),
 // Action: setClimateBuilder
 

@@ -70,6 +70,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // Proxy:         0x32C4c4953c03Fa466424A9ee11BE9863EBfc55aC          
 // Implementaion: 0xa39e0f0d688d0f3E3F6D41dd0B46b46aFcC13235
 
+// 2023/10/27: 1: Moving all svg logic to image contract
+// yarn deploy:matic:GreenBTC    
+// Proxy:         0xDf51F3DCD849f116948A5B23760B1ca0B5425BdE   (Manually)  
+// Implementaion: 0x85304b15f0762c0b2752C60e29D04843b17D79c7
+
 func.tags = ["GreenBTC"];
 
 export default func;

@@ -7,7 +7,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6000000000) : BigNumber.from(100000000000)
+  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6000000000) : BigNumber.from(120000000000)
 
   console.log("Deploying: ", 'GreenBTCImage', deployer, defaultGasPrice.toString());  
 
@@ -46,9 +46,13 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:GreenBTCImageD
 // 0xE44A9194ee572813db71496dA0D871b745e380Ac
 
-// 2023/10/27: Change image contract, move  all svg logic to image contract
+// 2023/10/27:2 Change image contract, move all svg logic to image contract
 // yarn deploy:matic_test:GreenBTCImageD
 // 0xb5E55E38B3260f52884a8b74a86F9C9c3933717d
+
+// 2023/10/27:3 Matic mainnet:  Moving all svg logic to image contract
+// yarn deploy:matic:GreenBTCImageD
+// 0x01e2D144E9414cb58FD9e90dd26b2555275bC42d
 
 func.tags = ["GreenBTCImageD"];
 
