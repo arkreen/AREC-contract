@@ -190,6 +190,7 @@ contract GreenBTC is
     ) external ensure(deadline) {
 
         require(dataGBTC[gbtc.height].ARTCount == 0, "GBTC: Already Minted");
+        require((gbtc.greenType & 0xF0) == 0x00, "GBTC: Wrong ART Type");
        
         _authVerify(gbtc, sig);                         // verify signature
 
@@ -397,37 +398,18 @@ contract GreenBTC is
     function tokenURI(uint256 tokenID) public view override returns (string memory){
 
         require(dataGBTC[tokenID].minter != address(0), "GBTC: Not Minted");
-
-        string memory svgData;
-        if(dataNFT[tokenID].open == false || dataNFT[tokenID].reveal == false) { 
-            svgData = IGreenBTCImage(greenBtcImage).getBlindBoxSVGBytes(tokenID);
-        } else {
-            if(dataNFT[tokenID].won) {
-                svgData = IGreenBTCImage(greenBtcImage).getGreenTreeSVGBytes();
-            } else {
-                svgData = IGreenBTCImage(greenBtcImage).getCertificateSVGBytes(ownerOf(tokenID), dataGBTC[tokenID]);    
-            }      
-        }
-
-        bytes memory dataURI = abi.encodePacked(
-            '{"name":"Green BTC #',
-            tokenID.toString(),
-            '","description":"Green BTC Club","image":"data:image/svg+xml;base64,',
-            svgData,
-            '"}'
-        );
-        return string(abi.encodePacked("data:application/json;base64,", Base64.encode(dataURI)));
+        return IGreenBTCImage(greenBtcImage).getCertificateSVG(ownerOf(tokenID), dataGBTC[tokenID], dataNFT[tokenID]);
     }
 
     /**
-     * @dev Return if the specified token is sold and openned
+     * @dev Return if the specified token is sold, openned and revealed
      */
-    function isUnPacking(uint256 tokenID) public view returns(bool, bool) {
+    function isUnPacking(uint256 tokenID) public view returns(bool, bool, bool) {
 
-        if(dataGBTC[tokenID].ARTCount == 0){
-            return (false, false);
-        }else{
-            return (true, dataNFT[tokenID].open);
+        if (dataGBTC[tokenID].ARTCount == 0) {
+            return (false, false, false);
+        } else{
+            return (true, dataNFT[tokenID].open, dataNFT[tokenID].reveal);
         }
     }
 

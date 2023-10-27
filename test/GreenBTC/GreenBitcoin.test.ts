@@ -720,6 +720,9 @@ describe("GreenBTC Test Campaign", () => {
         expect(await arkreenRetirement.getCertificate(badgeID)).to.deep.equal(offsetRecord)
         expect(await arkreenRECTokenESG.balanceOf(owner1.address)).to.equal(ARECBefore)
 
+        // Check Badge owner
+        expect(await arkreenRetirement.ownerOf(badgeID)).to.equal(owner2.address)
+
         // Check dataGBTC
         const _dataGBTC = [ BigNumber.from(12345), expandTo9Decimals(12), owner2.address, 1,
                             'Apr 26, 2009 10:25 PM UTC', '12.234 MWh']

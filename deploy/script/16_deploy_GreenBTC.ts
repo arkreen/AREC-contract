@@ -1,6 +1,7 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { CONTRACTS } from "../constants";
+import { BigNumber } from "ethers";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
@@ -26,6 +27,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const { deploy } = deployments;
     const { deployer } = await getNamedAccounts();
 
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6000000000) : BigNumber.from(100000000000)
+
     console.log("Deploying: ", CONTRACTS.GreenBTC, deployer);  
     const GreenBTC = await deploy(CONTRACTS.GreenBTC, {
         from: deployer,
@@ -33,13 +36,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
           proxyContract: "UUPSProxy",
           execute: {
             init: {
-              methodName: "initialize",   // Function to call when deployed first time.
+              methodName: "initialize",     // Function to call when deployed first time.
               args: [AUTHORIZER_ADDRESS, BUILDER_ADDRESS, CART_ADDRESS, WMATIC_ADDRESS]
             },
           },
         },
         log: true,
         skipIfAlreadyDeployed: false,
+        gasPrice: defaultGasPrice
     });
 
     console.log("Green BTC deployed to %s: ", hre.network.name, GreenBTC.address);
@@ -61,10 +65,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // Proxy:         0x770cb90378cb59665bbf623a72b90f427701c825         
 // Implementaion: 0x8ca0016B53D16E1712145937C36f009C4f7d493B
 
-// 2023/10/26
+// 2023/10/27
 // yarn deploy:matic:GreenBTC    
-// Proxy:                  
-// Implementaion:
+// Proxy:         0x32C4c4953c03Fa466424A9ee11BE9863EBfc55aC          
+// Implementaion: 0xa39e0f0d688d0f3E3F6D41dd0B46b46aFcC13235
 
 func.tags = ["GreenBTC"];
 

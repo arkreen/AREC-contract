@@ -9,16 +9,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { deployer } = await getNamedAccounts();
 
   const chainID = await getChainId()
-  const defaultGasfee = (chainID === '80001') ? BigNumber.from(6000000000) : BigNumber.from(50000000000)
+  const defaultGasPrice = (chainID === '80001') ? BigNumber.from(6000000000) : BigNumber.from(50000000000)
 
-  console.log("Deploying: ", CONTRACTS.GreenBTC, deployer, chainID, defaultGasfee.toString());  
+  console.log("Deploying: ", CONTRACTS.GreenBTC, deployer, chainID, defaultGasPrice.toString());  
 
   const greenBTC = await deploy(CONTRACTS.GreenBTC, {
       from: deployer,
       args: [],
       log: true,
       skipIfAlreadyDeployed: false,
-      gasPrice: defaultGasfee
+      gasPrice: defaultGasPrice
   });
 
   console.log("greenBTC deployed to %s: ", hre.network.name, greenBTC.address);
@@ -47,6 +47,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2023/10/26:2:  Add ART type check, and check minter is not zero
 // yarn deploy:matic_test:GreenBTCD
 // Implemenation:  0x9a1FC5338303b7E675a9cFfA2050aa7300760b5F
+
+// 2023/10/27 
+// yarn deploy:matic_test:GreenBTCD
+// Implemenation:  
 
 func.tags = ["GreenBTCD"];
 

@@ -39,7 +39,33 @@ contract GreenBTCImage {
         return string(result);
     }
 
-    function getCertificateSVGBytes(address owner, GreenBTCInfo calldata gbtc) external pure returns(string memory){
+
+    function getCertificateSVG(address owner, GreenBTCInfo calldata gbtc, NFTStatus calldata dataNFT) external pure returns(string memory) {
+
+        string memory svgData;
+        uint256 tokenID = gbtc.height;
+
+        if(dataNFT.open == false || dataNFT.reveal == false) { 
+            svgData = getBlindBoxSVGBytes(tokenID);
+        } else {
+            if(dataNFT.won) {
+                svgData = getGreenTreeSVGBytes(gbtc.greenType);
+            } else {
+                svgData = getCertificateSVGBytes(owner, gbtc);    
+            }      
+        }
+
+        bytes memory dataURI = abi.encodePacked(
+            '{"name":"Green BTC #',
+            tokenID.toString(),
+            '","description":"Green BTC Club","image":"data:image/svg+xml;base64,',
+            svgData,
+            '"}'
+        );
+        return string(abi.encodePacked("data:application/json;base64,", Base64.encode(dataURI)));
+    }
+
+    function getCertificateSVGBytes(address owner, GreenBTCInfo calldata gbtc) internal pure returns(string memory) {
 
         string memory turncateEnergy = _decimalTruncate(gbtc.energyStr, 3);
 
@@ -80,7 +106,14 @@ contract GreenBTCImage {
         return  string(Base64.encode(imgBytes));
     }
 
-    function getGreenTreeSVGBytes() external pure returns(string memory) {
+    function getGreenTreeSVGBytes(uint8 greenType) internal pure returns(string memory) {
+
+        string memory artFlag = ((greenType & 0xF0) == 0x10) 
+                                  ? '<rect width="10" height="10" x="290" y="280" fill="#fff"/>'
+                                    '<rect width="10" height="10" x="280" y="280" fill="#58a90f"/>'
+                                    '<rect width="10" height="10" x="290" y="290" fill="#58a90f"/>'
+                                    '<rect width="10" height="10" x="280" y="290" fill="#fff"/>'
+                                   : '';
 
         bytes memory imgBytes = abi.encodePacked(
             '<svg width="320" height="320" viewBox="0 0 320 320" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">'
@@ -268,14 +301,15 @@ contract GreenBTCImage {
                 '<rect width="320" height="10" x="0" y="280" fill="#49b652"/>'
                 '<rect width="320" height="10" x="0" y="290" fill="#49b652"/>'
                 '<rect width="320" height="10" x="0" y="300" fill="#49b652"/>'
-                '<rect width="320" height="10" x="0" y="310" fill="#49b652"/>'
+                '<rect width="320" height="10" x="0" y="310" fill="#49b652"/>',
+                artFlag,
                 '</svg>'
         );
 
         return  string(Base64.encode(imgBytes));
     }
 
-    function getBlindBoxSVGBytes(uint256 num) external pure returns(string memory){
+    function getBlindBoxSVGBytes(uint256 num) internal pure returns(string memory){
         bytes memory imgBytes = abi.encodePacked(
             '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" preserveAspectRatio="xMinYMin meet" fill="none">'
             '<style>.f{font-family:Montserrat,arial,sans-serif;dominant-baseline:middle;text-anchor:middle}</style>'

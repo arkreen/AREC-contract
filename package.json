@@ -157,6 +157,9 @@
     "deploy:matic:MulticallD": "hardhat --network matic deploy --tags MulticallD", 
     
     "deploy:matic:GreenBTC": "hardhat --network matic deploy --tags GreenBTC",
+    "deploy:matic:GreenBTCI": "hardhat --network matic deploy --tags GreenBTCI",
+
+    "deploy:matic:GreenBTCImageD": "hardhat --network matic deploy --tags GreenBTCImageD",
 
     "etherscan:matic": "hardhat --network matic etherscan-verify --api-key",
 
