@@ -32,6 +32,7 @@ function getAPIKey(network: string): string {
 //  url = `https://polygon-mainnet.infura.io/v3/` + projectID
 //  url = `https://polygon-mumbai.infura.io/v3/` + projectID
 // https://rpc-mumbai.maticvigil.com
+// https://rpc.ankr.com/polygon_mumbai
 // https://celo-mainnet.infura.io/v3/0ab4ce267db54906802cb43b24e5b0f7
 // https://celo-alfajores.infura.io/v3/0ab4ce267db54906802cb43b24e5b0f7
 
@@ -45,7 +46,7 @@ function getURL(network:string): string {
   } else if(network === 'matic') {
     url = `https://polygon-mainnet.infura.io/v3/` + projectID
   } else if(network === 'matic_test') {
-    url = `https://rpc-mumbai.maticvigil.com`
+    url = `https://rpc.ankr.com/polygon_mumbai`
   } else if(network === 'goerli') {
     url = `https://goerli.infura.io/v3/`+ projectID
   } else if(network === 'rinkeby') {

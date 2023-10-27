@@ -2,6 +2,7 @@ import { ethers } from "hardhat";
 import * as fs from "fs"
 import { ArkreenRECIssuance__factory } from "../typechain";
 import { RECDataStructOutput } from "../typechain/contracts/ArkreenRECIssuance";
+import { BigNumber } from "ethers";
 
 export enum REC_STATUS {
   Pending,            // 0
@@ -65,32 +66,36 @@ async function main() {
 
     let moveSNForward = true
 
-    console.log("Current Confirmation:", confirmInfoJson, (new Date()).toLocaleString())
+    console.log("Current Confirmation:", confirmInfoJson, (new Date()).toLocaleString(), startTokenID, totalARECNumber)
     for(let index = (startTokenID+1); index <= totalARECNumber.toNumber(); index++) {      // Id start from 1
       try {
         const ARECNftInfo: RECDataStructOutput = await arkreenRECIssuance.getRECData(index)
 
-//      console.log('AAAAAAAAAAAAA', moveSNForward, NewSerialNo, index, ARECNftInfo )
+        console.log('AAAAAAAAAAAAA', moveSNForward, NewSerialNo, index, ARECNftInfo )
         
         if(ARECNftInfo.status == REC_STATUS.Pending) {
           if (ARECNftInfo.cID.length >= 20) {
             NewSerialNo = NewSerialNo +1
             const NewSerialNoString = NewSerialNo.toString().padStart(8,'0')
-            await arkreenRECIssuance.certifyRECRequest(index, NewSerialNoString)
+            const tx = await arkreenRECIssuance.certifyRECRequest(index, NewSerialNoString, { gasPrice: BigNumber.from(5000000000)})
 
-            confirmInfoJson.SerialNo = NewSerialNoString
+            const txResult = await tx.wait()
+
+            confirmInfoJson.SerialNo = NewSerialNo.toString().padStart(8,'0')
             if(moveSNForward) {
               confirmInfoJson.counter = index.toString().padStart(4,'0')
             }
 
             setConfirmInfo(confirmInfoJson)
-            console.log("Updated Confirmation: BBBBBBBBBBBB", moveSNForward, index, NewSerialNo, confirmInfoJson, (new Date()).toLocaleString())
+            console.log("Updated Confirmation: BBBBBBBBBBBB", moveSNForward, index, NewSerialNo, confirmInfoJson, tx, txResult, (new Date()).toLocaleString())
           } else (
             moveSNForward = false
           )
         } else if(ARECNftInfo.status >= REC_STATUS.Certified && moveSNForward) {
+          console.log("Updated Confirmation: XXXXXXXXXXXX", moveSNForward, index, NewSerialNo, confirmInfoJson)
+
           confirmInfoJson.counter = index.toString().padStart(4,'0')
-          if (ARECNftInfo.serialNumber >= confirmInfoJson.SerialNo) {
+          if (Number(ARECNftInfo.serialNumber) > Number(confirmInfoJson.SerialNo)) {
             confirmInfoJson.SerialNo = ARECNftInfo.serialNumber
           }
 
