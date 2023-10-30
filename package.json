@@ -160,6 +160,8 @@
     "deploy:matic:GreenBTCI": "hardhat --network matic deploy --tags GreenBTCI",
 
     "deploy:matic:GreenBTCImageD": "hardhat --network matic deploy --tags GreenBTCImageD",
+    "deploy:matic:ABuilderD": "hardhat --network matic deploy --tags ABuilderD",
+    "deploy:matic:ABuilderU": "hardhat --network matic deploy --tags ABuilderU",
 
     "etherscan:matic": "hardhat --network matic etherscan-verify --api-key",
 
