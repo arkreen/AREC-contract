@@ -265,6 +265,58 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
   }
 
+  if(hre.network.name === 'celo') {
+    // 2023/11/01:  celo mainnet
+    const ArkreenRegistry_address     = '0x960C67B8526E6328b30Ed2c2fAeA0355BEB62A83'
+    const issuer                      = "0xaa65582453e121d463A51251E9d8C2BAd27ad99c"
+    // const tokenREC                 = "0x58Ac4e54a70b98960Ed5ecF9B9A2cd1AE83879Db"
+    const tokenCART                   = "0x9BBF9f544F3ceD640090f43FF6B820894f66Aaef"
+    const tokenPay                    = "0x765DE816845861e75A25fCA122bb6898B8B1282a"    // cUSD
+
+//  const ArkreenMiner_address        = '0x1F742C5f32C071A9925431cABb324352C6e99953'    // No miner contract for Celo
+//  const ArkreenRECToken_address     = '0x2cf7D8C6122a9026d875a8AF0967D8fd6648d9C4'    // No ART Token for Celo
+    const ArkreenRECIssuance_address  = '0xbB4b287Fdd601662eCf17fB6EDF3943A15D1b63e'
+    const ArkreenRECBadge_address     = '0x5EfbbB0a60110cCda7342A7230A32A4E78815f76'
+
+//    const Issuer_address              = '0x576Ab950B8B3B18b7B53F7edd8A47986a44AE6F4'
+//    const Issuer_name                 = 'Arkreen DAO REC Issuer'
+      
+    // 2023/11/01:    New asset
+    const idAsset =   "Classic Based AREC Token"
+    const rateToIssue = BigNumber.from(0).mul(BigNumber.from(10).pow(18))     // 0 cUSD / 1MWh, free in trial phase
+    const rateToLiquidize = 1000                                              // 10 %
+    const description = 	"Bridged AREC ERC20 token based on redeemed classic REC assets."   
+
+    const [deployer] = await ethers.getSigners();
+    const ArkreenRegistryFactory = ArkreenRegistry__factory.connect(ArkreenRegistry_address, deployer);
+
+//      function newAssetAREC(string calldata idAsset, address issuer, address tokenREC, address tokenPay,
+//                              uint128 rateToIssue, uint16 rateToLiquidize, string calldata description)
+    const newAssetARECTx = await ArkreenRegistryFactory.newAssetAREC(idAsset, issuer, tokenCART,
+                                                    tokenPay, rateToIssue, rateToLiquidize, description)
+    await newAssetARECTx.wait()
+    console.log("ArkreenRegistry newAssetAREC is executed: %s: ", hre.network.name, ArkreenRegistry_address);
+    
+    // 2023/08/25:    Celo
+    const updateTxIssuance = await ArkreenRegistryFactory.setRECIssuance(ArkreenRECIssuance_address)
+    await updateTxIssuance.wait()
+    console.log("ArkreenRECIssuance Initialized: %s: ", hre.network.name, ArkreenRECIssuance_address);
+
+//    const updateTxMiner = await ArkreenRegistryFactory.setArkreenMiner(ArkreenMiner_address)
+//    await updateTxMiner.wait()
+//    console.log("ArkreenMiner Initialized: %s: ", hre.network.name, ArkreenMiner_address);
+
+    const updateTxBadge = await ArkreenRegistryFactory.setArkreenRetirement(ArkreenRECBadge_address)
+    await updateTxBadge.wait()
+    console.log("updateTxBadge Initialized: %s: ", hre.network.name, ArkreenRECBadge_address);
+
+//    const updateTxAddRECIssuer = await ArkreenRegistryFactory.addRECIssuer(Issuer_address, ArkreenRECToken_address, Issuer_name)
+//    await updateTxAddRECIssuer.wait()
+//    console.log("AddRECIssuer Initialized: %s: ", hre.network.name, Issuer_address, ArkreenRECToken_address, Issuer_name);
+//    console.log("ArkreenRegistry Initialized to %s: ", hre.network.name, ArkreenRegistryFactory.address);
+
+  }
+
 };
 
 // 2023/03/28: call newAssetAREC for Matic testnet
@@ -294,6 +346,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2023/10/18: call newAssetAREC for Matic mainnet: CART: 0x0D7899F2D36344ed21829D4EBC49CC0d335B4A06
 // yarn deploy:matic:gRegistryI
 
+// 2023/10/31: call newAssetAREC for celo mainnet: newAssetAREC, setRECIssuance, setArkreenRetirement
+// yarn deploy:celo:gRegistryI
 
 func.tags = ["gRegistryI"];
 

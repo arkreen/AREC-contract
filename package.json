@@ -183,6 +183,20 @@
     "confirmAuto:celo_test": "hardhat run --network celo_test ./deploy/confirmIssuance_celo.ts",
     "etherscan:celo_test": "hardhat --network celo_test etherscan-verify --api-url https://api-alfajores.celoscan.io --api-key",
 
+    "deploy:celo:gRegistry": "hardhat --network celo deploy --tags gRegistry",
+    "deploy:celo:RECIssueExtD": "hardhat --network celo deploy --tags RECIssueExtD",
+    "deploy:celo:RECIssue": "hardhat --network celo deploy --tags RECIssue",
+    "deploy:celo:RECIssueI": "hardhat --network celo deploy --tags RECIssueI", 
+    "deploy:celo:RECToken": "hardhat --network celo deploy --tags RECToken",
+    "deploy:celo:RECBadge": "hardhat --network celo deploy --tags RECBadge",
+    "deploy:celo:gRegistryI": "hardhat --network celo deploy --tags gRegistryI", 
+    "deploy:celo:ArtBank": "hardhat --network celo deploy --tags ArtBank",
+    "deploy:celo:ABuilder": "hardhat --network celo deploy --tags ABuilder",
+    "deploy:celo:RECTokenI": "hardhat --network celo deploy --tags RECTokenI",
+    "deploy:celo:ABuilderI": "hardhat --network celo deploy --tags ABuilderI",
+    "deploy:celo:ArtBankI": "hardhat --network celo deploy --tags ArtBankI",
+    "deploy:celo:MulticallD": "hardhat --network celo deploy --tags MulticallD",
+
     "etherscan:celo": "hardhat --network celo etherscan-verify --api-url https://api.celoscan.io --api-key",
 
     "test": "hardhat test",

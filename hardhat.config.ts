@@ -83,7 +83,7 @@ const config: HardhatUserConfig = {
     },
     celo: {
       url: getURL("celo"),
-      chainId: 137,
+      chainId: 42220,
       accounts: [process.env.MATIC_PRIVATE_KEY as string, process.env.MATIC_CONTROLLER_KEY as string],
     },
     matic_test: {

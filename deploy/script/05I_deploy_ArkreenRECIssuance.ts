@@ -190,6 +190,63 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     
   } 
 
+  if(hre.network.name === 'celo') {
+      
+    const REC_ISSUANCE_ADDRESS = "0xbB4b287Fdd601662eCf17fB6EDF3943A15D1b63e"       // Celo Mainnet: 2023/10/31
+
+    const [deployer] = await ethers.getSigners();
+    const ArkreenRECIssuanceFactory = ArkreenRECIssuance__factory.connect(REC_ISSUANCE_ADDRESS, deployer);         
+    const ArkreenRECIssuanceExtFactory = ArkreenRECIssuanceExt__factory.connect(REC_ISSUANCE_ADDRESS, deployer);    
+      
+    // 2023/10/31
+    // function setESGExtAddress(address addrESGExt)
+    const REC_ISSUANCE_EXT_ADDRESS  = "0xD718fcC418e835C8dB91BbB9B90e2F9a6833EbAA"           // 2023/10/31, addrESGExt  
+
+/*    
+    // 2023/10/31
+    const setESGExtAddressTx = await ArkreenRECIssuanceFactory.setESGExtAddress(REC_ISSUANCE_EXT_ADDRESS)
+    await setESGExtAddressTx.wait()
+
+    console.log("callData setESGExtAddress", setESGExtAddressTx)
+    console.log("ArkreenRECIssuance: set Ext address to %s: ", hre.network.name, ArkreenRECIssuanceFactory.address,
+                                                                    REC_ISSUANCE_EXT_ADDRESS );
+*/
+
+      //////////////////////////////////////////////////////
+      // 2023/11/01
+      // function manageMVPAddress(bool op, address[] calldata listMVP) 
+      const MVP_ADDRESS = "0x1249B1eABcAE642CF3Cb1e512a0075CEe92769BE"            // 2023/11/01
+
+      const updateTx = await ArkreenRECIssuanceExtFactory.manageMVPAddress(true, [MVP_ADDRESS])
+      await updateTx.wait()
+
+      console.log("callData, update", updateTx)
+      console.log("ArkreenRECIssuance Updated to %s: ", hre.network.name, ArkreenRECIssuanceExtFactory.address, MVP_ADDRESS);                                                                    
+
+/*
+    // 2023/09/27
+//      const MVP_ADDRESS1 = "0x364a71eE7a1C9EB295a4F4850971a1861E9d3c7D"               // (2023/8/25): Celo test MVP address, account 1
+//      const MVP_ADDRESS2 = "0xB53B96e1eF29cB14313c18Fa6374AB87df59BcD9"               // (2023/8/25): Celo test MVP address, account 2
+//      const MVP_ADDRESS3 = "0x576Ab950B8B3B18b7B53F7edd8A47986a44AE6F4"               // (2023/8/25): Celo test MVP address, account 3
+
+//      const MVP_ABBA      = "0xeBD4B52B6412EA0dc162EE658de8761E9F248B83"               // (2023/9/27): Celo test MVP address, Abba 1
+    const MVP_ABBA      = "0xe655983fCD0A36E5b6c1401E53586968242b4E0b"               // (2023/9/27): Celo test MVP address, Abba 2
+    const MVP_TEST      = "0x571b9911448b1FC4f93Abf48cEC437Df97cf1E2E"               // (2023/9/27): Celo test MVP address, Me Test
+    
+    // function manageMVPAddress(bool op, address[] calldata listMVP) 
+    // 1. 2023/08/25
+//        const updateTx = await ArkreenRECIssuanceExtFactory.manageMVPAddress(true, [MVP_ADDRESS1, MVP_ADDRESS2, MVP_ADDRESS3])
+    const updateTx = await ArkreenRECIssuanceExtFactory.manageMVPAddress(true, [MVP_ABBA], {gasPrice: BigNumber.from(100_000_000_000)})
+    await updateTx.wait()
+
+    console.log("callData, update", updateTx)
+//      console.log("ArkreenRECIssuance manageMVPAddress %s: ", hre.network.name, ArkreenRECIssuanceExtFactory.address, MVP_ADDRESS1, MVP_ADDRESS2, MVP_ADDRESS3);        
+    console.log("ArkreenRECIssuance manageMVPAddress %s: ", hre.network.name, ArkreenRECIssuanceExtFactory.address, MVP_ABBA, MVP_TEST);        
+
+*/    
+
+  } 
+
 };
 
 // 2023/03/28： Called setESGExtAddress, Must call setESGExtAddress First
@@ -240,6 +297,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2023/10/18： Called manageMVPAddress: 0x1249B1eABcAE642CF3Cb1e512a0075CEe92769BE
 // yarn deploy:matic:RECIssueI
+
+// 2023/10/31： Called setESGExtAddress, Must call setESGExtAddress First
+// yarn deploy:celo:RECIssueI
+
+// 2023/11/01： Called manageMVPAddress
+// yarn deploy:celo:RECIssueI
 
 func.tags = ["RECIssueI"];
 

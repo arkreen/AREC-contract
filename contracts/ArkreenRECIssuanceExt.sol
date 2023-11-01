@@ -126,7 +126,9 @@ contract ArkreenRECIssuanceExt is
         emit ESGBatchMinted(sender, tokenId);
 
         // Transfer the REC mint fee
-        TransferHelper.safeTransferFrom(permitToPay.token, _msgSender(), address(this), valuePayment);
+        if(valuePayment != 0) {
+            TransferHelper.safeTransferFrom(permitToPay.token, _msgSender(), address(this), valuePayment);
+        }
     }
 
     /**

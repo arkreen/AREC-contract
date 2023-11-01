@@ -65,6 +65,15 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       USDC_ADDRESS      = "0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1"          // USDC address
       // USDT_ADDRESS      = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F"          // USDT address
       WNATIVE_ADDRESS    = "0xF194afDf50B03e69Bd7D057c1Aa9e10c9954E4C9"          // CELO native asset
+
+    } else if(hre.network.name === 'celo')  {        // Celo mainnet
+
+      BUILDER_ADDRESS   = "0x3d5531cF0bC2e8d0658fEc0D1a9995211Ac1f337"          // Action Builder address
+      HART_ADDRESS      = "0x9BBF9f544F3ceD640090f43FF6B820894f66Aaef"          // HART Address
+
+      USDC_ADDRESS      = "0x765DE816845861e75A25fCA122bb6898B8B1282a"          // USDC address
+      // USDT_ADDRESS      = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F"          // USDT address
+      WNATIVE_ADDRESS    = "0x471EcE3750Da237f93B8E339c536989b8978a438"          // CELO native asset
     } 
 
     const [deployer] = await ethers.getSigners();
@@ -88,7 +97,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
                                                     BUILDER_ADDRESS, HSKESG_ADDRESS );    
 */
 
-
+/*
     // 2023/09/07, 2023/09/12, 2023/10/13, 2023/10/23, 2023/10/24
     console.log("ArkreenBuilder mangeTrustedForwarder:", BUILDER_ADDRESS, GREEN_BTC_ADDRESS, deployer.address)
     const ArkreenBuilderFactory = ArkreenBuilder__factory.connect(BUILDER_ADDRESS as string, deployer);
@@ -100,6 +109,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     // Approve the DEX Router to Tranfer-From the specified tokens
     // const ArkreenBuilderFactory = ArkreenBuilder__factory.connect(BUILDER_ADDRESS as string, deployer);
+*/
 
 /*
     // 2023/04/05
@@ -122,15 +132,15 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
                               [USDC_ADDRESS, USDT_ADDRESS, WNATIVE_ADDRESS, AKRE_ADDRESS] );
 */
 
-/*
+
     // 2023/08/25: Celo_test, Approve USDT_ADDRESS, USDC_ADDRESS, NATIVE_ADDRESS
+    // 2023/11/01: Celo, Approve USDC_ADDRESS, NATIVE_ADDRESS
     const ArkreenBuilderFactory = ArkreenBuilder__factory.connect(BUILDER_ADDRESS as string, deployer);
     const approveArtBankTx = await ArkreenBuilderFactory.approveArtBank(
                                       [USDC_ADDRESS, WNATIVE_ADDRESS] as string[])
     await approveArtBankTx.wait()
     console.log("ArkreenBuilder approveRouter is executed: %s: ", hre.network.name, BUILDER_ADDRESS, 
                               [USDC_ADDRESS, WNATIVE_ADDRESS] );                              
-*/
 
 };
 
@@ -177,6 +187,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2023/10/27
 // yarn deploy:matic:ABuilderI:   // setClimateBuilder(CART_ADDRESS),
 // Action: setClimateBuilder
+
+// 2023/11/01
+// yarn deploy:celo:ABuilderI
+// Action: approveArtBank(USDC_ADDRESS, WNATIVE_ADDRESS)   
 
 func.tags = ["ABuilderI"];
 

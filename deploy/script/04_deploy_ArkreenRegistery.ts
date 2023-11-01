@@ -41,6 +41,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // Proxy:           0x572e9B8B210414b2D76ddf578925D769D96982E6
 // Implementation:  0x1410A78563075891bB196E30a8e441F93B7CC98d
 
+// 2023/10/31
+// yarn deploy:celo:gRegistry
+// Proxy:           0x960C67B8526E6328b30Ed2c2fAeA0355BEB62A83
+// Implementation:  0x953AAc5A0205CCdD6E0b4107ffB0a0ef7155F5bE
+
 func.tags = ["gRegistry"];
 
 export default func;

@@ -28,9 +28,13 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //    REGISTRY_ADDRESS    = "0x3E8A27dA0BF241f588141659cBb6Bd39717527F1"          // Version for test
       REGISTRY_ADDRESS    = "0xb17faCaCA106fB3D216923DB6CaBFC7C0517029d"          // 2023/3/23: Normal Release
     } 
-    else if(hre.network.name === 'celo_test')  {     // Simulation
+    else if(hre.network.name === 'celo_test')  {      // Simulation
       AKREToken_ADDRESS   = constants.AddressZero
       REGISTRY_ADDRESS   = "0x572e9B8B210414b2D76ddf578925D769D96982E6"
+      
+    } if(hre.network.name === 'celo')  {              // mainnet
+      AKREToken_ADDRESS   = constants.AddressZero
+      REGISTRY_ADDRESS   = "0x960C67B8526E6328b30Ed2c2fAeA0355BEB62A83"
     }
 
     const { deployments, getNamedAccounts } = hre;
@@ -69,6 +73,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:celo_test:RECIssue
 // Proxy:           0x66e9c20DE3711e7C8c886d461aACd6E092E161BE
 // Implementation:  0xc9865313b3EeB737C0061a578ca4Af722Add84CB
+
+// 2023/10/31
+// yarn deploy:celo:RECIssue
+// Proxy:           0xbB4b287Fdd601662eCf17fB6EDF3943A15D1b63e
+// Implementation:  0x2F4277E7Ec4FC9980Aa4F81d82E30575550099A9
 
 func.tags = ["RECIssue"];
 

@@ -248,6 +248,35 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       await depositARTTrx.wait()  
     
     }
+
+    else if(hre.network.name === 'celo')  {        // Celo Testnet 2023/11/01
+      RECBANK_ADDRESS   = "0x815bFE3aaCF765c9E0A4DdEb98Ad710a4Fb860d3"          // 2023/11/01
+      BUILDER_ADDRESS   = "0x3d5531cF0bC2e8d0658fEc0D1a9995211Ac1f337"          // ArkreenBuilder
+
+      CART_AREC         = "0x9BBF9f544F3ceD640090f43FF6B820894f66Aaef"
+      CART_CONTROLLER   = "0x1249B1eABcAE642CF3Cb1e512a0075CEe92769BE"
+
+      USDC_ADDRESS    = "0x765DE816845861e75A25fCA122bb6898B8B1282a"          // USDC address: cUSD
+//    USDT_ADDRESS    = "0xD89EDB2B7bc5E80aBFD064403e1B8921004Cdb4b"          // USDT address
+      WNATIVE_ADDRESS  = "0x471EcE3750Da237f93B8E339c536989b8978a438"         // CELO native asset: Celo
+//    AKRE_ADDRESS    = "0x54e1c534f59343c56549c76d1bdccc8717129832"          // AKRE address
+
+      USDC_PRICE      = BigNumber.from(10).mul(BigNumber.from(10).pow(18))     // 10 USDC, 10**18
+//    USDT_PRICE      = BigNumber.from(10).mul(BigNumber.from(10).pow(18))     // 10 USDT, 10**18
+      MATIC_PRICE     = BigNumber.from(20).mul(BigNumber.from(10).pow(18))     // 20 Celo
+//    AKRE_PRICE      = expandTo18Decimals(200)                               // 200 AKRE
+
+      const [deployer] = await ethers.getSigners();
+
+      // Approve HashKeyESGBTCContract to Tranfer-From the specified tokens
+      const ArkreenRECBankFactory = ArkreenRECBank__factory.connect(RECBANK_ADDRESS as string, deployer);
+     
+      // 2023/11/01: Called from Account 1
+      const addNewARTTRx = await ArkreenRECBankFactory.addNewART(CART_AREC as string , CART_CONTROLLER as string);
+      await addNewARTTRx.wait()
+    
+    }
+
 };
 
 
@@ -303,6 +332,15 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2023/10/25: Manually : 
 // 1. changeSalePrice (USDC/CART, USDT/CART)
+// 2. Approve(RECBANK_ADDRESS) (CART)
+// 3. Deposit CART
+
+// 2023/11/01
+// yarn deploy:celo:ArtBankI:          // addNewART
+// Action: addNewART
+
+// 2023/11/01: Manually : 
+// 1. changeSalePrice (cUSDC/CART)
 // 2. Approve(RECBANK_ADDRESS) (CART)
 // 3. Deposit CART
 

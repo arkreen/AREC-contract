@@ -34,6 +34,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // deploy:celo_test:MulticallD:  deployed on Celo Testnet
 // 0xB8663EdC9929D9135E7f6D50f7d3A97862554a72
 
+// 2023/11/01
+// deploy:celo:MulticallD:  deployed on Celo mainnet
+// 0xB63e71D6FB9F0b3717239474E6BD189930a3F201
+
 func.tags = ["MulticallD"];
 
 export default func;

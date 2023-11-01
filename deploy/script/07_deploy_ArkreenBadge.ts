@@ -20,8 +20,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     else if(hre.network.name === 'matic')  {                           // Matic Mainnet for test
 //    REGISTRY_ADDRESS   = "0x3E8A27dA0BF241f588141659cBb6Bd39717527F1"   // Version test
       REGISTRY_ADDRESS   = "0xb17facaca106fb3d216923db6cabfc7c0517029d"   // 2023/03/22: Normal Release
-    } else if(hre.network.name === 'celo_test')  {
+    } 
+    else if(hre.network.name === 'celo_test')  {
       REGISTRY_ADDRESS   = "0x572e9B8B210414b2D76ddf578925D769D96982E6"   // ArkreenRegistry for celo testnet
+    }     
+    else if(hre.network.name === 'celo')  {
+      REGISTRY_ADDRESS   = "0x960C67B8526E6328b30Ed2c2fAeA0355BEB62A83"   // ArkreenRegistry for celo mainnet
     }     
 
     const { deployments, getNamedAccounts } = hre;
@@ -70,6 +74,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:celo_test:RECBadge
 // Proxy:           0x9b5EE14b0B23876F39747747b227dDe12B62143d
 // Implementation:  0xF78E8576688284a51e783a3E730DCE8C6Aa686CC
+
+// 2023/11/01
+// yarn deploy:celo:RECBadge
+// Proxy:           0x5EfbbB0a60110cCda7342A7230A32A4E78815f76
+// Implementation:  0x8aA572eE9c7991dc059a2Ae18844858B1Eb274F0
 
 func.tags = ["RECBadge"];
 

@@ -34,20 +34,28 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
       REGISTRY_ADDRESS   = "0xb17faCaCA106fB3D216923DB6CaBFC7C0517029d"       // 2023/03/22: Normal release
       ISSUER_ADDRESS     = "0xec9254677d252df0dCaEb067dFC8b4ea5F6edAfC"       // 2023/03/22: same as test version
+
     }  else if(hre.network.name === 'celo_test')  {     // Celo test: 2023/08/21
       REGISTRY_ADDRESS    = "0x572e9B8B210414b2D76ddf578925D769D96982E6"
       ISSUER_ADDRESS      = "0x576Ab950B8B3B18b7B53F7edd8A47986a44AE6F4"
+
+    }  else if(hre.network.name === 'celo')  {                                    // Celo: 2023/11/01
+      REGISTRY_ADDRESS    = "0x960C67B8526E6328b30Ed2c2fAeA0355BEB62A83"
+      ISSUER_ADDRESS      = "0xaa65582453e121d463A51251E9d8C2BAd27ad99c"          // 2023/11/01
     } 
 
     const { deployments, getNamedAccounts } = hre;
     const { deploy } = deployments;
     const { deployer } = await getNamedAccounts();
 
-    const ART_NAME = 'HashKey AREC Token'
-    const SYMBOL = 'HART'
+    ///const ART_NAME = 'HashKey AREC Token'
+    ///const SYMBOL = 'HART'
 
     // const ART_NAME = ''         
     // const SYMBOL = ''
+
+    const ART_NAME  = 'Classic Based AREC Token'
+    const SYMBOL    = 'CART'
 
     console.log("Deploying: ", CONTRACTS.RECToken, deployer);  
     const ArkreenRECToken = await deploy(CONTRACTS.RECToken, {
@@ -60,6 +68,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //            args: [REGISTRY_ADDRESS, ISSUER_ADDRESS]    // 2023/2/26: Old Version
 
               // 2023/02/26: Name and Symbol can be customized for HashKey ESG project, test simulation
+              // 2023/11/01: Celo Maninet
               args: [REGISTRY_ADDRESS, ISSUER_ADDRESS, ART_NAME, SYMBOL]
             },
           },
@@ -80,6 +89,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:celo_test:RECToken
 // Proxy:           0x57Fe6324538CeDd43D78C975118Ecf8c137fC8B2
 // Implementation:  0xeAe93E21ea6E3EfFB0a58d458fb8414be98e285e
+
+// 2023/11/01
+// yarn deploy:celo:RECToken
+// Proxy:           0x9BBF9f544F3ceD640090f43FF6B820894f66Aaef
+// Implementation:  0xC039075e8abB0821BB0e7DDF43718345900C19c8
 
 func.tags = ["RECToken"];
 

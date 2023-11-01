@@ -47,6 +47,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:celo_test:RECIssueExtD: skip the payment value check while it is zero
 // 0x31ad3b7DC83bc00C321E927dE11AD313eEB9C07e
 
+// 2023/10/31:
+// yarn deploy:celo:RECIssueExtD
+// 0xD718fcC418e835C8dB91BbB9B90e2F9a6833EbAA
+
 func.tags = ["RECIssueExtD"];
 
 export default func;

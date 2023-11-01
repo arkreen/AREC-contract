@@ -15,8 +15,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     else if(hre.network.name === 'celo_test')  {                              // Matic Mainnet for test
       NATIVE_ADDRESS = "0xf194afdf50b03e69bd7d057c1aa9e10c9954e4c9"           // WMATIC
     } 
-    else if(hre.network.name === 'celo')  {                                   // Matic Mainnet for test
-      NATIVE_ADDRESS = "0x471EcE3750Da237f93B8E339c536989b8978a438"           // WMATIC
+    else if(hre.network.name === 'celo')  {                                   // Celo Mainnet
+      NATIVE_ADDRESS = "0x471EcE3750Da237f93B8E339c536989b8978a438"           // Celo 
     }  
 
     const { deployments, getNamedAccounts } = hre;
@@ -57,6 +57,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:celo_test:ArtBank
 // Proxy:           0x827155A6fD0aac8AbE7beb4Ee1a95143255ed438
 // Implementation:  0x7423616B90049f0510B1723b2a460A3D462C7Ca6
+
+// 2023/11/01
+// yarn deploy:celo:ArtBank
+// Proxy:           0x815bFE3aaCF765c9E0A4DdEb98Ad710a4Fb860d3
+// Implementation:  0xbDB320004dD108BD6bBBa948db992F7B4b3BdBF4
 
 func.tags = ["ArtBank"];
 
