@@ -39,6 +39,12 @@ const GREEN_BTC_TYPEHASH = utils.keccak256(
   utils.toUtf8Bytes('GreenBitCoin(uint256 height,string energyStr,uint256 artCount,string blockTime,address minter,uint8 greenType)')
 )
 
+// keccak256("GreenBitCoinBatch((uint128,uint128,address,uint8,string,string)[])");
+// 0x829ABF7A83FCBCF66649914B5A9A514ACBF6BEDA598A620AEF732202E8155D73
+const GREENBTC_BATCH_TYPEHASH = utils.keccak256(
+  utils.toUtf8Bytes('GreenBitCoinBatch((uint128,uint128,address,uint8,string,string)[])')
+)
+
 export function expandTo9Decimals(n: number): BigNumber {
   return BigNumber.from(n).mul(BigNumber.from(10).pow(9))
 }
@@ -124,6 +130,15 @@ export enum RECStatus {
   Certified,          // 3
   Retired,            // 4
   Liquidized          // 5
+}
+
+export interface GreenBTCInfo {
+  height:     BigNumber
+  ARTCount:   BigNumber
+  minter:     string             // Minter of the respective NFT
+  greenType:  number          // High nibble:  ART type: 0, CART, 1, Arkreen ART; Low nibble: mint type, 1: system, 2: user;  
+  blockTime:  string          // For NFT display
+  energyStr:  string          // For NTT display
 }
 
 export function getCreate2Address(
@@ -436,7 +451,30 @@ export function getGreenBitcoinDigest(
   )
 }
 
-// GreenBitCoin(uint256 height,string energyStr,uint256 artCount,string blockTime,address beneficiary,uint8 greenType)
+export function getGreenBitcoinDigestBatch(
+  contractName: string,
+  contractAddress: string,
+  greenBTCInfo: GreenBTCInfo[]
+): string {
+  const DOMAIN_SEPARATOR = getDomainSeparator(contractName, contractAddress)
+  
+  return utils.keccak256(
+    utils.solidityPack(
+      ['bytes1', 'bytes1', 'bytes32', 'bytes32'],
+      [
+        '0x19',
+        '0x01',
+        DOMAIN_SEPARATOR,
+        utils.keccak256(
+          utils.defaultAbiCoder.encode(
+            ['bytes32', '(uint256 height,uint256 ARTCount,address minter,uint256 greenType,string blockTime,string energyStr)[]'],
+            [GREENBTC_BATCH_TYPEHASH, greenBTCInfo]
+          )
+        )
+      ]
+    )
+  )
+}
 
 export async function getApprovalDigest(
   token: Contract,

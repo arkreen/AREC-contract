@@ -17,6 +17,9 @@ import './interfaces/IArkreenBuilder.sol';
 import './interfaces/IArkreenRECBank.sol';
 import './GreenBTCType.sol';
 
+// Import this file to use console.log
+// import "hardhat/console.sol";
+
 contract GreenBTC is 
     ContextUpgradeable,
     UUPSUpgradeable,
@@ -30,6 +33,10 @@ contract GreenBTC is
 
     //keccak256("GreenBitCoin(uint256 height,string energyStr,uint256 artCount,string blockTime,address minter,uint8 greenType)");
     bytes32 constant GREEN_BTC_TYPEHASH = 0xE645798FE54DB29ED50FD7F01A05DE6D1C5A65FAC8902DCFD7427B30FBD87C24;
+
+    //keccak256("GreenBitCoinBatch((uint128,uint128,address,uint8,string,string)[])");
+    bytes32 constant GREENBTC_BATCH_TYPEHASH = 0x829ABF7A83FCBCF66649914B5A9A514ACBF6BEDA598A620AEF732202E8155D73;
+    
     string  constant NAME = "Green BTC Club";
     string  constant SYMBOL = "GBC";
     string  constant VERSION = "1";
@@ -244,6 +251,43 @@ contract GreenBTC is
         emit GreenBitCoin(gbtc.height, gbtc.ARTCount, gbtc.minter, gbtc.greenType);
     }
 
+    /** 
+     * @dev Greenize BTC with specified ART token
+     * @param gbtcList Bitcoin block info to be greenized
+     * @param sig Signature of the authority to Bitcoin block info
+     * @param badgeInfo Information that will logged in Arkreen climate badge
+     * @param tokenART Address of the ART token, which should be whitelisted in the accepted list.
+     * @param deadline The deadline to cancel the transaction
+     */
+    function authMintGreenBTCWithARTBatch(
+        GreenBTCInfo[]  calldata gbtcList, 
+        Sig             calldata sig, 
+        BadgeInfo       calldata badgeInfo,
+        address                  tokenART, 
+        uint256                  deadline
+    )  public  ensure(deadline) {
+
+        require(whiteARTList[tokenART], "GBTC: ART Not Accepted"); 
+
+        uint256 amountARTSum = _authVerifyBatch(gbtcList, sig);                                              // verify signature
+ 
+        TransferHelper.safeTransferFrom(tokenART, msg.sender, address(this), amountARTSum);
+
+        for(uint256 index = 0; index < gbtcList.length; index++) {
+            require(dataGBTC[gbtcList[index].height].ARTCount == 0, "GBTC: Already Minted");
+            require((gbtcList[index].greenType & 0xF0) == 0x10, "GBTC: Wrong ART Type");
+
+            // actionBuilderBadgeWithART(address,uint256,uint256,(address,string,string,string)): 0x6E556DF8
+            bytes memory callData = abi.encodeWithSelector(0x6E556DF8, tokenART, gbtcList[index].ARTCount, deadline, badgeInfo);
+
+            _actionBuilderBadge(abi.encodePacked(callData, gbtcList[index].minter));
+
+            _mintNFT(gbtcList[index]);
+
+            emit GreenBitCoin(gbtcList[index].height, gbtcList[index].ARTCount, gbtcList[index].minter, gbtcList[index].greenType);
+        }
+    }
+
     /**
      * @dev Open the Green Bitcoin box, only thw owner of the box acceptable.
      * @param tokenID ID of the NFT token to be opened
@@ -438,6 +482,24 @@ contract GreenBTC is
     function _authVerify(GreenBTCInfo calldata gbtc, Sig calldata sig) internal view {
 
         bytes32 greenBTCHash = keccak256(abi.encode(GREEN_BTC_TYPEHASH, gbtc.height, gbtc.energyStr, gbtc.ARTCount, gbtc.blockTime, gbtc.minter, gbtc.greenType));
+        bytes32 digest = keccak256(abi.encodePacked('\x19\x01', DOMAIN_SEPARATOR, greenBTCHash));
+        address recoveredAddress = ecrecover(digest, sig.v, sig.r, sig.s);
+
+        require(recoveredAddress == authorizer, "GBTC: Invalid Singature");
+    }
+
+    /**
+     * @dev Verify the signature of authority based on the GreenBTC info list
+     * @param gbtcList Green BTC information of the List
+     * @param sig Signature of the authority
+     */
+    function _authVerifyBatch(GreenBTCInfo[] calldata gbtcList, Sig calldata sig) internal view returns(uint256 amountARTSum) {
+
+        bytes memory greenBTCData = abi.encode(GREENBTC_BATCH_TYPEHASH, gbtcList);
+
+        for(uint256 index = 0; index < gbtcList.length; index++) amountARTSum += gbtcList[index].ARTCount;
+
+        bytes32 greenBTCHash = keccak256(greenBTCData);
         bytes32 digest = keccak256(abi.encodePacked('\x19\x01', DOMAIN_SEPARATOR, greenBTCHash));
         address recoveredAddress = ecrecover(digest, sig.v, sig.r, sig.s);
 
