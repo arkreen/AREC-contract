@@ -252,10 +252,10 @@ contract GreenBTC is
     }
 
     /** 
-     * @dev Greenize BTC with specified ART token
-     * @param gbtcList Bitcoin block info to be greenized
+     * @dev Greenize multiple BTC blocks with specified ART token
+     * @param gbtcList Information of the Bitcoin blocks to be greenized
      * @param sig Signature of the authority to Bitcoin block info
-     * @param badgeInfo Information that will logged in Arkreen climate badge
+     * @param badgeInfo Information that will logged in Arkreen climate badge, used for all the blocks
      * @param tokenART Address of the ART token, which should be whitelisted in the accepted list.
      * @param deadline The deadline to cancel the transaction
      */
@@ -269,8 +269,7 @@ contract GreenBTC is
 
         require(whiteARTList[tokenART], "GBTC: ART Not Accepted"); 
 
-        uint256 amountARTSum = _authVerifyBatch(gbtcList, sig);                                              // verify signature
- 
+        uint256 amountARTSum = _authVerifyBatch(gbtcList, sig);                                           // verify signature
         TransferHelper.safeTransferFrom(tokenART, msg.sender, address(this), amountARTSum);
 
         for(uint256 index = 0; index < gbtcList.length; index++) {

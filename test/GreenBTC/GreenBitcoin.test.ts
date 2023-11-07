@@ -683,6 +683,34 @@ describe("GreenBTC Test Campaign", () => {
                       .to.be.revertedWith("GBTC: Already Minted")       
 
         } 
+
+        // Error: authMintGreenBTCWithARTBatch      
+        {
+          const greenBTCInfo: GreenBTCInfo=  {
+            height:     BigNumber.from(45678),
+            ARTCount:   expandTo9Decimals(45),  // 12 HART
+            minter:     owner2.address,
+            greenType:  0x02,
+            blockTime:  'Apr 14, 2009 10:25 PM UTC',
+            energyStr:  '45.234 MWh'
+          }
+
+          // const receiver = owner1.address
+          const register_digest = getGreenBitcoinDigestBatch(
+                          'Green BTC Club',
+                          greenBitcoin.address,
+                          [greenBTCInfo]
+                        )
+    
+          const {v,r,s} = ecsign( Buffer.from(register_digest.slice(2), 'hex'), 
+                                                Buffer.from(privateKeyRegister.slice(2), 'hex'))  
+        
+          await arkreenRECToken.connect(owner1).approve(greenBitcoin.address, constants.MaxUint256)  
+          await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithARTBatch( [greenBTCInfo], {v,r,s}, 
+                                                    badgeInfo, arkreenRECToken.address, constants.MaxUint256))
+                      .to.be.revertedWith("GBTC: Wrong ART Type")       
+
+        } 
         
         // Normal: authMintGreenBTCWithARTBatch: arkreenRECToken   
         {
@@ -711,10 +739,102 @@ describe("GreenBTC Test Campaign", () => {
                                                       badgeInfo, arkreenRECToken.address, constants.MaxUint256 )     
 
           expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(artTokenESGBefore.sub(expandTo9Decimals(45)))                                                      
-        }                                             
+        }
+             
+        
+        // Normal: authMintGreenBTCWithARTBatch: arkreenRECToken: Gasfee
+        {
+          let greenBTCInfo1: GreenBTCInfo=  {
+            height:     BigNumber.from(56789),
+            ARTCount:   expandTo9Decimals(45),  // 12 HART
+            minter:     owner2.address,
+            greenType:  0x12,
+            blockTime:  'Apr 14, 2009 10:25 PM UTC',
+            energyStr:  '45.234 MWh'
+          }
 
+          let greenBTCInfo2 = { ...greenBTCInfo1 };
+          greenBTCInfo2.height = greenBTCInfo1.height.add(2)
+
+          let greenBTCInfo3 = { ...greenBTCInfo1 };
+          greenBTCInfo3.height = greenBTCInfo1.height.add(3)
+
+          let greenBTCInfo4 = { ...greenBTCInfo1 };
+          greenBTCInfo4.height = greenBTCInfo1.height.add(4)
+
+          let greenBTCInfo5 = { ...greenBTCInfo1 };
+          greenBTCInfo5.height = greenBTCInfo1.height.add(5)
+
+          let greenBTCInfo6 = { ...greenBTCInfo1 };
+          greenBTCInfo6.height = greenBTCInfo1.height.add(6)
+
+          let greenBTCInfo7 = { ...greenBTCInfo1 };
+          greenBTCInfo7.height = greenBTCInfo1.height.add(7)
+          
+          let greenBTCInfo8 = { ...greenBTCInfo1 };
+          greenBTCInfo8.height = greenBTCInfo1.height.add(8)
+          
+          let greenBTCInfo9 = { ...greenBTCInfo1 };
+          greenBTCInfo9.height = greenBTCInfo1.height.add(9)
+          
+          let greenBTCInfo10 = { ...greenBTCInfo1 };
+          greenBTCInfo10.height = greenBTCInfo1.height.add(10)          
+
+          // const receiver = owner1.address
+          const register_digest = getGreenBitcoinDigestBatch(
+                          'Green BTC Club',
+                          greenBitcoin.address,
+                          [ greenBTCInfo1, greenBTCInfo2, greenBTCInfo3, greenBTCInfo4, greenBTCInfo5,
+                            greenBTCInfo6, greenBTCInfo7, greenBTCInfo8, greenBTCInfo9, greenBTCInfo10]
+                        )
+    
+          const {v,r,s} = ecsign( Buffer.from(register_digest.slice(2), 'hex'), 
+                                                Buffer.from(privateKeyRegister.slice(2), 'hex'))  
+
+          await arkreenRECToken.connect(owner1).approve(greenBitcoin.address, constants.MaxUint256)  
+
+          const tx = await greenBitcoin.connect(owner1).authMintGreenBTCWithARTBatch( 
+              [ greenBTCInfo1, greenBTCInfo2, greenBTCInfo3, greenBTCInfo4, greenBTCInfo5,
+                greenBTCInfo6, greenBTCInfo7, greenBTCInfo8, greenBTCInfo9, greenBTCInfo10], 
+                {v,r,s}, badgeInfo, arkreenRECToken.address, constants.MaxUint256 )  
+           
+          const receipt = await tx.wait()
+          expect(receipt.gasUsed).to.eq("7181278")        // 10: 7181278        
+        } 
+        
+
+        // Normal: authMintGreenBTCWithARTBatch: arkreenRECToken: Gasfee
+        {
+          let greenBTCInfoArray = new Array<GreenBTCInfo>(20)
+          for( let index = 0; index < greenBTCInfoArray.length; index++) {
+            greenBTCInfoArray[index]=  {
+              height:     BigNumber.from(67890).add(index),
+              ARTCount:   expandTo9Decimals(12),  // 12 HART
+              minter:     owner2.address,
+              greenType:  0x12,
+              blockTime:  'Apr 14, 2009 10:25 PM UTC',
+              energyStr:  '45.234 MWh'
+            }
+          }
+
+          // const receiver = owner1.address
+          const register_digest = getGreenBitcoinDigestBatch(
+                          'Green BTC Club',
+                          greenBitcoin.address, greenBTCInfoArray
+                        )
+    
+          const {v,r,s} = ecsign( Buffer.from(register_digest.slice(2), 'hex'), 
+                                                Buffer.from(privateKeyRegister.slice(2), 'hex'))  
+
+          await arkreenRECToken.connect(owner1).approve(greenBitcoin.address, constants.MaxUint256)  
+
+          const tx = await greenBitcoin.connect(owner1).authMintGreenBTCWithARTBatch( 
+                            greenBTCInfoArray, {v,r,s}, badgeInfo, arkreenRECToken.address, constants.MaxUint256 )  
+
+          const receipt = await tx.wait()
+          expect(receipt.gasUsed).to.eq("14193304")        // 20: 14193304        
+        } 
       });      
-
 
       it("GreenBTC Test: authMintGreenBTCWithNative", async () => {
         await arkreenRECBank.addNewART( arkreenRECToken.address,  maker1.address)
@@ -1479,7 +1599,6 @@ describe("GreenBTC Test Campaign", () => {
           await greenBitcoin.connect(owner1).authMintGreenBTCWithApprove( greenBTCInfo, {v,r,s}, badgeInfo, 
                                               {token: AKREToken.address, amount: amountPay}, constants.MaxUint256)  
         }        
-
 
         // 5th Block: authMintGreenBTCWithApprove    
         { 
