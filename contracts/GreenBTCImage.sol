@@ -45,22 +45,35 @@ contract GreenBTCImage {
         string memory svgData;
         uint256 tokenID = gbtc.height;
 
+        bytes memory typeNFT;
+        string memory turncateEnergy = _decimalTruncate(gbtc.energyStr, 3);
         if(dataNFT.open == false || dataNFT.reveal == false) { 
             svgData = getBlindBoxSVGBytes(tokenID);
+            typeNFT = 'Mystery Box';
         } else {
             if(dataNFT.won) {
                 svgData = getGreenTreeSVGBytes(gbtc.greenType);
+                typeNFT = 'Genesis Seed';
             } else {
                 svgData = getCertificateSVGBytes(owner, gbtc);    
+                typeNFT = 'Certificate';
             }      
         }
 
         bytes memory dataURI = abi.encodePacked(
             '{"name":"Green BTC #',
             tokenID.toString(),
-            '","description":"Green BTC Club","image":"data:image/svg+xml;base64,',
+            '","description":"',
+            "Greening BTC's past and future",
+            '","image":"data:image/svg+xml;base64,',
             svgData,
-            '"}'
+            '","attributes":[{"display_type":"number","trait_type":"Height","value":',
+            tokenID.toString(),
+            '},{"trait_type":"Energy","value":"',
+            turncateEnergy,
+            ' kWh"},{"trait_type":"Type","value":"',
+            typeNFT,
+            '"}]}'
         );
         return string(abi.encodePacked("data:application/json;base64,", Base64.encode(dataURI)));
     }
