@@ -187,7 +187,7 @@ contract GreenBTC is
         BadgeInfo       calldata badgeInfo, 
         PayInfo         calldata payInfo,
         uint256                  deadline
-    ) external ensure(deadline) {
+    ) public ensure(deadline) {
 
         require(dataGBTC[gbtc.height].ARTCount == 0, "GBTC: Already Minted");
         require((gbtc.greenType & 0xF0) == 0x00, "GBTC: Wrong ART Type");
@@ -209,6 +209,17 @@ contract GreenBTC is
         emit GreenBitCoin(gbtc.height, gbtc.ARTCount, gbtc.minter, gbtc.greenType);
     }
 
+    function authMintGreenBTCWithApproveOpen(
+        GreenBTCInfo    calldata gbtc, 
+        Sig             calldata sig, 
+        BadgeInfo       calldata badgeInfo, 
+        PayInfo         calldata payInfo,
+        uint256                  deadline
+    ) external ensure(deadline) {
+        authMintGreenBTCWithApprove(gbtc, sig, badgeInfo, payInfo, deadline);
+        openBox(gbtc.height);
+    }
+
     /** 
      * @dev Greenize BTC with specified ART token
      * @param gbtc Bitcoin block info to be greenized
@@ -223,7 +234,7 @@ contract GreenBTC is
         BadgeInfo       calldata badgeInfo,
         address                  tokenART, 
         uint256                  deadline
-    )  public  ensure(deadline) {
+    ) public ensure(deadline) {
 
         require(dataGBTC[gbtc.height].ARTCount == 0, "GBTC: Already Minted");
         require(whiteARTList[tokenART], "GBTC: ART Not Accepted"); 
@@ -244,6 +255,17 @@ contract GreenBTC is
         emit GreenBitCoin(gbtc.height, gbtc.ARTCount, gbtc.minter, gbtc.greenType);
     }
 
+    function authMintGreenBTCWithARTOpen(
+        GreenBTCInfo    calldata gbtc, 
+        Sig             calldata sig, 
+        BadgeInfo       calldata badgeInfo,
+        address                  tokenART, 
+        uint256                  deadline
+    )  public ensure(deadline) {
+        authMintGreenBTCWithART(gbtc, sig, badgeInfo, tokenART, deadline);
+        openBox(gbtc.height);
+    }
+    
     /**
      * @dev Open the Green Bitcoin box, only thw owner of the box acceptable.
      * @param tokenID ID of the NFT token to be opened
