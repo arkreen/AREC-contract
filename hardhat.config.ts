@@ -58,8 +58,6 @@ function getURL(network:string): string {
   return url
 }
 
-
-
 const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
   networks: {

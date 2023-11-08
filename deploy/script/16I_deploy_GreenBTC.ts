@@ -36,7 +36,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       //IMAGE_ADDRESS   = "0xc44ab5E1C00f9df586b80DDbAF00220974a97bC5"      // 2023/10/25: Lucky Image changed
       //IMAGE_ADDRESS   = "0x99C26b45949073a73b98b568de399B1569fe008c"      // 2023/10/26: Add ART flag
       //IMAGE_ADDRESS  = "0x5b92c6E11A98F76CF20d878A79150A09bB24C24f"       // 2023/10/26: POWER -> ENERGY in image contract
-      IMAGE_ADDRESS  = "0xb5E55E38B3260f52884a8b74a86F9C9c3933717d"         // 2023/10/27: Change image contract, move  all svg logic to image contract
+      //IMAGE_ADDRESS  = "0xb5E55E38B3260f52884a8b74a86F9C9c3933717d"       // 2023/10/27: Change image contract, move  all svg logic to image contract
+      IMAGE_ADDRESS  = "0x0Cd8bc60c7bE8cC22D9365B7996b6E789B948f97"         // 2023/11/08: Add metadata to NFT image
 
       MANAGER_ADDRESS   = "0xBAeF5d8EfA74d3cff297D88c433D7B5d90bf0e49"      // 2023/10/23: Image address
 
@@ -44,6 +45,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
       const GreenBTCFactory = GreenBTC__factory.connect(GREENBTC_ADDRESS as string, deployer);
       
+/*      
       // 2023/10/20, 2023/10/23, 2023/10/24, 2023/10/27
       // Approve GreenBTCContract to Tranfer-From the specified tokens
       const approveRouterTx = await GreenBTCFactory.approveBuilder(
@@ -51,14 +53,13 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       await approveRouterTx.wait()
       console.log("GreenBTCContract approveBuilder is executed: %s: ", hre.network.name, GREENBTC_ADDRESS, 
                                         [USDC_ADDRESS, ART_ADDRESS] );
+*/
 
-/*
-      // 2023/10/21, 2023/10/23, 2023/10/24, 2023/10/25, 2023/20/27
+      // 2023/10/21, 2023/10/23, 2023/10/24, 2023/10/25, 2023/20/27, 2023/11/08
       // Set Image Contract address
       const setImageContractTx = await GreenBTCFactory.setImageContract(IMAGE_ADDRESS, {gasPrice: defaultGasPrice})
       await setImageContractTx.wait()
       console.log("GreenBTCContract setImageContract is executed: %s: ", hre.network.name, IMAGE_ADDRESS);
-*/
 
 /*
       //  2023/10/23, 2023/10/24
@@ -68,12 +69,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       console.log("GreenBTCContract setImageContract is executed: %s: ", hre.network.name, MANAGER_ADDRESS);
 */
 
+/*
       //  2023/10/23, 2023/10/24, 2023/20/27
       // Set mangeARTTokens
       const mangeARTTokensTx = await GreenBTCFactory.mangeARTTokens([ART_ADDRESS], true, {gasPrice: defaultGasPrice})
       await mangeARTTokensTx.wait()
       console.log("GreenBTCContract setImageContract is executed: %s: ", hre.network.name, ART_ADDRESS);
-      
+*/
+
 /*
       // 2023/10/25
       // Set setLuckyRate
@@ -87,7 +90,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       
 //    GREENBTC_ADDRESS  = "0xfe9341218c7Fcb6DA1eC131a72f914B7C724F200"      // GreenBTC address: HashKey Green BTC
 //    GREENBTC_ADDRESS  = "0x32C4c4953c03Fa466424A9ee11BE9863EBfc55aC"      // 2023/10/27 !!!! (Abort)
-      GREENBTC_ADDRESS  = "0xDf51F3DCD849f116948A5B23760B1ca0B5425BdE"      // 2023/10/27 !!!! (Abort)
+      GREENBTC_ADDRESS  = "0xDf51F3DCD849f116948A5B23760B1ca0B5425BdE"      // 2023/10/27
 
       USDC_ADDRESS      = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"      // USDC address
       USDT_ADDRESS      = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F"      // USDT address
@@ -194,6 +197,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2023/10/27:2 
 // call approveBuilder(USDC,USDT,ART), setImageContract, setManager, mangeARTTokens(ART)
 // yarn deploy:matic:GreenBTCI
+
+// 2023/11/08
+// call setImageContract
+// yarn deploy:matic_test:GreenBTCI
 
 func.tags = ["GreenBTCI"];
 

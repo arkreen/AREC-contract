@@ -56,7 +56,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2023/11/08: Matic testnet:  Add metadata to NFT image
 // yarn deploy:matic_test:GreenBTCImageD
-// 
+// 0x0Cd8bc60c7bE8cC22D9365B7996b6E789B948f97
 
 func.tags = ["GreenBTCImageD"];
 
