@@ -17,6 +17,9 @@ import './interfaces/IArkreenBuilder.sol';
 import './interfaces/IArkreenRECBank.sol';
 import './GreenBTCType.sol';
 
+// Import this file to use console.log
+// import "hardhat/console.sol";
+
 contract GreenBTC is 
     ContextUpgradeable,
     UUPSUpgradeable,
@@ -30,6 +33,10 @@ contract GreenBTC is
 
     //keccak256("GreenBitCoin(uint256 height,string energyStr,uint256 artCount,string blockTime,address minter,uint8 greenType)");
     bytes32 constant GREEN_BTC_TYPEHASH = 0xE645798FE54DB29ED50FD7F01A05DE6D1C5A65FAC8902DCFD7427B30FBD87C24;
+
+    //keccak256("GreenBitCoinBatch((uint128,uint128,address,uint8,string,string)[])");
+    bytes32 constant GREENBTC_BATCH_TYPEHASH = 0x829ABF7A83FCBCF66649914B5A9A514ACBF6BEDA598A620AEF732202E8155D73;
+    
     string  constant NAME = "Green BTC Club";
     string  constant SYMBOL = "GBC";
     string  constant VERSION = "1";
@@ -209,6 +216,47 @@ contract GreenBTC is
         emit GreenBitCoin(gbtc.height, gbtc.ARTCount, gbtc.minter, gbtc.greenType);
     }
 
+    function authMintGreenBTCWithApproveBatch(
+        GreenBTCInfo[]  calldata gbtcList, 
+        Sig             calldata sig, 
+        BadgeInfo       calldata badgeInfo, 
+        PayInfo         calldata payInfo,
+        uint256                  deadline
+    ) public ensure(deadline) {
+      
+        _authVerifyBatch(gbtcList, sig);                                           // verify signature
+
+        TransferHelper.safeTransferFrom(payInfo.token, msg.sender, address(this), payInfo.amount);
+
+        for(uint256 index = 0; index < gbtcList.length; index++) {
+
+            GreenBTCInfo calldata gbtc = gbtcList[index];
+
+            require(dataGBTC[gbtc.height].ARTCount == 0, "GBTC: Already Minted");
+            require((gbtc.greenType & 0xF0) == 0x00, "GBTC: Wrong ART Type");
+          
+            uint256 modeAction = 0x02;                      // bit0 = 0: exact ART amount; bit1 = 1: ArkreenBank is used to get CART token
+
+            // actionBuilderBadge(address,address,uint256,uint256,uint256,uint256,(address,string,string,string)): 0x8D7FCEFD                                            
+            bytes memory callData = abi.encodeWithSelector( 0x8D7FCEFD, payInfo.token, tokenCART, payInfo.amount,
+                                                            gbtc.ARTCount, modeAction, deadline, badgeInfo);
+
+            _actionBuilderBadge(abi.encodePacked(callData, gbtc.minter));     // Pay back to msg.sender already ??
+
+            _mintNFT(gbtc);
+
+            emit GreenBitCoin(gbtc.height, gbtc.ARTCount, gbtc.minter, gbtc.greenType);
+        }
+    }
+
+    /** 
+     * @dev Greenize BTC with the token/amount that the user has approved, and open the box at the same time
+     * @param gbtc Bitcoin block info to be greenized, minter in gbtc must be same as the caller
+     * @param sig Signature of the authority to Bitcoin block info
+     * @param badgeInfo Information that will logged in Arkreen climate badge
+     * @param payInfo Address and amount of the token that will be used to pay for offsetting ART
+     * @param deadline The deadline to cancel the transaction
+     */
     function authMintGreenBTCWithApproveOpen(
         GreenBTCInfo    calldata gbtc, 
         Sig             calldata sig, 
@@ -255,15 +303,62 @@ contract GreenBTC is
         emit GreenBitCoin(gbtc.height, gbtc.ARTCount, gbtc.minter, gbtc.greenType);
     }
 
+
+    /** 
+     * @dev Greenize BTC with specified ART token, and open the box at the same time
+     * @param gbtc Bitcoin block info to be greenized, minter in gbtc must be same as the caller
+     * @param sig Signature of the authority to Bitcoin block info
+     * @param badgeInfo Information that will logged in Arkreen climate badge
+     * @param tokenART Address of the ART token, which should be whitelisted in the accepted list.
+     * @param deadline The deadline to cancel the transaction
+     */    
     function authMintGreenBTCWithARTOpen(
         GreenBTCInfo    calldata gbtc, 
         Sig             calldata sig, 
         BadgeInfo       calldata badgeInfo,
         address                  tokenART, 
         uint256                  deadline
-    )  public ensure(deadline) {
+    ) public ensure(deadline) {
         authMintGreenBTCWithART(gbtc, sig, badgeInfo, tokenART, deadline);
         openBox(gbtc.height);
+    }
+
+    /** 
+     * @dev Greenize multiple BTC blocks with specified ART token
+     * @param gbtcList Information of the Bitcoin blocks to be greenized
+     * @param sig Signature of the authority to Bitcoin block info
+     * @param badgeInfo Information that will logged in Arkreen climate badge, used for all the blocks
+     * @param tokenART Address of the ART token, which should be whitelisted in the accepted list.
+     * @param deadline The deadline to cancel the transaction
+     */
+    function authMintGreenBTCWithARTBatch(
+        GreenBTCInfo[]  calldata gbtcList, 
+        Sig             calldata sig, 
+        BadgeInfo       calldata badgeInfo,
+        address                  tokenART, 
+        uint256                  deadline
+    )  public  ensure(deadline) {
+
+        require(whiteARTList[tokenART], "GBTC: ART Not Accepted"); 
+
+        uint256 amountARTSum = _authVerifyBatch(gbtcList, sig);                                           // verify signature
+        TransferHelper.safeTransferFrom(tokenART, msg.sender, address(this), amountARTSum);
+
+        for(uint256 index = 0; index < gbtcList.length; index++) {
+            GreenBTCInfo calldata gbtc = gbtcList[index];
+
+            require(dataGBTC[gbtc.height].ARTCount == 0, "GBTC: Already Minted");
+            require((gbtc.greenType & 0xF0) == 0x10, "GBTC: Wrong ART Type");
+
+            // actionBuilderBadgeWithART(address,uint256,uint256,(address,string,string,string)): 0x6E556DF8
+            bytes memory callData = abi.encodeWithSelector(0x6E556DF8, tokenART, gbtc.ARTCount, deadline, badgeInfo);
+
+            _actionBuilderBadge(abi.encodePacked(callData, gbtc.minter));
+
+            _mintNFT(gbtc);
+
+            emit GreenBitCoin(gbtc.height, gbtc.ARTCount, gbtc.minter, gbtc.greenType);
+        }
     }
     
     /**
@@ -460,6 +555,24 @@ contract GreenBTC is
     function _authVerify(GreenBTCInfo calldata gbtc, Sig calldata sig) internal view {
 
         bytes32 greenBTCHash = keccak256(abi.encode(GREEN_BTC_TYPEHASH, gbtc.height, gbtc.energyStr, gbtc.ARTCount, gbtc.blockTime, gbtc.minter, gbtc.greenType));
+        bytes32 digest = keccak256(abi.encodePacked('\x19\x01', DOMAIN_SEPARATOR, greenBTCHash));
+        address recoveredAddress = ecrecover(digest, sig.v, sig.r, sig.s);
+
+        require(recoveredAddress == authorizer, "GBTC: Invalid Singature");
+    }
+
+    /**
+     * @dev Verify the signature of authority based on the GreenBTC info list
+     * @param gbtcList Green BTC information of the List
+     * @param sig Signature of the authority
+     */
+    function _authVerifyBatch(GreenBTCInfo[] calldata gbtcList, Sig calldata sig) internal view returns(uint256 amountARTSum) {
+
+        bytes memory greenBTCData = abi.encode(GREENBTC_BATCH_TYPEHASH, gbtcList);
+
+        for(uint256 index = 0; index < gbtcList.length; index++) amountARTSum += gbtcList[index].ARTCount;
+
+        bytes32 greenBTCHash = keccak256(greenBTCData);
         bytes32 digest = keccak256(abi.encodePacked('\x19\x01', DOMAIN_SEPARATOR, greenBTCHash));
         address recoveredAddress = ecrecover(digest, sig.v, sig.r, sig.s);
 
