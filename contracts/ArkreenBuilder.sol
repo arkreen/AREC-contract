@@ -162,12 +162,12 @@ contract ArkreenBuilder is
         Signature calldata  permitToPay
     ) external  {                       // Deadline will be checked by router, no need to check here.
         // Permit payment token
-        address payer = _msgSender();
-        IERC20Permit(permitToPay.token).permit(payer, address(this), 
+//      address payer = _msgSender();
+        IERC20Permit(permitToPay.token).permit(msg.sender, address(this), 
                         permitToPay.value, permitToPay.deadline, permitToPay.v, permitToPay.r, permitToPay.s);
 
         // Transfer payement 
-        TransferHelper.safeTransferFrom(permitToPay.token, payer, address(this), permitToPay.value);
+        TransferHelper.safeTransferFrom(permitToPay.token, msg.sender, address(this), permitToPay.value);
         _actionBuilder(permitToPay.token, tokenART, permitToPay.value, amountART, modeAction, permitToPay.deadline);
     }
 
@@ -280,12 +280,12 @@ contract ArkreenBuilder is
     ) external  {               // Deadline will be checked by router, no need to check here. //ensure(permitToPay.deadline)
 
         // Permit payment token
-        address payer = _msgSender();
-        IERC20Permit(permitToPay.token).permit(payer, address(this), 
+//      address payer = _msgSender();
+        IERC20Permit(permitToPay.token).permit(msg.sender, address(this), 
                         permitToPay.value, permitToPay.deadline, permitToPay.v, permitToPay.r, permitToPay.s);
 
         // Transfer payement 
-        TransferHelper.safeTransferFrom(permitToPay.token, payer, address(this), permitToPay.value);
+        TransferHelper.safeTransferFrom(permitToPay.token, msg.sender, address(this), permitToPay.value);
         _actionBuilderBadge(permitToPay.token, tokenART, permitToPay.value, amountART, modeAction, permitToPay.deadline, badgeInfo);
     }
 
@@ -328,9 +328,11 @@ contract ArkreenBuilder is
             if(amountPayLeft > 0) {
                 if(tokenPay == tokenNative) {
                     IWETH(tokenNative).withdraw(amountPayLeft);
-                    TransferHelper.safeTransferETH(payer, amountPayLeft);               
+//                  TransferHelper.safeTransferETH(payer, amountPayLeft);       
+                    TransferHelper.safeTransferETH(msg.sender, amountPayLeft);                                 
                 } else {
-                    TransferHelper.safeTransfer(tokenPay, payer, amountPayLeft);
+//                  TransferHelper.safeTransfer(tokenPay, payer, amountPayLeft);
+                    TransferHelper.safeTransfer(tokenPay, msg.sender, amountPayLeft);                    
                 }
             }
         }
@@ -378,9 +380,11 @@ contract ArkreenBuilder is
             if(amountPayLeft > 0) {
                 if(tokenPay == tokenNative) {
                     IWETH(tokenNative).withdraw(amountPayLeft);
-                    TransferHelper.safeTransferETH(payer, amountPayLeft);
+//                  TransferHelper.safeTransferETH(payer, amountPayLeft);
+                    TransferHelper.safeTransferETH(msg.sender, amountPayLeft);
                 } else {
-                    TransferHelper.safeTransfer(tokenPay, payer, amountPayLeft);
+//                  TransferHelper.safeTransfer(tokenPay, payer, amountPayLeft);
+                    TransferHelper.safeTransfer(tokenPay, msg.sender, amountPayLeft);
                 }
             }
         }

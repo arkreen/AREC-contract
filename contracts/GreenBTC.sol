@@ -16,9 +16,10 @@ import './interfaces/IGreenBTCImage.sol';
 import './interfaces/IArkreenBuilder.sol';
 import './interfaces/IArkreenRECBank.sol';
 import './GreenBTCType.sol';
+import "./interfaces/IERC20.sol";
 
 // Import this file to use console.log
-// import "hardhat/console.sol";
+import "hardhat/console.sol";
 
 contract GreenBTC is 
     ContextUpgradeable,
@@ -237,8 +238,9 @@ contract GreenBTC is
           
             uint256 modeAction = 0x02;                      // bit0 = 0: exact ART amount; bit1 = 1: ArkreenBank is used to get CART token
 
-            // actionBuilderBadge(address,address,uint256,uint256,uint256,uint256,(address,string,string,string)): 0x8D7FCEFD                                            
-            bytes memory callData = abi.encodeWithSelector( 0x8D7FCEFD, payInfo.token, tokenCART, payInfo.amount,
+            // actionBuilderBadge(address,address,uint256,uint256,uint256,uint256,(address,string,string,string)): 0x8D7FCEFD
+            uint256 paymentAmount = IERC20(payInfo.token).balanceOf(address(this));                                            
+            bytes memory callData = abi.encodeWithSelector( 0x8D7FCEFD, payInfo.token, tokenCART, paymentAmount,
                                                             gbtc.ARTCount, modeAction, deadline, badgeInfo);
 
             _actionBuilderBadge(abi.encodePacked(callData, gbtc.minter));     // Pay back to msg.sender already ??
