@@ -16,7 +16,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     let WMATIC_ADDRESS
     let AKRE_ADDRESS
 
-    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6000000000) : BigNumber.from(150000000000)
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6000000000) : BigNumber.from(100000000000)
 
     if(hre.network.name === 'matic_test')  {    
       // 2023/10/20, Test Net Simulation 
@@ -101,7 +101,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       ART_ADDRESS       = "0x58E4D14ccddD1E993e6368A8c5EAa290C95caFDF"      // ART address
 
 //    IMAGE_ADDRESS     = "0xE44A9194ee572813db71496dA0D871b745e380Ac"      // 2023/10/27: (Abort)
-      IMAGE_ADDRESS     = "0x01e2D144E9414cb58FD9e90dd26b2555275bC42d"      // 2023/10/27: Moving svg logic all to image contract
+//    IMAGE_ADDRESS     = "0x01e2D144E9414cb58FD9e90dd26b2555275bC42d"      // 2023/10/27: Moving svg logic all to image contract
+      IMAGE_ADDRESS     = "0x81f0B102a4d21B1BdaC5C0C4Cb350d0c30388892"      // 2023/11/13: Add metadata to NFT image, Green BTC -> GreenBTC, and change slogan
       
       MANAGER_ADDRESS   = "0xbEBE239CA18BacA579F5B82c1c290fc951FB954C"      // 2023/10/26: Manager address
 
@@ -109,44 +110,35 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
       const GreenBTCFactory = GreenBTC__factory.connect(GREENBTC_ADDRESS as string, deployer);
 
-/*      
-      // 2023/04/10
-      // Approve HashKeyESGBTCContract to Tranfer-From the specified tokens
-      const HashKeyESGBTCFactory = HashKeyESGBTC__factory.connect(ESGBTC_ADDRESS as string, deployer);
-
-      // 2023/04/05
-      const approveRouterTx = await HashKeyESGBTCFactory.approveBuilder(
-                                        [USDC_ADDRESS, USDT_ADDRESS, WMATIC_ADDRESS, AKRE_ADDRESS] as string[])
-      await approveRouterTx.wait()
-      console.log("HashKeyESGBTCContract approveBuilder is executed: %s: ", hre.network.name, ESGBTC_ADDRESS, 
-                                [USDC_ADDRESS, USDT_ADDRESS, WMATIC_ADDRESS, AKRE_ADDRESS] );                                
-*/
- 
-      // 2023/10/26
+/*
+      // 2023/10/27
       // Approve GreenBTCContract to Tranfer-From the specified tokens
       const approveRouterTx = await GreenBTCFactory.approveBuilder(
                                         [USDC_ADDRESS, USDT_ADDRESS, ART_ADDRESS], {gasPrice: defaultGasPrice} )
       await approveRouterTx.wait()
       console.log("GreenBTCContract approveBuilder is executed: %s: ", hre.network.name, GREENBTC_ADDRESS, 
                                         [USDC_ADDRESS, USDT_ADDRESS, ART_ADDRESS] );
+*/                                        
                                         
-      // 2023/10/21, 2023/10/23, 2023/10/24, 2023/10/25
+      // 2023/10/27, 2023/11/13
       // Set Image Contract address
       const setImageContractTx = await GreenBTCFactory.setImageContract(IMAGE_ADDRESS, {gasPrice: defaultGasPrice})
       await setImageContractTx.wait()
       console.log("GreenBTCContract setImageContract is executed: %s: ", hre.network.name, IMAGE_ADDRESS);
 
-      //  2023/10/23, 2023/10/24, 2023/10/27
+/*      
+      //  2023/10/27
       // Set Manager address
       const setManagerTx = await GreenBTCFactory.setManager(MANAGER_ADDRESS, {gasPrice: defaultGasPrice})
       await setManagerTx.wait()
       console.log("GreenBTCContract setManager is executed: %s: ", hre.network.name, MANAGER_ADDRESS);
 
-      //  2023/10/23, 2023/10/24, 2023/10/20
+      // 2023/10/27
       // Set mangeARTTokens
       const mangeARTTokensTx = await GreenBTCFactory.mangeARTTokens([ART_ADDRESS], true, {gasPrice: defaultGasPrice})
       await mangeARTTokensTx.wait()
       console.log("GreenBTCContract mangeARTTokens is executed: %s: ", hre.network.name, ART_ADDRESS);
+*/
       
 /*
       // 2023/10/25
@@ -201,6 +193,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2023/11/08
 // call setImageContract
 // yarn deploy:matic_test:GreenBTCI
+
+// 2023/11/13: Add metadata to NFT image, Green BTC -> GreenBTC, and change slogan
+// call setImageContract:   0xDf51F3DCD849f116948A5B23760B1ca0B5425BdE
+// yarn deploy:matic:GreenBTCI
 
 func.tags = ["GreenBTCI"];
 

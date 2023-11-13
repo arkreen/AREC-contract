@@ -61,10 +61,10 @@ contract GreenBTCImage {
         }
 
         bytes memory dataURI = abi.encodePacked(
-            '{"name":"Green BTC #',
+            '{"name":"GreenBTC #',
             tokenID.toString(),
             '","description":"',
-            "Greening BTC's past and future",
+            "Climate Actions For Greening BTC.",
             '","image":"data:image/svg+xml;base64,',
             svgData,
             '","attributes":[{"display_type":"number","trait_type":"Height","value":',
