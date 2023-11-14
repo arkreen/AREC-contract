@@ -61,23 +61,24 @@ async function main() {
       }
     }
     const startTokenID = Number(confirmInfoJson.counter)
-    let NewSerialNo = Number(confirmInfoJson.SerialNo)
+    let NewSerialNo = Number(confirmInfoJson.SerialNo.substring(9))
 
     let moveSNForward = true
 
     console.log("Current Confirmation:", confirmInfoJson, (new Date()).toLocaleString(), startTokenID, totalARECNumber)
     for(let index = (startTokenID+1); index <= totalARECNumber.toNumber(); index++) {      // Id start from 1
       try {
-        const ARECNftInfo: RECDataStructOutput = await arkreenRECIssuance.getRECData(index)
-        // console.log('AAAAAAAAAAAAA', moveSNForward, NewSerialNo, index, ARECNftInfo )
+        let ARECNftInfo: RECDataStructOutput = await arkreenRECIssuance.getRECData(index)
+        console.log('AAAAAAAAAAAAA', index, moveSNForward, NewSerialNo, totalARECNumber, ARECNftInfo.serialNumber, ARECNftInfo.status, ARECNftInfo.cID)
         
         if(ARECNftInfo.status == REC_STATUS.Pending) {
           if (ARECNftInfo.cID.length >= 20) {
             NewSerialNo = NewSerialNo +1
             const NewSerialNoString = "REC_CELO_" + NewSerialNo.toString().padStart(8,'0')
-            await arkreenRECIssuance.certifyRECRequest(index, NewSerialNoString)
+            const tx = await arkreenRECIssuance.certifyRECRequest(index, NewSerialNoString)
+	          await tx.wait()
 
-            confirmInfoJson.SerialNo = NewSerialNo.toString().padStart(8,'0')
+            confirmInfoJson.SerialNo = "REC_CELO_" + NewSerialNo.toString().padStart(8,'0')
             if(moveSNForward) {
               confirmInfoJson.counter = index.toString().padStart(4,'0')
             }
@@ -87,13 +88,18 @@ async function main() {
           } else (
             moveSNForward = false
           )
-        } else if(ARECNftInfo.status >= REC_STATUS.Certified && moveSNForward) {
-          console.log("Updated Confirmation: XXXXXXXXXXXX", moveSNForward, index, NewSerialNo, confirmInfoJson)
-
-          confirmInfoJson.counter = index.toString().padStart(4,'0')
-          if (Number(ARECNftInfo.serialNumber) > Number(confirmInfoJson.SerialNo)) {
-            confirmInfoJson.SerialNo = ARECNftInfo.serialNumber
+        } else if(ARECNftInfo.status >= REC_STATUS.Certified) {
+          console.log("Updated Confirmation: XXXXXXXXXXXX", moveSNForward, index, NewSerialNo, ARECNftInfo.serialNumber, confirmInfoJson.SerialNo)
+          if(moveSNForward) {
+            confirmInfoJson.counter = index.toString().padStart(4,'0')
           }
+
+          if (ARECNftInfo.serialNumber > confirmInfoJson.SerialNo) {
+            confirmInfoJson.SerialNo = ARECNftInfo.serialNumber
+            console.log("Updated Confirmation: YYYYYYYYYYYY", moveSNForward, index, NewSerialNo, ARECNftInfo.serialNumber, confirmInfoJson.SerialNo)
+          }
+
+          if(index==7) confirmInfoJson.SerialNo = 'REC_CELO_00000006'
 
           setConfirmInfo(confirmInfoJson)
           console.log("Updated Confirmation: CCCCCCCCCCCCC", moveSNForward, index, NewSerialNo, confirmInfoJson, (new Date()).toLocaleString())
