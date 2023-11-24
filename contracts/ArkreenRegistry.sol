@@ -104,7 +104,7 @@ contract ArkreenRegistry is
     function manageAssetAREC( uint256 idxAsset, uint256 flag, uint128 rateToIssue, uint16 rateToLiquidize, bool bActive,
                                 string calldata description) external {
 
-        require( (msg.sender == allAssets[idxAsset].issuer) || (owner() == msg.sender), 'Arkreen: Not Allowed');                                 
+        require( (msg.sender == allAssets[idxAsset].issuer) || (owner() == msg.sender), 'Arkreen: Not Allowed');
         if((flag & 0x01) != 0) {
             allAssets[idxAsset].rateToIssue = rateToIssue;
         }

@@ -52,7 +52,7 @@ contract GreenBTC is
     address public tokenCART;                       // CART token is bought to greenize Bitcoin by default while some other token is paid.
     address public tokenNative;              
 
-    OpenInfo[] internal openingBoxList;             // Box in this list could be openned internally with just a trigger command 
+    OpenInfo[] internal openingBoxList;             // Box in this list could be opened internally with just a trigger command 
     OpenInfo[] internal overtimeBoxList;            // Box in this list need to be revealed with external hash information
 
     mapping (uint256 => GreenBTCInfo)  public dataGBTC;
@@ -62,7 +62,7 @@ contract GreenBTC is
     uint256 public luckyRate;  
 
     event GreenBitCoin(uint256 height, uint256 ARTCount, address minter, uint8 greenType);
-    event OpenBox(address openner, uint256 tokenID, uint256 blockNumber);
+    event OpenBox(address opener, uint256 tokenID, uint256 blockNumber);
 
     event RevealBoxes(uint256[] revealList, bool[] wonList);
 
@@ -521,7 +521,7 @@ contract GreenBTC is
     }
 
     /**
-     * @dev Return if the specified token is sold, openned and revealed
+     * @dev Return if the specified token is sold, opened and revealed
      */
     function isUnPacking(uint256 tokenID) public view returns(bool, bool, bool) {
 
