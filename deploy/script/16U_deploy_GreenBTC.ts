@@ -18,8 +18,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     // const NEW_IMPLEMENTATION = "0x1DBB6623A6cF8b12bd1FB4A138D7FE11b1ec5f2e"       // 2023/10/25: Upgrade for luckyRate
     // const NEW_IMPLEMENTATION = "0x71CfBEAC18B738C5Cc34515C0316495A6CDf7231"       // 2023/10/25: Upgrade for changong management strategy
     // const NEW_IMPLEMENTATION = "0xc2f3A5b34D7Ed23297C57597001d82904191454D"       // 2023/10/26: Upgrade to change beneficiary to minter, greenType is used to flag ART type
-    // const NEW_IMPLEMENTATION    = "0x9a1FC5338303b7E675a9cFfA2050aa7300760b5F"    // 2023/10/26: Add ART type check, and check minter is not zero
-    const NEW_IMPLEMENTATION    = "0x1fcF387670f4f4835029eCE4acAb5CF327BFc005"       // 2023/10/27: Change image contract, move  all svg logic to image contract
+    // const NEW_IMPLEMENTATION = "0x9a1FC5338303b7E675a9cFfA2050aa7300760b5F"       // 2023/10/26: Add ART type check, and check minter is not zero
+    // const NEW_IMPLEMENTATION = "0x1fcF387670f4f4835029eCE4acAb5CF327BFc005"       // 2023/10/27: Change image contract, move  all svg logic to image contract
+    const NEW_IMPLEMENTATION    = "0xf2F563a63ba82aF85294d8d857dF7e7A22DdaB8B"       // 2023/12/04: Add buying in batch, and buy with opening 
         
     console.log("Updating GreenBTC: ", GREENBTC_PROXY_ADDRESS, chainID, defaultGasPrice.toString());  
 
@@ -65,6 +66,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:GreenBTCU
 
 // 2023/10/27: Change image contract, move  all svg logic to image contract
+// yarn deploy:matic_test:GreenBTCU
+
+// 2023/12/04: Add buying in batch, and buy with opening
 // yarn deploy:matic_test:GreenBTCU
 
 export default func;

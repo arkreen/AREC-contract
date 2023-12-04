@@ -364,6 +364,11 @@ describe("GreenBTC Test Campaign", () => {
                                           badgeInfo, arkreenRECTokenESG.address, dealineBlock.timestamp-1 ))
                     .to.be.revertedWith("GBTC: EXPIRED")    
 
+        await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithART( greenBTCInfo, {v,r,s}, 
+                                          badgeInfo, arkreenRECTokenESG.address, 
+                                          BigNumber.from(dealineBlock.timestamp-1).xor(BigNumber.from(1).shl(63))))
+                    .to.be.revertedWith("GBTC: EXPIRED")                      
+
         // Error: Check ART is whitelisted
         await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithART( greenBTCInfo, {v,r,s},
                                           badgeInfo, arkreenRECTokenESG.address, constants_MaxDealine ))

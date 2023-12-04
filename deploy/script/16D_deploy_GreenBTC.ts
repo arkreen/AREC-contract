@@ -50,7 +50,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2023/10/27 
 // yarn deploy:matic_test:GreenBTCD
-// Implemenation:  
+// Implemenation:  0x1fcf387670f4f4835029ece4acab5cf327bfc005
+
+// 2023/12/4 
+// yarn deploy:matic_test:GreenBTCD
+// Implemenation:  0xf2F563a63ba82aF85294d8d857dF7e7A22DdaB8B
 
 func.tags = ["GreenBTCD"];
 
