@@ -17,8 +17,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       args: [],
       log: true,
       skipIfAlreadyDeployed: false,
-      gasPrice: defaultGasPrice,
-      nonce: 150,
+      gasPrice: defaultGasPrice
   });
 
   console.log("ArkreenBuilder deployed to %s: ", hre.network.name, ArkreenBuilder.address);
@@ -35,6 +34,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2023/10/30: deploy and verification on polygon mainnet
 // yarn deploy:matic:ABuilderD
 // 0x076bB3051f273Ea6f6AA76e41797241124B3B157
+
+// 2023/12/05: deploy and verification: Overpayemnt payback target address is configed with modeAction
+// yarn deploy:matic_test:ABuilderD
+// 0x4aF1eADF9f2f51395Fc2329ac0ab554DBb7EBF57
 
 func.tags = ["ABuilderD"];
 
