@@ -166,7 +166,8 @@ contract GreenBTC is
 
         IWETH(tokenNative).deposit{value: msg.value}(); // Wrap MATIC to WMATIC 
 
-        uint256 modeAction = 0x03;                      // bit0 = 1: exact payment amount; bit1 = 1: ArkreenBank is used to get CART token
+        // bit0 = 1: exact payment amount; bit1 = 1: ArkreenBank is used to get CART token; bit2 = 0: Repay to caller  
+        uint256 modeAction = 0x03;                      
 
         // actionBuilderBadge(address,address,uint256,uint256,uint256,uint256,(address,string,string,string)): 0x8D7FCEFD                                            
         bytes memory builderCallData = abi.encodeWithSelector( 0x8D7FCEFD, tokenNative, tokenCART, msg.value,
@@ -205,7 +206,8 @@ contract GreenBTC is
 
         TransferHelper.safeTransferFrom(payInfo.token, msg.sender, address(this), payInfo.amount);
 
-        uint256 modeAction = 0x03;                      // bit0 = 1: exact payment amount; bit1 = 1: ArkreenBank is used to get CART token
+        // bit0 = 1: exact payment amount; bit1 = 1: ArkreenBank is used to get CART token; bit2 = 0: Repay to caller  
+        uint256 modeAction = 0x03;            
 
         // actionBuilderBadge(address,address,uint256,uint256,uint256,uint256,(address,string,string,string)): 0x8D7FCEFD                                            
         bytes memory builderCallData = abi.encodeWithSelector( 0x8D7FCEFD, payInfo.token, tokenCART, payInfo.amount,
@@ -242,7 +244,6 @@ contract GreenBTC is
         TransferHelper.safeTransferFrom(payInfo.token, msg.sender, address(this), payInfo.amount);
 
         uint256 paymentAmount;
-
         for(uint256 index = 0; index < gbtcList.length; index++) {
 
             GreenBTCInfo calldata gbtc = gbtcList[index];
@@ -253,9 +254,11 @@ contract GreenBTC is
             // actionBuilderBadge(address,address,uint256,uint256,uint256,uint256,(address,string,string,string)): 0x8D7FCEFD
             paymentAmount = IERC20(payInfo.token).balanceOf(address(this));         
 
-            // modeAction = 0x02, bit0 = 0: exact ART amount; bit1 = 1: ArkreenBank is used to get CART token
+            // modeAction = 0x02/0x06, bit0 = 0: exact ART amount; bit1 = 1: ArkreenBank is used to get CART token; bit2 = 0: Repay to caller  
+            uint256 modeAction = (index == gbtcList.length - 1) ? 0x02 : 0x06;
+
             bytes memory builderCallData = abi.encodeWithSelector( 0x8D7FCEFD, payInfo.token, tokenCART, paymentAmount,
-                                                            gbtc.ARTCount, 0x02, uint32(deadline), badgeInfo);
+                                                            gbtc.ARTCount, modeAction, uint32(deadline), badgeInfo);
 
             _actionBuilderBadge(abi.encodePacked(builderCallData, gbtc.minter));     // Pay back to msg.sender already ??
 
@@ -265,9 +268,6 @@ contract GreenBTC is
 
             emit GreenBitCoin(gbtc.height, gbtc.ARTCount, gbtc.minter, gbtc.greenType);
         }
-
-        //  paymentAmount = IERC20(payInfo.token).balanceOf(address(this));     // Pay back over payment
-        //  if(paymentAmount > 0) TransferHelper.safeTransferFrom(payInfo.token, address(this), msg.sender, paymentAmount);
     }
 
     /** 

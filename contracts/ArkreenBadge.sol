@@ -33,6 +33,7 @@ contract ArkreenBadge is
     event ArkreenRegistryUpdated(address newArkreenRegistry);
     event OffsetCertificateMinted(uint256 tokenId);
     event OffsetCertificateUpdated(uint256 tokenId);
+    event OffsetAttached(uint256 tokenId, uint256[] offsetIds);
   
     modifier whenNotPaused() {
         require(!IPausable(arkreenRegistry).paused(), 'ARB: Paused');
@@ -172,6 +173,7 @@ contract ArkreenBadge is
 
         // Accumulate the total retired offset amount
         totalOffsetRetired += offsetAmount;
+        emit OffsetAttached(tokenId, offsetIds);
     }    
 
     /**
@@ -232,25 +234,25 @@ contract ArkreenBadge is
                 IArkreenRegistry(arkreenRegistry).tokenRECs(msg.sender) != address(0),
                 'ARB: Caller Not Allowed');
 
-        uint256 offsetId = totalSupply() + 1;
-        _safeMint(offsetEntity, offsetId);
+        uint256 tokenId = totalSupply() + 1;
+        _safeMint(offsetEntity, tokenId);
 
         // Attach offset events to the newly minted NFT
-        uint256 offsetAmount = _attachOffsetEvents(offsetId, offsetEntity, offsetIds);
+        uint256 offsetAmount = _attachOffsetEvents(tokenId, offsetEntity, offsetIds);
 
-        certificates[offsetId].offsetEntity = offsetEntity;
-        certificates[offsetId].beneficiary = beneficiary;
-        certificates[offsetId].offsetEntityID = offsetEntityID;      
-        certificates[offsetId].beneficiaryID = beneficiaryID;
-        certificates[offsetId].offsetMessage = offsetMessage;
-        certificates[offsetId].creationTime = block.timestamp;
-        certificates[offsetId].offsetTotalAmount += offsetAmount;
+        certificates[tokenId].offsetEntity = offsetEntity;
+        certificates[tokenId].beneficiary = beneficiary;
+        certificates[tokenId].offsetEntityID = offsetEntityID;      
+        certificates[tokenId].beneficiaryID = beneficiaryID;
+        certificates[tokenId].offsetMessage = offsetMessage;
+        certificates[tokenId].creationTime = block.timestamp;
+        certificates[tokenId].offsetTotalAmount += offsetAmount;
 
         // Accumulate the total retired offset amount
         totalOffsetRetired += offsetAmount;
 
-        emit OffsetCertificateMinted(offsetId);
-        emit Locked(offsetId);
+        emit OffsetCertificateMinted(tokenId);
+        emit Locked(tokenId);
     }
 
     /**

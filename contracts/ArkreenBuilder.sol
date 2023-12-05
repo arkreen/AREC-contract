@@ -162,12 +162,12 @@ contract ArkreenBuilder is
         Signature calldata  permitToPay
     ) external  {                       // Deadline will be checked by router, no need to check here.
         // Permit payment token
-//      address payer = _msgSender();
-        IERC20Permit(permitToPay.token).permit(msg.sender, address(this), 
+        address payer = msg.sender;
+        IERC20Permit(permitToPay.token).permit(payer, address(this), 
                         permitToPay.value, permitToPay.deadline, permitToPay.v, permitToPay.r, permitToPay.s);
 
         // Transfer payement 
-        TransferHelper.safeTransferFrom(permitToPay.token, msg.sender, address(this), permitToPay.value);
+        TransferHelper.safeTransferFrom(permitToPay.token, payer, address(this), permitToPay.value);
         _actionBuilder(permitToPay.token, tokenART, permitToPay.value, amountART, modeAction, permitToPay.deadline);
     }
 
@@ -213,6 +213,8 @@ contract ArkreenBuilder is
      *                  bit0 = 0, amountART is the exact amount of the ART token to receive.
      *                  bit1 = 0, Swap ART from Dex
      *                  bit1 = 1, But ART from art sales bank     
+     *                  bit2 = 0, re-pay to _msgSender()
+     *                  bit2 = 1, re-pay to msg.sender
      * @param badgeInfo The information to be included for climate badge.
      */
     function actionBuilderBadge(
@@ -280,12 +282,12 @@ contract ArkreenBuilder is
     ) external  {               // Deadline will be checked by router, no need to check here. //ensure(permitToPay.deadline)
 
         // Permit payment token
-//      address payer = _msgSender();
-        IERC20Permit(permitToPay.token).permit(msg.sender, address(this), 
+        address payer = msg.sender;
+        IERC20Permit(permitToPay.token).permit(payer, address(this), 
                         permitToPay.value, permitToPay.deadline, permitToPay.v, permitToPay.r, permitToPay.s);
 
         // Transfer payement 
-        TransferHelper.safeTransferFrom(permitToPay.token, msg.sender, address(this), permitToPay.value);
+        TransferHelper.safeTransferFrom(permitToPay.token, payer, address(this), permitToPay.value);
         _actionBuilderBadge(permitToPay.token, tokenART, permitToPay.value, amountART, modeAction, permitToPay.deadline, badgeInfo);
     }
 
@@ -323,19 +325,7 @@ contract ArkreenBuilder is
         _offsetART(tokenART, abi.encodePacked(callData, payer));
  
         // Repay more payment back  
-        if(modeAction & 0x01 == 0x00) {        
-            uint256 amountPayLeft = IERC20(tokenPay).balanceOf(address(this));
-            if(amountPayLeft > 0) {
-                if(tokenPay == tokenNative) {
-                    IWETH(tokenNative).withdraw(amountPayLeft);
-//                  TransferHelper.safeTransferETH(payer, amountPayLeft);       
-                    TransferHelper.safeTransferETH(msg.sender, amountPayLeft);                                 
-                } else {
-//                  TransferHelper.safeTransfer(tokenPay, payer, amountPayLeft);
-                    TransferHelper.safeTransfer(tokenPay, msg.sender, amountPayLeft);                    
-                }
-            }
-        }
+        _payBackOverPayment(tokenPay, payer, modeAction);
     }
 
     function _actionBuilderBadge(
@@ -375,16 +365,24 @@ contract ArkreenBuilder is
         _offsetART(tokenART, abi.encodePacked(callData, payer));
   
         // Repay more payment back  
+        _payBackOverPayment(tokenPay, payer, modeAction);
+    }
+
+    function _payBackOverPayment(
+        address tokenPay,
+        address msgSender,
+        uint256 modeAction
+    ) internal {
         if(modeAction & 0x01 == 0x00) {      
+            address repayTo = (modeAction & 0x04 != 0x00) ? msg.sender : msgSender;
+
             uint256 amountPayLeft = IERC20(tokenPay).balanceOf(address(this));
             if(amountPayLeft > 0) {
-                if(tokenPay == tokenNative) {
+                if((tokenPay == tokenNative) && !address(repayTo).isContract()) {
                     IWETH(tokenNative).withdraw(amountPayLeft);
-//                  TransferHelper.safeTransferETH(payer, amountPayLeft);
-                    TransferHelper.safeTransferETH(msg.sender, amountPayLeft);
+                    TransferHelper.safeTransferETH(repayTo, amountPayLeft);
                 } else {
-//                  TransferHelper.safeTransfer(tokenPay, payer, amountPayLeft);
-                    TransferHelper.safeTransfer(tokenPay, msg.sender, amountPayLeft);
+                    TransferHelper.safeTransfer(tokenPay, repayTo, amountPayLeft);
                 }
             }
         }
