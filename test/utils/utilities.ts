@@ -53,6 +53,10 @@ export function expandTo18Decimals(n: number): BigNumber {
   return BigNumber.from(n).mul(BigNumber.from(10).pow(18))
 }
 
+export function expandTo16Decimals(n: number): BigNumber {
+  return BigNumber.from(n).mul(BigNumber.from(10).pow(16))
+}
+
 export function BigNumberPercent(n: BigNumber, ratio: number): BigNumber {
   return n.mul(BigNumber.from(ratio)).div(BigNumber.from(100))
 }

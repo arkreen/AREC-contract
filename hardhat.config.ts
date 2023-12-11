@@ -105,6 +105,18 @@ const config: HardhatUserConfig = {
   solidity: {
     compilers: [
       {
+        version: "0.7.6",
+        settings: {
+          metadata: {
+            bytecodeHash: "none",
+          },
+          optimizer: {
+            enabled: true,
+            runs: 0,
+          },
+        },
+      },
+      {
         version: "0.8.9",
         settings: {
           metadata: {
