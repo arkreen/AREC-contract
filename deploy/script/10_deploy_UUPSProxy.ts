@@ -7,7 +7,7 @@ import { CONTRACTS } from "../constants";
 //import { ArkreenRECIssuance__factory } from "../../typechain";
 //import { ArkreenMiner__factory } from "../../typechain";
 //import { ArkreenBadge__factory } from "../../typechain";
-//import { ArkreenBuilder__factory } from "../../typechain";
+import { ArkreenBuilder__factory } from "../../typechain";
 import { GreenBTC__factory } from "../../typechain";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
@@ -124,15 +124,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   });
 */
 
-/*
   // Proxy of ArkreenBuilder
-  // 2023/08/25:  
-  const IMPLEMENTATION_ADDRESS  = "0xC15de762EB03644ad92d45091E52d840594c6CB2"    // 2023/08/25: ArkreenBadge Implementation 
+  // 2023/12/13: Polygon testnet Dev env 
+  const IMPLEMENTATION_ADDRESS  = "0x4aF1eADF9f2f51395Fc2329ac0ab554DBb7EBF57"    // 2023/12/13: ArkreenBuilder Implementation 
   const ROUTER_ADDRESS          = "0x0000000000000000000000000000000000000000"
-  const RECBANK_ADDRESS         = "0x827155A6fD0aac8AbE7beb4Ee1a95143255ed438"
-  const NATIVE_TOKEN_ADDRESS    = "0xB53B96e1eF29cB14313c18Fa6374AB87df59BcD9"
+  const RECBANK_ADDRESS         = "0x9E1DdE2912a804e39E5b19c8B670a6ceE0b1Ca7a"
+  const NATIVE_TOKEN_ADDRESS    = "0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889"
   
-  // 2023/06/08:  0x70A7981b5c9ca1a4250A0C9BBDC2141752deBeeb
+  // 2023/12/13:  
   const callData = ArkreenBuilder__factory.createInterface().encodeFunctionData("initialize",[ROUTER_ADDRESS, RECBANK_ADDRESS, NATIVE_TOKEN_ADDRESS])     // Create new ArkreenBadge
 
   console.log("IMPLEMENTATION_ADDRESS, deployer, callData", IMPLEMENTATION_ADDRESS, deployer, callData)
@@ -143,8 +142,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       log: true,
       skipIfAlreadyDeployed: false,
   });
-*/
 
+
+/*
   // Proxy of GreenBTC
   // 2023/10/23:  
   //const IMPLEMENTATION_ADDRESS  = "0x6240d9780Ac11ccE9A9C269Eb68dFB1eA39eAa05"  // 2023/10/23: GreenBTC Implementation 
@@ -152,13 +152,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
   const IMPLEMENTATION_ADDRESS  = "0x85304b15f0762c0b2752C60e29D04843b17D79c7"    // 2023/10/27: GreenBTC Mainnet 
   
-/*  
   // Polygon Test net
-  const AUTHORIZER_ADDRESS  = "0x2df522C2bF3E570caA22FBBd06d1A120B4Dc29a8"        // Authorizeried address
-  const BUILDER_ADDRESS     = "0xa05a9677a9216401cf6800d28005b227f7a3cfae"        // ArkreenBuilder address
-  const CART_ADDRESS        = "0x0999afb673944a7b8e1ef8eb0a7c6ffdc0b43e31"        // HashKey ART token address
-  const WMATIC_ADDRESS      = "0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889"        // WMATIC address    
-*/
+  // const AUTHORIZER_ADDRESS  = "0x2df522C2bF3E570caA22FBBd06d1A120B4Dc29a8"        // Authorizeried address
+  // const BUILDER_ADDRESS     = "0xa05a9677a9216401cf6800d28005b227f7a3cfae"        // ArkreenBuilder address
+  // const CART_ADDRESS        = "0x0999afb673944a7b8e1ef8eb0a7c6ffdc0b43e31"        // HashKey ART token address
+  // const WMATIC_ADDRESS      = "0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889"        // WMATIC address    
 
   // Polygon mainnet  
   const AUTHORIZER_ADDRESS  = "0x0dE4fB23694c1532815Ad90fd1689c7234242FE3"        // Authorizeried address
@@ -179,6 +177,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       log: true,
       skipIfAlreadyDeployed: false,
   });
+*/
 
   console.log("UUPSProxy deployed to %s: ", hre.network.name, UUPSProxyContract.address);
 
@@ -212,7 +211,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:UUPSProxy
 // Proxy:   0xDf51F3DCD849f116948A5B23760B1ca0B5425BdE
 
-
+// 2023/12/13:  ArkreenBuilder
+// yarn deploy:matic_test:UUPSProxy
+// Proxy:   0xC88535788B4e45966c529D8b3FAd027d1E2d5a0a
 
 export default func;
 func.tags = ["UUPSProxy"];

@@ -63,6 +63,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // Proxy:           0x815bFE3aaCF765c9E0A4DdEb98Ad710a4Fb860d3
 // Implementation:  0xbDB320004dD108BD6bBBa948db992F7B4b3BdBF4
 
+// 2023/12/12
+// yarn deploy:matic_test:ArtBank
+// Proxy:           0x9e1dde2912a804e39e5b19c8b670a6cee0b1ca7a
+// Implementation:  0xBB17d9b933F631024cA4cF45391E7302CD527489
+
 func.tags = ["ArtBank"];
 
 export default func;

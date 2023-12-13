@@ -68,7 +68,7 @@ contract ArkreenRECBank is
 
     receive() external payable {
         assert(msg.sender == tokenNative); // only accept WMATIC via fallback from the WMATIC contract
-    }  
+    }
 
     function buyART(
         address             tokenPay,

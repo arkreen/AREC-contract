@@ -61,6 +61,18 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     console.log("ArkreenRECToken Updated to %s: ", hre.network.name, ArkreenRECTokenFactory.address);
     */
   } 
+  if(hre.network.name === 'celo_test') {
+    const CARTTOKEN_ADDRESS     = "0x57Fe6324538CeDd43D78C975118Ecf8c137fC8B2"      // 2023/12/12: Need to check
+    const AREC_ISSUE_ADDRESS    = "0x392a051d030629188d60299232C3bFB34b8Af1e6"      // 2023/12/12: cART Issuer
+  
+    const ArkreenRECTokenFactory = ArkreenRECToken__factory.connect(CARTTOKEN_ADDRESS, deployer);
+
+    const updateTx = await  ArkreenRECTokenFactory.setIssuerREC(AREC_ISSUE_ADDRESS)
+    await updateTx.wait()
+
+    console.log("callData, update", updateTx)
+    console.log("ArkreenRECToken Updated to %s: ", hre.network.name, ArkreenRECTokenFactory.address, AREC_ISSUE_ADDRESS);
+  } 
 
   if(hre.network.name === 'celo') {
     const CARTTOKEN_ADDRESS     = "0x9BBF9f544F3ceD640090f43FF6B820894f66Aaef"      // Need to check
@@ -92,6 +104,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2023/10/30: Call setClimateBuilder to update climateBuilder: 0x3d5531cF0bC2e8d0658fEc0D1a9995211Ac1f337
 // yarn deploy:celo:RECTokenI
+
+// 2023/05/10: Call setIssuerREC to update AREC_ISSUE_ADDRESS: 0xFedD52848Cb44dcDBA95df4cf2BCBD71D58df879
+// yarn deploy:celo_test:RECTokenI
 
 func.tags = ["RECTokenI"];
 

@@ -27,7 +27,6 @@
     "deploy:rinkeby:gMiner": "hardhat --network rinkeby deploy --tags gMiner",
     "deploy:rinkeby:gMinerU": "hardhat --network rinkeby deploy --tags gMinerU",
     "verify:rinkeby": "npx hardhat verify --network rinkeby <ADDRESS> <PARAMS>",
-
     "deploy:matic_test:ARKE": "hardhat --network matic_test deploy --tags ARKE --reset",
     "deploy:matic_test:gMiner": "hardhat --network matic_test deploy --tags gMiner",
     "deploy:matic_test:gMinerU": "hardhat --network matic_test deploy --tags gMinerU",
@@ -40,7 +39,6 @@
     "deploy:matic_test:AMinerV10V": "hardhat --network matic_test deploy --tags AMinerV10V",
     "deploy:matic_test:AMinerUV10V": "hardhat --network matic_test deploy --tags AMinerUV10V",
     "deploy:matic_test:AMinerV10D": "hardhat --network matic_test deploy --tags AMinerV10D",
-
     "deploy:matic_test:AMinerU": "hardhat --network matic_test deploy --tags AMinerU",
     "deploy:matic_test:gMinerU:reset": "npx hardhat --network matic_test deploy --reset --tags gMinerU",
     "deploy:matic_test:gRegistry": "hardhat --network matic_test deploy --tags gRegistry",
@@ -60,32 +58,25 @@
     "deploy:matic_test:RECBadgeD": "hardhat --network matic_test deploy --tags RECBadgeD",
     "deploy:matic_test:arkReward": "hardhat --network matic_test deploy --tags arkReward",
     "deploy:matic_test:RECBadge": "hardhat --network matic_test deploy --tags RECBadge --reset",
-
     "deploy:matic_test:ABuilder": "hardhat --network matic_test deploy --tags ABuilder",
     "deploy:matic_test:HskBTC": "hardhat --network matic_test deploy --tags HskBTC --reset",
     "deploy:matic_test:gRegistryD": "hardhat --network matic_test deploy --tags gRegistryD --reset",
-    "deploy:matic_test:RECIssueExtD": "hardhat --network matic_test deploy --tags RECIssueExtD --reset",   
-    "deploy:matic_test:gRegistryI": "hardhat --network matic_test deploy --tags gRegistryI", 
-    "deploy:matic_test:RECIssueI": "hardhat --network matic_test deploy --tags RECIssueI", 
-
+    "deploy:matic_test:RECIssueExtD": "hardhat --network matic_test deploy --tags RECIssueExtD --reset",
+    "deploy:matic_test:gRegistryI": "hardhat --network matic_test deploy --tags gRegistryI",
+    "deploy:matic_test:RECIssueI": "hardhat --network matic_test deploy --tags RECIssueI",
     "deploy:matic_test:ABuilderI": "hardhat --network matic_test deploy --tags ABuilderI",
     "deploy:matic_test:HskBTCI": "hardhat --network matic_test deploy --tags HskBTCI",
     "deploy:matic_test:HskBTCD": "hardhat --network matic_test deploy --tags HskBTCD --reset",
     "deploy:matic_test:HskBTCU": "hardhat --network matic_test deploy --tags HskBTCU",
-
     "deploy:matic_test:ArtBank": "hardhat --network matic_test deploy --tags ArtBank",
     "deploy:matic_test:ABuilderD": "hardhat --network matic_test deploy --tags ABuilderD",
     "deploy:matic_test:ABuilderU": "hardhat --network matic_test deploy --tags ABuilderU",
     "deploy:matic_test:ArtBankI": "hardhat --network matic_test deploy --tags ArtBankI",
-
     "deploy:matic_test:RECTokenR": "hardhat --network matic_test deploy --tags RECTokenR",
-
     "deploy:matic_test:UUPSProxy": "hardhat --network matic_test deploy --tags UUPSProxy",
-
     "verify:matic_test": "npx hardhat verify --network matic_test <ADDRESS> <PARAMS>",
     "confirmAuto:matic_test": "hardhat run --network matic_test ./deploy/confirmIssuance.ts",
     "claim:matic_test": "hardhat run --network matic_test ./deploy/matic-gatherer-v2.ts",
-
     "deploy:matic_test:all": "hardhat --network matic_test deploy",
     "etherscan:matic_test": "hardhat --network matic_test etherscan-verify --api-key",
     "deploy_ARKE_test": "hardhat run --network matic_test scripts/deployArkreenToken.ts",
@@ -96,14 +87,11 @@
     "deploy:matic_test:ArtBankD": "hardhat --network matic_test deploy --tags ArtBankD",
     "deploy:matic_test:ArtBankU": "hardhat --network matic_test deploy --tags ArtBankU",
     "deploy:matic_test:RECTokenI": "hardhat --network matic_test deploy --tags RECTokenI",
-
     "deploy:matic_test:GreenBTC": "hardhat --network matic_test deploy --tags GreenBTC",
     "deploy:matic_test:GreenBTCD": "hardhat --network matic_test deploy --tags GreenBTCD",
     "deploy:matic_test:GreenBTCI": "hardhat --network matic_test deploy --tags GreenBTCI",
     "deploy:matic_test:GreenBTCU": "hardhat --network matic_test deploy --tags GreenBTCU",
-    
-    "deploy:matic_test:GreenBTCImageD": "hardhat --network matic_test deploy --tags GreenBTCImageD",    
-
+    "deploy:matic_test:GreenBTCImageD": "hardhat --network matic_test deploy --tags GreenBTCImageD",
     "deploy:matic:gAKRE": "hardhat --network matic deploy --tags gAKRE",
     "deploy:matic:arkReward": "hardhat --network matic deploy --tags arkReward",
     "deploy:matic:AMiner": "hardhat --network matic deploy --tags AMiner",
@@ -114,91 +102,75 @@
     "deploy:matic:gRegistry": "hardhat --network matic deploy --tags gRegistry",
     "deploy:matic:UUPSProxy": "hardhat --network matic deploy --tags UUPSProxy",
     "deploy:matic:RECIssue": "hardhat --network matic deploy --tags RECIssue --reset",
-
     "deploy:matic:RECIssueD": "hardhat --network matic deploy --tags RECIssueD --reset",
     "deploy:matic:RECIssueU": "hardhat --network matic deploy --tags RECIssueU",
     "deploy:matic:RECToken": "hardhat --network matic deploy --tags RECToken",
     "deploy:matic:RECTokenI": "hardhat --network matic deploy --tags RECTokenI",
-    
     "deploy:matic:RECTokenD": "hardhat --network matic deploy --tags RECTokenD --reset",
     "deploy:matic:RECTokenU": "hardhat --network matic deploy --tags RECTokenU",
     "deploy:matic:RECBadge": "hardhat --network matic deploy --tags RECBadge --reset",
     "deploy:matic:gRegistryI": "hardhat --network matic deploy --tags gRegistryI",
-    
     "deploy:matic:Notary": "hardhat --network matic deploy --tags Notary",
     "deploy:matic:RECBadgeD": "hardhat --network matic deploy --tags RECBadgeD --reset",
     "deploy:matic:RECBadgeU": "hardhat --network matic deploy --tags RECBadgeU",
     "deploy:matic:ARewardD": "hardhat --network matic deploy --tags ARewardD --reset",
     "deploy:matic:ARewardU": "hardhat --network matic deploy --tags ARewardU",
-
-    "deploy:matic:RECIssueExtD": "hardhat --network matic deploy --tags RECIssueExtD --reset",   
-    "deploy:matic:RECIssueI": "hardhat --network matic deploy --tags RECIssueI", 
-
+    "deploy:matic:RECIssueExtD": "hardhat --network matic deploy --tags RECIssueExtD --reset",
+    "deploy:matic:RECIssueI": "hardhat --network matic deploy --tags RECIssueI",
     "deploy:matic:RECBadgeI": "hardhat --network matic deploy --tags RECBadgeI",
     "deploy:matic:RECTokenR": "hardhat --network matic deploy --tags RECTokenR",
-
     "deploy:matic:ARKE": "hardhat --network matic deploy --tags ARKE --reset",
     "deploy:matic:gRegistryD": "hardhat --network matic deploy --tags gRegistryD --reset",
     "deploy:matic:gRegistryU": "hardhat --network matic deploy --tags gRegistryU",
     "deploy:matic:ArtBank": "hardhat --network matic deploy --tags ArtBank",
     "deploy:matic:ABuilder": "hardhat --network matic deploy --tags ABuilder",
     "deploy:matic:HskBTC": "hardhat --network matic deploy --tags HskBTC --reset",
-
     "deploy:matic:ArtBankI": "hardhat --network matic deploy --tags ArtBankI",
-    "deploy:matic:ABuilderI": "hardhat --network matic deploy --tags ABuilderI",    
+    "deploy:matic:ABuilderI": "hardhat --network matic deploy --tags ABuilderI",
     "deploy:matic:HskBTCI": "hardhat --network matic deploy --tags HskBTCI",
     "deploy:matic:HskBTCD": "hardhat --network matic deploy --tags HskBTCD",
     "deploy:matic:HskBTCU": "hardhat --network matic deploy --tags HskBTCU",
-
-    "deploy:matic:AMinerV10": "hardhat --network matic deploy --tags AMinerV10",  
-    "deploy:matic:AMinerUV10": "hardhat --network matic deploy --tags AMinerUV10",  
-    "deploy:matic:AMinerV10D": "hardhat --network matic deploy --tags AMinerV10D",  
-
-    "deploy:matic:MulticallD": "hardhat --network matic deploy --tags MulticallD", 
-    
+    "deploy:matic:AMinerV10": "hardhat --network matic deploy --tags AMinerV10",
+    "deploy:matic:AMinerUV10": "hardhat --network matic deploy --tags AMinerUV10",
+    "deploy:matic:AMinerV10D": "hardhat --network matic deploy --tags AMinerV10D",
+    "deploy:matic:MulticallD": "hardhat --network matic deploy --tags MulticallD",
     "deploy:matic:GreenBTC": "hardhat --network matic deploy --tags GreenBTC",
     "deploy:matic:GreenBTCI": "hardhat --network matic deploy --tags GreenBTCI",
-
     "deploy:matic:GreenBTCImageD": "hardhat --network matic deploy --tags GreenBTCImageD",
     "deploy:matic:ABuilderD": "hardhat --network matic deploy --tags ABuilderD",
     "deploy:matic:ABuilderU": "hardhat --network matic deploy --tags ABuilderU",
-
     "etherscan:matic": "hardhat --network matic etherscan-verify --api-key",
-
     "deploy:celo_test:gRegistry": "hardhat --network celo_test deploy --tags gRegistry",
-
     "deploy:celo_test:RECIssueExtD": "hardhat --network celo_test deploy --tags RECIssueExtD --reset",
     "deploy:celo_test:RECIssue": "hardhat --network celo_test deploy --tags RECIssue",
-    "deploy:celo_test:RECIssueI": "hardhat --network celo_test deploy --tags RECIssueI", 
+    "deploy:celo_test:RECIssueI": "hardhat --network celo_test deploy --tags RECIssueI",
     "deploy:celo_test:RECToken": "hardhat --network celo_test deploy --tags RECToken --reset",
     "deploy:celo_test:RECBadge": "hardhat --network celo_test deploy --tags RECBadge --reset",
-    "deploy:celo_test:gRegistryI": "hardhat --network celo_test deploy --tags gRegistryI", 
+    "deploy:celo_test:gRegistryI": "hardhat --network celo_test deploy --tags gRegistryI",
     "deploy:celo_test:ArtBank": "hardhat --network celo_test deploy --tags ArtBank",
     "deploy:celo_test:ABuilder": "hardhat --network celo_test deploy --tags ABuilder",
     "deploy:celo_test:ABuilderI": "hardhat --network celo_test deploy --tags ABuilderI",
     "deploy:celo_test:ArtBankI": "hardhat --network celo_test deploy --tags ArtBankI",
     "deploy:celo_test:MulticallD": "hardhat --network celo_test deploy --tags MulticallD",
+    "deploy:celo_test:RECTokenI": "hardhat --network celo_test deploy --tags RECTokenI",
 
     "allowance:celo_test": "hardhat run --network celo_test ./deploy/allowance_manager.ts",
     "confirmAuto:celo_test": "hardhat run --network celo_test ./deploy/confirmIssuance_celo.ts",
     "etherscan:celo_test": "hardhat --network celo_test etherscan-verify --api-url https://api-alfajores.celoscan.io --api-key",
-
     "deploy:celo:gRegistry": "hardhat --network celo deploy --tags gRegistry",
     "deploy:celo:RECIssueExtD": "hardhat --network celo deploy --tags RECIssueExtD",
     "deploy:celo:RECIssue": "hardhat --network celo deploy --tags RECIssue",
-    "deploy:celo:RECIssueI": "hardhat --network celo deploy --tags RECIssueI", 
+    "deploy:celo:RECIssueI": "hardhat --network celo deploy --tags RECIssueI",
     "deploy:celo:RECToken": "hardhat --network celo deploy --tags RECToken",
     "deploy:celo:RECBadge": "hardhat --network celo deploy --tags RECBadge",
-    "deploy:celo:gRegistryI": "hardhat --network celo deploy --tags gRegistryI", 
+    "deploy:celo:gRegistryI": "hardhat --network celo deploy --tags gRegistryI",
     "deploy:celo:ArtBank": "hardhat --network celo deploy --tags ArtBank",
     "deploy:celo:ABuilder": "hardhat --network celo deploy --tags ABuilder",
     "deploy:celo:RECTokenI": "hardhat --network celo deploy --tags RECTokenI",
     "deploy:celo:ABuilderI": "hardhat --network celo deploy --tags ABuilderI",
     "deploy:celo:ArtBankI": "hardhat --network celo deploy --tags ArtBankI",
     "deploy:celo:MulticallD": "hardhat --network celo deploy --tags MulticallD",
-
     "etherscan:celo": "hardhat --network celo etherscan-verify --api-url https://api.celoscan.io --api-key",
-
     "test": "hardhat test",
     "gas": "set REPORT_GAS=true && hardhat test",
     "coverage": "HARDHAT_DEPLOY_FIXTURE=true hardhat coverage",
@@ -247,16 +219,18 @@
     "hardhat-deploy": "^0.11.15",
     "hardhat-gas-reporter": "^1.0.8",
     "hardhat-storage-layout": "^0.1.7",
+    "mocha-chai-jest-snapshot": "^1.1.0",
     "solidity-coverage": "^0.7.21",
     "ts-node": "^10.9.1",
     "typechain": "^8.1.0",
-    "typescript": "^4.7.4"
+    "typescript": "^4.7.4",
+    "decimal.js": "^10.2.1"
   },
   "dependencies": {
     "@nomiclabs/hardhat-waffle": "^2.0.5",
     "@solidstate/contracts": "^0.0.58",
+    "base64-sol": "1.0.1",
     "openzeppelin342": "npm:@openzeppelin/contracts@3.4.2-solc-0.7",
-    "solady": "^0.0.145",
-    "base64-sol": "1.0.1"
+    "solady": "^0.0.145"
   }
 }

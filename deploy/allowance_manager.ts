@@ -12,8 +12,8 @@ async function main() {
 
   const old_allowance = await tokenFactory.allowance(deployer.address, targetAddress)
 
-//  const removeAllowance = await tokenFactory.approve(targetAddress, new_allowance)
-//  await removeAllowance.wait()
+  const removeAllowance = await tokenFactory.approve(targetAddress, new_allowance)
+  await removeAllowance.wait()
 
   console.log('Previous allowance:', old_allowance, new_allowance)
 }

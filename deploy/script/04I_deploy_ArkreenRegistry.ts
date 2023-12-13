@@ -5,8 +5,6 @@ import { ethers } from "hardhat";
 import { ArkreenRegistry__factory } from "../../typechain";
 import { BigNumber, constants } from "ethers";
 
-
-
 // Initialize 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
@@ -20,7 +18,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //      const tokenPay = 	"0x54e1c534f59343c56549c76d1bdccc8717129832"
 
 /*
-        // 2023/03/28:  Matic testnet
+        // 2023/03/28:  Matic testnet Simu
         const ArkreenRegistry_address     = '0x61a914363ef99aabca69504cee5ccfd5523c845d'
         const issuer                      = "0x0AF6Fad1e63De91d5C53Af1dD2e55BB1b278b131"
         const tokenREC                    = "0x58Ac4e54a70b98960Ed5ecF9B9A2cd1AE83879Db"
@@ -30,6 +28,30 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         const rateToIssue = BigNumber.from(100).mul(BigNumber.from(10).pow(18))
         const rateToLiquidize = 1000
         const description = 	"I-REC ERC20 token to greenize the BTC block while HashKey opening ceremony is held."                        
+*/
+
+/*
+        // 2023/12/12:  Matic testnet Dev Env for hART
+        const ArkreenRegistry_address     = '0xfEcbD33525d9B869e5f3CaB895cd6D7A666209ee'
+        const issuer                      = "0x4710E7Fd7A4FBF55ddCcA3105919E2488E5c7D17"
+        const tokenREC                    = "0xCAABA1AC075Ba045e8C21F9Ae00347EB4FADA3A1"
+        const tokenPay                    = "0x8Ab2299351585097101c91FE4b098d95c18D28a7"
+
+        const idAsset =   "AREC_HSK_ESG_BTC"
+        const rateToIssue = BigNumber.from(100).mul(BigNumber.from(10).pow(18))
+        const rateToLiquidize = 1000
+        const description = "HashKey AREC ERC20 token based on redeemed I-REC."      
+*/        
+        // 2023/12/12B:  Matic testnet Dev Env for cART
+        const ArkreenRegistry_address     = '0xfEcbD33525d9B869e5f3CaB895cd6D7A666209ee'
+        const issuer                      = "0x392a051d030629188d60299232C3bFB34b8Af1e6"
+        const tokenREC                    = "0x9031550a0aE38337a19E4eFA372B3e6b0FE94D3f"
+        const tokenPay                    = "0x8Ab2299351585097101c91FE4b098d95c18D28a7"
+
+        const idAsset =  "Classic Based AREC Token"
+        const rateToIssue = BigNumber.from(100).mul(BigNumber.from(10).pow(18))
+        const rateToLiquidize = 1000
+        const description = 	"Bridged AREC ERC20 token based on redeemed classic REC assets."      
 
         const [deployer] = await ethers.getSigners();
         const ArkreenRegistryFactory = ArkreenRegistry__factory.connect(ArkreenRegistry_address, deployer);
@@ -40,7 +62,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
                                                         tokenPay, rateToIssue, rateToLiquidize, description)
         await updateTxIssuance.wait()
         console.log("ArkreenRegistry newAssetAREC is executed: %s: ", hre.network.name, ArkreenRegistry_address);
-*/
+
         // 2023/05/05:    Dev Environment
         // const ArkreenRegistry_address     = '0xfEcbD33525d9B869e5f3CaB895cd6D7A666209ee'
         // const ArkreenMiner_address        = '0x682e01f8ecc0524085F51CC7dFB54fDB8729ac22'
@@ -51,6 +73,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         // const Issuer_address              = '0xF1CF65Dbfa9cCEe650a053E218F5788F63bDA60E'
         // const Issuer_name                 = 'Arkreen DAO REC Issuer'
 
+/*
         // 2023/06/08:    Pre-Production
         const ArkreenRegistry_address     = '0x4590B2d8251963E249967D1fa8122974dE574aC6'
         const ArkreenMiner_address        = '0x1F742C5f32C071A9925431cABb324352C6e99953'
@@ -82,7 +105,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         console.log("AddRECIssuer Initialized: %s: ", hre.network.name, Issuer_address, ArkreenRECToken_address, Issuer_name);        
 
         console.log("ArkreenRegistry Initialized to %s: ", hre.network.name, ArkreenRegistryFactory.address);
-
+*/
     }
 
     if(hre.network.name === 'matic') {
@@ -241,7 +264,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       await updateTxIssuance.wait()
       console.log("ArkreenRegistry newAssetAREC is executed: %s: ", hre.network.name, ArkreenRegistry_address);
 */
-      
+
+/*
       // 2023/08/25:    Celo_Test
       const [deployer] = await ethers.getSigners();
       const ArkreenRegistryFactory = ArkreenRegistry__factory.connect(ArkreenRegistry_address, deployer);
@@ -257,11 +281,30 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       const updateTxBadge = await ArkreenRegistryFactory.setArkreenRetirement(ArkreenRECBadge_address)
       await updateTxBadge.wait()
       console.log("updateTxBadge Initialized: %s: ", hre.network.name, ArkreenRECBadge_address);
+*/
 
 //    const updateTxAddRECIssuer = await ArkreenRegistryFactory.addRECIssuer(Issuer_address, ArkreenRECToken_address, Issuer_name)
 //    await updateTxAddRECIssuer.wait()
 //    console.log("AddRECIssuer Initialized: %s: ", hre.network.name, Issuer_address, ArkreenRECToken_address, Issuer_name);
 //    console.log("ArkreenRegistry Initialized to %s: ", hre.network.name, ArkreenRegistryFactory.address);
+
+
+      // 2023/12/12:  Celo Test net 
+      //function manageAssetARECExt( uint256 idxAsset, uint256 flag, string calldata idAsset, address issuer, 
+      //                                  address tokenREC, address tokenPay)
+      const newIssuer           = "0x392a051d030629188d60299232C3bFB34b8Af1e6"    // 2023/12/12:  new newIssuer
+
+      const [deployer] = await ethers.getSigners();
+      const ArkreenRegistryFactory = ArkreenRegistry__factory.connect(ArkreenRegistry_address, deployer);
+
+      // 2023/12/12:  Celo Test net
+      const manageAssetARECExtTx = await ArkreenRegistryFactory.manageAssetARECExt(1, 0x02, 
+                                              '', newIssuer, constants.AddressZero, constants.AddressZero)
+                                                        
+      console.log("manageAssetARECExt", manageAssetARECExtTx)
+      await manageAssetARECExtTx.wait()
+
+      console.log("ArkreenRegistry manageAssetARECExt is executed: %s: ", hre.network.name, ArkreenRegistry_address, newIssuer);
 
   }
 
@@ -348,6 +391,15 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2023/10/31: call newAssetAREC for celo mainnet: newAssetAREC, setRECIssuance, setArkreenRetirement
 // yarn deploy:celo:gRegistryI
+
+// 2023/12/12: call newAssetAREC for Matic testnet Dev env and hART
+// yarn deploy:matic_test:gRegistryI
+
+// 2023/12/12B: call newAssetAREC for Matic testnet Dev env and cART
+// yarn deploy:matic_test:gRegistryI
+
+// 2023/12/12C: call manageAssetARECExt for celo testnet to update new Issuer
+// yarn deploy:celo_test:gRegistryI
 
 func.tags = ["gRegistryI"];
 

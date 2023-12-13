@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity =0.7.6;
 
-import './TestERC20.sol';
+import './TestERC20Uni.sol';
 import '../interfaces/external/IERC20PermitAllowed.sol';
 
 // has a fake permit that just uses the other signature type for type(uint256).max
-contract TestERC20PermitAllowed is TestERC20, IERC20PermitAllowed {
-    constructor(uint256 amountToMint) TestERC20(amountToMint) {}
+contract TestERC20PermitAllowed is TestERC20Uni, IERC20PermitAllowed {
+    constructor(uint256 amountToMint) TestERC20Uni(amountToMint) {}
 
     function permit(
         address holder,
