@@ -17,6 +17,7 @@ import "./interfaces/IERC20Permit.sol";
 import "./ArkreenBuilderTypes.sol";
 import "./interfaces/IArkreenRECBank.sol";
 import "./interfaces/IFeSwapRouter.sol";
+import "./interfaces/ISwapRouter.sol";
 import "./interfaces/IArkreenRECToken.sol";
 
 // Import this file to use console.log
@@ -103,6 +104,9 @@ contract ArkreenBuilder is
      *                  bit0 = 0, amountART is the exact amount of the ART token to receive.
      *                  bit1 = 0, Swap ART from Dex
      *                  bit1 = 1, But ART from art sales bank
+     *                  bit2 = 0, Use Uniswap V2 liquidity pool
+     *                  bit2 = 1, Use Uniswap V3 liquidity pool
+     *                  Byte4-Byte23, sqrtPriceLimitX96 for Uniswap V3, uint160
      */
     function actionBuilder(
         address             tokenPay,
@@ -129,6 +133,8 @@ contract ArkreenBuilder is
      *                  bit0 = 0, amountART is the exact amount of the ART token to receive.
      *                  bit1 = 0, Swap ART from Dex
      *                  bit1 = 1, But ART from art sales bank
+     *                  bit2 = 0, Use Uniswap V2 liquidity pool
+     *                  bit2 = 1, Use Uniswap V3 liquidity pool     
      */
     function actionBuilderNative(
         address             tokenART,
@@ -153,6 +159,8 @@ contract ArkreenBuilder is
      *                  bit0 = 0, amountART is the exact amount of the ART token to receive.
      *                  bit1 = 0, Swap ART from Dex
      *                  bit1 = 1, But ART from art sales bank
+     *                  bit2 = 0, Use Uniswap V2 liquidity pool
+     *                  bit2 = 1, Use Uniswap V3 liquidity pool     
      * @param permitToPay The permit information to approve the payment token to swap for ART token 
      */
     function actionBuilderWithPermit(
@@ -291,6 +299,63 @@ contract ArkreenBuilder is
         _actionBuilderBadge(permitToPay.token, tokenART, permitToPay.value, amountART, modeAction, permitToPay.deadline, badgeInfo);
     }
 
+    function _swapARTToken(
+        address             tokenPay,
+        address             tokenART,
+        uint256             amountPay,
+        uint256             amountART,
+        uint256             modeAction,
+        uint256             deadline
+    ) internal returns (uint256) {
+
+        bool isExactIn = (modeAction&0x01) == 0x01;
+        if(modeAction & 0x02 != 0x00) {
+            IArkreenRECBank(artBank).buyART(tokenPay, tokenART, amountPay, amountART, isExactIn);
+        } else {
+            if(modeAction & 0x04 == 0x00) {
+                address[] memory swapPath = new address[](2);
+                swapPath[0] = tokenPay;
+                swapPath[1] = tokenART;
+
+                if(isExactIn) {
+                    IFeSwapRouter(routerSwap).swapExactTokensForTokens(amountPay, amountART, swapPath, address(this), deadline);
+                } else {
+                    IFeSwapRouter(routerSwap).swapTokensForExactTokens(amountART, amountPay, swapPath, address(this), deadline);
+                }
+            } else {
+                if(isExactIn) {
+                    ISwapRouter.ExactInputSingleParams memory exactInputParams = 
+                        ISwapRouter.ExactInputSingleParams({
+                            tokenIn:            tokenPay,
+                            tokenOut:           tokenART,
+                            fee:                3000,
+                            recipient:          address(this),
+                            deadline:           deadline,
+                            amountIn:           amountPay,
+                            amountOutMinimum:   amountART,
+                            sqrtPriceLimitX96:  uint160(modeAction >> 32)
+                        });
+                    ISwapRouter(routerSwap).exactInputSingle(exactInputParams);
+                } else { 
+                    ISwapRouter.ExactOutputSingleParams memory ExactOutputParam = 
+                        ISwapRouter.ExactOutputSingleParams({
+                            tokenIn:            tokenPay,
+                            tokenOut:           tokenART,
+                            fee:                3000,
+                            recipient:          address(this),
+                            deadline:           deadline,
+                            amountOut:          amountART,
+                            amountInMaximum:    amountPay,
+                            sqrtPriceLimitX96:  uint160(modeAction >> 32)
+                    });
+                    ISwapRouter(routerSwap).exactOutputSingle(ExactOutputParam);
+                }
+            }
+        }
+
+        return isExactIn ? IERC20(tokenART).balanceOf(address(this)) : amountART;
+    }
+
     function _actionBuilder(
         address             tokenPay,
         address             tokenART,
@@ -300,23 +365,7 @@ contract ArkreenBuilder is
         uint256             deadline
     ) internal {
 
-        bool isExact = (modeAction&0x01) == 0x01;
-        if(modeAction & 0x02 != 0x00) {
-            IArkreenRECBank(artBank).buyART(tokenPay, tokenART, amountPay, amountART, isExact);
-        } else {
-          address[] memory swapPath = new address[](2);
-          swapPath[0] = tokenPay;
-          swapPath[1] = tokenART;
-
-          if(isExact) {
-              IFeSwapRouter(routerSwap).swapExactTokensForTokens(amountPay, amountART, swapPath, address(this), deadline);
-          } else {
-              IFeSwapRouter(routerSwap).swapTokensForExactTokens(amountART, amountPay, swapPath, address(this), deadline);
-          }
-        }
-
-        uint256 amountOffset = amountART;  
-        if(isExact)  amountOffset = IERC20(tokenART).balanceOf(address(this));    // Pleae do not send ART to this contract
+        uint256 amountOffset = _swapARTToken(tokenPay, tokenART, amountPay, amountART, modeAction, deadline);  
  
         // commitOffset(uint256 amount): 0xe8fef571
         bytes memory callData = abi.encodeWithSelector(0xe8fef571, amountOffset);
@@ -338,23 +387,7 @@ contract ArkreenBuilder is
         BadgeInfo calldata  badgeInfo
     ) internal {
 
-        bool isExact = (modeAction&0x01) == 0x01;
-        if(modeAction & 0x02 != 0x00) {
-            IArkreenRECBank(artBank).buyART(tokenPay, tokenART, amountPay, amountART, isExact);
-        } else {
-          address[] memory swapPath = new address[](2);
-          swapPath[0] = tokenPay;
-          swapPath[1] = tokenART;
-
-          if(modeAction & 0x01 != 0x00) {
-              IFeSwapRouter(routerSwap).swapExactTokensForTokens(amountPay, amountART, swapPath, address(this), deadline);
-          } else {
-              IFeSwapRouter(routerSwap).swapTokensForExactTokens(amountART, amountPay, swapPath, address(this), deadline);
-          }
-        }
-
-        uint256 amountOffset = amountART;  
-        if(isExact)  amountOffset = IERC20(tokenART).balanceOf(address(this));        
+        uint256 amountOffset = _swapARTToken(tokenPay, tokenART, amountPay, amountART, modeAction, deadline);       
 
         // offsetAndMintCertificate(address beneficiary,string offsetEntityID,string beneficiaryID,string offsetMessage,uint256 amount)
         // offsetAndMintCertificate(address,string,string,string,uint256): signature = 0x0fba6a8d
