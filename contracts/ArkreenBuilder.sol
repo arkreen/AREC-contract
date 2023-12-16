@@ -104,8 +104,10 @@ contract ArkreenBuilder is
      *                  bit0 = 0, amountART is the exact amount of the ART token to receive.
      *                  bit1 = 0, Swap ART from Dex
      *                  bit1 = 1, But ART from art sales bank
-     *                  bit2 = 0, Use Uniswap V2 liquidity pool
-     *                  bit2 = 1, Use Uniswap V3 liquidity pool
+     *                  bit2 = 0, re-pay to _msgSender()
+     *                  bit2 = 1, re-pay to msg.sender
+     *                  bit3 = 0, Use Uniswap V2 liquidity pool
+     *                  bit3 = 1, Use Uniswap V3 liquidity pool    
      *                  Byte4-Byte23, sqrtPriceLimitX96 for Uniswap V3, uint160
      */
     function actionBuilder(
@@ -133,8 +135,11 @@ contract ArkreenBuilder is
      *                  bit0 = 0, amountART is the exact amount of the ART token to receive.
      *                  bit1 = 0, Swap ART from Dex
      *                  bit1 = 1, But ART from art sales bank
-     *                  bit2 = 0, Use Uniswap V2 liquidity pool
-     *                  bit2 = 1, Use Uniswap V3 liquidity pool     
+     *                  bit2 = 0, re-pay to _msgSender()
+     *                  bit2 = 1, re-pay to msg.sender
+     *                  bit3 = 0, Use Uniswap V2 liquidity pool
+     *                  bit3 = 1, Use Uniswap V3 liquidity pool    
+     *                  Byte4-Byte23, sqrtPriceLimitX96 for Uniswap V3, uint160
      */
     function actionBuilderNative(
         address             tokenART,
@@ -159,8 +164,11 @@ contract ArkreenBuilder is
      *                  bit0 = 0, amountART is the exact amount of the ART token to receive.
      *                  bit1 = 0, Swap ART from Dex
      *                  bit1 = 1, But ART from art sales bank
-     *                  bit2 = 0, Use Uniswap V2 liquidity pool
-     *                  bit2 = 1, Use Uniswap V3 liquidity pool     
+     *                  bit2 = 0, re-pay to _msgSender()
+     *                  bit2 = 1, re-pay to msg.sender
+     *                  bit3 = 0, Use Uniswap V2 liquidity pool
+     *                  bit3 = 1, Use Uniswap V3 liquidity pool    
+     *                  Byte4-Byte23, sqrtPriceLimitX96 for Uniswap V3, uint160   
      * @param permitToPay The permit information to approve the payment token to swap for ART token 
      */
     function actionBuilderWithPermit(
@@ -223,6 +231,9 @@ contract ArkreenBuilder is
      *                  bit1 = 1, But ART from art sales bank     
      *                  bit2 = 0, re-pay to _msgSender()
      *                  bit2 = 1, re-pay to msg.sender
+     *                  bit3 = 0, Use Uniswap V2 liquidity pool
+     *                  bit3 = 1, Use Uniswap V3 liquidity pool    
+     *                  Byte4-Byte23, sqrtPriceLimitX96 for Uniswap V3, uint160
      * @param badgeInfo The information to be included for climate badge.
      */
     function actionBuilderBadge(
@@ -251,7 +262,12 @@ contract ArkreenBuilder is
      *                  bit0 = 1, amountPay is the exact amount of the payment token to pay.
      *                  bit0 = 0, amountART is the exact amount of the ART token to receive.
      *                  bit1 = 0, Swap ART from Dex
-     *                  bit1 = 1, But ART from art sales bank   
+     *                  bit1 = 1, But ART from art sales bank
+     *                  bit2 = 0, re-pay to _msgSender()
+     *                  bit2 = 1, re-pay to msg.sender
+     *                  bit3 = 0, Use Uniswap V2 liquidity pool
+     *                  bit3 = 1, Use Uniswap V3 liquidity pool    
+     *                  Byte4-Byte23, sqrtPriceLimitX96 for Uniswap V3, uint160        
      * @param badgeInfo The information to be included for climate badge.
      */
     function actionBuilderBadgeNative(
@@ -312,7 +328,7 @@ contract ArkreenBuilder is
         if(modeAction & 0x02 != 0x00) {
             IArkreenRECBank(artBank).buyART(tokenPay, tokenART, amountPay, amountART, isExactIn);
         } else {
-            if(modeAction & 0x04 == 0x00) {
+            if(modeAction & 0x08 == 0x00) {                   // Check UniV2/UniV3 Pool
                 address[] memory swapPath = new address[](2);
                 swapPath[0] = tokenPay;
                 swapPath[1] = tokenART;
