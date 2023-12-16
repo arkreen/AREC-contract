@@ -396,7 +396,8 @@ describe("ArkreenRECIssuance", () => {
 
       const region = "Shanghai"
       const url = "https://www.arkreen.com/AREC/"
-      const memo = "Test Update"        
+      const memo = "Test Update"    
+      const price0:BigNumber = expandTo18Decimals(50).div(expandTo9Decimals(1))    
 
       beforeEach(async () => {
         recMintRequest = { 
@@ -418,7 +419,6 @@ describe("ArkreenRECIssuance", () => {
 
         // Normal
         await arkreenRegistry.setArkreenMiner(arkreenMiner.address)      
-        const price0:BigNumber = expandTo18Decimals(50).div(expandTo9Decimals(1))
         await arkreenRECIssuance.updateARECMintPrice(AKREToken.address, price0)
         
         await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
@@ -460,7 +460,8 @@ describe("ArkreenRECIssuance", () => {
       let recMintRequest: RECRequestStruct 
       const startTime = 1564888526
       const endTime   = 1654888526
-      const mintFee = expandTo18Decimals(100)    
+      const price0:BigNumber = expandTo18Decimals(50).div(expandTo9Decimals(1))
+      const mintFee = BigNumber.from(1000).mul(price0)
       let arkreenRECIssuanceExt: ArkreenRECIssuanceExt
 
       beforeEach(async () => {
@@ -483,7 +484,6 @@ describe("ArkreenRECIssuance", () => {
 
         // Normal
         await arkreenRegistry.setArkreenMiner(arkreenMiner.address)      
-        const price0:BigNumber = expandTo18Decimals(50).div(expandTo9Decimals(1))
         await arkreenRECIssuance.updateARECMintPrice(AKREToken.address, price0)
 
         await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
@@ -504,6 +504,7 @@ describe("ArkreenRECIssuance", () => {
 
       it("ArkreenRECIssuance: cancelRECRequest Normal", async () => {
         await arkreenRECIssuance.connect(manager).rejectRECRequest(tokenID)  
+
         await expect(arkreenRECIssuanceExt.connect(owner1).cancelRECRequest(tokenID))
                 .to.emit(AKREToken, 'Transfer')
                 .withArgs(arkreenRECIssuanceExt.address, owner1.address, mintFee)
@@ -521,7 +522,6 @@ describe("ArkreenRECIssuance", () => {
 
         let payInfo = [constants.AddressZero, BigNumber.from(0)]
         expect(await arkreenRECIssuance.allPayInfo(tokenID)).to.deep.eq(payInfo);
-
       })
     })
 

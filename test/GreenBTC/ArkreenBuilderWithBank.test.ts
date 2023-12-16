@@ -303,13 +303,13 @@ describe("ArkreenBuilderWithBank", () => {
                           .to.emit(tokenA, 'Transfer')
                           .withArgs(arkreenBuilder.address, arkreenRECBank.address, expandTo18Decimals(150*250))                              
                           .to.emit(arkreenRECBank, "ARTSold")
-                          .withArgs(arkreenRECTokenESG.address, tokenA.address, expandTo9Decimals(100), expandTo18Decimals(150*250))
+                          .withArgs(arkreenRECTokenESG.address, tokenA.address, expandTo9Decimals(150), expandTo18Decimals(150*250))
                           .to.emit(arkreenRECTokenESG, "OffsetFinished")
                           .withArgs(deployer.address, expandTo9Decimals(150), 2)                                                 
 
           const actionID = await arkreenRetirement.offsetCounter()
           const lastBlock = await ethers.provider.getBlock('latest')    
-          
+
           const tokenID = await arkreenRECIssuanceExt.totalSupply()
           const action = [  deployer.address, maker1.address, expandTo9Decimals(150),    // Manger is the issuer address
                             tokenID.add(MASK_OFFSET), lastBlock.timestamp, false ]        // Offset action is claimed
@@ -375,7 +375,7 @@ describe("ArkreenBuilderWithBank", () => {
 
         {
           await arkreenRECBank.connect(maker2).changeSalePrice( arkreenRECTokenESG.address, tokenA.address, expandTo18Decimals(250))
-
+          
           const ARECBefore = await arkreenRECTokenESG.balanceOf(deployer.address)
           await expect(arkreenBuilder.actionBuilderBadge( tokenA.address, arkreenRECTokenESG.address,
                                               expandTo18Decimals(150*250), expandTo9Decimals(150), 2, constants.MaxUint256, badgeInfo))
@@ -384,7 +384,7 @@ describe("ArkreenBuilderWithBank", () => {
                           .to.emit(tokenA, 'Transfer')
                           .withArgs(arkreenBuilder.address, arkreenRECBank.address, expandTo18Decimals(150*250))                              
                           .to.emit(arkreenRECBank, "ARTSold")
-                          .withArgs(arkreenRECTokenESG.address, tokenA.address, expandTo9Decimals(100), expandTo18Decimals(150*250))
+                          .withArgs(arkreenRECTokenESG.address, tokenA.address, expandTo9Decimals(150), expandTo18Decimals(150*250))
                           .to.emit(arkreenRECTokenESG, "OffsetFinished")
                           .withArgs(deployer.address, expandTo9Decimals(150), 2) 
                           .to.emit(arkreenRetirement, "OffsetCertificateMinted")    
@@ -454,7 +454,7 @@ describe("ArkreenBuilderWithBank", () => {
                           .to.emit(WETH, 'Transfer')
                           .withArgs(arkreenBuilder.address, arkreenRECBank.address, expandTo18Decimals(1))                              
                           .to.emit(arkreenRECBank, "ARTSold")
-                          .withArgs(arkreenRECTokenESG.address, tokenA.address, expandTo9Decimals(400), expandTo18Decimals(1))
+                          .withArgs(arkreenRECTokenESG.address, WETH.address, expandTo9Decimals(400), expandTo18Decimals(1))
                           .to.emit(arkreenRECTokenESG, "OffsetFinished")
                           .withArgs(deployer.address, expandTo9Decimals(400), 2)                                                 
 
@@ -529,12 +529,12 @@ describe("ArkreenBuilderWithBank", () => {
 
           const ARECBefore = await arkreenRECTokenESG.balanceOf(owner1.address)
           await expect(arkreenBuilder.connect(owner1).actionBuilderWithPermit( arkreenRECTokenESG.address, expandTo9Decimals(1500), 2, permitToPay))
-                          .to.emit(tokenA, 'Transfer')
+                          .to.emit(AKREToken, 'Transfer')
                           .withArgs(owner1.address, arkreenBuilder.address, expandTo18Decimals(1500*150))
-                          .to.emit(tokenA, 'Transfer')
+                          .to.emit(AKREToken, 'Transfer')
                           .withArgs(arkreenBuilder.address, arkreenRECBank.address, expandTo18Decimals(1500*150))                              
                           .to.emit(arkreenRECBank, "ARTSold")
-                          .withArgs(arkreenRECTokenESG.address, tokenA.address, expandTo9Decimals(1500), expandTo18Decimals(1500*150))
+                          .withArgs(arkreenRECTokenESG.address, AKREToken.address, expandTo9Decimals(1500), expandTo18Decimals(1500*150))
                           .to.emit(arkreenRECTokenESG, "OffsetFinished")
                           .withArgs(owner1.address, expandTo9Decimals(1500), 2)                                                 
 
@@ -546,10 +546,7 @@ describe("ArkreenBuilderWithBank", () => {
                             tokenID.add(MASK_OFFSET), lastBlock.timestamp, false ]        // Offset action is claimed
           expect(await arkreenRetirement.getOffsetActions(actionID)).to.deep.equal(action)
           expect(await arkreenRECTokenESG.balanceOf(owner1.address)).to.equal(ARECBefore)
-
         }   
       })
-
     })  
-
 });

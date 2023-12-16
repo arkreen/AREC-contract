@@ -210,7 +210,7 @@ describe("ArkreenRECIssuanceExt", () => {
         const balanceArkreenRECIssuance = await AKREToken.balanceOf(arkreenRECIssuance.address)
         await expect(arkreenRECIssuanceExt.connect(owner1).mintESGBatch(1, expandTo9Decimals(99), signature))
                   .to.emit(arkreenRECIssuanceExt, 'Transfer')
-                  .withArgs(0, owner1.address, 1)
+                  .withArgs(constants.AddressZero, owner1.address, 1)
                   .to.emit(arkreenRECIssuanceExt, 'ESGBatchMinted')
                   .withArgs(owner1.address, 1)
                   .to.emit(AKREToken, 'Transfer')

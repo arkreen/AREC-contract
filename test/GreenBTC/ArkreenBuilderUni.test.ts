@@ -497,7 +497,6 @@ describe("ArkreenBuilder", () => {
         return createPool(AKREToken.address, arkreenRECToken.address, expandTo18Decimals(2000000), expandTo9Decimals(20000))
       }
 
-/*      
       it("actionBuilderWithART", async () => {
         await mintAREC(5000)          // 2
         await arkreenRECToken.setClimateBuilder(arkreenBuilder.address)
@@ -514,7 +513,7 @@ describe("ArkreenBuilder", () => {
                             .to.emit(arkreenRECToken, 'Transfer')
                             .withArgs(owner1.address, arkreenBuilder.address, amountART)
                             .to.emit(arkreenRECToken, 'Transfer')
-                            .withArgs(arkreenBuilder.address, 0, amountART)
+                            .withArgs(arkreenBuilder.address, constants.AddressZero, amountART)
                             .to.emit(arkreenRECToken, "OffsetFinished")
                             .withArgs(owner1.address, amountART, 1)           
 
@@ -553,7 +552,7 @@ describe("ArkreenBuilder", () => {
                             .to.emit(arkreenRECToken, 'Transfer')
                             .withArgs(owner1.address, arkreenBuilder.address, amountART)
                             .to.emit(arkreenRECToken, 'Transfer')
-                            .withArgs(arkreenBuilder.address, 0, amountART)
+                            .withArgs(arkreenBuilder.address, constants.AddressZero, amountART)
                             .to.emit(arkreenRECToken, "OffsetFinished")
                             .withArgs(owner1.address, amountART, 1)     
                             .to.emit(arkreenRetirement, "OffsetCertificateMinted")
@@ -575,7 +574,6 @@ describe("ArkreenBuilder", () => {
         expect(await arkreenRetirement.getCertificate(badgeID)).to.deep.equal(offsetRecord)
         expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(ARECBefore.sub(amountART))
       });      
-*/
 
       it("ActionBuilder: Exact Payment Token with DEX (UniV3)", async () => {
         await mintAREC(200000)          // 2

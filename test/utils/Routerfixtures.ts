@@ -1,8 +1,5 @@
 import { Wallet, Contract, providers, utils } from 'ethers'
-//import { deployContract } from 'ethereum-waffle'
 import { ethers, network, upgrades } from "hardhat";
-
-import { waffle } from "hardhat"
 
 import { expandTo18Decimals, mineBlock } from './utilities'
 import FeSwapPair from '../../artifacts/contracts/Dex/FeSwapPair.sol/FeSwapPair.json'

@@ -455,15 +455,14 @@ describe("ArkreenBuilder", () => {
                     .to.be.revertedWith("TransferHelper: TRANSFER_FROM_FAILED")     
                  
         await arkreenRECToken.connect(owner1).approve(arkreenBuilder.address, constants.MaxUint256)
-
         await expect(arkreenBuilder.connect(owner1).actionBuilderWithART(arkreenRECToken.address, amountART, constants.MaxUint256))
                             .to.emit(arkreenRECToken, 'Transfer')
                             .withArgs(owner1.address, arkreenBuilder.address, amountART)
                             .to.emit(arkreenRECToken, 'Transfer')
-                            .withArgs(arkreenBuilder.address, 0, amountART)
+                            .withArgs(arkreenBuilder.address, constants.AddressZero, amountART)
                             .to.emit(arkreenRECToken, "OffsetFinished")
                             .withArgs(owner1.address, amountART, 1)           
-
+                            owner1.address, arkreenBuilder.address
         const actionID =1     
         const lastBlock = await ethers.provider.getBlock('latest')     
         const tokenID = BigNumber.from(1)
@@ -499,7 +498,7 @@ describe("ArkreenBuilder", () => {
                             .to.emit(arkreenRECToken, 'Transfer')
                             .withArgs(owner1.address, arkreenBuilder.address, amountART)
                             .to.emit(arkreenRECToken, 'Transfer')
-                            .withArgs(arkreenBuilder.address, 0, amountART)
+                            .withArgs(arkreenBuilder.address, constants.AddressZero, amountART)
                             .to.emit(arkreenRECToken, "OffsetFinished")
                             .withArgs(owner1.address, amountART, 1)     
                             .to.emit(arkreenRetirement, "OffsetCertificateMinted")
