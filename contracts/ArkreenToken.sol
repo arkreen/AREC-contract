@@ -10,7 +10,6 @@ import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import '@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol';
 
-
 contract ArkreenToken is 
     ContextUpgradeable,
     ERC20BurnableUpgradeable,
@@ -76,7 +75,6 @@ contract ArkreenToken is
         _unpause();
     }
 
-
     function permit(
         address owner,
         address spender,
@@ -85,8 +83,7 @@ contract ArkreenToken is
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) external{
-
+    ) external {
         require(block.timestamp <= deadline, "ERC20Permit: expired deadline");
 
         bytes32 structHash = keccak256(abi.encode(_PERMIT_TYPEHASH, owner, spender, value, nonces[owner], deadline));
@@ -99,11 +96,9 @@ contract ArkreenToken is
         _approve(owner, spender, value);
     }
 
-
     function DOMAIN_SEPARATOR() external view returns (bytes32){
         return _DOMAIN_SEPARATOR;
     }
-
 
     function _beforeTokenTransfer(
         address from,
@@ -113,11 +108,6 @@ contract ArkreenToken is
         super._beforeTokenTransfer(from, to, amount);
     }
 
-
-    function _authorizeUpgrade(address newImplementation)
-        internal
-        override
-        onlyOwner
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner
     {}
-
 }

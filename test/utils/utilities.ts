@@ -33,6 +33,10 @@ const STANDARD_REGISTER_TYPEHASH = utils.keccak256(
   utils.toUtf8Bytes('StandardMinerOnboard(address owner,address miner,uint256 deadline)')
 )
 
+const REWARD_TYPEHASH = utils.keccak256(
+  utils.toUtf8Bytes('Reward(address receiver,uint256 value,uint256 nonce)')
+)
+
 // keccak256("GreenBitCoin(uint256 height,string energyStr,uint256 artCount,string blockTime,address minter,uint8 greenType)");
 // 0xE645798FE54DB29ED50FD7F01A05DE6D1C5A65FAC8902DCFD7427B30FBD87C24
 const GREEN_BTC_TYPEHASH = utils.keccak256(
@@ -139,10 +143,10 @@ export enum RECStatus {
 export interface GreenBTCInfo {
   height:     BigNumber
   ARTCount:   BigNumber
-  minter:     string             // Minter of the respective NFT
-  greenType:  number          // High nibble:  ART type: 0, CART, 1, Arkreen ART; Low nibble: mint type, 1: system, 2: user;  
-  blockTime:  string          // For NFT display
-  energyStr:  string          // For NTT display
+  minter:     string            // Minter of the respective NFT
+  greenType:  number            // High nibble:  ART type: 0, CART, 1, Arkreen ART; Low nibble: mint type, 1: system, 2: user;  
+  blockTime:  string            // For NFT display
+  energyStr:  string            // For NTT display
 }
 
 export function getCreate2Address(
@@ -505,6 +509,35 @@ export async function getApprovalDigest(
           utils.defaultAbiCoder.encode(
             ['bytes32', 'address', 'address', 'uint256', 'uint256', 'uint256'],
             [PERMIT_TYPEHASH, approve.owner, approve.spender, approve.value, nonce, deadline]
+          )
+        )
+      ]
+    )
+  )
+}
+
+export function getWithdrawDigest(
+  //sender: string,
+  receiver: string,
+  value: BigNumber,
+  nonce: BigNumber,
+  contractAddr: string,
+  domainName: string
+): string {
+
+  const DOMAIN_SEPARATOR = getDomainSeparator(domainName, contractAddr)
+
+  return utils.keccak256(
+    utils.solidityPack(
+      ['bytes1', 'bytes1', 'bytes32', 'bytes32'],
+      [
+        '0x19',
+        '0x01',
+        DOMAIN_SEPARATOR,
+        utils.keccak256(
+          utils.defaultAbiCoder.encode(
+            ['bytes32', 'address', 'uint256', 'uint256'],
+            [REWARD_TYPEHASH , receiver, value, nonce]
           )
         )
       ]

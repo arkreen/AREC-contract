@@ -5,10 +5,9 @@ import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol';
-import "./ArkreenToken.sol";
-
 import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+
+import "./ArkreenToken.sol";
 
 contract ArkreenReward is 
         ContextUpgradeable,
@@ -20,8 +19,7 @@ contract ArkreenReward is
 
     string  private constant _NAME = 'Arkreen Reward';
     string  private constant _VERSION = '1';
-    bytes32 private constant _REWARD_TYPEHASH = 
-        keccak256("Reward(address receiver,uint256 value,uint256 nonce)");
+    bytes32 private constant _REWARD_TYPEHASH = keccak256("Reward(address receiver,uint256 value,uint256 nonce)");
     
     bytes32                     private _DOMAIN_SEPARATOR;
     address                     public validationAddress;
@@ -74,13 +72,13 @@ contract ArkreenReward is
         _unpause();
     }
 
-    function setERC20ContractAddress(address addr)public onlyOwner{
+    function setERC20ContractAddress(address addr) public onlyOwner {
         require(addr != address(0), "zero address is not allowed");
         require(addr.isContract(), "is not a contract address");
         ERC20Contract = ArkreenToken(addr);
     }
 
-    function setValidationAddress(address addr)public onlyOwner{
+    function setValidationAddress(address addr) public onlyOwner {
         require(addr != address(0), "zero address is not allowed");
         validationAddress = addr;
     }
