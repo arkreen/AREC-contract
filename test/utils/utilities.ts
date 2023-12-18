@@ -516,6 +516,40 @@ export async function getApprovalDigest(
   )
 }
 
+export function getPermitDigest(
+  owner: string,
+  spender: string,
+  value: BigNumber,
+  nonce: BigNumber,
+  deadline: BigNumber,
+
+  contracAddress: string,
+  domainName: string,
+): string {
+  const DOMAIN_SEPARATOR = getDomainSeparator(domainName, contracAddress)
+
+  //console.log("domain separator: " + DOMAIN_SEPARATOR)
+  //console.log("permit type hash: " +  PERMIT_TYPEHASH)
+
+  return utils.keccak256(
+    utils.solidityPack(
+      ['bytes1', 'bytes1', 'bytes32', 'bytes32'],
+      [
+        '0x19',
+        '0x01',
+        DOMAIN_SEPARATOR,
+        utils.keccak256(
+          utils.defaultAbiCoder.encode(
+            //'Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)'
+            ['bytes32', 'address','address', 'uint256', 'uint256', 'uint256'],
+            [PERMIT_TYPEHASH , owner, spender, value, nonce, deadline]
+          )
+        )
+      ]
+    )
+  )
+}
+
 export function getWithdrawDigest(
   //sender: string,
   receiver: string,
