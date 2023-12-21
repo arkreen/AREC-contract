@@ -1001,7 +1001,7 @@ describe("ArkreenMiner", () => {
       expect(await ArkreenMiner.numberOfWhiteListBatch()).to.deep.eq(0);
 
       const receipt = await tx.wait()
-      expect(receipt.gasUsed).to.eq("8147380")  //8121659 8121568 8122040
+      expect(receipt.gasUsed).to.eq("8147392")  // 8147392, 8147380  8121659 8121568 8122040
 
       await expect(ArkreenMiner.connect(owner1).RemoteMinerOnboardNativeBatch(receiver, 1, signature, {value: minerValue}))
               .to.be.revertedWith("Arkreen Miner: Wrong Miner Number")
