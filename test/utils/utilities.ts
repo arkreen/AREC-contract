@@ -73,7 +73,7 @@ export function RemoveLeftPercent(n: BigNumber, ratio: number, Liquidity: BigNum
   return n.mul(BigNumber.from(ratio)).div(BigNumber.from(100)).mul(MINIMUM_LIQUIDITY).div(Liquidity)
 }
 
-function getDomainSeparator(name: string, contractAddress: string) {
+export function getDomainSeparator(name: string, contractAddress: string) {
   const chainId = hre.network.config.chainId
 
   return utils.keccak256(

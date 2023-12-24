@@ -4,7 +4,7 @@ import { expect } from "chai";
 const {ethers, upgrades} =  require("hardhat");
 import hre from 'hardhat'
 import { ecsign, fromRpcSig, ecrecover } from 'ethereumjs-util'
-import { getPermitDigest, expandTo18Decimals } from '../utils/utilities'
+import { getPermitDigest, getDomainSeparator, expandTo18Decimals } from '../utils/utilities'
 import { constants } from 'ethers'
 
 // console.log(upgrades)
@@ -22,7 +22,7 @@ describe("test ArkreenToken", ()=>{
         const [deployer, user1, user2] = await ethers.getSigners();
         const ArkreenTokenFactory = await ethers.getContractFactory("ArkreenToken")
         const ArkreenToken : ArkreenToken = await upgrades.deployProxy(
-            ArkreenTokenFactory, [10000000000, user1.address, '' , ''])
+            ArkreenTokenFactory, [10000000000, user1.address, '', ''])
   
         await ArkreenToken.deployed()
 
@@ -37,11 +37,18 @@ describe("test ArkreenToken", ()=>{
             expect(await ArkreenToken.balanceOf(user1.address)).to.equal(expandTo18Decimals(10000000000));
             expect(await ArkreenToken.balanceOf(user2.address)).to.equal(0);
             expect(await ArkreenToken.owner()).to.be.equal(deployer.address)
+
+            const domainSeparator = getDomainSeparator('Arkreen Token', ArkreenToken.address)
+            expect(await ArkreenToken.DOMAIN_SEPARATOR()).to.be.equal(domainSeparator)
+
+            expect(await ArkreenToken.name()).to.be.equal('Arkreen Token')
+            expect(await ArkreenToken.symbol()).to.be.equal('AKRE')
+            expect(await ArkreenToken.decimals()).to.be.equal(18)
         });
 
         it('function initialize() could be execute only onec',async () => {
             const {ArkreenToken, deployer, user1, user2} = await loadFixture(deployFixture)
-            await expect(ArkreenToken.initialize(10000000000, user1.address, '', '')).to.be.revertedWith("Initializable: contract is already initialized")
+            await expect(ArkreenToken.initialize(10000000000, user1.address, '',  '')).to.be.revertedWith("Initializable: contract is already initialized")
         })
     })
 
@@ -76,6 +83,12 @@ describe("test ArkreenToken", ()=>{
                 v,  r,  s)).to.be.ok
 
             expect(await ArkreenToken.allowance(user1.address, user2.address)).to.be.equal(value)
+
+            await ArkreenToken.approve(user1.address, expandTo18Decimals(180))
+            expect(await ArkreenToken.allowance(deployer.address, user1.address)).to.be.equal(expandTo18Decimals(180))
+
+            console.log('AAAAAAAAAAA', ArkreenToken)
+
         })
 
         it("expired deadline should be reverted", async ()=>{
@@ -157,6 +170,7 @@ describe("test ArkreenToken", ()=>{
             const {ArkreenToken, deployer, user1, user2} = await loadFixture(deployFixture)
            
             await ArkreenToken.connect(deployer).pause();
+            expect(await ArkreenToken.paused()).to.be.equal(true)
             await ArkreenToken.connect(deployer).unpause();
             expect(await ArkreenToken.connect(user1).transfer(user2.address, expandTo18Decimals(100))).to.be.ok
             expect(await ArkreenToken.balanceOf(user2.address)).to.equal(expandTo18Decimals(100));

@@ -19,7 +19,7 @@ import { getApprovalDigest, expandTo18Decimals, randomAddresses, RECStatus, Mine
 import { ecsign, fromRpcSig, ecrecover } from 'ethereumjs-util'
 import { RECRequestStruct, SignatureStruct, RECDataStruct } from "../../typechain/contracts/ArkreenRECIssuance";
 import { OffsetActionStruct }  from "../../typechain/contracts/ArkreenBadge";
-import FeSwapPair from '../../artifacts/contracts/Dex/FeSwapPair.sol/FeSwapPair.json'
+import FeSwapPair from '../../artifacts/contracts/Dex/AMMV2/FeSwapPair.sol/FeSwapPair.json'
 import { Web3Provider } from "@ethersproject/providers";
 
 //const { provider, createFixtureLoader } = waffle;
@@ -165,13 +165,6 @@ describe("ArkreenBuilder", () => {
 //    console.log("FFFFFFFFFFFFFFFFFFFF")
       await factoryFeswa.createUpdatePair(tokenB.address, WETHPartner.address, pairOwner.address, rateTriggerArbitrage, 0, overrides)  
 
-      // deploy FeSwap MetamorphicContractFactory
-      // const MetamorphicFactory = await deployContract(wallet, MetamorphicContractFactory)
-
-      const MetamorphicContractFactory = await ethers.getContractFactory("MetamorphicContractFactory");
-      const MetamorphicFactory = await MetamorphicContractFactory.deploy();
-      await MetamorphicFactory.deployed();
-
       ////////////////////////////////////////////////////////////////////////////////////////
 
       const AKRETokenFactory = await ethers.getContractFactory("ArkreenToken");
@@ -249,7 +242,7 @@ describe("ArkreenBuilder", () => {
 
       return { WETH, WETHPartner, factoryFeswa,
         routerFeswa, Feswa, FeswaNFT,
-        tokenIDMatch, MetamorphicFactory, 
+        tokenIDMatch, 
         pairTTArt, pairTAArt,  pairEEArt, pairEAArt,
         AKREToken, arkreenMiner, arkreenRegistry, arkreenRECIssuance, 
         arkreenRECToken, arkreenRetirement, arkreenBuilder, arkreenRECBank
