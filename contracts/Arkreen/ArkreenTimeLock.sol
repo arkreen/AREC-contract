@@ -4,7 +4,7 @@ pragma solidity ^0.8.9;
 import "@openzeppelin/contracts-upgradeable/governance/TimelockControllerUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-contract TimeLock is
+contract ArkreenTimeLock is
     Initializable,
     TimelockControllerUpgradeable,
     UUPSUpgradeable
