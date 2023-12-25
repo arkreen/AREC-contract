@@ -2,7 +2,7 @@ import { Wallet, Contract, providers, utils } from 'ethers'
 import { ethers, network, upgrades } from "hardhat";
 
 import { expandTo18Decimals, mineBlock } from './utilities'
-import FeSwapPair from '../../artifacts/contracts/Dex/AMMV2/FeSwapPair.sol/FeSwapPair.json'
+import FeSwapPair from '../../artifacts/contracts/Test/AMMV2/FeSwapPair.sol/FeSwapPair.json'
 
 /*
 import ERC20 from './build/ERC20.json'

@@ -23,7 +23,7 @@ import { getApprovalDigest, expandTo18Decimals, randomAddresses, RECStatus, Mine
 import { ecsign, fromRpcSig, ecrecover, zeroAddress } from 'ethereumjs-util'
 import { RECRequestStruct, SignatureStruct, RECDataStruct } from "../../typechain/contracts/ArkreenRECIssuance";
 import { OffsetActionStruct }  from "../../typechain/contracts/ArkreenBadge";
-import FeSwapPair from '../../artifacts/contracts/Dex/AMMV2/FeSwapPair.sol/FeSwapPair.json'
+import FeSwapPair from '../../artifacts/contracts/Test/AMMV2/FeSwapPair.sol/FeSwapPair.json'
 
 //const { provider, createFixtureLoader } = waffle;
 

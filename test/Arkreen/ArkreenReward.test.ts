@@ -251,7 +251,7 @@ describe("Test ArkreenReward Contract ", () => {
             let ArkreenReward = await upgrades.upgradeProxy(arkreenRewardV1.address, ArkreenRewardFactory)
             expect(ArkreenReward.address).to.be.equal(arkreenRewardV1.address)
 
-            console.log(await upgrades.erc1967.getImplementationAddress(arkreenRewardV1.address)," getImplementationAddress")
+            // console.log(await upgrades.erc1967.getImplementationAddress(arkreenRewardV1.address)," getImplementationAddress")
             
             expect(await ArkreenReward.connect(deployer).ERC20Contract()).to.be.equal(AKREToken.address)
         })

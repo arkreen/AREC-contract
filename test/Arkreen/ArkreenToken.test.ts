@@ -86,9 +86,6 @@ describe("test ArkreenToken", ()=>{
 
             await ArkreenToken.approve(user1.address, expandTo18Decimals(180))
             expect(await ArkreenToken.allowance(deployer.address, user1.address)).to.be.equal(expandTo18Decimals(180))
-
-            console.log('AAAAAAAAAAA', ArkreenToken)
-
         })
 
         it("expired deadline should be reverted", async ()=>{
