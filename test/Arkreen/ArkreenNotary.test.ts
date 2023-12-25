@@ -121,8 +121,8 @@ describe("test ArkreenNotary", ()=>{
             const {arkreenNotary, deployer, manager, user2} = await loadFixture(deployFixture)
 
             await expect(arkreenNotary.connect(manager).saveData("aaa", "b", 99, 100, 100, '1234'))
-            .to.emit(arkreenNotary, "DataSaved2")
-            .withArgs("aaa", "b", 99, 100, 100, '1234');
+                    .to.emit(arkreenNotary, "DataSaved2")
+                    .withArgs("aaa", "b", 99, 100, 100, '1234');
         })
 
     })
