@@ -11,9 +11,17 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     
     // function initialize(uint256 amount, address foundationAddr, string calldata name, string calldata symbol)
     const amount = 10_000_000_000
+
+/*    
+    // tAKRE on Mainnet
     const foundationAddr = '0x05D1e64fc523105CECEd7c5Ca70993CD69b8e808'
     const name = 'Arkreen Token'
     const symbol = 'tAKRE'
+*/
+    // AKRE on Paranet
+    const foundationAddr = '0xB53B96e1eF29cB14313c18Fa6374AB87df59BcD9'
+    const name = ''
+    const symbol = ''
 
     const ArkreenToken = await deploy(CONTRACTS.AKRE, {
       from: deployer,
@@ -38,6 +46,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:ARKE
 // Proxy:           0x21B101f5d61A66037634f7e1BeB5a733d9987D57
 // Implementation:  0xe47Ee63316855522f4719C36D75964F9B8453A94
+
+// 2023/12/26: deploy AKRE for Paranet on testnet
+// yarn deploy:matic_test:ARKE
+// Proxy:           0xbc9de41189F76519e8Aa43157F2D4faf305458da
+// Implementation:  0x1b6209dFb258ba757066CC8BDa987d592962b375
 
 func.tags = ["ARKE"];
 
