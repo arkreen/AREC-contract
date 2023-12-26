@@ -15,10 +15,10 @@ library FeSwapLibrary {
                 hex'ff',
                 factory,
                 keccak256(abi.encodePacked(tokenA, tokenB)),
-                hex'62a5b6c40cb3aa9eaf4ddaafa2a38ceea7440a0080e5730ab156a7f484e7be01' // init code hash // save 9916 gas
+                hex'61ba50a567aed79f740c2a36f5fb032b17a57707506d4890ccec01a00a16129a' // init code hash // save 9916 gas
             )))));
     }
-
+//    61ba50a567aed79f740c2a36f5fb032b17a57707506d4890ccec01a00a16129a
 //    62a5b6c40cb3aa9eaf4ddaafa2a38ceea7440a0080e5730ab156a7f484e7be01
 //    7aa8464d8ac14b76fb2c0b86c2a76d577b4b0e799422728bff419da91438af36    // org
 

@@ -169,9 +169,36 @@ describe("test ArkreenToken", ()=>{
             await ArkreenToken.connect(deployer).pause();
             expect(await ArkreenToken.paused()).to.be.equal(true)
             await ArkreenToken.connect(deployer).unpause();
-            expect(await ArkreenToken.connect(user1).transfer(user2.address, expandTo18Decimals(100))).to.be.ok
+            await ArkreenToken.connect(user1).transfer(user2.address, expandTo18Decimals(100))
             expect(await ArkreenToken.balanceOf(user2.address)).to.equal(expandTo18Decimals(100));
         })
+    })
+
+    describe("deleget gas cost test", ()=>{
+
+      it('if unpaused , transfer is allowed', async () => {
+          const {ArkreenToken, user1, user2} = await loadFixture(deployFixture)
+
+          let receipt
+          let transferTx = await ArkreenToken.connect(user1).transfer(user2.address, expandTo18Decimals(1000))
+          receipt = await transferTx.wait()
+          expect(receipt.gasUsed).to.eq(63210)
+          // console.log("Gas used of transfer:", receipt.gasUsed)   //  63210  // 63782  ; tAKRE: 59121 
+
+          await ArkreenToken.connect(user1).delegate(user1.address)
+          transferTx = await ArkreenToken.connect(user1).transfer(user2.address, expandTo18Decimals(1000))
+          receipt = await transferTx.wait()
+          expect(receipt.gasUsed).to.eq(78648)
+          // console.log("Gas used of transfer:", receipt.gasUsed)   // 78648 // 79265
+
+          await ArkreenToken.connect(user1).delegate(user2.address)
+          transferTx = await ArkreenToken.connect(user1).transfer(user2.address, expandTo18Decimals(1000))
+          receipt = await transferTx.wait()
+          expect(receipt.gasUsed).to.eq(78648)
+          // console.log("Gas used of transfer:", receipt.gasUsed)   // 78648 // 79265
+
+          expect(await ArkreenToken.balanceOf(user2.address)).to.equal(expandTo18Decimals(3000));
+      })
     })
 
     describe("ownerable test", ()=>{

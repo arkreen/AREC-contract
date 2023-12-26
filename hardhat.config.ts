@@ -112,7 +112,7 @@ const config: HardhatUserConfig = {
           },
           optimizer: {
             enabled: true,
-            runs: 0,
+            runs: 500,
           },
         },
       },
@@ -124,7 +124,7 @@ const config: HardhatUserConfig = {
           },
           optimizer: {
             enabled: true,
-            runs: 0,
+            runs: 500,
           },
         },
       },
@@ -135,6 +135,44 @@ const config: HardhatUserConfig = {
                 "*": ["storageLayout"],
             },
         },
+    },
+    overrides: {
+      "contracts/GreenBTC.sol": {
+        version: "0.8.9",
+        settings: {
+          metadata: {
+            bytecodeHash: "none",
+          },
+          optimizer: {
+            enabled: true,
+            runs: 0,
+          },
+        },
+      },
+      "contracts/ArkreenRECIssuance.sol": {
+        version: "0.8.9",
+        settings: {
+          metadata: {
+            bytecodeHash: "none",
+          },
+          optimizer: {
+            enabled: true,
+            runs: 100,
+          },
+        },
+      },
+      "contracts/test/ArkreenMinerU.sol": {
+        version: "0.8.9",
+        settings: {
+          metadata: {
+            bytecodeHash: "none",
+          },
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
+      },
     },
   },
   typechain: {
