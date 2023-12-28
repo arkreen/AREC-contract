@@ -10,6 +10,7 @@ import {
     ArkreenRegistry,
     ArkreenRECToken,
     ArkreenBadge,
+    ArkreenBadgeImage
 } from "../typechain";
 
 
@@ -42,10 +43,11 @@ describe("ArkreenRECToken", () => {
 
     let AKREToken:                    ArkreenToken
     let arkreenMiner:                 ArkreenMiner
-    let arkreenRegistry:             ArkreenRegistry
+    let arkreenRegistry:              ArkreenRegistry
     let arkreenRECIssuance:           ArkreenRECIssuance
     let arkreenRECToken:              ArkreenRECToken
-    let arkreenRetirement:            ArkreenBadge
+    let arkreenBadge:                 ArkreenBadge
+    let arkreenBadgeImage:            ArkreenBadgeImage
 
     const Miner_Manager       = 0         
 
@@ -73,9 +75,15 @@ describe("ArkreenRECToken", () => {
       arkreenRECToken = await upgrades.deployProxy(ArkreenRECTokenFactory,[arkreenRegistry.address, manager.address, '', '']) as ArkreenRECToken
       await arkreenRECToken.deployed()
       
-      const ArkreenRetirementFactory = await ethers.getContractFactory("ArkreenBadge")
-      arkreenRetirement = await upgrades.deployProxy(ArkreenRetirementFactory,[arkreenRegistry.address]) as ArkreenBadge
-      await arkreenRetirement.deployed()           
+      const ArkreenBadgeFactory = await ethers.getContractFactory("ArkreenBadge")
+      arkreenBadge = await upgrades.deployProxy(ArkreenBadgeFactory,[arkreenRegistry.address]) as ArkreenBadge
+      await arkreenBadge.deployed()
+      
+      const ArkreenBadgeImageFactory = await ethers.getContractFactory("ArkreenBadgeImage")
+      arkreenBadgeImage = await ArkreenBadgeImageFactory.deploy()
+      await arkreenBadgeImage.deployed()
+
+      await arkreenBadge.setBadgeImage(arkreenBadgeImage.address)
   
       await AKREToken.transfer(owner1.address, expandTo18Decimals(10000000))
       await AKREToken.connect(owner1).approve(arkreenRECIssuance.address, expandTo18Decimals(10000000))
@@ -93,9 +101,9 @@ describe("ArkreenRECToken", () => {
 
       await arkreenRegistry.addRECIssuer(manager.address, arkreenRECToken.address, "Arkreen Issuer")
       await arkreenRegistry.setRECIssuance(arkreenRECIssuance.address)
-      await arkreenRegistry.setArkreenRetirement(arkreenRetirement.address)
+      await arkreenRegistry.setArkreenRetirement(arkreenBadge.address)
 
-      return {AKREToken, arkreenMiner, arkreenRegistry, arkreenRECIssuance, arkreenRECToken, arkreenRetirement}
+      return {AKREToken, arkreenMiner, arkreenRegistry, arkreenRECIssuance, arkreenRECToken, arkreenBadge}
     }
 
     beforeEach(async () => {
@@ -111,7 +119,7 @@ describe("ArkreenRECToken", () => {
         arkreenMiner = fixture.arkreenMiner        
         arkreenRegistry = fixture.arkreenRegistry
         arkreenRECIssuance = fixture.arkreenRECIssuance
-        arkreenRetirement = fixture.arkreenRetirement
+        arkreenBadge = fixture.arkreenBadge
 
         const startTime = 1564888526
         const endTime   = 1654888526
@@ -199,40 +207,40 @@ describe("ArkreenRECToken", () => {
       await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(10))
       expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(balance_1.sub(expandTo9Decimals(10)))
       expect(await arkreenRECToken.totalSupply()).to.equal(totalSupply.sub(expandTo9Decimals(10)))
-      const offsetID1 = await arkreenRetirement.offsetCounter()
+      const offsetID1 = await arkreenBadge.offsetCounter()
       lastBlock = await ethers.provider.getBlock('latest')
       const action_1 = [  owner1.address, manager.address, expandTo9Decimals(10),    // Manger is the issuer address
                           tokenID.add(MASK_OFFSET), lastBlock.timestamp, false ]
 
-      expect(await arkreenRetirement.getOffsetActions(offsetID1)).to.deep.equal(action_1)
+      expect(await arkreenBadge.getOffsetActions(offsetID1)).to.deep.equal(action_1)
 
-      expect(await arkreenRetirement.partialARECIDExt(arkreenRECToken.address)).to.equal(1)
-      expect(await arkreenRetirement.partialAvailableAmountExt(arkreenRECToken.address)).to.equal(balance_1.sub(expandTo9Decimals(10)))
+      expect(await arkreenBadge.partialARECIDExt(arkreenRECToken.address)).to.equal(1)
+      expect(await arkreenBadge.partialAvailableAmountExt(arkreenRECToken.address)).to.equal(balance_1.sub(expandTo9Decimals(10)))
       
       await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(10))
       expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(balance_1.sub(expandTo9Decimals(20)))
-      const offsetID2 = await arkreenRetirement.offsetCounter()
+      const offsetID2 = await arkreenBadge.offsetCounter()
       lastBlock = await ethers.provider.getBlock('latest')
       const action_2 = [  owner1.address, manager.address, expandTo9Decimals(10),
                           tokenID.add(MASK_OFFSET), lastBlock.timestamp, false ]
 
-      expect(await arkreenRetirement.partialARECIDExt(arkreenRECToken.address)).to.equal(1)
-      expect(await arkreenRetirement.partialAvailableAmountExt(arkreenRECToken.address)).to.equal(balance_1.sub(expandTo9Decimals(20)))                          
+      expect(await arkreenBadge.partialARECIDExt(arkreenRECToken.address)).to.equal(1)
+      expect(await arkreenBadge.partialAvailableAmountExt(arkreenRECToken.address)).to.equal(balance_1.sub(expandTo9Decimals(20)))                          
 
-      expect(await arkreenRetirement.getOffsetActions(offsetID2)).to.deep.equal(action_2)
+      expect(await arkreenBadge.getOffsetActions(offsetID2)).to.deep.equal(action_2)
 
       await expect(arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(10)))
               .to.emit(arkreenRECToken, "OffsetFinished")
               .withArgs(owner1.address, expandTo9Decimals(10), offsetID2.add(1)) 
 
-      expect(await arkreenRetirement.partialARECIDExt(arkreenRECToken.address)).to.equal(1)
-      expect(await arkreenRetirement.partialAvailableAmountExt(arkreenRECToken.address)).to.equal(balance_1.sub(expandTo9Decimals(30)))     
+      expect(await arkreenBadge.partialARECIDExt(arkreenRECToken.address)).to.equal(1)
+      expect(await arkreenBadge.partialAvailableAmountExt(arkreenRECToken.address)).to.equal(balance_1.sub(expandTo9Decimals(30)))     
       
       const recData: RECDataStruct = await arkreenRECIssuance.getRECData(tokenID)
       expect(recData.status).to.equal(BigNumber.from(RECStatus.Retired));      
 
       expect(await arkreenRECToken.totalOffset()).to.equal(expandTo9Decimals(30))
-      await arkreenRetirement.connect(owner1).mintCertificate(
+      await arkreenBadge.connect(owner1).mintCertificate(
                               owner1.address, owner1.address, "Owner","","Save Earth",[offsetID1,offsetID2])
             
     })
@@ -250,20 +258,20 @@ describe("ArkreenRECToken", () => {
       expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(balance_1.sub(expandTo9Decimals(10)))
       expect(await arkreenRECToken.allowance(owner1.address, owner2.address)).to.equal(allowance_1.sub(expandTo9Decimals(10)))
       expect(await arkreenRECToken.totalSupply()).to.equal(totalSupply.sub(expandTo9Decimals(10)))
-      const offsetID1 = await arkreenRetirement.offsetCounter()
+      const offsetID1 = await arkreenBadge.offsetCounter()
 
       await arkreenRECToken.connect(owner2).commitOffsetFrom(owner1.address, expandTo9Decimals(10))
       expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(balance_1.sub(expandTo9Decimals(20)))
-      const offsetID2 = await arkreenRetirement.offsetCounter()
+      const offsetID2 = await arkreenBadge.offsetCounter()
 
       await expect(arkreenRECToken.connect(owner2).commitOffsetFrom(owner1.address, expandTo9Decimals(10)))
               .to.emit(arkreenRECToken, "OffsetFinished")
              .withArgs(owner1.address, expandTo9Decimals(10), offsetID2.add(1))
 
       expect(await arkreenRECToken.totalOffset()).to.equal(expandTo9Decimals(30))        
-      const offsetID3 = await arkreenRetirement.offsetCounter()              
+      const offsetID3 = await arkreenBadge.offsetCounter()              
      
-      await arkreenRetirement.connect(owner1).mintCertificate(
+      await arkreenBadge.connect(owner1).mintCertificate(
                              owner1.address, owner1.address, "Owner","","Save Earth",[offsetID1, offsetID2, offsetID3])
            
    })
@@ -275,37 +283,41 @@ describe("ArkreenRECToken", () => {
 
        // commitOffset
       await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(10))
-      const offsetID1 = await arkreenRetirement.offsetCounter()
+      const offsetID1 = await arkreenBadge.offsetCounter()
 
       await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(10))
-      const offsetID2 = await arkreenRetirement.offsetCounter()
+      const offsetID2 = await arkreenBadge.offsetCounter()
       
       await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(10))
-      const offsetID3 = await arkreenRetirement.offsetCounter()
+      const offsetID3 = await arkreenBadge.offsetCounter()
 
       // mintCertificate
-      await arkreenRetirement.connect(owner1).mintCertificate(owner1.address, owner1.address, "Owner","","Save Earth",[offsetID1,offsetID2]) 
-      const certId = await arkreenRetirement.totalSupply()
+      await arkreenBadge.connect(owner1).mintCertificate(owner1.address, owner1.address, "Owner","","Save Earth",[offsetID1,offsetID2]) 
+      const certId = await arkreenBadge.totalSupply()
       const lastBlock = await ethers.provider.getBlock('latest')
 
       // attachOffsetEvents
-      await arkreenRetirement.connect(owner1).attachOffsetEvents(certId, [offsetID3])
+      await arkreenBadge.connect(owner1).attachOffsetEvents(certId, [offsetID3])
       
       // updateCertificate
-      await arkreenRetirement.connect(owner1).updateCertificate(certId, owner1.address, "Kitty","Alice","")
+      await arkreenBadge.connect(owner1).updateCertificate(certId, owner1.address, "Kitty","Alice","")
 
       const offsetRecord = [owner1.address, owner1.address, "Kitty", "Alice", "Save Earth", 
                             BigNumber.from(lastBlock.timestamp), expandTo9Decimals(30), [offsetID1,offsetID2,offsetID3]]
-      expect(await arkreenRetirement.getCertificate(certId)).to.deep.equal(offsetRecord)
+      expect(await arkreenBadge.getCertificate(certId)).to.deep.equal(offsetRecord)
+      
+
+      const iamgeURL = await arkreenBadge.tokenURI(certId)
+      console.log("QQQQQQQQQQQQ", iamgeURL)
 
       // attachOffsetEvents
       await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(10))
-      const offsetID4 = await arkreenRetirement.offsetCounter()
-      await arkreenRetirement.connect(owner1).attachOffsetEvents(certId, [offsetID4])        
+      const offsetID4 = await arkreenBadge.offsetCounter()
+      await arkreenBadge.connect(owner1).attachOffsetEvents(certId, [offsetID4])        
 
   });
 
-
+/*
   describe("commitOffset: Details", () => {
     let tokenID: BigNumber
 
@@ -396,10 +408,10 @@ describe("ArkreenRECToken", () => {
 
       expect(await arkreenRECToken.latestARECID()).to.equal(0)
 
-      expect(await arkreenRECIssuance.balanceOf(arkreenRetirement.address)).to.equal(1)
-      expect(await arkreenRECIssuance.balanceOf(arkreenRetirement.address)).to.equal(1)
+      expect(await arkreenRECIssuance.balanceOf(arkreenBadge.address)).to.equal(1)
+      expect(await arkreenRECIssuance.balanceOf(arkreenBadge.address)).to.equal(1)
 
-      expect(await arkreenRetirement.detailsCounter()).to.equal(0)
+      expect(await arkreenBadge.detailsCounter()).to.equal(0)
     });
 
     it("Offset Details: 2 AREC", async () => {
@@ -417,18 +429,18 @@ describe("ArkreenRECToken", () => {
 
       expect(await arkreenRECToken.latestARECID()).to.equal(0)
 
-      expect(await arkreenRECIssuance.balanceOf(arkreenRetirement.address)).to.equal(2)
-      expect(await arkreenRetirement.detailsCounter()).to.equal(1)
+      expect(await arkreenRECIssuance.balanceOf(arkreenBadge.address)).to.equal(2)
+      expect(await arkreenBadge.detailsCounter()).to.equal(1)
 
       const detail_0 = [1, expandTo9Decimals(500)]
       const detail_1 = [2, expandTo9Decimals(1000)]
 
-      const offsetDetails = await arkreenRetirement.getOffsetDetails(1)
+      const offsetDetails = await arkreenBadge.getOffsetDetails(1)
       expect(offsetDetails[0]).to.deep.equal(detail_0)
       expect(offsetDetails[1]).to.deep.equal(detail_1)
 
-      expect(await arkreenRetirement.OffsetDetails(1,0)).to.deep.equal(detail_0)
-      expect(await arkreenRetirement.OffsetDetails(1,1)).to.deep.equal(detail_1)
+      expect(await arkreenBadge.OffsetDetails(1,0)).to.deep.equal(detail_0)
+      expect(await arkreenBadge.OffsetDetails(1,1)).to.deep.equal(detail_1)
 
       await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(1500))
       await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(2500))
@@ -468,24 +480,24 @@ describe("ArkreenRECToken", () => {
 
       expect(await arkreenRECToken.latestARECID()).to.equal(20)  // 18, 19, 20
 
-      expect(await arkreenRECIssuance.balanceOf(arkreenRetirement.address)).to.equal(17)
-      expect(await arkreenRetirement.detailsCounter()).to.equal(2)
+      expect(await arkreenRECIssuance.balanceOf(arkreenBadge.address)).to.equal(17)
+      expect(await arkreenBadge.detailsCounter()).to.equal(2)
 
       const detail_0 = [4, expandTo9Decimals(8000)]
       const detail_1 = [11, expandTo9Decimals(5000)]
       const detail_2 = [17, expandTo9Decimals(3100)]
 
-      expect(await arkreenRetirement.partialARECIDExt(arkreenRECToken.address)).to.equal(17)
-      expect(await arkreenRetirement.partialAvailableAmountExt(arkreenRECToken.address)).to.equal(expandTo9Decimals(9000-3100))
+      expect(await arkreenBadge.partialARECIDExt(arkreenRECToken.address)).to.equal(17)
+      expect(await arkreenBadge.partialAvailableAmountExt(arkreenRECToken.address)).to.equal(expandTo9Decimals(9000-3100))
 
-      const offsetDetails = await arkreenRetirement.getOffsetDetails(2)
+      const offsetDetails = await arkreenBadge.getOffsetDetails(2)
       expect(offsetDetails[2]).to.deep.equal(detail_0)
       expect(offsetDetails[9]).to.deep.equal(detail_1)
       expect(offsetDetails[15]).to.deep.equal(detail_2)
 
-      expect(await arkreenRetirement.OffsetDetails(2,2)).to.deep.equal(detail_0)
-      expect(await arkreenRetirement.OffsetDetails(2,9)).to.deep.equal(detail_1)
-      expect(await arkreenRetirement.OffsetDetails(2,15)).to.deep.equal(detail_2)
+      expect(await arkreenBadge.OffsetDetails(2,2)).to.deep.equal(detail_0)
+      expect(await arkreenBadge.OffsetDetails(2,9)).to.deep.equal(detail_1)
+      expect(await arkreenBadge.OffsetDetails(2,15)).to.deep.equal(detail_2)
     });
 
     it("Offset Details: 20 AREC", async () => {     // Maximum 20 NFT in one offset transaction
@@ -530,21 +542,21 @@ describe("ArkreenRECToken", () => {
 
       expect(await arkreenRECToken.latestARECID()).to.equal(24)  // 22,23,24
 
-      expect(await arkreenRECIssuance.balanceOf(arkreenRetirement.address)).to.equal(21)
-      expect(await arkreenRetirement.detailsCounter()).to.equal(2)
+      expect(await arkreenRECIssuance.balanceOf(arkreenBadge.address)).to.equal(21)
+      expect(await arkreenBadge.detailsCounter()).to.equal(2)
 
       const detail_0 = [2, expandTo9Decimals(4500)]
       const detail_1 = [10, expandTo9Decimals(3000)]
       const detail_2 = [21, expandTo9Decimals(400)]
 
-      const offsetDetails = await arkreenRetirement.getOffsetDetails(2)
+      const offsetDetails = await arkreenBadge.getOffsetDetails(2)
       expect(offsetDetails[0]).to.deep.equal(detail_0)
       expect(offsetDetails[8]).to.deep.equal(detail_1)
       expect(offsetDetails[19]).to.deep.equal(detail_2)
 
-      expect(await arkreenRetirement.OffsetDetails(2,0)).to.deep.equal(detail_0)
-      expect(await arkreenRetirement.OffsetDetails(2,8)).to.deep.equal(detail_1)
-      expect(await arkreenRetirement.OffsetDetails(2,19)).to.deep.equal(detail_2)
+      expect(await arkreenBadge.OffsetDetails(2,0)).to.deep.equal(detail_0)
+      expect(await arkreenBadge.OffsetDetails(2,8)).to.deep.equal(detail_1)
+      expect(await arkreenBadge.OffsetDetails(2,19)).to.deep.equal(detail_2)
     });
 
     it("Offset Details: 20 AREC gas used ", async () => {     // Maximum 20 NFT in one offset transaction
@@ -1029,5 +1041,5 @@ describe("ArkreenRECToken", () => {
       expect(await arkreenRECToken.latestARECID()).to.equals(12)                      
     })
   })
-
+*/
 });

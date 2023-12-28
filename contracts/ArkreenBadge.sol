@@ -18,6 +18,9 @@ import "./ArkreenBadgeType.sol";
 
 import "./libraries/MemArrays.sol";  
 
+// Import this file to use console.log
+import "hardhat/console.sol";
+
 contract ArkreenBadge is
     OwnableUpgradeable,
     UUPSUpgradeable,
@@ -386,22 +389,34 @@ contract ArkreenBadge is
         uint256[] memory idsAREC = new uint256[](0);
         uint256 actionType;
 
-        for (uint256 index = 0; index < actionNumber; index) {
+        for (uint256 index = 0; index < actionNumber; index++) {
             uint256 offsetIds = offsetRecord.offsetIds[index];
             uint256 idRetiredAREC = offsetActions[offsetIds].tokenId; 
             uint256 tag = idRetiredAREC >> 62;  
+
+            console.log('1111111111111111', tag, actionNumber);
+
             if (tag == 0) {
                 actionType |= 1;
+                console.log('AAAAAAAAAAAAAAAAAAA');
                 idsAREC = idsAREC.insertInOrder(idRetiredAREC);
+                console.log('BBBBBBBBBBBBBBBBBB');
             } else { 
                 actionType |= 2;
-                uint256 idARECDetail = idRetiredAREC & (1<<62 - 1); // Remove the two tag bits 
-                if (tag == 1) {
+                uint256 idARECDetail = idRetiredAREC & (1<<62 - 1);                 // Remove the two msb tag bits 
+
+                if (tag == 2) {
+                    console.log('CCCCCCCCCCCCCCCC');
                     idsAREC = idsAREC.insertInOrder(idARECDetail);
+                    console.log('DDDDDDDDDDDDDDDDDD');
+
                 } else {
                     OffsetDetail[] storage offsetDetails = OffsetDetails[idARECDetail];
-                    for (uint256 ind = 0; ind < offsetDetails.length; ind) {
+                    console.log('XXXXXXXXXXXXXX', offsetDetails.length);
+                    for (uint256 ind = 0; ind < offsetDetails.length; ind++) {
+                        console.log('EEEEEEEEEEEEEEEEEEE');
                         idsAREC = idsAREC.insertInOrder(offsetDetails[ind].tokenId);
+                        console.log('FFFFFFFFFFFFFFFFF');
                     }
                 }
             } 
@@ -410,17 +425,6 @@ contract ArkreenBadge is
         return IArkreenBadgeImage(arkreenBadgeImage).getBadgeSVG(tokenId, offsetRecord, actionType, idsAREC);
     }
 
-    /**
-     * @dev See {IERC721Metadata-tokenURI}.
-     */
-/*     
-    function tokenURI(uint256 tokenID) public view override returns (string memory) {
-
-        require(dataGBTC[tokenID].minter != address(0), "GBTC: Not Minted");
-        return IGreenBTCImage(greenBtcImage).getCertificateSVG(ownerOf(tokenID), dataGBTC[tokenID], dataNFT[tokenID]);
-    }
-*/
-
     function updateCID(uint256[] calldata tokenId, string[] calldata cid) external virtual onlyOwner {
         require(tokenId.length == cid.length, "'ARB: Wrong Data");
 
@@ -428,6 +432,11 @@ contract ArkreenBadge is
           cidBadge[tokenId[index]] = cid[index];
         }
     }    
+
+    function setBadgeImage(address newImage) external virtual onlyOwner {
+        require(newImage != address(0), 'ARB: Zero Address');
+        arkreenBadgeImage = IArkreenBadgeImage(newImage);
+    }       
 
     /**
      * @dev Hook that is called before any token transfer. Miner Info is checked as the following rules:  

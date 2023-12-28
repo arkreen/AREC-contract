@@ -8,9 +8,12 @@ import "./libraries/FormattedStrings.sol";
 import "./libraries/TransferHelper.sol";
 import "./libraries/BytesLib.sol";
 
-import "./ArkreenBadgeType.sol";  
+import "./ArkreenBadgeType.sol";
 
-contract GreenBadgeImage {
+// Import this file to use console.log
+import "hardhat/console.sol";
+
+contract ArkreenBadgeImage {
  
     using Strings for uint128;
     using Strings for uint256;
@@ -65,10 +68,12 @@ contract GreenBadgeImage {
         OffsetRecord calldata offsetRecord,
         uint256 actionType,
         uint256[] calldata idsOfAREC
-    ) external pure returns(string memory) {
+    ) external view returns(string memory) {
 
         bytes memory dataURI;
         string memory tokenString = tokenId.toString();
+
+        console.log("XXXXXXXXXX", tokenId, actionType, idsOfAREC.length);
 
         {
             string memory energyInBadge = _decimalTruncate(toFixedPoint(offsetRecord.offsetTotalAmount, 9), 3);
@@ -137,7 +142,7 @@ contract GreenBadgeImage {
             dataURI = abi.encodePacked(dataURI,
                             '{"trait_type":"Retired AREC NFTs","value":"',
                             string(arecNftIds),
-                            '"}'
+                            '"},'
                         );
         }
 
@@ -161,9 +166,14 @@ contract GreenBadgeImage {
 
         bytes memory imgBytes = abi.encodePacked(
 
-            '<svg viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">'
+            '<svg viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">'
+                '<defs>'
+                    '<path id="center" d="M0 20,400,20" stroke="white" fill="none"/>'
+                    '<path id="top" transform="translate(140,40)" d="M -70 162 A 50 50 0 1 1 190 162"/>'
+                    '<path id="address" transform="translate(140,40)" d="M -98 160 A 50 50 0 1 0 218 160"/>'
+                '</defs>'
                 '<path'
-                    'd="M178.596 12.8029C191.891 5.3451 208.109 5.34509 221.404 12.8029L236.374 21.2005C242.954 24.8916'
+                    ' d="M178.596 12.8029C191.891 5.3451 208.109 5.34509 221.404 12.8029L236.374 21.2005C242.954 24.8916'
                     ' 250.355 26.8745 257.899 26.968L275.062 27.1805C290.305 27.3693 304.35 35.4785 312.135 48.5846L320.901'
                     ' 63.3422C324.754 69.8288 330.171 75.2463 336.658 79.0992L351.415 87.865C364.522 95.6498 372.631 109.695'
                     ' 372.819 124.938L373.032 142.101C373.125 149.645 375.108 157.046 378.8 163.626L387.197 178.596C394.655'
@@ -179,11 +189,11 @@ contract GreenBadgeImage {
                     ' 142.101L27.1805 124.938C27.3693 109.695 35.4785 95.6498 48.5846 87.865L63.3422 79.0992C69.8288'
                     ' 75.2463 75.2463 69.8288 79.0992 63.3422L87.865 48.5846C95.6498 35.4785 109.695 27.3693 124.938'
                     ' 27.1805L142.101 26.968C149.645 26.8745 157.046 24.8916 163.626 21.2005L178.596 12.8029Z"'
-                    ' fill="#28282D" stroke="#404047" strokeWidth="1.38889" />'
-                '<circle cx="200" cy="200" r="166.667" fill="#28282D" stroke="#34C46E" strokeWidth="2.66667" />'
-                '<rect x="88" y="88" width="224" height="224" rx="112" fill="#2F2F34" />'
+                    ' fill="#28282D" stroke="#404047" strokeWidth="1.38889"/>'
+                '<circle cx="200" cy="200" r="166.667" fill="#28282D" stroke="#34C46E" strokeWidth="2.66667"/>'
+                '<rect x="88" y="88" width="224" height="224" rx="112" fill="#2F2F34"/>'
                 '<path'
-                    'd="M198.826 167.539L182.368 193.898C180.788 196.429 182.606 199.719 185.588 199.719H244.003C247.357 199.719'
+                    ' d="M198.826 167.539L182.368 193.898C180.788 196.429 182.606 199.719 185.588 199.719H244.003C247.357 199.719'
                     ' 249.403 196.024 247.626 193.175L205.67 125.971C203.066 121.801 197.007 121.801 194.396 125.971L151.99'
                     ' 193.898C150.409 196.429 152.227 199.719 155.209 199.719H164.692C165.175 199.719 165.65 199.596 166.072'
                     ' 199.361C166.495 199.127 166.851 198.789 167.106 198.379L198.826 147.565C198.954 147.36 199.132 147.191'
@@ -196,38 +206,33 @@ contract GreenBadgeImage {
                     ' 208.735 179.955C208.735 179.688 208.66 179.426 208.519 179.2L201.242 167.544C201.115 167.339 200.937'
                     ' 167.169 200.726 167.051C200.515 166.933 200.277 166.871 200.035 166.871C199.794 166.87 199.556 166.932'
                     ' 199.344 167.048C199.133 167.165 198.955 167.334 198.826 167.539Z"'
-                    ' fill="#34C46E" />'
-                '<text textAnchor="middle" fill="#34C46E">'
-                    '<textPath fontFamily="Montserrat" xlinkHref="#top" startOffset="50%" fontSize="24" fontWeight="700">'
+                    ' fill="#34C46E"/>'
+                '<text text-anchor="middle" fill="#34C46E">'
+                    '<textPath font-family="Montserrat" xlink:href="#top" startOffset="50%" font-size="24" font-weight="700">'
                         'Arkreen Climate Action Badge'
                     '</textPath>'
                 '</text>'
-                '<text textAnchor="middle" fill="#34C46E">'
-                    '<textPath fontFamily="Montserrat" xlinkHref="#address" startOffset="50%" fontSize="16" fontWeight="500">',
+                '<text text-anchor="middle" fill="#34C46E">'
+                    '<textPath font-family="Montserrat" xlink:href="#address" startOffset="50%" font-size="16" font-weight="500">',
                         beneficiary,
                     '</textPath>'
                 '</text>'
                 '<g transform="translate(0,227)">'
-                    '<text style={{fontFamily:"Montserrat",fontSize: "26px",fontWeight:"700",fill:"white",textAnchor:"middle",dominantBaseline:"middle"}}>'
-                        '<textPath xlinkHref="#center" startOffset="50%">',
+                    '<text font-family="Montserrat" font-size="26px" font-weight="700" fill="white" text-anchor="middle" dominant-baseline="middle">'
+                        '<textPath xlink:href="#center" startOffset="50%">',
                             energyInBadge,
                             ' ART'
                         '</textPath>'
                     '</text>'
                 '</g>'
                 '<g transform="translate(0,253)">'
-                    '<rect width="400" height="40" />'
-                    '<text style={{fontFamily:"Montserrat",fontSize: "12px",fontWeight:"400",fill:"#7F7F8D",textAnchor:"middle",dominantBaseline:"middle"}}>'
-                        '<textPath xlinkHref="#center" startOffset="50%">'
+                    '<rect width="400" height="40"/>'
+                    '<text font-family="Montserrat" font-size="12px" font-weight="400" fill="#7F7F8D" text-anchor="middle" dominant-baseline="middle">'
+                        '<textPath xlink:href="#center" startOffset="50%">'
                             'Offset'
                         '</textPath>'
                     '</text>'
                 '</g>'
-                '<defs>'
-                    '<path id="center" d="M0 20,400,20" style={{stroke: "white", fill: "none"}} />'
-                    '<path id="top" transform="translate(140,40)" d="M -70 162 A 50 50 0 1 1 190 162"/>'
-                    '<path id="address" transform="translate(140,40)" d="M -98 160 A 50 50 0 1 0 218 160" />'
-                '</defs>'
             '</svg>'
         );
 

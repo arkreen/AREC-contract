@@ -37,11 +37,11 @@ describe("ArkreenBadge", () => {
     let privateKeyMaker:        string
 
     let AKREToken:                    ArkreenToken
-    let arkreenMiner:      ArkreenMiner
-    let arkreenRegistry:             ArkreenRegistry
+    let arkreenMiner:                 ArkreenMiner
+    let arkreenRegistry:              ArkreenRegistry
     let arkreenRECIssuance:           ArkreenRECIssuance
     let arkreenRECToken:              ArkreenRECToken
-    let arkreenBadge:            ArkreenBadge
+    let arkreenBadge:                 ArkreenBadge
 
     const Miner_Manager       = 0         
 
