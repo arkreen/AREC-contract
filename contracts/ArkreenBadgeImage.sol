@@ -11,7 +11,7 @@ import "./libraries/BytesLib.sol";
 import "./ArkreenBadgeType.sol";
 
 // Import this file to use console.log
-import "hardhat/console.sol";
+// import "hardhat/console.sol";
 
 contract ArkreenBadgeImage {
  
@@ -72,8 +72,6 @@ contract ArkreenBadgeImage {
 
         bytes memory dataURI;
         string memory tokenString = tokenId.toString();
-
-        console.log("XXXXXXXXXX", tokenId, actionType, idsOfAREC.length);
 
         {
             string memory energyInBadge = _decimalTruncate(toFixedPoint(offsetRecord.offsetTotalAmount, 9), 3);

@@ -15,7 +15,7 @@ import {
 
 
 import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { getApprovalDigest, expandTo18Decimals, randomAddresses, RECStatus, MinerType, expandTo9Decimals } from "./utils/utilities";
+import { getApprovalDigest, expandTo18Decimals, randomAddresses, RECStatus, MinerType, expandTo9Decimals, urlData } from "./utils/utilities";
 import { ecsign, fromRpcSig, ecrecover } from 'ethereumjs-util'
 import { RECRequestStruct, SignatureStruct, RECDataStruct } from "../typechain/contracts/ArkreenRECIssuance";
 import { OffsetActionStruct }  from "../typechain/contracts/ArkreenBadge";
@@ -308,7 +308,8 @@ describe("ArkreenRECToken", () => {
       
 
       const iamgeURL = await arkreenBadge.tokenURI(certId)
-      console.log("QQQQQQQQQQQQ", iamgeURL)
+      expect(urlData).to.eq(urlData)
+      //console.log("QQQQQQQQQQQQ", iamgeURL)
 
       // attachOffsetEvents
       await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(10))
@@ -317,7 +318,6 @@ describe("ArkreenRECToken", () => {
 
   });
 
-/*
   describe("commitOffset: Details", () => {
     let tokenID: BigNumber
 
@@ -1041,5 +1041,4 @@ describe("ArkreenRECToken", () => {
       expect(await arkreenRECToken.latestARECID()).to.equals(12)                      
     })
   })
-*/
 });

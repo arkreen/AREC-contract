@@ -394,29 +394,19 @@ contract ArkreenBadge is
             uint256 idRetiredAREC = offsetActions[offsetIds].tokenId; 
             uint256 tag = idRetiredAREC >> 62;  
 
-            console.log('1111111111111111', tag, actionNumber);
-
             if (tag == 0) {
                 actionType |= 1;
-                console.log('AAAAAAAAAAAAAAAAAAA');
                 idsAREC = idsAREC.insertInOrder(idRetiredAREC);
-                console.log('BBBBBBBBBBBBBBBBBB');
             } else { 
                 actionType |= 2;
                 uint256 idARECDetail = idRetiredAREC & (1<<62 - 1);                 // Remove the two msb tag bits 
 
                 if (tag == 2) {
-                    console.log('CCCCCCCCCCCCCCCC');
                     idsAREC = idsAREC.insertInOrder(idARECDetail);
-                    console.log('DDDDDDDDDDDDDDDDDD');
-
                 } else {
                     OffsetDetail[] storage offsetDetails = OffsetDetails[idARECDetail];
-                    console.log('XXXXXXXXXXXXXX', offsetDetails.length);
                     for (uint256 ind = 0; ind < offsetDetails.length; ind++) {
-                        console.log('EEEEEEEEEEEEEEEEEEE');
                         idsAREC = idsAREC.insertInOrder(offsetDetails[ind].tokenId);
-                        console.log('FFFFFFFFFFFFFFFFF');
                     }
                 }
             } 
