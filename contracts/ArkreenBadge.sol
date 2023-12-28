@@ -12,8 +12,11 @@ import './ArkreenBadgeStorage.sol';
 import "./interfaces/IPausable.sol";
 import "./interfaces/IArkreenRegistry.sol";
 import "./interfaces/IArkreenRECIssuance.sol";
+import "./interfaces/IArkreenBadgeImage.sol";
 import "./interfaces/IERC5192.sol";
 import "./ArkreenBadgeType.sol";  
+
+import "./libraries/MemArrays.sol";  
 
 contract ArkreenBadge is
     OwnableUpgradeable,
@@ -24,6 +27,7 @@ contract ArkreenBadge is
     IERC5192
 {
     using AddressUpgradeable for address;
+    using MemArrays for uint256[];
 
     // Public variables
     string public constant NAME = 'Arkreen REC Badge';
@@ -373,16 +377,49 @@ contract ArkreenBadge is
     /**
      * @dev See {IERC721Metadata-tokenURI}.
      */
-    function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
+    function tokenURI(uint256 tokenId) public view override returns (string memory) {
         _requireMinted(tokenId);
 
-        string memory cid = cidBadge[tokenId];
-        if( bytes(cid).length > 0) {
-          return string(abi.encodePacked("https://", cid, ".ipfs.w3s.link"));
-        } else {
-          return super.tokenURI(tokenId);
+        OffsetRecord storage offsetRecord = certificates[tokenId];
+        uint256 actionNumber = offsetRecord.offsetIds.length;
+
+        uint256[] memory idsAREC = new uint256[](0);
+        uint256 actionType;
+
+        for (uint256 index = 0; index < actionNumber; index) {
+            uint256 offsetIds = offsetRecord.offsetIds[index];
+            uint256 idRetiredAREC = offsetActions[offsetIds].tokenId; 
+            uint256 tag = idRetiredAREC >> 62;  
+            if (tag == 0) {
+                actionType |= 1;
+                idsAREC = idsAREC.insertInOrder(idRetiredAREC);
+            } else { 
+                actionType |= 2;
+                uint256 idARECDetail = idRetiredAREC & (1<<62 - 1); // Remove the two tag bits 
+                if (tag == 1) {
+                    idsAREC = idsAREC.insertInOrder(idARECDetail);
+                } else {
+                    OffsetDetail[] storage offsetDetails = OffsetDetails[idARECDetail];
+                    for (uint256 ind = 0; ind < offsetDetails.length; ind) {
+                        idsAREC = idsAREC.insertInOrder(offsetDetails[ind].tokenId);
+                    }
+                }
+            } 
         }
+
+        return IArkreenBadgeImage(arkreenBadgeImage).getBadgeSVG(tokenId, offsetRecord, actionType, idsAREC);
     }
+
+    /**
+     * @dev See {IERC721Metadata-tokenURI}.
+     */
+/*     
+    function tokenURI(uint256 tokenID) public view override returns (string memory) {
+
+        require(dataGBTC[tokenID].minter != address(0), "GBTC: Not Minted");
+        return IGreenBTCImage(greenBtcImage).getCertificateSVG(ownerOf(tokenID), dataGBTC[tokenID], dataNFT[tokenID]);
+    }
+*/
 
     function updateCID(uint256[] calldata tokenId, string[] calldata cid) external virtual onlyOwner {
         require(tokenId.length == cid.length, "'ARB: Wrong Data");

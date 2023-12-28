@@ -2,6 +2,7 @@
 pragma solidity ^0.8.9;
 
 import "./ArkreenBadgeType.sol";  
+import "./interfaces/IArkreenBadgeImage.sol";
 
 abstract contract ArkreenBadgeStorage {
     string public baseURI;
@@ -39,4 +40,6 @@ abstract contract ArkreenBadgeStorage {
     mapping(address => uint256) public partialAvailableAmountExt;   // Amount available for partial offset, from REC Token to Amount
 
     mapping(uint256 => string) public cidBadge; 
+
+    IArkreenBadgeImage arkreenBadgeImage;
 }
