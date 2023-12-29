@@ -74,7 +74,6 @@ contract ArkreenRECIssuanceImage {
 
         {
             string memory energyInBadge = _decimalTruncate(toFixedPoint(recData.amountREC, 9), 3);
-
             string memory svgData = getARECSVGImage(tokenId, owner, recData);
 
             dataURI = abi.encodePacked(
@@ -176,33 +175,42 @@ contract ArkreenRECIssuanceImage {
                 '</g>'
             );
 
-        imgBytes = abi.encodePacked(imgBytes,
+        {
+            string memory artAmount = _decimalTruncate(toFixedPoint(recData.amountREC, 9), 4);
+            bytes memory fullARTString = bytes("AREC certificates, representing ")
+                                            .concat(bytes(artAmount))
+                                            .concat(bytes(' MWh of electricity generated from renewable sources, recoreded in the link'));
+            
+            _decimalTruncate(toFixedPoint(recData.amountREC, 9), 4);
+
+            imgBytes = abi.encodePacked(imgBytes,
+
                 '<g transform="translate(50,344)">'
                     '<text class="f4" font-size="12px" fill="#5D5D68">'
-                        '<textPath xlink:href="#center" startOffset="50%">'
-                            'confirming the issuance of'
+                        '<textPath xlink:href="#center" startOffset="50%">',
+                            'confirming the issuance of',
                         '</textPath>'
                     '</text>'
                 '</g>'
                 '<g transform="translate(50,384)">'
                     '<rect width="800" height="40" />'
                     '<text class="f" font-size="32px" font-weight="700" fill="#202024">'
-                        '<textPath xlink:href="#center" startOffset="50%">'
-                          '{Number(art/1000000000).toFixed(4)}'
+                        '<textPath xlink:href="#center" startOffset="50%">',
+                          artAmount,
                         '</textPath>'
                     '</text>'
                 '</g>'
                 '<g transform="translate(50,418)">'
                     '<text class="f4" font-size="12px" fill="#5D5D68">'
-                        '<textPath xlink:href="#center" startOffset="50%">'
-                            'AREC certificates, representing {Number(art/1000000000).toFixed(3)}MWh of electricity generated from renewable sources, in the blockchain transaction'
+                        '<textPath xlink:href="#center" startOffset="50%">',
+                            string(fullARTString),
                         '</textPath>'
                     '</text>'
                 '</g>'
                 '<g transform="translate(50,444)">'
                     '<text class="f" font-size="12px" font-weight="700" fill="#2f2f34">'
-                        '<textPath xlink:href="#center" startOffset="50%">'
-                          '{tx}'
+                        '<textPath xlink:href="#center" startOffset="50%">',
+                          recData.url,
                       '</textPath>'
                     '</text>'
                 '</g>'
@@ -213,38 +221,49 @@ contract ArkreenRECIssuanceImage {
                         '</textPath>'
                     '</text>'
                 '</g>'
-                '<g transform="translate(50,504)">'
-                    '<rect width="800" height="40"/>'
-                    '<text class="f" font-size="16px" font-weight="700" fill="#2f2f34">'
-                        '<textPath xlink:href="#center" startOffset="50%">'
-                            '{region?region.replace("China","Mongolia")="Mongolia"}'
-                        '</textPath>'
-                    '</text>'
-                '</g>'
-                '<g transform="translate(50,536)">'
-                    '<text class="f4" font-size="12px" fill="#5D5D68">'
-                        '<textPath xlink:href="#center" startOffset="50%">'
-                            'in respect of the reporting period'
-                        '</textPath>'
-                    '</text>'
-                '</g>'
-                '<g transform="translate(50,572)">'
-                    '<text class="f4" font-size="12px" fill="#5D5D68">'
-                        '<textPath xlink:href="#center" startOffset="50%">'
-                            'to'
-                        '</textPath>'
-                    '</text>'
-                '</g>'
-                '<g transform="translate(50,574)">'
-                    '<text class="f" font-size="16px" font-weight="500" fill="#202024">'
-                        '<textPath xlink:href="#center" startOffset="50%">'
-                            '{startTime}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{endTime}'
-                        '</textPath>'
-                    '</text>'
-                '</g>'
-            '</svg>'
-        );
+            );    
+        }
+
+        {
+            imgBytes = abi.encodePacked(imgBytes,     
+
+                    '<g transform="translate(50,504)">'
+                        '<rect width="800" height="40"/>'
+                        '<text class="f" font-size="16px" font-weight="700" fill="#2f2f34">'
+                            '<textPath xlink:href="#center" startOffset="50%">',
+                                recData.region,
+                            '</textPath>'
+                        '</text>'
+                    '</g>'
+                    '<g transform="translate(50,536)">'
+                        '<text class="f4" font-size="12px" fill="#5D5D68">'
+                            '<textPath xlink:href="#center" startOffset="50%">'
+                                'in respect of the reporting period'
+                            '</textPath>'
+                        '</text>'
+                    '</g>'
+                    '<g transform="translate(50,572)">'
+                        '<text class="f4" font-size="12px" fill="#5D5D68">'
+                            '<textPath xlink:href="#center" startOffset="50%">'
+                                'to'
+                            '</textPath>'
+                        '</text>'
+                    '</g>'
+                    '<g transform="translate(50,574)">'
+                        '<text class="f" font-size="16px" font-weight="500" fill="#202024">'
+                            '<textPath xlink:href="#center" startOffset="50%">',
+                                'startTime endTime',
+                            '</textPath>'
+                        '</text>'
+                    '</g>'
+                '</svg>'
+            );
+        }
 
         return  string(Base64.encode(imgBytes));
     }
 }
+
+/*
+             
+*/
