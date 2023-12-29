@@ -384,12 +384,12 @@ contract ArkreenRECIssuance is
     }
 
     /// @dev retrieve all AREC data
-    function getRECData(uint256 tokenId) external view virtual returns (RECData memory) {
+    function getRECData(uint256 tokenId) public view virtual returns (RECData memory) {
         return (allRECData[tokenId]);
     }
 
     /// @dev retrieve all AREC data
-    function getRECDataCore(uint256 tokenId) external view virtual returns (
+    function getRECDataCore(uint256 tokenId) public view virtual returns (
                                 address issuer, uint128 amountREC, uint8 status, uint16 idAsset) {
         RECData storage recData = allRECData[tokenId];                          
         return (recData.issuer, recData.amountREC, recData.status, recData.idAsset);
@@ -502,6 +502,7 @@ contract ArkreenRECIssuance is
     /**
      * @dev Returns the URI for the given token.  
      */    
+/*     
     function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
         _requireMinted(tokenId);
 
@@ -518,5 +519,18 @@ contract ArkreenRECIssuance is
         }
 
         return super.tokenURI(tokenId);
-    }  
+    } 
+*/
+
+    function tokenURI(uint256 tokenId) public view override returns (string memory) {
+        _requireMinted(tokenId);
+        RECData memory arecData = getRECData(tokenId);
+   
+        return IArkreenRECIssuanceImage(arkreenRECImage).getARECSVG(tokenId, ownerOf(tokenId), arecData);
+    }
+
+    function setARECImage(address newImage) external virtual onlyOwner {
+        require(newImage != address(0), 'ARB: Zero Address');
+        arkreenRECImage = IArkreenRECIssuanceImage(newImage);
+    }       
 }

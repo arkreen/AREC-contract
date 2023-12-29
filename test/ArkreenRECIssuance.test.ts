@@ -76,6 +76,12 @@ describe("ArkreenRECIssuance", () => {
       
       await arkreenRECIssuance.setESGExtAddress(arkreenRECIssuanceExt.address)
 
+      const ArkreenRECIssuanceImageFactory = await ethers.getContractFactory("ArkreenRECIssuanceImage")
+      const arkreenRECIssuanceImage = await ArkreenRECIssuanceImageFactory.deploy()
+      await arkreenRECIssuanceImage.deployed()
+
+      await arkreenRECIssuance.setARECImage(arkreenRECIssuanceImage.address)
+
       const ArkreenRECTokenFactory = await ethers.getContractFactory("ArkreenRECToken")
       arkreenRECToken = await upgrades.deployProxy(ArkreenRECTokenFactory,[arkreenRegistry.address, manager.address,'','']) as ArkreenRECToken
       await arkreenRECToken.deployed()     
@@ -947,6 +953,15 @@ describe("ArkreenRECIssuance", () => {
       await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
       tokenID = await arkreenRECIssuance.totalSupply()
       await arkreenRECIssuance.connect(manager).certifyRECRequest(tokenID, "Serial12345678")
+      const uri = await arkreenRECIssuance.tokenURI(tokenID);
+      console.log("AAAAAAAAAAAA", uri)
+    })
+
+/*
+    it("ArkreenRECIssuance: tokenURI, No given URI", async () => {
+      await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
+      tokenID = await arkreenRECIssuance.totalSupply()
+      await arkreenRECIssuance.connect(manager).certifyRECRequest(tokenID, "Serial12345678")
       expect( await arkreenRECIssuance.tokenURI(tokenID)).to.equal("https://www.arkreen.com/AREC/1");
     })
 
@@ -956,8 +971,8 @@ describe("ArkreenRECIssuance", () => {
       tokenID = await arkreenRECIssuance.totalSupply()
       await arkreenRECIssuance.connect(manager).certifyRECRequest(tokenID, "Serial12345678")
       expect( await arkreenRECIssuance.tokenURI(tokenID)).to.equal("https://www.arkreen.com/AREC/Shangxi");
-
     })
+*/  
   })
 
   describe("Mint Fee Withdraw", () => {

@@ -68,7 +68,7 @@ contract ArkreenBadgeImage {
         OffsetRecord calldata offsetRecord,
         uint256 actionType,
         uint256[] calldata idsOfAREC
-    ) external view returns(string memory) {
+    ) external pure returns(string memory) {
 
         bytes memory dataURI;
         string memory tokenString = tokenId.toString();

@@ -14,8 +14,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //    const AKRE_TOKEN_ADDRESS    = "0x21B101f5d61A66037634f7e1BeB5a733d9987D57"
 //    const VALIDATOR_ADDRESS     = "0x741e2403b63a41188e72dc3897d730a746d9181e"
 
+/*
     // 2023/12/26: Paranet on Testnet
     const AKRE_TOKEN_ADDRESS    = "0xbc9de41189F76519e8Aa43157F2D4faf305458da"
+    const VALIDATOR_ADDRESS     = "0xF013aC5bF29Fc3DcAd2f89510eCfAeca79d5042e"
+*/
+
+    // 2023/12/29: Paranet on mainnet
+    const AKRE_TOKEN_ADDRESS    = "0x990393E7540883260BBEBf1960C77b78Ad5F0146"
     const VALIDATOR_ADDRESS     = "0xF013aC5bF29Fc3DcAd2f89510eCfAeca79d5042e"
 
     const { deployments, getNamedAccounts } = hre;
@@ -50,6 +56,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:arkReward  
 // Proxy:           0x138E8e06F64ef9aAd795b7bF90E04004eb5E7463        
 // Implementaion:   0x13522dbB30a14A884a16B622868E7037efdd252C
+
+// 2023/12/29: Paranet on mainnet
+// yarn deploy:matic:arkReward  
+// Proxy:           0x7654db08Da620bC36e9F15F40De7FeEf9265a808         
+// Implementaion:   0x82c7ae0b76Cead58Ad93aAc462139E396Df50Fb8
 
 func.tags = ["arkReward"];
 

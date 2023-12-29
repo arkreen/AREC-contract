@@ -2,6 +2,7 @@
 pragma solidity ^0.8.9;
 
 import "./ArkreenRECIssuanceType.sol";  
+import "./interfaces/IArkreenRECIssuanceImage.sol";
 
 contract ArkreenRECIssuanceStorage {
     address public tokenAKRE;                           // token adddress of AKRE
@@ -28,6 +29,8 @@ contract ArkreenRECIssuanceStorage {
     address[] public paymentTokens;
 
     mapping(address => bool) public AllMVPEntity;
+
+    IArkreenRECIssuanceImage arkreenRECImage;
 
     // keccak256("RECIssuance(address owner,uint256 startTime,uint256 endTime,
     //                        uint256 amountREC,uint256 merkelRoot,string url,
