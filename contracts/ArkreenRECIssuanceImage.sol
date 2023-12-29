@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import "./libraries/FormattedStrings.sol";
 import "./libraries/TransferHelper.sol";
 import "./libraries/BytesLib.sol";
+import "./libraries/DateTime.sol";
 
 import "./ArkreenRECIssuanceType.sol";
 
@@ -225,6 +226,8 @@ contract ArkreenRECIssuanceImage {
         }
 
         {
+            DateTimeLib.DateTime startTime = parseTimestamp(uint256(recData.startTime));
+
             imgBytes = abi.encodePacked(imgBytes,     
 
                     '<g transform="translate(50,504)">'
@@ -252,7 +255,9 @@ contract ArkreenRECIssuanceImage {
                     '<g transform="translate(50,574)">'
                         '<text class="f" font-size="16px" font-weight="500" fill="#202024">'
                             '<textPath xlink:href="#center" startOffset="50%">',
-                                'startTime endTime',
+                                uint256(startTime.year).tostring().concat(bytes('-'))
+                                .concat(uint256(startTime.month).tostring()).concat(bytes('-'))
+                                .concat(uint256(startTime.day).tostring()),
                             '</textPath>'
                         '</text>'
                     '</g>'
