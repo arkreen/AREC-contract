@@ -14,13 +14,13 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 contract ArkreenGovernor is
     Initializable,
     OwnableUpgradeable,
+    UUPSUpgradeable,
     GovernorUpgradeable,
     GovernorSettingsUpgradeable,
     GovernorCountingSimpleUpgradeable,
     GovernorVotesUpgradeable,
     GovernorVotesQuorumFractionUpgradeable,
-    GovernorTimelockControlUpgradeable,
-    UUPSUpgradeable
+    GovernorTimelockControlUpgradeable
 {
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {

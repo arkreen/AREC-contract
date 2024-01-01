@@ -7,8 +7,8 @@ import '@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol';
 
 contract ArkreenNotary is 
     ContextUpgradeable,
-    UUPSUpgradeable,
-    OwnableUpgradeable
+    OwnableUpgradeable,
+    UUPSUpgradeable
 {
     uint256 public updateCount;
 

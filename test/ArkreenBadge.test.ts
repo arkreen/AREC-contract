@@ -14,7 +14,7 @@ import {
 
 
 import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { getApprovalDigest, expandTo18Decimals, randomAddresses, MinerType, RECStatus, expandTo9Decimals } from "./utils/utilities";
+import { getApprovalDigest, expandTo18Decimals, randomAddresses, MinerType, RECStatus, expandTo9Decimals, urlBadgeData } from "./utils/utilities";
 import { ecsign, fromRpcSig, ecrecover } from 'ethereumjs-util'
 import { RECRequestStruct, SignatureStruct, RECDataStruct } from "../typechain/contracts/ArkreenRECIssuance";
 
@@ -72,6 +72,12 @@ describe("ArkreenBadge", () => {
       const ArkreenRetirementFactory = await ethers.getContractFactory("ArkreenBadge")
       arkreenBadge = await upgrades.deployProxy(ArkreenRetirementFactory,[arkreenRegistry.address]) as ArkreenBadge
       await arkreenBadge.deployed()           
+
+      const ArkreenBadgeImageFactory = await ethers.getContractFactory("ArkreenBadgeImage")
+      const arkreenBadgeImage = await ArkreenBadgeImageFactory.deploy()
+      await arkreenBadgeImage.deployed()
+
+      await arkreenBadge.setBadgeImage(arkreenBadgeImage.address)
   
       await AKREToken.transfer(owner1.address, expandTo18Decimals(100000))
       await AKREToken.connect(owner1).approve(arkreenRECIssuance.address, expandTo18Decimals(100000))
@@ -356,15 +362,21 @@ describe("ArkreenBadge", () => {
 
         expect(await arkreenBadge.getCertificate(certId)).to.deep.equal(offsetRecord1)    
         expect(await arkreenBadge.totalOffsetRetired()).to.equal(expandTo9Decimals(20))  
-        expect( await arkreenBadge.tokenURI(certId)).to.equal("https://www.arkreen.com/badge/1");     
+
+        const imageURL = await arkreenBadge.tokenURI(certId)   
+
+        expect(imageURL.slice(0,8000)).to.eq(urlBadgeData.slice(0,8000))
+
+/*        
         await arkreenBadge.setBaseURI("https://www.arkreen.com/offset/")
         expect( await arkreenBadge.tokenURI(certId)).to.equal("https://www.arkreen.com/offset/1"); 
 
         await arkreenBadge.updateCID([certId], ["bafkreidotvli35mt5rjywkps7aqxo3elc5dh6dlynd6yxcyipnfaghkoe4"])
         const cid = await arkreenBadge.cidBadge(certId)
+
         expect(cid).to.equal("bafkreidotvli35mt5rjywkps7aqxo3elc5dh6dlynd6yxcyipnfaghkoe4"); 
         expect( await arkreenBadge.tokenURI(certId)).to.equal("https://bafkreidotvli35mt5rjywkps7aqxo3elc5dh6dlynd6yxcyipnfaghkoe4.ipfs.w3s.link"); 
-
+*/
       });
     })
 

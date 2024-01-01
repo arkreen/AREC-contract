@@ -67,6 +67,7 @@ contract GreenBTC is
     event RevealBoxes(uint256[] revealList, bool[] wonList);
 
     modifier ensure(uint256 deadline) {
+        console.log("QQQQQQQQQQQ", deadline, block.timestamp);
         require(deadline >= block.timestamp, 'GBTC: EXPIRED');
         _;
     }
@@ -620,8 +621,10 @@ contract GreenBTC is
      * @param tokenART ART token
      * @param tokenPay Payment token
      */
+/*     
     function getPrice(address tokenART, address tokenPay) external view returns(uint128 price, uint128 received) {
         address artBank = IArkreenBuilder(arkreenBuilder).artBank();
         (price, received) = IArkreenRECBank(artBank).saleIncome(tokenART, tokenPay);
     }
+*/
 }

@@ -64,6 +64,22 @@ contract ArkreenRECIssuanceImage {
         return string(resulInBytes);
     }
 
+    function toStringDayMonth(uint16 year, uint8 month, uint8 day) internal pure returns (string memory) {
+        bytes memory buffer = new bytes(11);
+        buffer[3] = bytes1(uint8(48 + uint256(year % 10)));  year /= 10;
+        buffer[2] = bytes1(uint8(48 + uint256(year % 10)));  year /= 10;
+        buffer[1] = bytes1(uint8(48 + uint256(year % 10)));  year /= 10;
+        buffer[0] = bytes1(uint8(48 + uint256(year)));
+        buffer[4] = '-';
+        buffer[6] = bytes1(uint8(48 + uint256(month % 10)));  month /= 10;
+        buffer[5] = bytes1(uint8(48 + uint256(month))); 
+        buffer[7] = '-';
+        buffer[9] = bytes1(uint8(48 + uint256(day % 10)));  day /= 10;
+        buffer[8] = bytes1(uint8(48 + uint256(day)));  
+        return string(buffer);
+    }
+
+
     function getARECSVG(
         uint256 tokenId,
         address owner,
@@ -147,15 +163,16 @@ contract ArkreenRECIssuanceImage {
                '</g>'
                 '<g transform="translate(50,130)">'
                     '<text class="f" font-size="24px" font-weight="700" fill="#202024">'
-                        '<textPath xlink:href="#center" startOffset="50%">',
-                          'ARKREEN RENEWABLE ENERGY CERTIFICATE',
+                        '<textPath xlink:href="#center" startOffset="50%">'
+                          'ARKREEN RENEWABLE ENERGY CERTIFICATE'
                         '</textPath>'
                     '</text>'
                 '</g>'
+                '<line x1="50" y1="620" x2="850" y2="620" stroke="#E0E0E0" stroke-width="1.5" stroke-dasharray="4,4" />'
                 '<g transform="translate(50,200)">'
                     '<text class="f4" font-size="12px" fill="#5D5D68">'
-                        '<textPath xlink:href="#center" startOffset="50%">',
-                            'This certificate is issued to the account on Polygon of',
+                        '<textPath xlink:href="#center" startOffset="50%">'
+                            'This certificate is issued to the account on Polygon of'
                         '</textPath>'
                     '</text>'
                 '</g>'
@@ -169,11 +186,19 @@ contract ArkreenRECIssuanceImage {
                 '</g>'
                 '<g transform="translate(50,272)">'
                     '<text class="f4" font-size="12px" fill="#5D5D68">'
-                        '<textPath xlink:href="#center" startOffset="50%">',
-                          'by',
+                        '<textPath xlink:href="#center" startOffset="50%">'
+                          'by'
                         '</textPath>'
                     '</text>'
                 '</g>'
+                '<g transform="translate(50,302)">'
+                    '<text class="f" font-size="16px" font-weight="700" fill="#2f2f34">'
+                        '<textPath xlink:href="#center" startOffset="50%">',
+                          'Arkreen Network',
+                        '</textPath>'
+                    '</text>'
+                '</g>'
+                
             );
 
         {
@@ -226,7 +251,10 @@ contract ArkreenRECIssuanceImage {
         }
 
         {
-            DateTimeLib.DateTime startTime = parseTimestamp(uint256(recData.startTime));
+            DateTimeLib.DateTime memory startTime = DateTimeLib.parseTimestamp(uint256(recData.startTime));
+            DateTimeLib.DateTime memory endTime = DateTimeLib.parseTimestamp(uint256(recData.endTime));
+            string memory startString = toStringDayMonth(startTime.year, startTime.month, startTime.day);
+            string memory endString = toStringDayMonth(endTime.year, endTime.month, endTime.day);
 
             imgBytes = abi.encodePacked(imgBytes,     
 
@@ -245,22 +273,29 @@ contract ArkreenRECIssuanceImage {
                             '</textPath>'
                         '</text>'
                     '</g>'
-                    '<g transform="translate(50,572)">'
+                    '<g transform="translate(50,574)">'
                         '<text class="f4" font-size="12px" fill="#5D5D68">'
                             '<textPath xlink:href="#center" startOffset="50%">'
                                 'to'
                             '</textPath>'
                         '</text>'
                     '</g>'
-                    '<g transform="translate(50,574)">'
+                    '<g transform="translate(-20,574)">'
                         '<text class="f" font-size="16px" font-weight="500" fill="#202024">'
                             '<textPath xlink:href="#center" startOffset="50%">',
-                                uint256(startTime.year).tostring().concat(bytes('-'))
-                                .concat(uint256(startTime.month).tostring()).concat(bytes('-'))
-                                .concat(uint256(startTime.day).tostring()),
+                                startString,
                             '</textPath>'
                         '</text>'
                     '</g>'
+
+                    '<g transform="translate(120,574)">'
+                        '<text class="f" font-size="16px" font-weight="500" fill="#202024">'
+                            '<textPath xlink:href="#center" startOffset="50%">',
+                                endString,
+                            '</textPath>'
+                        '</text>'
+                    '</g>'
+                    '<line x1="50" y1="620" x2="850" y2="620" stroke="#E0E0E0" stroke-width="1.5" stroke-dasharray="4,4" />'
                 '</svg>'
             );
         }
@@ -268,7 +303,3 @@ contract ArkreenRECIssuanceImage {
         return  string(Base64.encode(imgBytes));
     }
 }
-
-/*
-             
-*/

@@ -360,6 +360,7 @@ describe("GreenBTC Test Campaign", () => {
 
         // Error: Check dealine
         const dealineBlock = await ethers.provider.getBlock('latest')
+        console.log("AAAAAAAAAAAAAAAA", dealineBlock.timestamp)
         await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithART( greenBTCInfo, {v,r,s}, 
                                           badgeInfo, arkreenRECTokenESG.address, dealineBlock.timestamp-1 ))
                     .to.be.revertedWith("GBTC: EXPIRED")    
@@ -367,7 +368,7 @@ describe("GreenBTC Test Campaign", () => {
         await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithART( greenBTCInfo, {v,r,s}, 
                                           badgeInfo, arkreenRECTokenESG.address, 
                                           BigNumber.from(dealineBlock.timestamp-1).xor(BigNumber.from(1).shl(63))))
-                    .to.be.revertedWith("GBTC: EXPIRED")                      
+                    .to.be.revertedWith("GBTC: EXPIRED")
 
         // Error: Check ART is whitelisted
         await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithART( greenBTCInfo, {v,r,s},

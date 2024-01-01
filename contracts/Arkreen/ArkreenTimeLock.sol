@@ -6,8 +6,8 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 contract ArkreenTimeLock is
     Initializable,
-    TimelockControllerUpgradeable,
-    UUPSUpgradeable
+    UUPSUpgradeable,
+    TimelockControllerUpgradeable
 {
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {

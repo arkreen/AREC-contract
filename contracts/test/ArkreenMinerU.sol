@@ -3,6 +3,9 @@ pragma solidity ^0.8.9;
 
 import "../ArkreenMiner.sol";
 
+// Import this file to use console.log
+// import "hardhat/console.sol";
+
 // For testing of contract upgrading 
 contract ArkreenMinerU is ArkreenMiner
 {
