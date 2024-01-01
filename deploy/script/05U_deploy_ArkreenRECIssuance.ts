@@ -15,7 +15,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //    await ArkreenRECIssuance_Upgrade.deployed();
 
     if(hre.network.name === 'matic_test') {
-//      const REC_ISSUANCE_ADDRESS = "0x95f56340889642a41b913c32d160d2863536e073"       // Need to check  // Simu mode
+        const REC_ISSUANCE_ADDRESS = "0x95f56340889642a41b913c32d160d2863536e073"       // Need to check  // Simu mode
 //      const REC_ISSUANCE_ADDRESS = "0xb917c92458a23c6934ca34c6d4468ec8565c1313"       // Need to check
         
 //      const NEW_IMPLEMENTATION = "0x020287A42cF2cbc5E8583968456EFB1db90cAe9c"     // Need to check
@@ -34,12 +34,13 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //      const NEW_IMPLEMENTATION = "0x113102Ee8e450B27A19397d8e94c4232DF430064"     // 8. Try to add HashKey feature, checking if RECData mapping is compatible
 //      const NEW_IMPLEMENTATION = "0x8Dc3cd4666909D09aCf8d7197fD4E5F43D7ae4aB"     // 9. Upgrade to support ESG Features (2023/2/26)
 //      const NEW_IMPLEMENTATION = "0x5e9a9a89e4B5229Ec5789e2dA1C995a3b1224275"     // 10. Remove if caller is Miner checking in simu mode (2023/2/26)
+        const NEW_IMPLEMENTATION = "0x829e71F96A35ff3ba1c0BfE388d8d470c95106A6"     // 10. 2024/01/01: Addd AREC NFT Image
 
         // Matic Test net
-        const REC_ISSUANCE_ADDRESS = "0x7370c2166d7720c41f0931f0bbf67e10d00b0d18"   // Need to check  // MATIC Testnet
+//      const REC_ISSUANCE_ADDRESS = "0x7370c2166d7720c41f0931f0bbf67e10d00b0d18"   // Need to check  // MATIC Testnet
 //      const NEW_IMPLEMENTATION = "0x09fD58cf56a3f307910CA72eA47a85D7e48EB828"     // 4. Reuse For Matic testnet
 //      const NEW_IMPLEMENTATION = "0x5e9a9a89e4B5229Ec5789e2dA1C995a3b1224275"     // 5. Reuse the simu impt (2023/03/26)
-        const NEW_IMPLEMENTATION = "0x51016eafbc75058391beeea156ab6b8ad9b92e52"     // 6. Add setTokenAKRE (2023/04/02)
+//      const NEW_IMPLEMENTATION = "0x51016eafbc75058391beeea156ab6b8ad9b92e52"     // 6. Add setTokenAKRE (2023/04/02)
 
         const [deployer] = await ethers.getSigners();
         const ArkreenRECIssuanceFactory = ArkreenRECIssuance__factory.connect(REC_ISSUANCE_ADDRESS, deployer);
@@ -83,6 +84,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2023/04/02: Add setTokenAKRE
 // yarn deploy:matic:RECIssueU
+
+// 2024/01/01: Addd AREC NFT Image: 0x829e71F96A35ff3ba1c0BfE388d8d470c95106A6
+// yarn deploy:matic_test:RECIssueU
 
 func.tags = ["RECIssueU"];
 

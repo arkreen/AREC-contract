@@ -41,5 +41,5 @@ abstract contract ArkreenBadgeStorage {
 
     mapping(uint256 => string) public cidBadge; 
 
-    IArkreenBadgeImage arkreenBadgeImage;
+    IArkreenBadgeImage public arkreenBadgeImage;
 }

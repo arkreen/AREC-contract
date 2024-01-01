@@ -1,3 +1,4 @@
+
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
@@ -18,9 +19,6 @@ import "./ArkreenRECIssuanceStorage.sol";
 import "./interfaces/IPausable.sol";
 
 import '@openzeppelin/contracts/utils/StorageSlot.sol';
-
-// Import this file to use console.log
-// import "hardhat/console.sol";
 
 contract ArkreenRECIssuance is
     OwnableUpgradeable,
@@ -502,26 +500,6 @@ contract ArkreenRECIssuance is
     /**
      * @dev Returns the URI for the given token.  
      */    
-/*     
-    function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
-        _requireMinted(tokenId);
-
-        string memory url = allRECData[tokenId].url;
-        string memory base = baseURI;
-
-        // If there is no base URI, return url
-        if (bytes(base).length == 0) {
-            return url;
-        }
-        // If both are set, concatenate them
-        if (bytes(url).length > 0) {
-            return string(abi.encodePacked(base, url));
-        }
-
-        return super.tokenURI(tokenId);
-    } 
-*/
-
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
         _requireMinted(tokenId);
         RECData memory arecData = getRECData(tokenId);

@@ -9,10 +9,22 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     let tokenIDList: number[] = []
     let metaDatList: string[] = []
 
+    const [deployer] = await ethers.getSigners();
+
     if(hre.network.name === 'matic_test')  {   
-      PROXY_ADDRESS = ''
-      tokenIDList = []
-      metaDatList = []
+      const PROXY_ADDRESS = "0x5C653b445BE2bdEB6f8f3CD099FC801865Cab835"      // Need to check: Simu mode
+      const IMAGE_URL = '0x65c78eaC38aa9B5eaa871d6cd22598E011aC1164'          // 2024/01/01: Image contract supporting image url
+
+      const  ArkreenBadgeFactory = ArkreenBadge__factory.connect(PROXY_ADDRESS, deployer);
+
+//      const updateTx = await  ArkreenBadgeFactory.setBadgeImage(IMAGE_URL)
+//      await updateTx.wait()
+//      console.log("callData, update", updateTx)
+//      console.log(" ArkreenBadge updated to %s: ", hre.network.name,  ArkreenBadgeFactory.address);
+
+      const image = await  ArkreenBadgeFactory.tokenURI(161)
+      console.log(" ArkreenBadge updated to %s: ", hre.network.name,  ArkreenBadgeFactory.address, image);
+      
     }
     else if(hre.network.name === 'matic')  {                                  // Matic Mainnet for test
       PROXY_ADDRESS = "0x3d5531cF0bC2e8d0658fEc0D1a9995211Ac1f337"            // Need to check
@@ -31,19 +43,22 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
                     ]
     } 
 
-    const [deployer] = await ethers.getSigners();
-
+/*    
     // 2023/04/03
     const ArkreenBadgeFactory = ArkreenBadge__factory.connect(PROXY_ADDRESS as string, deployer);
     const updateCIDTx = await ArkreenBadgeFactory.updateCID(tokenIDList, metaDatList)
     await updateCIDTx.wait()
     console.log("ArkreenBadge updateCID is executed: ", hre.network.name, new Date().toLocaleString(),
                                     tokenIDList, metaDatList );    
+*/
 
 };
 
 // 2023/04/02: yarn deploy:matic:RECBadgeI
 // Updated CID to ArkreenBadge contract to test NFT picture
+
+// 2024/01/01: yarn deploy:matic_test:RECBadgeI
+// Update image contract supporting image url:  0x65c78eaC38aa9B5eaa871d6cd22598E011aC1164
 
 func.tags = ["RECBadgeI"];
 

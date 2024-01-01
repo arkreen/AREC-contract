@@ -65,7 +65,7 @@ contract ArkreenRECIssuanceImage {
     }
 
     function toStringDayMonth(uint16 year, uint8 month, uint8 day) internal pure returns (string memory) {
-        bytes memory buffer = new bytes(11);
+        bytes memory buffer = new bytes(10);
         buffer[3] = bytes1(uint8(48 + uint256(year % 10)));  year /= 10;
         buffer[2] = bytes1(uint8(48 + uint256(year % 10)));  year /= 10;
         buffer[1] = bytes1(uint8(48 + uint256(year % 10)));  year /= 10;
@@ -78,7 +78,6 @@ contract ArkreenRECIssuanceImage {
         buffer[8] = bytes1(uint8(48 + uint256(day)));  
         return string(buffer);
     }
-
 
     function getARECSVG(
         uint256 tokenId,
@@ -94,7 +93,7 @@ contract ArkreenRECIssuanceImage {
             string memory svgData = getARECSVGImage(tokenId, owner, recData);
 
             dataURI = abi.encodePacked(
-                            '{"name":"AREC NDT #',
+                            '{"name":"AREC NFT #',
                             tokenString,
                             '","description":"',
                             'Details of renewable energy included in the AREC NFT.',

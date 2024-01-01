@@ -19,7 +19,7 @@ import "./ArkreenBadgeType.sol";
 import "./libraries/MemArrays.sol";  
 
 // Import this file to use console.log
-import "hardhat/console.sol";
+// import "hardhat/console.sol";
 
 contract ArkreenBadge is
     OwnableUpgradeable,

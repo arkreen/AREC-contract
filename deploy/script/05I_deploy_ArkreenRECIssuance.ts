@@ -18,14 +18,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     if(hre.network.name === 'matic_test') {
       
-//      const REC_ISSUANCE_ADDRESS = "0x95f56340889642a41b913c32d160d2863536e073"       // Need to check  // Simu mode
+        const REC_ISSUANCE_ADDRESS = "0x95f56340889642a41b913c32d160d2863536e073"       // Need to check  // Simu mode
 //      const REC_ISSUANCE_ADDRESS = "0x7370c2166D7720c41F0931f0bbF67e10d00B0D18"       // Need to check  // Matic testnet
-        const REC_ISSUANCE_ADDRESS = "0x32Dbe18BBc2C752203b6e1bE87EdE5655A091dFa"       // Need to check  // Dev environment // 2023/12/12
+//      const REC_ISSUANCE_ADDRESS = "0x32Dbe18BBc2C752203b6e1bE87EdE5655A091dFa"       // Need to check  // Dev environment // 2023/12/12
 //      const REC_ISSUANCE_ADDRESS = "0x9745918BAF66e3634502bF9a6C07AD320291D211"       // 2023/06/08: Pre-production Env
 
         const [deployer] = await ethers.getSigners();
-        // const ArkreenRECIssuanceFactory = ArkreenRECIssuance__factory.connect(REC_ISSUANCE_ADDRESS, deployer);     
-        const ArkreenRECIssuanceExtFactory = ArkreenRECIssuanceExt__factory.connect(REC_ISSUANCE_ADDRESS, deployer);
+        const ArkreenRECIssuanceFactory = ArkreenRECIssuance__factory.connect(REC_ISSUANCE_ADDRESS, deployer);     
+//      const ArkreenRECIssuanceExtFactory = ArkreenRECIssuanceExt__factory.connect(REC_ISSUANCE_ADDRESS, deployer);
 
 /*          
         // 2023/03/28
@@ -44,6 +44,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
                                                                     REC_ISSUANCE_EXT_ADDRESS );
 */                                                                    
 
+/*
 //      const MVP_ADDRESS = "0x8d832f73D678cFd2dA04401b18973Ed146Db1ABA"                // (2023/2/26): Simu mode, MVP address, account 6
 
         const MVP_ADDRESS1 = "0x364a71eE7a1C9EB295a4F4850971a1861E9d3c7D"               // (2023/2/27): Simu mode, MVP address, account 1
@@ -60,6 +61,19 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         await updateTx.wait()
         console.log("ArkreenRECIssuance: updateARECMintPrice:", hre.network.name, ArkreenRECIssuanceExtFactory.address,
                                 MVP_ADDRESS1, MVP_ADDRESS2, MVP_ADDRESS3, MVP_ADDRESS4 );   
+*/
+
+//      const IMAGE_URL_ADDRESS = "0x5F8dE063558Ffb782760A0dC6de6108c4387356e"               // (2024/01/01A): Update Image URL Contract
+        const IMAGE_URL_ADDRESS = "0xB4B19F8381bf6a44CDc8591294683Bf21C8997cb"               // (2024/01/01B): Fix bug
+
+        // 2024/01/01A, 2024/01/01B
+        const updateTx = await ArkreenRECIssuanceFactory.setARECImage(IMAGE_URL_ADDRESS)
+        await updateTx.wait()
+        console.log("ArkreenRECIssuance: updateARECMintPrice:", hre.network.name, 
+                        ArkreenRECIssuanceFactory.address, IMAGE_URL_ADDRESS);
+
+        const imageUrl = await ArkreenRECIssuanceFactory.tokenURI(287)
+        console.log("ArkreenRECIssuance: updateARECMintPrice:", hre.network.name, imageUrl)
 
 /*
       // 2023/05/09, 2023/06/08
@@ -295,6 +309,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2023/12/12： Called manageMVPAddress: Add Issuer address for Dev env on celo testnet
 // yarn deploy:celo_test:RECIssueI
+
+// 2024/01/01A： Called setARECImage: 0x5F8dE063558Ffb782760A0dC6de6108c4387356e
+// yarn deploy:matic_test:RECIssueI
+
+// 2024/01/01B： Called setARECImage: 0xB4B19F8381bf6a44CDc8591294683Bf21C8997cb
+// yarn deploy:matic_test:RECIssueI
 
 func.tags = ["RECIssueI"];
 

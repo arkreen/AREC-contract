@@ -30,7 +30,7 @@ contract ArkreenRECIssuanceStorage {
 
     mapping(address => bool) public AllMVPEntity;
 
-    IArkreenRECIssuanceImage arkreenRECImage;
+    IArkreenRECIssuanceImage public arkreenRECImage;
 
     // keccak256("RECIssuance(address owner,uint256 startTime,uint256 endTime,
     //                        uint256 amountREC,uint256 merkelRoot,string url,
