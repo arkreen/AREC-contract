@@ -6,7 +6,7 @@ import "../Arkreen/ArkreenToken.sol";
 // For testing of contract upgrading 
 contract ArkreenTokenTest is ArkreenToken
 {
-    function burn(address user, uint256 amount) external onlyOwner {
-        super._burn(user, amount);
+    function testUpgrade() external pure returns (string memory) {
+        return "This is test";
     }
 }

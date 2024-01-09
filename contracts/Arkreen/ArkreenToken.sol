@@ -4,12 +4,14 @@ pragma solidity ^0.8.9;
 import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
+import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20VotesUpgradeable.sol";
 
 contract ArkreenToken is 
     OwnableUpgradeable,
     PausableUpgradeable,
     UUPSUpgradeable,
+    ERC20BurnableUpgradeable,
     ERC20VotesUpgradeable
 {
     string  private constant _NAME = 'Arkreen Token';
@@ -49,12 +51,36 @@ contract ArkreenToken is
         _unpause();
     }
 
+    function _mint(address account, uint256 amount) 
+        internal 
+        virtual
+        override(ERC20Upgradeable, ERC20VotesUpgradeable)
+    {
+        super._mint(account, amount);
+    }
+
+    function _burn(address account, uint256 amount) 
+        internal 
+        virtual
+        override(ERC20Upgradeable, ERC20VotesUpgradeable)
+    {
+        super._burn(account, amount);
+    }    
+
     function _beforeTokenTransfer(
         address from,
         address to,
         uint256 amount
     ) internal override whenNotPaused {
         super._beforeTokenTransfer(from, to, amount);
+    }
+
+    function _afterTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal override(ERC20Upgradeable, ERC20VotesUpgradeable) {
+        super._afterTokenTransfer(from, to, amount);
     }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner

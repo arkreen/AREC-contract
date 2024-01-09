@@ -12,6 +12,7 @@ import { constants } from 'ethers'
 import {
     ArkreenToken,
     ArkreenToken__factory,
+    ArkreenTokenTest__factory
     // ArkreenTokenV2,
     // ArkreenTokenV2__factory
 } from "../../typechain";
@@ -84,8 +85,13 @@ describe("test ArkreenToken", ()=>{
 
             expect(await ArkreenToken.allowance(user1.address, user2.address)).to.be.equal(value)
 
-            await ArkreenToken.approve(user1.address, expandTo18Decimals(180))
-            expect(await ArkreenToken.allowance(deployer.address, user1.address)).to.be.equal(expandTo18Decimals(180))
+            await ArkreenToken.approve(user1.address, expandTo18Decimals(1800))
+            expect(await ArkreenToken.allowance(deployer.address, user1.address)).to.be.equal(expandTo18Decimals(1800))
+
+            await ArkreenToken.connect(user1).transfer(deployer.address, expandTo18Decimals(10000))
+
+            await ArkreenToken.connect(user1).burnFrom(deployer.address, expandTo18Decimals(100));
+            expect(await ArkreenToken.totalSupply()).to.equal(expandTo18Decimals(10_000_000_000).sub(expandTo18Decimals(100)))            
         })
 
         it("expired deadline should be reverted", async ()=>{
@@ -154,6 +160,18 @@ describe("test ArkreenToken", ()=>{
 
     })
 
+    
+    describe("burn test", ()=>{
+
+      it('Burn Test', async () => {
+          const {ArkreenToken, deployer, user1, user2} = await loadFixture(deployFixture)
+
+          await ArkreenToken.connect(user1).transfer(deployer.address, expandTo18Decimals(10000))
+          await ArkreenToken.connect(deployer).burn(expandTo18Decimals(100));
+          expect(await ArkreenToken.totalSupply()).to.equal(expandTo18Decimals(10_000_000_000).sub(expandTo18Decimals(100)))
+      })
+  })
+
     describe("pause test", ()=>{
 
         it('if paused , transfer is forbidden', async () => {
@@ -182,20 +200,20 @@ describe("test ArkreenToken", ()=>{
           let receipt
           let transferTx = await ArkreenToken.connect(user1).transfer(user2.address, expandTo18Decimals(1000))
           receipt = await transferTx.wait()
-          expect(receipt.gasUsed).to.eq(63210)
-          // console.log("Gas used of transfer:", receipt.gasUsed)   //  63210  // 63782  ; tAKRE: 59121 
+          expect(receipt.gasUsed).to.eq(63271)
+          // console.log("Gas used of transfer:", receipt.gasUsed)   // 63271  63210  // 63782  ; tAKRE: 59121 
 
           await ArkreenToken.connect(user1).delegate(user1.address)
           transferTx = await ArkreenToken.connect(user1).transfer(user2.address, expandTo18Decimals(1000))
           receipt = await transferTx.wait()
-          expect(receipt.gasUsed).to.eq(78648)
-          // console.log("Gas used of transfer:", receipt.gasUsed)   // 78648 // 79265
+          expect(receipt.gasUsed).to.eq(78709)
+          // console.log("Gas used of transfer:", receipt.gasUsed)   // 78709 78648 // 79265
 
           await ArkreenToken.connect(user1).delegate(user2.address)
           transferTx = await ArkreenToken.connect(user1).transfer(user2.address, expandTo18Decimals(1000))
           receipt = await transferTx.wait()
-          expect(receipt.gasUsed).to.eq(78648)
-          // console.log("Gas used of transfer:", receipt.gasUsed)   // 78648 // 79265
+          expect(receipt.gasUsed).to.eq(78709)
+          // console.log("Gas used of transfer:", receipt.gasUsed)   // 78709 78648 // 79265
 
           expect(await ArkreenToken.balanceOf(user2.address)).to.equal(expandTo18Decimals(3000));
       })
@@ -226,7 +244,7 @@ describe("test ArkreenToken", ()=>{
 
     })
 
-    /*
+    
     describe("upgrade test", ()=>{
 
         it("contract owner should be deployer", async () =>{
@@ -239,60 +257,42 @@ describe("test ArkreenToken", ()=>{
 
             const {ArkreenToken, deployer, user1, user2} = await loadFixture(deployFixture)
 
-            let ArkreenTokenV2Factory = await ethers.getContractFactory("ArkreenTokenV2")
-            let AKRETokenV2 = await ArkreenTokenV2Factory.deploy()
-            await AKRETokenV2.deployed()
+            let ArkreenTokenTestFactory = await ethers.getContractFactory("ArkreenTokenTest")
+            let AKRETokenTest = await ArkreenTokenTestFactory.deploy()
+            await AKRETokenTest.deployed()
 
-            const ArkreenTokenFactory = ArkreenToken__factory.connect(ArkreenToken.address, deployer);
-            let calldata = ArkreenToken.interface.encodeFunctionData("postUpdate", [user2.address])
-            const updateTx = await ArkreenToken.upgradeToAndCall(AKRETokenV2.address, calldata)
+            const ArkreenTokenFactory = ArkreenTokenTest__factory.connect(ArkreenToken.address, deployer);
+            const updateTx = await ArkreenTokenFactory.upgradeTo(AKRETokenTest.address)
             await updateTx.wait()
 
-            // console.log(await upgrades.erc1967.getImplementationAddress(ArkreenToken.address)," getImplementationAddress")
-            // console.log(await upgrades.erc1967.getAdminAddress(ArkreenToken.address)," getAdminAddress") 
-
-            expect(await upgrades.erc1967.getImplementationAddress(ArkreenToken.address)).to.be.equal(AKRETokenV2.address)
-            expect(await ArkreenToken.balanceOf(user2.address)).to.be.equal(expandTo18Decimals((10_000_000_000 - 10))
-        })
-
-        it("upgrade method 2", async ()=>{
-
-            const {ArkreenToken, deployer, user1, user2} = await loadFixture(deployFixture)
-            
-            let ArkreenTokenV2Factory = await ethers.getContractFactory("ArkreenTokenV2")
-            let arkreenTokenV2 = await upgrades.upgradeProxy(ArkreenToken.address, ArkreenTokenV2Factory)
-
-            expect(arkreenTokenV2.address).to.be.equal(ArkreenToken.address)
-
-            //expect(await ArkreenTokenUpgradeable2.connect(deployer).nonces(receiver.address)).to.be.equal(0)
-            expect(await arkreenTokenV2.connect(deployer).setMarking('aaaaa')).to.be.ok
-            expect(await arkreenTokenV2.connect(deployer).marking()).to.be.equal('aaaaa')
-
+            expect(await ArkreenTokenFactory.testUpgrade()).to.be.equal('This is test')
         })
 
         it('only owner could do upgrade',async () => {
-            const {ArkreenToken, deployer, user1, user2} = await loadFixture(deployFixture)
+            const {ArkreenToken: arkreenToken, deployer, user1, user2} = await loadFixture(deployFixture)
 
-            let ArkreenTokenV2Factory = await ethers.getContractFactory("ArkreenTokenV2")
-            let AKRETokenV2 = await ArkreenTokenV2Factory.deploy()
-            await AKRETokenV2.deployed()
+            let ArkreenTokenTestFactory = await ethers.getContractFactory("ArkreenTokenTest")
+            let AKRETokenTest = await ArkreenTokenTestFactory.deploy() as ArkreenToken
+            await AKRETokenTest.deployed()
             
-            await expect(ArkreenToken.connect(user1).upgradeTo(AKRETokenV2.address)).to.be.revertedWith('Ownable: caller is not the owner')
+            await expect(arkreenToken.connect(user1).upgradeTo(AKRETokenTest.address)).to.be.revertedWith('Ownable: caller is not the owner')
         })
     })
 
+/*    
     describe('proxy test',async () => {
         
         it('only proxy could call postUpdate',async () => {
             
-            const {ArkreenToken, deployer, user1, user2} = await loadFixture(deployFixture)
+            const {ArkreenToken: arkreenToken, deployer, user1, user2} = await loadFixture(deployFixture)
 
             let ArkreenTokenFactory = await ethers.getContractFactory("ArkreenToken")
-            let AKRETokenV1 = await ArkreenTokenFactory.deploy()
-            await AKRETokenV1.deployed()
+            let AKRETokenTest = await ArkreenTokenFactory.deploy() as ArkreenToken
+            await AKRETokenTest.deployed()
 
-            await expect(AKRETokenV1.postUpdate(user1.address)).to.be.revertedWith('Function must be called through delegatecall')
+            await expect(arkreenToken.postUpdate(user1.address)).to.be.revertedWith('Function must be called through delegatecall')
         })
     })
-    */
+*/
+
 })

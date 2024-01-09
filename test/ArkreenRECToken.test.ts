@@ -588,11 +588,11 @@ describe("ArkreenRECToken", () => {
 
       const tx_1 = await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(500))
       const receipt_1 = await tx_1.wait()
-      expect(receipt_1.gasUsed).to.eq("429573")  // 429595 435553 435586 435300 432982 460991 461138  
+      expect(receipt_1.gasUsed).to.eq("429551")  // 429573 429595 435553 435586 435300 432982 460991 461138  
 
       const tx_2 = await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(800))
       const receipt_2 = await tx_2.wait()
-      expect(receipt_2.gasUsed).to.eq("412885")  // 412907 422169 422158 414450 442460 442607 423814 
+      expect(receipt_2.gasUsed).to.eq("412863")  // 412885 412907 422169 422158 414450 442460 442607 423814 
 
       const tx_3 = await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(200))
       const receipt_3 = await tx_3.wait()
@@ -600,7 +600,7 @@ describe("ArkreenRECToken", () => {
 
       const tx = await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(66000))
       const receipt = await tx.wait()
-      expect(receipt.gasUsed).to.eq("2108392")  // 2108414 2190594 2190925 2753332 2756125 
+      expect(receipt.gasUsed).to.eq("2107974")  //  2108392 2108414 2190594 2190925 2753332 2756125 
     });
   })
 
