@@ -143,6 +143,9 @@
     "deploy:matic:GreenBTCImageD": "hardhat --network matic deploy --tags GreenBTCImageD",
     "deploy:matic:ABuilderD": "hardhat --network matic deploy --tags ABuilderD",
     "deploy:matic:ABuilderU": "hardhat --network matic deploy --tags ABuilderU",
+    "deploy:matic:ArtBankD": "hardhat --network matic deploy --tags ArtBankD",
+    "deploy:matic:ArtBankU": "hardhat --network matic deploy --tags ArtBankU",
+
     "etherscan:matic": "hardhat --network matic etherscan-verify --api-key",
     "deploy:celo_test:gRegistry": "hardhat --network celo_test deploy --tags gRegistry",
     "deploy:celo_test:RECIssueExtD": "hardhat --network celo_test deploy --tags RECIssueExtD --reset",
@@ -157,6 +160,8 @@
     "deploy:celo_test:ArtBankI": "hardhat --network celo_test deploy --tags ArtBankI",
     "deploy:celo_test:MulticallD": "hardhat --network celo_test deploy --tags MulticallD",
     "deploy:celo_test:RECTokenI": "hardhat --network celo_test deploy --tags RECTokenI",
+    "deploy:celo_test:gRegistryD": "hardhat --network celo_test deploy --tags gRegistryD",  
+    "deploy:celo_test:gRegistryU": "hardhat --network celo_test deploy --tags gRegistryU",
 
     "allowance:celo_test": "hardhat run --network celo_test ./deploy/allowance_manager.ts",
     "confirmAuto:celo_test": "hardhat run --network celo_test ./deploy/confirmIssuance_celo.ts",

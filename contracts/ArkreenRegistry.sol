@@ -127,12 +127,14 @@ contract ArkreenRegistry is
         }
         if((flag & 0x02) != 0) {
             allAssets[idxAsset].issuer = issuer;
+            address curTokenREC = allAssets[idxAsset].tokenREC;
+            tokenRECs[curTokenREC] = issuer;
         }
         if((flag & 0x04) != 0) {
             allAssets[idxAsset].tokenREC = tokenREC;
         }
         if((flag & 0x08) != 0) {
-            allAssets[idxAsset].tokenPay = tokenPay;
+            allAssets[idxAsset].tokenPay = tokenPay;            
         }        
     }
 

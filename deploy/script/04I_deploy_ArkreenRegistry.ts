@@ -401,6 +401,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2023/12/12C: call manageAssetARECExt for celo testnet to update new Issuer
 // yarn deploy:celo_test:gRegistryI
 
+// 2024/01/11: call manageAssetARECExt for celo testnet to update REC token Issuer
+// yarn deploy:celo_test:gRegistryI
+
 func.tags = ["gRegistryI"];
 
 export default func;

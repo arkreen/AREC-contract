@@ -23,6 +23,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // deploy:matic_test:ArtBankD
 // 0x84AEAe330517A89Ab74f5eD0f805522634dF8Df6
 
+// 2024/01/11
+// deploy:matic:ArtBankD 
+// 0xF845c843DaEa0cE08d2184CC1eDfe2b998B2d565
+
 func.tags = ["ArtBankD"];
 
 export default func;

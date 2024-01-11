@@ -28,6 +28,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:gRegistryD
 // 0x8668dD561a693aB7F8B48b599B692F2EFB070937
 
+// 2024/01/11: Upgrade to update REC issuer on Celo Network
+// yarn deploy:celo_test:gRegistryD
+// 0x19444425121096d92c0eEC7eFf84ba0094C8f634
+
+// 2024/01/11A: Upgrade to update REC issuer on Celo Network (Bug Fixed)
+// yarn deploy:celo_test:gRegistryD
+// 0xB2Dda4591b015BC96632FEB0d24B65AB7485959f
+
 func.tags = ["gRegistryD"];
 
 export default func;
