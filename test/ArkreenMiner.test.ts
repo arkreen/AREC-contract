@@ -279,6 +279,10 @@ describe("ArkreenMiner", () => {
 
   describe("ArkreenMiner: Update Miner White List For Batch Sales", () => {
     it("UpdateMinerWhiteListBatch: ", async () => {
+
+      expect(await ArkreenMiner.numberOfWhiteListBatch(0)).to.deep.eq(0);
+      expect(await ArkreenMiner.numberOfWhiteListBatch(1)).to.deep.eq(0);
+
       const miners1 = randomAddresses(10)
       await ArkreenMiner.connect(manager).UpdateMinerWhiteListBatch(miners1) 
       expect(await ArkreenMiner.numberOfWhiteListBatch(0)).to.deep.eq(10);

@@ -114,5 +114,13 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // Upgrade to emit back all miner addresses in batch sales
 // 0x604e10b67736773BD5517fF628e350F443Db85F0
 
+// 2024/01/12: yarn deploy:matic_test:AMinerV10D 
+// Upgrade to add RemoteMinerOnboardBatchClaim and UpdateMinerWhiteListBatchClaim
+// 0x6661cC0df27111c67CAB8c52B1e21fAbd0354143
+
+// 2024/01/12A: yarn deploy:matic_test:AMinerV10D 
+// Upgrade to add RemoteMinerOnboardBatchClaim and UpdateMinerWhiteListBatchClaim, make public 
+// 0xcCfC2109F4997F2c7Da39f1De51620d357EBE471
+
 export default func;
 func.tags = ["AMinerV10D"];

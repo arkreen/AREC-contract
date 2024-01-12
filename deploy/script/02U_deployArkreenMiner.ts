@@ -50,24 +50,28 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
   if(hre.network.name === 'matic_test') {
 //  const MINER_PROXY_ADDRESS = "0xC4f795514586275c799729aF5AE7113Bdb7ccc86"       // game miner in matic test net
-//  const MINER_PROXY_ADDRESS = "0x682e01f8ecc0524085F51CC7dFB54fDB8729ac22"       // 2023/08/29: Miner in dev env, 2023/08/30, 2023/09/05
-    const MINER_PROXY_ADDRESS = "0x1F742C5f32C071A9925431cABb324352C6e99953"       // 2023/08/29: Miner in preduction env, 2023/08/30, 2023/09/05
+    const MINER_PROXY_ADDRESS = "0x682e01f8ecc0524085F51CC7dFB54fDB8729ac22"       // 2023/08/29: Miner in dev env, 2023/08/30, 2023/09/05
+//  const MINER_PROXY_ADDRESS = "0x1F742C5f32C071A9925431cABb324352C6e99953"       // 2023/08/29: Miner in preduction env, 2023/08/30, 2023/09/05
     
 //  const NEW_IMPLEMENTATION =  "0x4EDe87d416e872376583E793ac26526c535267C5"        // Wrong
 //  const NEW_IMPLEMENTATION =  "0x7693ad7e3a69b241322094b14fcaec233afb3e56"        // original 
 //  const NEW_IMPLEMENTATION =  "0x16a427a1a2012fdde0ccad2664d5f2981d52a2d2"        // restored
 //  const NEW_IMPLEMENTATION =  "0xF6c90184eB83a78F184f7bC883721F23519Da067"        // 2023/08/29: Upgrade to support: a) Socket Miner; 2) Batch sale for remote miner;
 //  const NEW_IMPLEMENTATION =  "0xFE3423Fb2ef2f1403Cd64a78124ddC1329B6BF00"        // 2023/08/30: Upgrade to sign total value instead price for batch sales
-    const NEW_IMPLEMENTATION =  "0x8aFFe644eD9ae6D9DEC5672cDd927dd8eF29d9EF"        // 2023/09/05: Upgrade to emit back all miner addresses in batch sales
-    
+//  const NEW_IMPLEMENTATION =  "0x8aFFe644eD9ae6D9DEC5672cDd927dd8eF29d9EF"        // 2023/09/05: Upgrade to emit back all miner addresses in batch sales
+//  const NEW_IMPLEMENTATION =  "0x6661cC0df27111c67CAB8c52B1e21fAbd0354143"        // 2024/01/12: Dev Env: Upgrade to add RemoteMinerOnboardBatchClaim and UpdateMinerWhiteListBatchClaim
+    const NEW_IMPLEMENTATION =  "0xcCfC2109F4997F2c7Da39f1De51620d357EBE471"        // 2024/01/12: Dev Env: Upgrade to add RemoteMinerOnboardBatchClaim and UpdateMinerWhiteListBatchClaim
+
     const [deployer] = await ethers.getSigners();
     const ArkreenMinerFactory = ArkreenMiner__factory.connect(MINER_PROXY_ADDRESS, deployer);
 
-//  const callData = ArkreenMinerFactory.interface.encodeFunctionData("postUpdate", 
-//                                            [AKREToken_ADDRESS as string, MANAGER_ADDRESS as string])
-//  const updateTx = await ArkreenMinerFactory.upgradeToAndCall(NEW_IMPLEMENTATION, callData)
-    const updateTx = await ArkreenMinerFactory.upgradeTo(NEW_IMPLEMENTATION)
-    await updateTx.wait()
+    // 2024/01/12: Dev Env, 2024/01/12B: Dev Env: make parameter public
+    const callData = ArkreenMinerFactory.interface.encodeFunctionData("postUpdate")
+    const updateTx = await ArkreenMinerFactory.upgradeToAndCall(NEW_IMPLEMENTATION, callData)
+
+    // 2024/01/12A: Dev Env, Revert to 0x8aFFe644eD9ae6D9DEC5672cDd927dd8eF29d9EF
+//    const updateTx = await ArkreenMinerFactory.upgradeTo(NEW_IMPLEMENTATION)
+//    await updateTx.wait()
 
     console.log("Update Trx:", updateTx)
     console.log("ArkreenMiner Updated to: ", hre.network.name, ArkreenMinerFactory.address, NEW_IMPLEMENTATION);
@@ -134,6 +138,18 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2023/09/12: yarn deploy:matic:AMinerUV10: For production Env. 
 // Upgrade: 1)Socket Miner, 2) Batch sales
 // new immplementaion: 0x604e10b67736773BD5517fF628e350F443Db85F0
+
+// 2024/01/12: yarn deploy:matic_test:AMinerUV10: For Dev Env. 
+// Dev Env: Upgrade to add RemoteMinerOnboardBatchClaim and UpdateMinerWhiteListBatchClaim
+// new immplementaion: 0x6661cC0df27111c67CAB8c52B1e21fAbd0354143
+
+// 2024/01/12A: yarn deploy:matic_test:AMinerUV10: For Dev Env. 
+// Dev Env: Revert to 0x8affe644ed9ae6d9dec5672cdd927dd8ef29d9ef
+// immplementaion: 0x8affe644ed9ae6d9dec5672cdd927dd8ef29d9ef
+
+// 2024/01/12B: yarn deploy:matic_test:AMinerUV10: For Dev Env. 
+// Dev Env: Revert to 0xcCfC2109F4997F2c7Da39f1De51620d357EBE471
+// immplementaion: 0xcCfC2109F4997F2c7Da39f1De51620d357EBE471
 
 export default func;
 func.tags = ["AMinerUV10"];
