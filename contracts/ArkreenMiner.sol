@@ -229,21 +229,21 @@ contract ArkreenMiner is
     }
 
     /**
-     * @dev Onboarding a remote miner while the payment has been approved
+     * @dev Claiming and Onboarding a remote miner under the approval
      * @param owner address receiving the remote miner
      * @param remoteType type of the remote miner, indicating different power normally; = 0, default 100W
      * @param numMiners number of remote miners desired to purchase
      * @param permitMiner signature of miner register authority to confirm the miner address and price.  
      */
-    function RemoteMinerOnboardBatchAirdrop(
+    function RemoteMinerOnboardBatchClaim(
         address     owner,
-        uint8       remoteType,
+        uint256     remoteType,
         uint8       numMiners,
         Signature   memory  permitMiner
     ) external ensure(permitMiner.deadline) {
 
         // Check for minting remote miner  
-        _mintBatchCheckPrice(0, owner, numMiners, permitMiner);
+        _mintBatchCheckPrice(remoteType, owner, numMiners, permitMiner);
 
         // mint new remote miner
         address[] memory minersBatch = _mintRemoteMinerBatch(remoteType, owner, numMiners);
@@ -292,7 +292,7 @@ contract ArkreenMiner is
      * @param permitMiner signature of miner register authority to confirm the owner address and value.  
      */
     function _mintBatchCheckPrice(
-        uint8       remoteType, 
+        uint256     remoteType, 
         address     owner,
         uint8       quantity,
         Signature   memory  permitMiner
@@ -344,7 +344,7 @@ contract ArkreenMiner is
      * @param owner address receiving the remote miner
      * @param numMiners number of remote miners needed to mint
      */
-    function _mintRemoteMinerBatch(uint8 remoteType, address owner, uint8 numMiners) internal returns (address[] memory minerList) {
+    function _mintRemoteMinerBatch(uint256 remoteType, address owner, uint8 numMiners) internal returns (address[] memory minerList) {
 
         // Prepare to mint new remote miners
         Miner memory newMiner;
@@ -356,9 +356,9 @@ contract ArkreenMiner is
 
         uint256 listHead = whiteListBatchPoolIndexHead[remoteType];
 
-        uint256 poolIdTag = remoteType << 248;
+        uint256 remoteTypeTag = remoteType << 248;
         for(uint8 index; index < numMiners; index++) {
-            address miner = whiteListMinerBatch[poolIdTag + listHead +index];
+            address miner = whiteListMinerBatch[remoteTypeTag + listHead + index];
             minerList[index] = miner;
 
             // Check miner is not repeated
@@ -367,7 +367,7 @@ contract ArkreenMiner is
             // mint new remote miner
             newMiner.mAddress = miner;
             _mintMiner(owner, miner, newMiner);
-            delete whiteListMinerBatch[poolIdTag + listHead +index];
+            delete whiteListMinerBatch[remoteTypeTag + listHead +index];
         }
         whiteListBatchPoolIndexHead[remoteType] += numMiners;
     }
@@ -598,22 +598,22 @@ contract ArkreenMiner is
 
     /**
      * @dev Update the miner white list for the specified pool. Only miners in the white list are allowed to onboard as an NFT.
-     * @param remoteType type of the remote miner pool, which could be used to differentiate the various type of remote miners
+     * @param remoteType type of the remote miner to claim, which could be used to differentiate the various type of remote miners
      * @param addressMiners List of the miners
      */
-    function UpdateMinerWhiteListPoolBatch(uint256 remoteType, address[] calldata addressMiners) public onlyMinerManager {
+    function UpdateMinerWhiteListBatchClaim(uint256 remoteType, address[] calldata addressMiners) public onlyMinerManager {
         require(remoteType <= type(uint8).max, "Arkreen Miner: Wrong Pool ID");
         _UpdatePoolMinerWhiteList(remoteType, addressMiners);
     }
 
-    function _UpdatePoolMinerWhiteList(uint256 remoteType, address[] memory addressMiners) internal  {
+    function _UpdatePoolMinerWhiteList(uint256 remoteType, address[] calldata addressMiners) internal  {
         // pool id is located at the MSB of index 
-        uint256 poolIdTag = remoteType << 248;                                                 
+        uint256 remoteTypeTag = remoteType << 248;                                                 
 
         uint256 indexStart = whiteListBatchPoolIndexTail[remoteType];
         uint256 length = addressMiners.length;
         for(uint256 index; index < length; index++) {
-            whiteListMinerBatch[poolIdTag + indexStart + index] = addressMiners[index];
+            whiteListMinerBatch[remoteTypeTag + indexStart + index] = addressMiners[index];
         }
         whiteListBatchPoolIndexTail[remoteType] += length;
     }
