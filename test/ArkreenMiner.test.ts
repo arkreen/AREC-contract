@@ -281,11 +281,11 @@ describe("ArkreenMiner", () => {
     it("UpdateMinerWhiteListBatch: ", async () => {
       const miners1 = randomAddresses(10)
       await ArkreenMiner.connect(manager).UpdateMinerWhiteListBatch(miners1) 
-      expect(await ArkreenMiner.numberOfWhiteListBatch()).to.deep.eq(10);
+      expect(await ArkreenMiner.numberOfWhiteListBatch(0)).to.deep.eq(10);
 
       const miners2 = randomAddresses(20)
       await ArkreenMiner.connect(manager).UpdateMinerWhiteListBatch(miners2) 
-      expect(await ArkreenMiner.numberOfWhiteListBatch()).to.deep.eq(30);
+      expect(await ArkreenMiner.numberOfWhiteListBatch(0)).to.deep.eq(30);
 
       const miners3 = randomAddresses(100)
       await ArkreenMiner.connect(manager).UpdateMinerWhiteListBatch(miners3) 
@@ -294,7 +294,7 @@ describe("ArkreenMiner", () => {
 //    const receipt = await tx.wait()
 //    expect(receipt.gasUsed).to.eq("2337646")
 
-      expect(await ArkreenMiner.numberOfWhiteListBatch()).to.deep.eq(130);
+      expect(await ArkreenMiner.numberOfWhiteListBatch(0)).to.deep.eq(130);
     })
   })
 
@@ -998,10 +998,10 @@ describe("ArkreenMiner", () => {
 
       const tx = await ArkreenMiner.connect(owner1).RemoteMinerOnboardNativeBatch(receiver, 50, signature, {value: minerValue})
 
-      expect(await ArkreenMiner.numberOfWhiteListBatch()).to.deep.eq(0);
+      expect(await ArkreenMiner.numberOfWhiteListBatch(0)).to.deep.eq(0);
 
       const receipt = await tx.wait()
-      expect(receipt.gasUsed).to.eq("8140408")  // 8140408 8140420 8147392 8147392, 8147380  8121659 8121568 8122040
+      expect(receipt.gasUsed).to.eq("8149747")  // 8140408 8140420 8147392 8147392, 8147380  8121659 8121568 8122040
 
       await expect(ArkreenMiner.connect(owner1).RemoteMinerOnboardNativeBatch(receiver, 1, signature, {value: minerValue}))
               .to.be.revertedWith("Arkreen Miner: Wrong Miner Number")
