@@ -958,6 +958,7 @@ describe("ArkreenMiner", () => {
       expect(await ArkreenMiner.AllMinerInfo(40)).to.deep.eq(minerInfo40)
     })
 
+/*
     it("Onboarding Remote Miner MATIC Batch: Onboarding a Remote miners: Max checking ", async () => {
       const miners = randomAddresses(100)
       await ArkreenMiner.connect(manager).UpdateMinerWhiteListBatch(miners) 
@@ -978,6 +979,7 @@ describe("ArkreenMiner", () => {
       await expect(ArkreenMiner.connect(owner1).RemoteMinerOnboardNativeBatch(receiver, 51, signature, {value: minerValue}))
               .to.be.revertedWith("Arkreen Miner: Quantity Too More")
     })
+*/
 
     it("Onboarding Remote Miner MATIC Batch: Onboarding a Remote miners: 50 ", async () => {
       const miners = randomAddresses(50)
@@ -1001,7 +1003,7 @@ describe("ArkreenMiner", () => {
       expect(await ArkreenMiner.numberOfWhiteListBatch(0)).to.deep.eq(0);
 
       const receipt = await tx.wait()
-      expect(receipt.gasUsed).to.eq("8149747")  // 8140408 8140420 8147392 8147392, 8147380  8121659 8121568 8122040
+      expect(receipt.gasUsed).to.eq("8149715")  // 8149747 8140408 8140420 8147392 8147392, 8147380  8121659 8121568 8122040
 
       await expect(ArkreenMiner.connect(owner1).RemoteMinerOnboardNativeBatch(receiver, 1, signature, {value: minerValue}))
               .to.be.revertedWith("Arkreen Miner: Wrong Miner Number")

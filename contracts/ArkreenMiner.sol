@@ -299,7 +299,7 @@ contract ArkreenMiner is
     ) view internal {
 
         require((quantity != 0) && (quantity <= numberOfWhiteListBatch(remoteType)), "Arkreen Miner: Wrong Miner Number");
-        require( quantity <= MAX_BATCH_SALE, 'Arkreen Miner: Quantity Too More');
+        // require( quantity <= MAX_BATCH_SALE, 'Arkreen Miner: Quantity Too More');
 
         // Check signature
         // keccak256("RemoteMinerOnboardBatch(address owner,uint256 quantity,address token,uint256 value,uint256 deadline)");
