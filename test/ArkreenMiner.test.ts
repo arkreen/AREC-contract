@@ -735,7 +735,7 @@ describe("ArkreenMiner", () => {
       const register_digest = getOnboardingRemoteMinerBatchDigest(
                       'Arkreen Miner',
                       ArkreenMiner.address,
-                      { owner: owner1.address, quantity: BigNumber.from(3),
+                      { owner: owner1.address, quantity: BigNumber.from(1).shl(248).add(3),
                         token: AKREToken.address, price: minerValue, deadline: constants.MaxUint256 }
                     )
       await ArkreenMiner.setManager(Register_Authority, register_authority.address)
@@ -773,6 +773,10 @@ describe("ArkreenMiner", () => {
       expect(await ArkreenMiner.AllMinerInfo(minerNFT2)).to.deep.eq(minerInfo2);
       expect(await ArkreenMiner.AllMinersToken(miners[2])).to.deep.eq(minerNFT2);
       expect(await ArkreenMiner.whiteListMiner(miners[2])).to.deep.eq(0);
+
+      await expect(ArkreenMiner.connect(owner1).RemoteMinerOnboardBatchClaim(receiver, 1, 3, signature))
+              .to.be.revertedWith("Arkreen Miner: Not Allowed")
+
     })
   })
 
@@ -1095,7 +1099,7 @@ describe("ArkreenMiner", () => {
       expect(await ArkreenMiner.numberOfWhiteListBatch(0)).to.deep.eq(0);
 
       const receipt = await tx.wait()
-      expect(receipt.gasUsed).to.eq("8149630")  // 8149648 8149715 8149747 8140408 8140420 8147392 8147392, 8147380  8121659 8121568 8122040
+      expect(receipt.gasUsed).to.eq("8149722")  // 8149630 8149648 8149715 8149747 8140408 8140420 8147392 8147392, 8147380  8121659 8121568 8122040
 
       await expect(ArkreenMiner.connect(owner1).RemoteMinerOnboardNativeBatch(receiver, 1, signature, {value: minerValue}))
               .to.be.revertedWith("Arkreen Miner: Wrong Miner Number")

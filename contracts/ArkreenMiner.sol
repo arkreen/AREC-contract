@@ -64,6 +64,7 @@ contract ArkreenMiner is
 
     mapping(uint256 => uint256) private whiteListBatchPoolIndexHead;
     mapping(uint256 => uint256) private whiteListBatchPoolIndexTail;
+    mapping(address => uint256) private claimTimestamp;   // protect againt replay 
 
     // Events
     event MinerOnboarded(address indexed owner, address indexed miner);
@@ -243,6 +244,9 @@ contract ArkreenMiner is
     ) external ensure(permitMiner.deadline) {
 
         // Check for minting remote miner  
+        require(permitMiner.deadline > claimTimestamp[owner], "Arkreen Miner: Not Allowed");
+        claimTimestamp[owner] = permitMiner.deadline;
+
         _mintBatchCheckPrice(remoteType, owner, numMiners, permitMiner);
 
         // mint new remote miner
@@ -303,7 +307,9 @@ contract ArkreenMiner is
 
         // Check signature
         // keccak256("RemoteMinerOnboardBatch(address owner,uint256 quantity,address token,uint256 value,uint256 deadline)");
-        bytes32 hashRegister = keccak256(abi.encode(REMOTE_MINER_BATCH_TYPEHASH, owner, uint256(quantity),
+        uint256 typeAndQuantity = (remoteType << 248) + uint256(quantity);
+
+        bytes32 hashRegister = keccak256(abi.encode(REMOTE_MINER_BATCH_TYPEHASH, owner, typeAndQuantity,
                                           permitMiner.token, permitMiner.value, permitMiner.deadline));
         bytes32 digest = keccak256(abi.encodePacked('\x19\x01', DOMAIN_SEPARATOR, hashRegister));
         address recoveredAddress = ecrecover(digest, permitMiner.v, permitMiner.r, permitMiner.s);
