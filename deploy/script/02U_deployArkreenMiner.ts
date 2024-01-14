@@ -60,18 +60,20 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //  const NEW_IMPLEMENTATION =  "0xFE3423Fb2ef2f1403Cd64a78124ddC1329B6BF00"        // 2023/08/30: Upgrade to sign total value instead price for batch sales
 //  const NEW_IMPLEMENTATION =  "0x8aFFe644eD9ae6D9DEC5672cDd927dd8eF29d9EF"        // 2023/09/05: Upgrade to emit back all miner addresses in batch sales
 //  const NEW_IMPLEMENTATION =  "0x6661cC0df27111c67CAB8c52B1e21fAbd0354143"        // 2024/01/12: Dev Env: Upgrade to add RemoteMinerOnboardBatchClaim and UpdateMinerWhiteListBatchClaim
-    const NEW_IMPLEMENTATION =  "0xcCfC2109F4997F2c7Da39f1De51620d357EBE471"        // 2024/01/12: Dev Env: Upgrade to add RemoteMinerOnboardBatchClaim and UpdateMinerWhiteListBatchClaim
-
+//  const NEW_IMPLEMENTATION =  "0xcCfC2109F4997F2c7Da39f1De51620d357EBE471"        // 2024/01/12: Dev Env: Upgrade to add RemoteMinerOnboardBatchClaim and UpdateMinerWhiteListBatchClaim
+    const NEW_IMPLEMENTATION =  "0x7D4718A6430334556c27503A04B3CAf072BA4e29"        // 2024/01/14: Dev Env: Upgrade to add pretection in RemoteMinerOnboardBatchClaim againt replaying signature
+    
     const [deployer] = await ethers.getSigners();
     const ArkreenMinerFactory = ArkreenMiner__factory.connect(MINER_PROXY_ADDRESS, deployer);
 
     // 2024/01/12: Dev Env, 2024/01/12B: Dev Env: make parameter public
-    const callData = ArkreenMinerFactory.interface.encodeFunctionData("postUpdate")
-    const updateTx = await ArkreenMinerFactory.upgradeToAndCall(NEW_IMPLEMENTATION, callData)
+//    const callData = ArkreenMinerFactory.interface.encodeFunctionData("postUpdate")
+//    const updateTx = await ArkreenMinerFactory.upgradeToAndCall(NEW_IMPLEMENTATION, callData)
 
     // 2024/01/12A: Dev Env, Revert to 0x8aFFe644eD9ae6D9DEC5672cDd927dd8eF29d9EF
-//    const updateTx = await ArkreenMinerFactory.upgradeTo(NEW_IMPLEMENTATION)
-//    await updateTx.wait()
+    // 2024/01/14: Dev Env: Upgrade to add pretection in RemoteMinerOnboardBatchClaim againt replaying signature
+    const updateTx = await ArkreenMinerFactory.upgradeTo(NEW_IMPLEMENTATION)
+    await updateTx.wait()
 
     console.log("Update Trx:", updateTx)
     console.log("ArkreenMiner Updated to: ", hre.network.name, ArkreenMinerFactory.address, NEW_IMPLEMENTATION);
@@ -151,7 +153,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // Dev Env: Revert to 0xcCfC2109F4997F2c7Da39f1De51620d357EBE471
 // immplementaion: 0xcCfC2109F4997F2c7Da39f1De51620d357EBE471
 
+// 2024/01/14: yarn deploy:matic_test:AMinerUV10: For Dev Env. 
+// Dev Env: Upgrade to add pretection in RemoteMinerOnboardBatchClaim againt replaying signature
+// immplementaion: 0x7D4718A6430334556c27503A04B3CAf072BA4e29
+
 export default func;
 func.tags = ["AMinerUV10"];
-
-

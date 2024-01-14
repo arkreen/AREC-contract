@@ -122,5 +122,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // Upgrade to add RemoteMinerOnboardBatchClaim and UpdateMinerWhiteListBatchClaim, make public 
 // 0xcCfC2109F4997F2c7Da39f1De51620d357EBE471
 
+// 2024/01/14: yarn deploy:matic_test:AMinerV10D 
+// Upgrade to add pretection in RemoteMinerOnboardBatchClaim againt replaying signature
+// 0x7D4718A6430334556c27503A04B3CAf072BA4e29
+
 export default func;
 func.tags = ["AMinerV10D"];
