@@ -229,7 +229,14 @@ describe("ArkreenRECToken", () => {
 
       expect(await arkreenBadge.getOffsetActions(offsetID2)).to.deep.equal(action_2)
 
+      await arkreenRECToken.setReceiverFee(fund_receiver.address)
+      await arkreenRECToken.setRatioFeeOffset(1000)       
+
       await expect(arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(10)))
+              .to.emit(arkreenRECToken, "Transfer")
+              .withArgs(owner1.address, constants.AddressZero, expandTo9Decimals(10))  
+              .to.emit(arkreenRECToken, "Transfer")
+              .withArgs(owner1.address, fund_receiver.address, expandTo9Decimals(1))   
               .to.emit(arkreenRECToken, "OffsetFinished")
               .withArgs(owner1.address, expandTo9Decimals(10), offsetID2.add(1)) 
 
@@ -273,13 +280,35 @@ describe("ArkreenRECToken", () => {
      
       await arkreenBadge.connect(owner1).mintCertificate(
                              owner1.address, owner1.address, "Owner","","Save Earth",[offsetID1, offsetID2, offsetID3])
-           
+
+      await arkreenRECToken.setReceiverFee(fund_receiver.address)
+      await arkreenRECToken.setRatioFeeOffset(500)        
+
+      await expect(arkreenRECToken.connect(owner2).commitOffsetFrom(owner1.address, expandTo9Decimals(100)))
+              .to.emit(arkreenRECToken, "Transfer")
+              .withArgs(owner1.address, constants.AddressZero, expandTo9Decimals(100))  
+              .to.emit(arkreenRECToken, "Transfer")
+              .withArgs(owner1.address, fund_receiver.address, expandTo9Decimals(5))      
+              .to.emit(arkreenRECToken, "OffsetFinished")
+              .withArgs(owner1.address, expandTo9Decimals(100), offsetID3.add(1))      
+         
    })
 
     it("ArkreenRECToken: mintCertificate: By REC token", async () => {
       // offsetAndMintCertificate
-      await arkreenRECToken.connect(owner1).offsetAndMintCertificate(
-                                              owner1.address, "Owner","Alice","Save Earth",expandTo9Decimals(10)) 
+      await arkreenRECToken.setReceiverFee(fund_receiver.address)
+      await arkreenRECToken.setRatioFeeOffset(1000)   
+
+      await expect(arkreenRECToken.connect(owner1).offsetAndMintCertificate(
+                                              owner1.address, "Owner","Alice","Save Earth",expandTo9Decimals(10)))
+              .to.emit(arkreenRECToken, "Transfer")
+              .withArgs(owner1.address, constants.AddressZero, expandTo9Decimals(10))  
+              .to.emit(arkreenRECToken, "Transfer")
+              .withArgs(owner1.address, fund_receiver.address, expandTo9Decimals(1))      
+              .to.emit(arkreenRECToken, "OffsetFinished")
+              .withArgs(owner1.address, expandTo9Decimals(10), 1)       
+              .to.emit(arkreenBadge, "OffsetCertificateMinted")
+              .withArgs(1)
 
        // commitOffset
       await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(10))
@@ -588,19 +617,19 @@ describe("ArkreenRECToken", () => {
 
       const tx_1 = await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(500))
       const receipt_1 = await tx_1.wait()
-      expect(receipt_1.gasUsed).to.eq("429551")  // 429573 429595 435553 435586 435300 432982 460991 461138  
+      expect(receipt_1.gasUsed).to.eq("431697")  // 429551(no fee) 429595 435553 435586 435300 432982 460991 461138  
 
       const tx_2 = await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(800))
       const receipt_2 = await tx_2.wait()
-      expect(receipt_2.gasUsed).to.eq("412863")  // 412885 412907 422169 422158 414450 442460 442607 423814 
+      expect(receipt_2.gasUsed).to.eq("415009")  // 412863(no fee) 412907 422169 422158 414450 442460 442607 423814 
 
       const tx_3 = await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(200))
       const receipt_3 = await tx_3.wait()
-      expect(receipt_3.gasUsed).to.eq("204263")  // 204285 207832 207824 204554 204554  
+      expect(receipt_3.gasUsed).to.eq("206409")  // 204263(no fee) 207832 207824 204554 204554  
 
       const tx = await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(66000))
       const receipt = await tx.wait()
-      expect(receipt.gasUsed).to.eq("2107974")  //  2108392 2108414 2190594 2190925 2753332 2756125 
+      expect(receipt.gasUsed).to.eq("2110120")  // 2107974(no fee) 2108414 2190594 2190925 2753332 2756125 
     });
   })
 

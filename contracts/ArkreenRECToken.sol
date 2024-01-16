@@ -15,7 +15,7 @@ import "./interfaces/IArkreenBadge.sol";
 import "./interfaces/IPausable.sol";
 
 // Import this file to use console.log
-//import "hardhat/console.sol";
+// import "hardhat/console.sol";
 
 contract ArkreenRECToken is
     OwnableUpgradeable,
@@ -48,8 +48,9 @@ contract ArkreenRECToken is
 
 //    uint256 partialARECID;                                // AREC NFT ID partialy offset
 //    uint256 partialAvailableAmount;                       // Amount available for partial offset
-    uint256 public triggerUpgradeAmount;                    // The amount to trigger solidify upgrade
+    uint256 public triggerUpgradeAmount;                    // The amount to trigger solidify upgrade, must keep
     address public climateBuilder;
+    uint256 public ratioFeeOffset;                          // Percentage in basis point (10000) to charge for offseting ART
 
     // Events
     event OffsetFinished(address indexed offsetEntity, uint256 amount, uint256 offsetId);
@@ -185,6 +186,12 @@ contract ArkreenRECToken is
 
         offsetActionId = IArkreenBadge(badgeContract).registerOffset(owner, issuerREC, amountOffset, FLAG_OFFSET+detailsCounter);
         totalOffset += amountOffset;
+
+        // Charge Offset fee 
+        if(ratioFeeOffset != 0 && receiverFee != address(0)) {
+            uint256 feeOffset = amountOffset * ratioFeeOffset / 10000;
+            _transfer(account, receiverFee, feeOffset);
+        }
 
         emit OffsetFinished(owner, amountOffset, offsetActionId);
     }
@@ -371,6 +378,14 @@ contract ArkreenRECToken is
     function setRatioFeeToSolidify(uint256 ratio) external onlyOwner {
         require(ratio <10000, 'ART: Wrong Data');
         ratioFeeToSolidify = ratio;
+    }  
+
+    /**
+     * @dev set the ratio of fee to offset ART as a climate action
+     */     
+    function setRatioFeeOffset(uint256 ratio) external onlyOwner {
+        require(ratio <10000, 'ART: Wrong Data');
+        ratioFeeOffset = ratio;
     }  
 
     /**
