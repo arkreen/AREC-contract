@@ -140,7 +140,6 @@ contract ArkreenRECToken is
 
         // Track total retirement amount in TCO2 factory
         uint256 steps = 0;
-        uint256 curAREC; 
         uint256 amountFilled = 0; 
         uint256 amountRegister;
 
@@ -150,12 +149,19 @@ contract ArkreenRECToken is
         uint256 amountOffset;
         uint256 detailsCounter;
 
+        // Calculate Offset fee 
+        uint256 feeOffset; 
+        if(ratioFeeOffset != 0 && receiverFee != address(0)) {
+            feeOffset = amount * ratioFeeOffset / 10000;
+            amount = amount - feeOffset;
+        }
+
         (partialAvailableAmount, partialARECID) = IArkreenBadge(badgeContract).getDetailStatus(address(this));
 
         if(amount > partialAvailableAmount) {
             while(steps < MAX_SKIP) {
                 if(partialAvailableAmount == 0) {
-                    curAREC = allARECLiquidized[latestARECID];        // Get the ID at AREC NFT loop head
+                    uint256 curAREC = allARECLiquidized[latestARECID];        // Get the ID at AREC NFT loop head
                     _remove(latestARECID, curAREC);                   // Remove from the loop
                     IArkreenRECIssuance(issuanceAREC).safeTransferFrom(address(this), badgeContract, curAREC);  // Send to Badge contract
 
@@ -188,8 +194,10 @@ contract ArkreenRECToken is
         totalOffset += amountOffset;
 
         // Charge Offset fee 
-        if(ratioFeeOffset != 0 && receiverFee != address(0)) {
-            uint256 feeOffset = amountOffset * ratioFeeOffset / 10000;
+        if(feeOffset != 0) {
+            if(amount != 0) {
+              feeOffset = amountOffset * ratioFeeOffset / (10000 - ratioFeeOffset);    // re-calculate in case not fully offset  
+            }
             _transfer(account, receiverFee, feeOffset);
         }
 
@@ -380,6 +388,14 @@ contract ArkreenRECToken is
         ratioFeeToSolidify = ratio;
     }  
 
+    /**
+     * @dev get the ratio of fee to offset ART as a climate action
+     *      If receiver not set, no fee is charged
+     */
+    function getRatioFeeOffset() external view returns (uint256) {
+        if(receiverFee == address(0)) return 0;
+        return ratioFeeOffset;
+    }  
     /**
      * @dev set the ratio of fee to offset ART as a climate action
      */     

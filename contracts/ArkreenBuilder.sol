@@ -267,7 +267,7 @@ contract ArkreenBuilder is
      *                  bit2 = 1, re-pay to msg.sender
      *                  bit3 = 0, Use Uniswap V2 liquidity pool
      *                  bit3 = 1, Use Uniswap V3 liquidity pool    
-     *                  Byte4-Byte23, sqrtPriceLimitX96 for Uniswap V3, uint160        
+     *                  Byte4-Byte23, sqrtPriceLimitX96 for Uniswap V3, uint160 
      * @param badgeInfo The information to be included for climate badge.
      */
     function actionBuilderBadgeNative(

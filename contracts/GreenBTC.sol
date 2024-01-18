@@ -15,6 +15,7 @@ import "./interfaces/IWETH.sol";
 import './interfaces/IGreenBTCImage.sol';
 import './interfaces/IArkreenBuilder.sol';
 import './interfaces/IArkreenRECBank.sol';
+import "./interfaces/IArkreenRECToken.sol";
 import './GreenBTCType.sol';
 import "./interfaces/IERC20.sol";
 
@@ -169,10 +170,18 @@ contract GreenBTC is
         // bit0 = 1: exact payment amount; bit1 = 1: ArkreenBank is used to get CART token; bit2 = 0: Repay to caller  
         uint256 modeAction = 0x03;                      
 
-        // actionBuilderBadge(address,address,uint256,uint256,uint256,uint256,(address,string,string,string)): 0x8D7FCEFD                                            
+        // actionBuilderBadge(address,address,uint256,uint256,uint256,uint256,(address,string,string,string)): 0x8D7FCEFD  
         bytes memory builderCallData = abi.encodeWithSelector( 0x8D7FCEFD, tokenNative, tokenCART, msg.value,
                                                         gbtc.ARTCount, modeAction, uint32(deadline), badgeInfo);
 
+        _callActionBuilderBadge(builderCallData, deadline, gbtc);                                 
+    }
+
+    function _callActionBuilderBadge(
+        bytes memory builderCallData, 
+        uint256 deadline,
+        GreenBTCInfo calldata gbtc
+    ) internal {
         _actionBuilderBadge(abi.encodePacked(builderCallData, gbtc.minter));     // Pay back to msg.sender already
 
         _mintNFT(gbtc);
@@ -209,17 +218,11 @@ contract GreenBTC is
         // bit0 = 1: exact payment amount; bit1 = 1: ArkreenBank is used to get CART token; bit2 = 0: Repay to caller  
         uint256 modeAction = 0x03;            
 
-        // actionBuilderBadge(address,address,uint256,uint256,uint256,uint256,(address,string,string,string)): 0x8D7FCEFD                                            
+        // actionBuilderBadge(address,address,uint256,uint256,uint256,uint256,(address,string,string,string)): 0x8D7FCEFD  
         bytes memory builderCallData = abi.encodeWithSelector( 0x8D7FCEFD, payInfo.token, tokenCART, payInfo.amount,
                                                         gbtc.ARTCount, modeAction, uint32(deadline), badgeInfo);
 
-        _actionBuilderBadge(abi.encodePacked(builderCallData, gbtc.minter));     // Pay back to msg.sender already ??
-
-        _mintNFT(gbtc);
-
-        if((deadline >> 32) !=0) openBox(gbtc.height);
-
-        emit GreenBitCoin(gbtc.height, gbtc.ARTCount, gbtc.minter, gbtc.greenType);
+        _callActionBuilderBadge(builderCallData, deadline, gbtc);                                 
     }
 
     /** 
@@ -260,13 +263,7 @@ contract GreenBTC is
             bytes memory builderCallData = abi.encodeWithSelector( 0x8D7FCEFD, payInfo.token, tokenCART, paymentAmount,
                                                             gbtc.ARTCount, modeAction, uint32(deadline), badgeInfo);
 
-            _actionBuilderBadge(abi.encodePacked(builderCallData, gbtc.minter));     // Pay back to msg.sender already ??
-
-            _mintNFT(gbtc);
-
-            if((deadline >> 32) !=0) openBox(gbtc.height);
-
-            emit GreenBitCoin(gbtc.height, gbtc.ARTCount, gbtc.minter, gbtc.greenType);
+            _callActionBuilderBadge(builderCallData, deadline, gbtc);                                                                      
         }
     }
 
@@ -291,22 +288,17 @@ contract GreenBTC is
         require(whiteARTList[tokenART], "GBTC: ART Not Accepted"); 
         require((gbtc.greenType & 0xF0) == 0x10, "GBTC: Wrong ART Type");
 
-        _authVerify(gbtc, sig);                                                 // verify signature
+        _authVerify(gbtc, sig);                                                   // verify signature
 
-        uint256  amountART = gbtc.ARTCount;
+        uint256 ratioFeeOffset = IArkreenRECToken(tokenART).getRatioFeeOffset();
 
+        uint256 amountART = (gbtc.ARTCount * 10000) / (10000 - ratioFeeOffset);    // Add Offset fee
         TransferHelper.safeTransferFrom(tokenART, msg.sender, address(this), amountART);
 
         // actionBuilderBadgeWithART(address,uint256,uint256,(address,string,string,string)): 0x6E556DF8
         bytes memory builderCallData = abi.encodeWithSelector(0x6E556DF8, tokenART, amountART, uint32(deadline), badgeInfo);
 
-        _actionBuilderBadge(abi.encodePacked(builderCallData, gbtc.minter));
-
-        _mintNFT(gbtc);
-
-        if((deadline >> 32) !=0) openBox(gbtc.height);
-
-        emit GreenBitCoin(gbtc.height, gbtc.ARTCount, gbtc.minter, gbtc.greenType);
+        _callActionBuilderBadge(builderCallData, deadline, gbtc);          
     }
 
     /** 
@@ -341,13 +333,7 @@ contract GreenBTC is
             // actionBuilderBadgeWithART(address,uint256,uint256,(address,string,string,string)): 0x6E556DF8
             bytes memory builderCallData = abi.encodeWithSelector(0x6E556DF8, tokenART, gbtc.ARTCount, uint32(deadline), badgeInfo);
 
-            _actionBuilderBadge(abi.encodePacked(builderCallData, gbtc.minter));
-
-            _mintNFT(gbtc);
-
-            if((deadline >> 32) !=0) openBox(gbtc.height);
-
-            emit GreenBitCoin(gbtc.height, gbtc.ARTCount, gbtc.minter, gbtc.greenType);
+            _callActionBuilderBadge(builderCallData, deadline, gbtc);          
         }
     }
     
