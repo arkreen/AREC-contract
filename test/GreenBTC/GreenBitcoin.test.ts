@@ -1266,12 +1266,12 @@ describe("GreenBTC Test Campaign", () => {
                                       {v,r,s}, badgeInfo, {token: AKREToken.address, amount: amountPay}, dealineBlock.timestamp-1))
                     .to.be.revertedWith("GBTC: EXPIRED")    
 
+        await AKREToken.connect(owner1).approve(greenBitcoin.address, constants.MaxUint256)                         
+
         // Error: Check signature of Green Bitcoin info                    
         await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithApproveBatch( [greenBTCInfo1, greenBTCInfo2, greenBTCInfo3], 
                                       {v,r:s,s}, badgeInfo, {token: AKREToken.address, amount: amountPay}, constants_MaxDealine))
                     .to.be.revertedWith("GBTC: Invalid Singature")    
-
-        await AKREToken.connect(owner1).approve(greenBitcoin.address, constants.MaxUint256)     
 
         // Normal: authMintGreenBTCWithApproveBatch                     
         await greenBitcoin.connect(owner1).authMintGreenBTCWithApproveBatch( [greenBTCInfo1, greenBTCInfo2, greenBTCInfo3], 

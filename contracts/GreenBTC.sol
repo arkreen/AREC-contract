@@ -19,6 +19,9 @@ import "./interfaces/IArkreenRECToken.sol";
 import './GreenBTCType.sol';
 import "./interfaces/IERC20.sol";
 
+// Import this file to use console.log
+//import "hardhat/console.sol";
+
 contract GreenBTC is 
     ContextUpgradeable,
     UUPSUpgradeable,
@@ -146,7 +149,7 @@ contract GreenBTC is
         }
     }
 
-    /** 
+    /*
      * @dev Greenize BTC with the native token
      * @param gbtc Bitcoin block info to be greenized
      * @param sig Signature of the authority to Bitcoin block info
@@ -154,6 +157,7 @@ contract GreenBTC is
      * @param deadline LB0-LB3: The deadline to cancel the transaction, LB7: 0x80, Open box at same time,
      * gbtc.miner must be the caller if opening box at the same time 
      */
+/*     
     function authMintGreenBTCWithNative(
         GreenBTCInfo    calldata gbtc,
         Sig             calldata sig,
@@ -169,12 +173,18 @@ contract GreenBTC is
 
         // bit0 = 1: exact payment amount; bit1 = 1: ArkreenBank is used to get CART token; bit2 = 0: Repay to caller  
         uint256 modeAction = 0x03;                      
-
+        
         // actionBuilderBadge(address,address,uint256,uint256,uint256,uint256,(address,string,string,string)): 0x8D7FCEFD  
         bytes memory builderCallData = abi.encodeWithSelector( 0x8D7FCEFD, tokenNative, tokenCART, msg.value,
-                                                        gbtc.ARTCount, modeAction, uint32(deadline), badgeInfo);
+                                            _getFullARTValue(gbtc.ARTCount), modeAction, uint32(deadline), badgeInfo);
 
         _callActionBuilderBadge(builderCallData, deadline, gbtc);                                 
+    }
+*/
+
+    function _getFullARTValue( uint256 actionValue ) internal returns (uint256) {
+        uint256 ratioFeeOffset = IArkreenRECToken(tokenCART).getRatioFeeOffset();
+        return (actionValue * 10000) / (10000 - ratioFeeOffset);    // Add Offset fee
     }
 
     function _callActionBuilderBadge(
@@ -208,8 +218,9 @@ contract GreenBTC is
         uint256                  deadline
     ) public ensure(deadline) {
 
-        require(dataGBTC[gbtc.height].ARTCount == 0, "GBTC: Already Minted");
-        require((gbtc.greenType & 0xF0) == 0x00, "GBTC: Wrong ART Type");
+        _checkGBTCData(gbtc, 0x00);
+//        require(dataGBTC[gbtc.height].ARTCount == 0, "GBTC: Already Minted");
+//        require((gbtc.greenType & 0xF0) == 0x00, "GBTC: Wrong ART Type");
        
         _authVerify(gbtc, sig);                         // verify signature
 
@@ -220,9 +231,14 @@ contract GreenBTC is
 
         // actionBuilderBadge(address,address,uint256,uint256,uint256,uint256,(address,string,string,string)): 0x8D7FCEFD  
         bytes memory builderCallData = abi.encodeWithSelector( 0x8D7FCEFD, payInfo.token, tokenCART, payInfo.amount,
-                                                        gbtc.ARTCount, modeAction, uint32(deadline), badgeInfo);
+                                                        _getFullARTValue(gbtc.ARTCount), modeAction, uint32(deadline), badgeInfo);
 
-        _callActionBuilderBadge(builderCallData, deadline, gbtc);                                 
+        _callActionBuilderBadge(builderCallData, deadline, gbtc);
+    }
+
+    function _checkGBTCData(GreenBTCInfo calldata gbtc, uint8 typeTarget) view internal {
+        require(dataGBTC[gbtc.height].ARTCount == 0, "GBTC: Already Minted");
+        require((gbtc.greenType & 0xF0) == typeTarget, "GBTC: Wrong ART Type");
     }
 
     /** 
@@ -238,21 +254,22 @@ contract GreenBTC is
         GreenBTCInfo[]  calldata gbtcList, 
         Sig             calldata sig, 
         BadgeInfo       calldata badgeInfo, 
-        PayInfo         calldata payInfo,
+        PayInfo         memory payInfo,
         uint256                  deadline
     ) public ensure(deadline) {
       
-        _authVerifyBatch(gbtcList, sig);                                           // verify signature
-
         TransferHelper.safeTransferFrom(payInfo.token, msg.sender, address(this), payInfo.amount);
+        payInfo.amount = IArkreenRECToken(tokenCART).getRatioFeeOffset();             // re-use to save memory buffer
+        _authVerifyBatch(0, gbtcList, sig);                                           // verify signature
 
         uint256 paymentAmount;
         for(uint256 index = 0; index < gbtcList.length; index++) {
 
             GreenBTCInfo calldata gbtc = gbtcList[index];
 
-            require(dataGBTC[gbtc.height].ARTCount == 0, "GBTC: Already Minted");
-            require((gbtc.greenType & 0xF0) == 0x00, "GBTC: Wrong ART Type");
+            _checkGBTCData(gbtc, 0x00);
+//            require(dataGBTC[gbtc.height].ARTCount == 0, "GBTC: Already Minted");
+//            require((gbtc.greenType & 0xF0) == 0x00, "GBTC: Wrong ART Type");
           
             // actionBuilderBadge(address,address,uint256,uint256,uint256,uint256,(address,string,string,string)): 0x8D7FCEFD
             paymentAmount = IERC20(payInfo.token).balanceOf(address(this));         
@@ -261,7 +278,8 @@ contract GreenBTC is
             uint256 modeAction = (index == gbtcList.length - 1) ? 0x02 : 0x06;
 
             bytes memory builderCallData = abi.encodeWithSelector( 0x8D7FCEFD, payInfo.token, tokenCART, paymentAmount,
-                                                            gbtc.ARTCount, modeAction, uint32(deadline), badgeInfo);
+                                                  (gbtc.ARTCount * 10000) / (10000 - payInfo.amount),     // save memory buffer
+                                                  modeAction, uint32(deadline), badgeInfo);
 
             _callActionBuilderBadge(builderCallData, deadline, gbtc);                                                                      
         }
@@ -284,9 +302,11 @@ contract GreenBTC is
         uint256                  deadline
     ) public ensure(deadline) {
 
-        require(dataGBTC[gbtc.height].ARTCount == 0, "GBTC: Already Minted");
+        _checkGBTCData(gbtc, 0x10);
         require(whiteARTList[tokenART], "GBTC: ART Not Accepted"); 
-        require((gbtc.greenType & 0xF0) == 0x10, "GBTC: Wrong ART Type");
+
+//        require(dataGBTC[gbtc.height].ARTCount == 0, "GBTC: Already Minted");
+//        require((gbtc.greenType & 0xF0) == 0x10, "GBTC: Wrong ART Type");
 
         _authVerify(gbtc, sig);                                                   // verify signature
 
@@ -321,17 +341,22 @@ contract GreenBTC is
 
         require(whiteARTList[tokenART], "GBTC: ART Not Accepted"); 
 
-        uint256 amountARTSum = _authVerifyBatch(gbtcList, sig);                                           // verify signature
+        uint256 ratioFeeOffset = IArkreenRECToken(tokenART).getRatioFeeOffset();
+        uint256 amountARTSum = _authVerifyBatch(ratioFeeOffset, gbtcList, sig);                 // verify signature
         TransferHelper.safeTransferFrom(tokenART, msg.sender, address(this), amountARTSum);
 
         for(uint256 index = 0; index < gbtcList.length; index++) {
             GreenBTCInfo calldata gbtc = gbtcList[index];
 
-            require(dataGBTC[gbtc.height].ARTCount == 0, "GBTC: Already Minted");
-            require((gbtc.greenType & 0xF0) == 0x10, "GBTC: Wrong ART Type");
+            _checkGBTCData(gbtc, 0x10);
+//            require(dataGBTC[gbtc.height].ARTCount == 0, "GBTC: Already Minted");
+//            require((gbtc.greenType & 0xF0) == 0x10, "GBTC: Wrong ART Type");
+
+
+            uint256 amountART = (gbtc.ARTCount * 10000) / (10000 - ratioFeeOffset);    // Add Offset fee
 
             // actionBuilderBadgeWithART(address,uint256,uint256,(address,string,string,string)): 0x6E556DF8
-            bytes memory builderCallData = abi.encodeWithSelector(0x6E556DF8, tokenART, gbtc.ARTCount, uint32(deadline), badgeInfo);
+            bytes memory builderCallData = abi.encodeWithSelector(0x6E556DF8, tokenART, amountART, uint32(deadline), badgeInfo);
 
             _callActionBuilderBadge(builderCallData, deadline, gbtc);          
         }
@@ -542,11 +567,21 @@ contract GreenBTC is
      * @param gbtcList Green BTC information of the List
      * @param sig Signature of the authority
      */
-    function _authVerifyBatch(GreenBTCInfo[] calldata gbtcList, Sig calldata sig) internal view returns(uint256 amountARTSum) {
+    function _authVerifyBatch(
+        uint256 ratioFeeOffset,
+        GreenBTCInfo[] calldata gbtcList, 
+        Sig calldata sig
+    ) internal view returns(uint256 amountARTSum) {
 
         bytes memory greenBTCData = abi.encode(GREENBTC_BATCH_TYPEHASH, gbtcList);
 
-        for(uint256 index = 0; index < gbtcList.length; index++) amountARTSum += gbtcList[index].ARTCount;
+        for(uint256 index = 0; index < gbtcList.length; index++) {
+            if(ratioFeeOffset != 0) {
+                amountARTSum += (gbtcList[index].ARTCount * 10000) / (10000 - ratioFeeOffset);
+            } else {
+                amountARTSum += gbtcList[index].ARTCount;
+            }
+        }
 
         bytes32 greenBTCHash = keccak256(greenBTCData);
         bytes32 digest = keccak256(abi.encodePacked('\x19\x01', DOMAIN_SEPARATOR, greenBTCHash));
