@@ -280,7 +280,7 @@ describe("ArkreenBuilderWithBank", () => {
                               .to.emit(tokenA, 'Transfer')
                               .withArgs(deployer.address, arkreenBuilder.address, expandTo18Decimals(100*150))
                               .to.emit(tokenA, 'Transfer')
-                              .withArgs(arkreenBuilder.address, arkreenRECBank.address, expandTo18Decimals(100*150))                              
+                              .withArgs(arkreenBuilder.address, arkreenRECBank.address, expandTo18Decimals(100*150))
                               .to.emit(arkreenRECBank, "ARTSold")
                               .withArgs(arkreenRECToken.address, tokenA.address, expandTo9Decimals(100), expandTo18Decimals(100*150))
                               .to.emit(arkreenRECToken, "OffsetFinished")
