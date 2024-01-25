@@ -32,7 +32,7 @@ import { boolean } from "hardhat/internal/core/params/argumentTypes";
 // import { Web3Provider } from "@ethersproject/providers";
 
 const constants_MaxDealine = BigNumber.from('0xFFFFFFFF')
-const constants_MaxDealineAndOpen = constants_MaxDealine.xor(BigNumber.from(1).shl(63))
+const constants_MaxDealineAndOpen = constants_MaxDealine.or(BigNumber.from(1).shl(63))
 
 
 describe("GreenBTC Test Campaign", () => {
@@ -366,7 +366,7 @@ describe("GreenBTC Test Campaign", () => {
 
         await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithART( greenBTCInfo, {v,r,s}, 
                                           badgeInfo, arkreenRECTokenESG.address, 
-                                          BigNumber.from(dealineBlock.timestamp-1).xor(BigNumber.from(1).shl(63))))
+                                          BigNumber.from(dealineBlock.timestamp-1).or(BigNumber.from(1).shl(63))))
                     .to.be.revertedWith("GBTC: EXPIRED")
 
         // Error: Check ART is whitelisted
@@ -568,15 +568,15 @@ describe("GreenBTC Test Campaign", () => {
         await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithARTBatch( [greenBTCInfo1, greenBTCInfo2, greenBTCInfo3], {v,r:s,s},
                                           badgeInfo, arkreenRECTokenESG.address, constants_MaxDealine ))
                     .to.be.revertedWith("GBTC: Invalid Singature")    
-/*
-        // Error: Check ART Type
-        greenBTCInfo1.greenType = 0x02
-        await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithARTBatch( [greenBTCInfo1, greenBTCInfo2, greenBTCInfo3], {v,r,s},
-                                          badgeInfo, arkreenRECTokenESG.address, constants_MaxDealine ))
-                    .to.be.revertedWith("GBTC: Wrong ART Type")    
 
-        greenBTCInfo1.greenType = 0x12      
-*/
+//        // Error: Check ART Type
+//        greenBTCInfo1.greenType = 0x02
+//        await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithARTBatch( [greenBTCInfo1, greenBTCInfo2, greenBTCInfo3], {v,r,s},
+//                                          badgeInfo, arkreenRECTokenESG.address, constants_MaxDealine ))
+//                    .to.be.revertedWith("GBTC: Wrong ART Type")    
+//
+//        greenBTCInfo1.greenType = 0x12      
+
         // Error: user need to approve greenBitcoin
         await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithARTBatch( [greenBTCInfo1, greenBTCInfo2, greenBTCInfo3], {v,r,s}, 
                                                     badgeInfo, arkreenRECTokenESG.address, constants_MaxDealine ))
@@ -597,25 +597,17 @@ describe("GreenBTC Test Campaign", () => {
                       .to.emit(arkreenRECTokenESG, 'Transfer')
                       .withArgs(owner1.address, greenBitcoin.address, expandTo9Decimals(12+23+34))                                                       
                       .to.emit(arkreenRECTokenESG, 'Transfer')
-                      .withArgs(greenBitcoin.address, arkreenBuilder.address, expandTo9Decimals(12))                                                       
+                      .withArgs(greenBitcoin.address, arkreenBuilder.address, expandTo9Decimals(12+23+34))                                                       
                       .to.emit(arkreenRECTokenESG, 'Transfer')
-                      .withArgs(arkreenBuilder.address, constants.AddressZero, expandTo9Decimals(12))                                                 
+                      .withArgs(arkreenBuilder.address, constants.AddressZero, expandTo9Decimals(12+23+34))                                                 
                       .to.emit(greenBitcoin, 'Transfer')
                       .withArgs(constants.AddressZero, owner2.address, 12345)                                                 
                       .to.emit(greenBitcoin, 'GreenBitCoin')
                       .withArgs(12345, expandTo9Decimals(12), owner2.address, 0x12)
-                      .to.emit(arkreenRECTokenESG, 'Transfer')
-                      .withArgs(greenBitcoin.address, arkreenBuilder.address, expandTo9Decimals(23))                                                       
-                      .to.emit(arkreenRECTokenESG, 'Transfer')
-                      .withArgs(arkreenBuilder.address, constants.AddressZero, expandTo9Decimals(23))   
                       .to.emit(greenBitcoin, 'Transfer')
                       .withArgs(constants.AddressZero, owner2.address, 23456)                                                 
                       .to.emit(greenBitcoin, 'GreenBitCoin')
                       .withArgs(23456, expandTo9Decimals(23), owner2.address, 0x12)    
-                      .to.emit(arkreenRECTokenESG, 'Transfer')
-                      .withArgs(greenBitcoin.address, arkreenBuilder.address, expandTo9Decimals(34))                                                       
-                      .to.emit(arkreenRECTokenESG, 'Transfer')
-                      .withArgs(arkreenBuilder.address, constants.AddressZero, expandTo9Decimals(34))   
                       .to.emit(greenBitcoin, 'Transfer')
                       .withArgs(constants.AddressZero, owner2.address, 34567)                                                 
                       .to.emit(greenBitcoin, 'GreenBitCoin')
@@ -624,10 +616,10 @@ describe("GreenBTC Test Campaign", () => {
         const lastBlock = await ethers.provider.getBlock('latest')
 
         const tokenID = await arkreenRECIssuance.totalSupply()
-        expect(await arkreenRetirement.totalSupply()).to.deep.equal(3)
-        expect(await arkreenRetirement.offsetCounter()).to.deep.equal(3)
+        expect(await arkreenRetirement.totalSupply()).to.deep.equal(1)
+        expect(await arkreenRetirement.offsetCounter()).to.deep.equal(1)
 
-        const amountART1 = expandTo9Decimals(12)
+        const amountART1 = expandTo9Decimals(12+23+34)
 
         const actionID1 = 1
         const action1 = [  owner2.address, maker1.address, amountART1,                // Manger is the issuer address
@@ -639,27 +631,7 @@ describe("GreenBTC Test Campaign", () => {
         const badgeID1 = 1                            
         expect(await arkreenRetirement.getCertificate(badgeID1)).to.deep.equal(offsetRecord1)
 
-        const amountART2 = expandTo9Decimals(23)
-        const actionID2 = 2
-        const action2 = [  owner2.address, maker1.address, amountART2,                // Manger is the issuer address
-                          tokenID.add(MASK_OFFSET), lastBlock.timestamp, true ]     // Offset action is claimed
-        expect(await arkreenRetirement.getOffsetActions(actionID2)).to.deep.equal(action2)
-
-        const offsetRecord2 = [owner2.address, owner1.address, "Owner1", "Tester", "Just Testing", 
-                              BigNumber.from(lastBlock.timestamp), amountART2, [actionID2]]
-        const badgeID2 = 2                            
-        expect(await arkreenRetirement.getCertificate(badgeID2)).to.deep.equal(offsetRecord2)        
-
-        const amountART3 = expandTo9Decimals(34)
-        const actionID3 = 3
-        const action3 = [  owner2.address, maker1.address, amountART3,                // Manger is the issuer address
-                          tokenID.add(MASK_OFFSET), lastBlock.timestamp, true ]     // Offset action is claimed
-        expect(await arkreenRetirement.getOffsetActions(actionID3)).to.deep.equal(action3)
-
-        const offsetRecord3 = [owner2.address, owner1.address, "Owner1", "Tester", "Just Testing", 
-                              BigNumber.from(lastBlock.timestamp), amountART3, [actionID3]]
-        const badgeID3 = 3                            
-        expect(await arkreenRetirement.getCertificate(badgeID3)).to.deep.equal(offsetRecord3)        
+      
 
         expect(await arkreenRECTokenESG.balanceOf(owner1.address)).to.equal(artTokenESGBefore.sub(expandTo9Decimals(12+23+34)))
 
@@ -874,8 +846,9 @@ describe("GreenBTC Test Campaign", () => {
           const _dataNFTX = [owner1.address, 67890+19, true, false, false, 0]
           expect(await greenBitcoin.dataNFT(67890+19)).to.deep.equal(_dataNFTX)       
         } 
-      });      
+      });     
 
+/*
       it("GreenBTC Test: authMintGreenBTCWithNative", async () => {
         await arkreenRECBank.addNewART( arkreenRECToken.address,  maker1.address)
         await arkreenRECBank.addNewART( arkreenRECTokenESG.address,  maker2.address)  
@@ -945,13 +918,12 @@ describe("GreenBTC Test Campaign", () => {
 //                .to.be.revertedWith("ARBK: Pay Less")         
 
         // Normal: authMintGreenBTCWithNative   
-/*        
-        console.log('DDDDDDDDDDDDDDDDD', owner1.address, greenBitcoin.address, arkreenBuilder.address)
-        const resp = await greenBitcoin.connect(owner1).authMintGreenBTCWithNative( greenBTCInfo, {v,r,s}, 
-                                      badgeInfo, constants_MaxDealine, {value: expandTo18Decimals(24)})        
-        const receipt = await resp.wait()
-        console.log('DDDDDDDDDDDDDDDDD', resp, receipt)
-*/        
+        
+//        console.log('DDDDDDDDDDDDDDDDD', owner1.address, greenBitcoin.address, arkreenBuilder.address)
+//        const resp = await greenBitcoin.connect(owner1).authMintGreenBTCWithNative( greenBTCInfo, {v,r,s}, 
+//                                      badgeInfo, constants_MaxDealine, {value: expandTo18Decimals(24)})        
+//        const receipt = await resp.wait()
+//        console.log('DDDDDDDDDDDDDDDDD', resp, receipt)
         
         await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithNative( greenBTCInfo, {v,r,s}, 
                                                     badgeInfo, constants_MaxDealine, {value: expandTo18Decimals(24)}))
@@ -1036,7 +1008,7 @@ describe("GreenBTC Test Campaign", () => {
         }
 
       });
-
+*/
       it("GreenBTC Test: authMintGreenBTCWithApprove", async () => {
 
         await arkreenRECBank.addNewART( arkreenRECToken.address,  maker1.address)

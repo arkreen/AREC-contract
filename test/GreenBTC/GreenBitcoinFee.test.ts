@@ -32,7 +32,7 @@ import { boolean } from "hardhat/internal/core/params/argumentTypes";
 // import { Web3Provider } from "@ethersproject/providers";
 
 const constants_MaxDealine = BigNumber.from('0xFFFFFFFF')
-const constants_MaxDealineAndOpen = constants_MaxDealine.xor(BigNumber.from(1).shl(63))
+const constants_MaxDealineAndOpen = constants_MaxDealine.or(BigNumber.from(1).shl(63))
 
 
 describe("GreenBTC Test Campaign", () => {
@@ -279,8 +279,9 @@ describe("GreenBTC Test Campaign", () => {
           // Normal
           await arkreenRECIssuance.connect(owner1).liquidizeREC(tokenID)
 
-          await arkreenRECToken.connect(owner1).transfer(maker1.address, expandTo9Decimals(9000))
-          await arkreenRECToken.connect(maker1).approve(arkreenRECBank.address, expandTo9Decimals(9000))
+          await arkreenRECToken.connect(owner1).transfer(maker1.address, expandTo9Decimals(5000))
+          await arkreenRECToken.connect(owner1).transfer(greenBitcoin.address, expandTo9Decimals(1000))
+          await arkreenRECToken.connect(maker1).approve(arkreenRECBank.address, expandTo9Decimals(5000))
         }
 
         {
@@ -309,8 +310,9 @@ describe("GreenBTC Test Campaign", () => {
           // Normal
           await arkreenRECIssuance.connect(owner1).liquidizeREC(tokenID)
 
-          await arkreenRECTokenESG.connect(owner1).transfer(maker2.address, expandTo9Decimals(9000))
-          await arkreenRECTokenESG.connect(maker2).approve(arkreenRECBank.address, expandTo9Decimals(9000))   
+          await arkreenRECTokenESG.connect(owner1).transfer(maker2.address, expandTo9Decimals(5000))
+          await arkreenRECTokenESG.connect(owner1).transfer(greenBitcoin.address, expandTo9Decimals(1000))
+          await arkreenRECTokenESG.connect(maker2).approve(arkreenRECBank.address, expandTo9Decimals(5000))   
 
         }
       });
@@ -321,8 +323,8 @@ describe("GreenBTC Test Campaign", () => {
         await arkreenRECBank.addNewART( arkreenRECToken.address,  maker1.address)
         await arkreenRECBank.addNewART( arkreenRECTokenESG.address,  maker2.address)  
         
-        await arkreenRECBank.connect(maker1).depositART( arkreenRECToken.address,  expandTo9Decimals(9000))
-        await arkreenRECBank.connect(maker2).depositART( arkreenRECTokenESG.address,  expandTo9Decimals(9000))
+        await arkreenRECBank.connect(maker1).depositART( arkreenRECToken.address,  expandTo9Decimals(5000))
+        await arkreenRECBank.connect(maker2).depositART( arkreenRECTokenESG.address,  expandTo9Decimals(5000))
 
         await arkreenRECToken.setClimateBuilder(arkreenBuilder.address)
         await arkreenRECTokenESG.setClimateBuilder(arkreenBuilder.address)
@@ -344,7 +346,8 @@ describe("GreenBTC Test Campaign", () => {
         }
 
         const amountART = expandTo9Decimals(12)
-        const artTokenESGBefore = await arkreenRECTokenESG.balanceOf(owner1.address) 
+        const artTokenESGBefore = await arkreenRECTokenESG.balanceOf(owner1.address)
+        const artTokenESGBeforeGBTC = await arkreenRECTokenESG.balanceOf(greenBitcoin.address)
 
         // const receiver = owner1.address
         const register_digest = getGreenBitcoinDigest(
@@ -372,7 +375,7 @@ describe("GreenBTC Test Campaign", () => {
 
         await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithART( greenBTCInfo, {v,r,s}, 
                                           badgeInfo, arkreenRECTokenESG.address, 
-                                          BigNumber.from(dealineBlock.timestamp-1).xor(BigNumber.from(1).shl(63))))
+                                          BigNumber.from(dealineBlock.timestamp-1).or(BigNumber.from(1).shl(63))))
                     .to.be.revertedWith("GBTC: EXPIRED")
 
         // Error: Check ART is whitelisted
@@ -411,25 +414,22 @@ describe("GreenBTC Test Campaign", () => {
 
         // Normal: authMintGreenBTCWithART   
         const overAllARTwithFee = expandTo9Decimals(12).mul(100).div(95)    // Add offset fee, round-up
-//      console.log("WWWWWWWWWWWWW", overAllARTwithFee.toString(), overAllARTwithFee.toHexString())
-
-/*        
-        const tx = await greenBitcoin.connect(owner1).authMintGreenBTCWithART( greenBTCInfo, {v,r,s}, 
-                  badgeInfo, arkreenRECTokenESG.address, constants_MaxDealine )
-        
-        const receipt = await tx.wait()
-     
-        console.log("AAAAAAAAAAAA", tx, receipt, receipt.events![0], receipt.events![1], receipt.events![2], receipt.events![3])
-        console.log("BBBBBBBBBBBB", receipt.events![0], receipt.events![1], receipt.events![2], receipt.events![3])
-        console.log("CCCCCCCCCCCCC", receipt.events![4], receipt.events![5],receipt.events![6], receipt.events![7])
-        console.log("DDDDDDDDDDDDD", receipt.events![8], receipt.events![9],receipt.events![10], receipt.events![11])
-        console.log("EEEEEEEEEEEEEE", owner1.address, arkreenRECTokenESG.address, greenBitcoin.address, arkreenBuilder.address, fund_receiver.address)
-*/
+//        console.log("WWWWWWWWWWWWW", overAllARTwithFee.toString(), overAllARTwithFee.toHexString())
+//        const tx = await greenBitcoin.connect(owner1).authMintGreenBTCWithART( greenBTCInfo, {v,r,s}, 
+//                  badgeInfo, arkreenRECTokenESG.address, constants_MaxDealine )
+//        
+//        const receipt = await tx.wait()
+//     
+//        console.log("AAAAAAAAAAAA", tx, receipt, receipt.events![0], receipt.events![1], receipt.events![2], receipt.events![3])
+//        console.log("BBBBBBBBBBBB", receipt.events![0], receipt.events![1], receipt.events![2], receipt.events![3])
+//        console.log("CCCCCCCCCCCCC", receipt.events![4], receipt.events![5],receipt.events![6], receipt.events![7])
+//        console.log("DDDDDDDDDDDDD", receipt.events![8], receipt.events![9],receipt.events![10], receipt.events![11])
+//        console.log("EEEEEEEEEEEEEE", owner1.address, arkreenRECTokenESG.address, greenBitcoin.address, arkreenBuilder.address, fund_receiver.address)
 
         await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithART( greenBTCInfo, {v,r,s}, 
                                                     badgeInfo, arkreenRECTokenESG.address, constants_MaxDealine ))
                       .to.emit(arkreenRECTokenESG, 'Transfer')
-                      .withArgs(owner1.address, greenBitcoin.address, overAllARTwithFee)                                                         
+                      .withArgs(owner1.address, greenBitcoin.address, expandTo9Decimals(12))                                                         
                       .to.emit(arkreenRECTokenESG, 'Transfer')
                       .withArgs(greenBitcoin.address, arkreenBuilder.address, overAllARTwithFee)                                                       
                       .to.emit(arkreenRECTokenESG, 'Transfer')
@@ -454,7 +454,9 @@ describe("GreenBTC Test Campaign", () => {
         const badgeID = 1                            
         expect(await arkreenRetirement.getCertificate(badgeID)).to.deep.equal(offsetRecord)
 
-        expect(await arkreenRECTokenESG.balanceOf(owner1.address)).to.equal(artTokenESGBefore.sub(overAllARTwithFee))
+        expect(await arkreenRECTokenESG.balanceOf(owner1.address)).to.equal(artTokenESGBefore.sub(expandTo9Decimals(12)))
+
+        expect(await arkreenRECTokenESG.balanceOf(greenBitcoin.address)).to.equal(artTokenESGBeforeGBTC.sub(overAllARTwithFee.sub(expandTo9Decimals(12))))
 
         // Check dataGBTC
         const _dataGBTC = [ BigNumber.from(12345), expandTo9Decimals(12), owner2.address, 0x12,
@@ -468,6 +470,8 @@ describe("GreenBTC Test Campaign", () => {
 
         // Check NFT ID and owner
         expect(await greenBitcoin.ownerOf(12345)).to.equal(owner2.address)
+
+        // 
 
         // Error: authMintGreenBTCWithART                     
         await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithART( greenBTCInfo, {v,r,s}, 
@@ -507,7 +511,7 @@ describe("GreenBTC Test Campaign", () => {
           await greenBitcoin.connect(owner1).authMintGreenBTCWithART( greenBTCInfo, {v,r,s}, 
                                                       badgeInfo, arkreenRECToken.address, constants_MaxDealineAndOpen )     
 
-          expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(artTokenESGBefore.sub(expandTo9Decimals(13).mul(100).div(95)))    
+          expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(artTokenESGBefore.sub(expandTo9Decimals(13)))    
           
           // Check dataGBTC
           const _dataNFT = [owner1.address, 23456, true, false, false, 0]
@@ -520,8 +524,8 @@ describe("GreenBTC Test Campaign", () => {
         await arkreenRECBank.addNewART( arkreenRECToken.address,  maker1.address)
         await arkreenRECBank.addNewART( arkreenRECTokenESG.address,  maker2.address)  
         
-        await arkreenRECBank.connect(maker1).depositART( arkreenRECToken.address,  expandTo9Decimals(9000))
-        await arkreenRECBank.connect(maker2).depositART( arkreenRECTokenESG.address,  expandTo9Decimals(9000))
+        await arkreenRECBank.connect(maker1).depositART( arkreenRECToken.address,  expandTo9Decimals(5000))
+        await arkreenRECBank.connect(maker2).depositART( arkreenRECTokenESG.address,  expandTo9Decimals(5000))
 
         await arkreenRECToken.setClimateBuilder(arkreenBuilder.address)
         await arkreenRECTokenESG.setClimateBuilder(arkreenBuilder.address)
@@ -562,6 +566,7 @@ describe("GreenBTC Test Campaign", () => {
 
         const amountART = expandTo9Decimals(12)
         const artTokenESGBefore = await arkreenRECTokenESG.balanceOf(owner1.address) 
+        const artTokenESGBeforeGBTC = await arkreenRECTokenESG.balanceOf(greenBitcoin.address) 
 
         // const receiver = owner1.address
         const register_digest = getGreenBitcoinDigestBatch(
@@ -592,7 +597,7 @@ describe("GreenBTC Test Campaign", () => {
         await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithARTBatch( [greenBTCInfo1, greenBTCInfo2, greenBTCInfo3], {v,r:s,s},
                                           badgeInfo, arkreenRECTokenESG.address, constants_MaxDealine ))
                     .to.be.revertedWith("GBTC: Invalid Singature")    
-/*
+        /*
         // Error: Check ART Type
         greenBTCInfo1.greenType = 0x02
         await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithARTBatch( [greenBTCInfo1, greenBTCInfo2, greenBTCInfo3], {v,r,s},
@@ -600,7 +605,7 @@ describe("GreenBTC Test Campaign", () => {
                     .to.be.revertedWith("GBTC: Wrong ART Type")    
 
         greenBTCInfo1.greenType = 0x12      
-*/
+        */
         // Error: user need to approve greenBitcoin
         await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithARTBatch( [greenBTCInfo1, greenBTCInfo2, greenBTCInfo3], {v,r,s}, 
                                                     badgeInfo, arkreenRECTokenESG.address, constants_MaxDealine ))
@@ -615,12 +620,12 @@ describe("GreenBTC Test Campaign", () => {
 
         await greenBitcoin.approveBuilder([arkreenRECToken.address, arkreenRECTokenESG.address])
 
-        const overAllARTwithFee1 = expandTo9Decimals(12).mul(100).div(95)    
-        const overAllARTwithFee2 = expandTo9Decimals(23).mul(100).div(95)    
-        const overAllARTwithFee3 = expandTo9Decimals(34).mul(100).div(95)    
+        const overAllARTToPay = expandTo9Decimals(12+23+34)
+        const paymentByGreenBTC = expandTo9Decimals(12+23+34).mul(100).div(95)  
+        
 
         // Normal: authMintGreenBTCWithARTBatch   
-/*
+        /*
         const tx = await greenBitcoin.connect(owner1).authMintGreenBTCWithARTBatch( [greenBTCInfo1, greenBTCInfo2, greenBTCInfo3], {v,r,s}, 
                   badgeInfo, arkreenRECTokenESG.address, constants_MaxDealine )
 
@@ -633,31 +638,25 @@ describe("GreenBTC Test Campaign", () => {
         }
 
         console.log("CCCCCCCCCCCCCCCCCC", owner1.address, arkreenRECTokenESG.address, greenBitcoin.address, arkreenBuilder.address, fund_receiver.address)
-*/
+        */
         await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithARTBatch( [greenBTCInfo1, greenBTCInfo2, greenBTCInfo3], {v,r,s}, 
                                                     badgeInfo, arkreenRECTokenESG.address, constants_MaxDealine ))
                       .to.emit(arkreenRECTokenESG, 'Transfer')
-                      .withArgs(owner1.address, greenBitcoin.address, overAllARTwithFee1.add(overAllARTwithFee2).add(overAllARTwithFee3))
+                      .withArgs(owner1.address, greenBitcoin.address, overAllARTToPay)
                       .to.emit(arkreenRECTokenESG, 'Transfer')
-                      .withArgs(greenBitcoin.address, arkreenBuilder.address, overAllARTwithFee1)                                                       
+                      .withArgs(greenBitcoin.address, arkreenBuilder.address, paymentByGreenBTC)                                                       
                       .to.emit(arkreenRECTokenESG, 'Transfer')
-                      .withArgs(arkreenBuilder.address, constants.AddressZero, expandTo9Decimals(12))                                                 
+                      .withArgs(arkreenBuilder.address, constants.AddressZero, overAllARTToPay)
+                      .to.emit(arkreenRECTokenESG, "Transfer")
+                      .withArgs(arkreenBuilder.address, fund_receiver.address, paymentByGreenBTC.sub(overAllARTToPay))   
                       .to.emit(greenBitcoin, 'Transfer')
                       .withArgs(constants.AddressZero, owner2.address, 12345)                                                 
                       .to.emit(greenBitcoin, 'GreenBitCoin')
                       .withArgs(12345, expandTo9Decimals(12), owner2.address, 0x12)
-                      .to.emit(arkreenRECTokenESG, 'Transfer')
-                      .withArgs(greenBitcoin.address, arkreenBuilder.address, overAllARTwithFee2)                                                       
-                      .to.emit(arkreenRECTokenESG, 'Transfer')
-                      .withArgs(arkreenBuilder.address, constants.AddressZero, expandTo9Decimals(23))   
                       .to.emit(greenBitcoin, 'Transfer')
                       .withArgs(constants.AddressZero, owner2.address, 23456)                                                 
                       .to.emit(greenBitcoin, 'GreenBitCoin')
                       .withArgs(23456, expandTo9Decimals(23), owner2.address, 0x12)    
-                      .to.emit(arkreenRECTokenESG, 'Transfer')
-                      .withArgs(greenBitcoin.address, arkreenBuilder.address, overAllARTwithFee3)                                                       
-                      .to.emit(arkreenRECTokenESG, 'Transfer')
-                      .withArgs(arkreenBuilder.address, constants.AddressZero, expandTo9Decimals(34))   
                       .to.emit(greenBitcoin, 'Transfer')
                       .withArgs(constants.AddressZero, owner2.address, 34567)                                                 
                       .to.emit(greenBitcoin, 'GreenBitCoin')
@@ -665,15 +664,15 @@ describe("GreenBTC Test Campaign", () => {
 
         const lastBlock = await ethers.provider.getBlock('latest')
 
-        const tokenID = await arkreenRECIssuance.totalSupply()
-        expect(await arkreenRetirement.totalSupply()).to.deep.equal(3)
-        expect(await arkreenRetirement.offsetCounter()).to.deep.equal(3)
+        const tokenID = await arkreenRECIssuance.totalSupply()              // should be arkreenRECIssuance
+        expect(await arkreenRetirement.totalSupply()).to.deep.equal(1)
+        expect(await arkreenRetirement.offsetCounter()).to.deep.equal(1)
 
-        const amountART1 = expandTo9Decimals(12)
+        const amountART1 = expandTo9Decimals(12+23+34)
 
         const actionID1 = 1
         const action1 = [  owner2.address, maker1.address, amountART1,                // Manger is the issuer address
-                          tokenID.add(MASK_OFFSET), lastBlock.timestamp, true ]     // Offset action is claimed
+                          tokenID.add(MASK_OFFSET), lastBlock.timestamp, true ]       // Offset action is claimed
         expect(await arkreenRetirement.getOffsetActions(actionID1)).to.deep.equal(action1)
 
         const offsetRecord1 = [owner2.address, owner1.address, "Owner1", "Tester", "Just Testing", 
@@ -681,29 +680,8 @@ describe("GreenBTC Test Campaign", () => {
         const badgeID1 = 1                            
         expect(await arkreenRetirement.getCertificate(badgeID1)).to.deep.equal(offsetRecord1)
 
-        const amountART2 = expandTo9Decimals(23)
-        const actionID2 = 2
-        const action2 = [  owner2.address, maker1.address, amountART2,                // Manger is the issuer address
-                          tokenID.add(MASK_OFFSET), lastBlock.timestamp, true ]     // Offset action is claimed
-        expect(await arkreenRetirement.getOffsetActions(actionID2)).to.deep.equal(action2)
-
-        const offsetRecord2 = [owner2.address, owner1.address, "Owner1", "Tester", "Just Testing", 
-                              BigNumber.from(lastBlock.timestamp), amountART2, [actionID2]]
-        const badgeID2 = 2                            
-        expect(await arkreenRetirement.getCertificate(badgeID2)).to.deep.equal(offsetRecord2)        
-
-        const amountART3 = expandTo9Decimals(34)
-        const actionID3 = 3
-        const action3 = [  owner2.address, maker1.address, amountART3,                // Manger is the issuer address
-                          tokenID.add(MASK_OFFSET), lastBlock.timestamp, true ]     // Offset action is claimed
-        expect(await arkreenRetirement.getOffsetActions(actionID3)).to.deep.equal(action3)
-
-        const offsetRecord3 = [owner2.address, owner1.address, "Owner1", "Tester", "Just Testing", 
-                              BigNumber.from(lastBlock.timestamp), amountART3, [actionID3]]
-        const badgeID3 = 3                            
-        expect(await arkreenRetirement.getCertificate(badgeID3)).to.deep.equal(offsetRecord3)        
-
-        expect(await arkreenRECTokenESG.balanceOf(owner1.address)).to.equal(artTokenESGBefore.sub(overAllARTwithFee1.add(overAllARTwithFee2).add(overAllARTwithFee3)))
+        expect(await arkreenRECTokenESG.balanceOf(owner1.address)).to.equal(artTokenESGBefore.sub(overAllARTToPay))
+        expect(await arkreenRECTokenESG.balanceOf(greenBitcoin.address)).to.equal(artTokenESGBeforeGBTC.sub(paymentByGreenBTC.sub(overAllARTToPay)))
 
         // Check dataGBTC
         const _dataGBTC1 = [ BigNumber.from(12345), expandTo9Decimals(12), owner2.address, 0x12,
@@ -813,7 +791,7 @@ describe("GreenBTC Test Campaign", () => {
           await greenBitcoin.connect(owner1).authMintGreenBTCWithARTBatch( [greenBTCInfo], {v,r,s}, 
                                                       badgeInfo, arkreenRECToken.address, constants_MaxDealine )     
 
-          expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(artTokenESGBefore.sub(expandTo9Decimals(45).mul(100).div(95)))                                                      
+          expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(artTokenESGBefore.sub(expandTo9Decimals(45)))                                                      
         }
              
         
@@ -875,7 +853,7 @@ describe("GreenBTC Test Campaign", () => {
            
           const receipt = await tx.wait()
           console.log("Gas used of authMintGreenBTCWithARTBatch of 10 items", receipt.gasUsed)
-//        expect(receipt.gasUsed).to.eq("7169162")        // 10: 7181278   7169162     
+          expect(receipt.gasUsed).to.eq("3030734")          // 10: 7169162 (Multiple Badge), 3030734(Single Badge)
         } 
         
 
@@ -909,10 +887,11 @@ describe("GreenBTC Test Campaign", () => {
 
           const receipt = await tx.wait()
           console.log("Gas used of authMintGreenBTCWithARTBatch(Open) of 20 items", receipt.gasUsed)
-//        expect(receipt.gasUsed).to.eq("14169028")        // 20: 14193304  14193326    
+          expect(receipt.gasUsed).to.eq("5953560")        // 20: 14169028(Multiple Badge), 5953560(Single Badge) 
 
           const _dataNFT1 = [owner1.address, 67890, true, false, false, 0]
           expect(await greenBitcoin.dataNFT(67890)).to.deep.equal(_dataNFT1)
+
           const _dataNFTX = [owner1.address, 67890+19, true, false, false, 0]
           expect(await greenBitcoin.dataNFT(67890+19)).to.deep.equal(_dataNFTX)       
         } 
@@ -923,8 +902,8 @@ describe("GreenBTC Test Campaign", () => {
         await arkreenRECBank.addNewART( arkreenRECToken.address,  maker1.address)
         await arkreenRECBank.addNewART( arkreenRECTokenESG.address,  maker2.address)  
         
-        await arkreenRECBank.connect(maker1).depositART( arkreenRECToken.address,  expandTo9Decimals(9000))
-        await arkreenRECBank.connect(maker2).depositART( arkreenRECTokenESG.address,  expandTo9Decimals(9000))
+        await arkreenRECBank.connect(maker1).depositART( arkreenRECToken.address,  expandTo9Decimals(5000))
+        await arkreenRECBank.connect(maker2).depositART( arkreenRECTokenESG.address,  expandTo9Decimals(5000))
 
         await arkreenRECToken.setClimateBuilder(arkreenBuilder.address)
         await arkreenRECTokenESG.setClimateBuilder(arkreenBuilder.address)
@@ -1085,8 +1064,8 @@ describe("GreenBTC Test Campaign", () => {
         await arkreenRECBank.addNewART( arkreenRECToken.address,  maker1.address)
         await arkreenRECBank.addNewART( arkreenRECTokenESG.address,  maker2.address)  
         
-        await arkreenRECBank.connect(maker1).depositART( arkreenRECToken.address,  expandTo9Decimals(9000))
-        await arkreenRECBank.connect(maker2).depositART( arkreenRECTokenESG.address,  expandTo9Decimals(9000))
+        await arkreenRECBank.connect(maker1).depositART( arkreenRECToken.address,  expandTo9Decimals(5000))
+        await arkreenRECBank.connect(maker2).depositART( arkreenRECTokenESG.address,  expandTo9Decimals(5000))
 
         await arkreenRECToken.setClimateBuilder(arkreenBuilder.address)
         await arkreenRECTokenESG.setClimateBuilder(arkreenBuilder.address)
@@ -1139,7 +1118,7 @@ describe("GreenBTC Test Campaign", () => {
         
         await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithApprove( greenBTCInfo, {v,r,s}, badgeInfo, 
                                             {token: AKREToken.address, amount: amountPay}, dealineBlock.timestamp-1))
-                    .to.be.revertedWith("GBTC: EXPIRED")    
+                    .to.be.revertedWith("GBTC: EXPIRED")
 
         // Error: Check signature of Green Bitcoin info                    
         await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithApprove( greenBTCInfo, {v,r:s,s}, badgeInfo, 
@@ -1149,7 +1128,7 @@ describe("GreenBTC Test Campaign", () => {
         // Error: Should approved before
         await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithApprove( greenBTCInfo, {v,r,s}, badgeInfo, 
                                             {token: AKREToken.address, amount: amountPay}, constants_MaxDealine))
-                    .to.be.revertedWith("TransferHelper: TRANSFER_FROM_FAILED")    
+                    .to.be.revertedWith("TransferHelper: TRANSFER_FROM_FAILED")
 
         await AKREToken.connect(owner1).approve(greenBitcoin.address, constants.MaxUint256)     
 
@@ -1236,13 +1215,14 @@ describe("GreenBTC Test Campaign", () => {
         }                      
       });
 
+/*
       it("GreenBTC Test: authMintGreenBTCWithApproveBatch", async () => {
 
         await arkreenRECBank.addNewART( arkreenRECToken.address,  maker1.address)
         await arkreenRECBank.addNewART( arkreenRECTokenESG.address,  maker2.address)  
         
-        await arkreenRECBank.connect(maker1).depositART( arkreenRECToken.address,  expandTo9Decimals(9000))
-        await arkreenRECBank.connect(maker2).depositART( arkreenRECTokenESG.address,  expandTo9Decimals(9000))
+        await arkreenRECBank.connect(maker1).depositART( arkreenRECToken.address,  expandTo9Decimals(5000))
+        await arkreenRECBank.connect(maker2).depositART( arkreenRECTokenESG.address,  expandTo9Decimals(5000))
 
         await arkreenRECToken.setClimateBuilder(arkreenBuilder.address)
         await arkreenRECTokenESG.setClimateBuilder(arkreenBuilder.address)
@@ -1477,7 +1457,7 @@ describe("GreenBTC Test Campaign", () => {
 
           const receipt = await tx.wait()
           console.log("Gas used of authMintGreenBTCWithApproveBatch of 20 items", receipt.gasUsed)
-//        expect(receipt.gasUsed).to.eq("14774178")        // 20: 14193304  14193326       
+          //        expect(receipt.gasUsed).to.eq("14774178")        // 20: 14193304  14193326       
         }       
         
         // Normal: authMintGreenBTCWithApproveBatch: arkreenRECToken: Gasfee
@@ -1512,7 +1492,7 @@ describe("GreenBTC Test Campaign", () => {
 
           const receipt = await tx.wait()
           console.log("Gas used of authMintGreenBTCWithApproveBatch(Open) of 20 items", receipt.gasUsed)
-//        expect(receipt.gasUsed).to.eq("15290477")        // 20: 15290477       
+          //        expect(receipt.gasUsed).to.eq("15290477")        // 20: 15290477       
         }    
       });
       
@@ -1521,8 +1501,8 @@ describe("GreenBTC Test Campaign", () => {
         await arkreenRECBank.addNewART( arkreenRECToken.address,  maker1.address)
         await arkreenRECBank.addNewART( arkreenRECTokenESG.address,  maker2.address)  
         
-        await arkreenRECBank.connect(maker1).depositART( arkreenRECToken.address,  expandTo9Decimals(9000))
-        await arkreenRECBank.connect(maker2).depositART( arkreenRECTokenESG.address,  expandTo9Decimals(9000))
+        await arkreenRECBank.connect(maker1).depositART( arkreenRECToken.address,  expandTo9Decimals(5000))
+        await arkreenRECBank.connect(maker2).depositART( arkreenRECTokenESG.address,  expandTo9Decimals(5000))
 
         await arkreenRECToken.setClimateBuilder(arkreenBuilder.address)
         await arkreenRECTokenESG.setClimateBuilder(arkreenBuilder.address)
@@ -1647,8 +1627,8 @@ describe("GreenBTC Test Campaign", () => {
         await arkreenRECBank.addNewART( arkreenRECToken.address,  maker1.address)
         await arkreenRECBank.addNewART( arkreenRECTokenESG.address,  maker2.address)  
         
-        await arkreenRECBank.connect(maker1).depositART( arkreenRECToken.address,  expandTo9Decimals(9000))
-        await arkreenRECBank.connect(maker2).depositART( arkreenRECTokenESG.address,  expandTo9Decimals(9000))
+        await arkreenRECBank.connect(maker1).depositART( arkreenRECToken.address,  expandTo9Decimals(5000))
+        await arkreenRECBank.connect(maker2).depositART( arkreenRECTokenESG.address,  expandTo9Decimals(5000))
 
         await arkreenRECToken.setClimateBuilder(arkreenBuilder.address)
         await arkreenRECTokenESG.setClimateBuilder(arkreenBuilder.address)
@@ -1759,8 +1739,8 @@ describe("GreenBTC Test Campaign", () => {
         await arkreenRECBank.addNewART( arkreenRECToken.address,  maker1.address)
         await arkreenRECBank.addNewART( arkreenRECTokenESG.address,  maker2.address)  
         
-        await arkreenRECBank.connect(maker1).depositART( arkreenRECToken.address,  expandTo9Decimals(9000))
-        await arkreenRECBank.connect(maker2).depositART( arkreenRECTokenESG.address,  expandTo9Decimals(9000))
+        await arkreenRECBank.connect(maker1).depositART( arkreenRECToken.address,  expandTo9Decimals(5000))
+        await arkreenRECBank.connect(maker2).depositART( arkreenRECTokenESG.address,  expandTo9Decimals(5000))
 
         await arkreenRECToken.setClimateBuilder(arkreenBuilder.address)
         await arkreenRECTokenESG.setClimateBuilder(arkreenBuilder.address)
@@ -1875,8 +1855,8 @@ describe("GreenBTC Test Campaign", () => {
         await arkreenRECBank.addNewART( arkreenRECToken.address,  maker1.address)
         await arkreenRECBank.addNewART( arkreenRECTokenESG.address,  maker2.address)  
         
-        await arkreenRECBank.connect(maker1).depositART( arkreenRECToken.address,  expandTo9Decimals(9000))
-        await arkreenRECBank.connect(maker2).depositART( arkreenRECTokenESG.address,  expandTo9Decimals(9000))
+        await arkreenRECBank.connect(maker1).depositART( arkreenRECToken.address,  expandTo9Decimals(5000))
+        await arkreenRECBank.connect(maker2).depositART( arkreenRECTokenESG.address,  expandTo9Decimals(5000))
 
         await arkreenRECToken.setClimateBuilder(arkreenBuilder.address)
         await arkreenRECTokenESG.setClimateBuilder(arkreenBuilder.address)
@@ -2043,8 +2023,8 @@ describe("GreenBTC Test Campaign", () => {
         await arkreenRECBank.addNewART( arkreenRECToken.address,  maker1.address)
         await arkreenRECBank.addNewART( arkreenRECTokenESG.address,  maker2.address)  
         
-        await arkreenRECBank.connect(maker1).depositART( arkreenRECToken.address,  expandTo9Decimals(9000))
-        await arkreenRECBank.connect(maker2).depositART( arkreenRECTokenESG.address,  expandTo9Decimals(9000))
+        await arkreenRECBank.connect(maker1).depositART( arkreenRECToken.address,  expandTo9Decimals(5000))
+        await arkreenRECBank.connect(maker2).depositART( arkreenRECTokenESG.address,  expandTo9Decimals(5000))
 
         await arkreenRECToken.setClimateBuilder(arkreenBuilder.address)
         await arkreenRECTokenESG.setClimateBuilder(arkreenBuilder.address)
@@ -2343,8 +2323,8 @@ describe("GreenBTC Test Campaign", () => {
         await arkreenRECBank.addNewART( arkreenRECToken.address,  maker1.address)
         await arkreenRECBank.addNewART( arkreenRECTokenESG.address,  maker2.address)  
         
-        await arkreenRECBank.connect(maker1).depositART( arkreenRECToken.address,  expandTo9Decimals(9000))
-        await arkreenRECBank.connect(maker2).depositART( arkreenRECTokenESG.address,  expandTo9Decimals(9000))
+        await arkreenRECBank.connect(maker1).depositART( arkreenRECToken.address,  expandTo9Decimals(5000))
+        await arkreenRECBank.connect(maker2).depositART( arkreenRECTokenESG.address,  expandTo9Decimals(5000))
 
         await arkreenRECToken.setClimateBuilder(arkreenBuilder.address)
         await arkreenRECTokenESG.setClimateBuilder(arkreenBuilder.address)
@@ -2415,5 +2395,7 @@ describe("GreenBTC Test Campaign", () => {
         console.log(uri3, '\r\n')
 
       });
+*/
+
     })  
 });

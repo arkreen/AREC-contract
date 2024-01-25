@@ -182,7 +182,7 @@ contract GreenBTC is
     }
 */
 
-    function _getFullARTValue( uint256 actionValue ) internal returns (uint256) {
+    function _getFullARTValue( uint256 actionValue ) internal view returns (uint256) {
         uint256 ratioFeeOffset = IArkreenRECToken(tokenCART).getRatioFeeOffset();
         return (actionValue * 10000) / (10000 - ratioFeeOffset);    // Add Offset fee
     }
@@ -260,7 +260,7 @@ contract GreenBTC is
       
         TransferHelper.safeTransferFrom(payInfo.token, msg.sender, address(this), payInfo.amount);
         payInfo.amount = IArkreenRECToken(tokenCART).getRatioFeeOffset();             // re-use to save memory buffer
-        _authVerifyBatch(0, gbtcList, sig);                                           // verify signature
+        _authVerifyBatch(gbtcList, sig);                                           // verify signature
 
         uint256 paymentAmount;
         for(uint256 index = 0; index < gbtcList.length; index++) {
@@ -305,15 +305,12 @@ contract GreenBTC is
         _checkGBTCData(gbtc, 0x10);
         require(whiteARTList[tokenART], "GBTC: ART Not Accepted"); 
 
-//        require(dataGBTC[gbtc.height].ARTCount == 0, "GBTC: Already Minted");
-//        require((gbtc.greenType & 0xF0) == 0x10, "GBTC: Wrong ART Type");
-
         _authVerify(gbtc, sig);                                                   // verify signature
 
         uint256 ratioFeeOffset = IArkreenRECToken(tokenART).getRatioFeeOffset();
 
+        TransferHelper.safeTransferFrom(tokenART, msg.sender, address(this), gbtc.ARTCount);
         uint256 amountART = (gbtc.ARTCount * 10000) / (10000 - ratioFeeOffset);    // Add Offset fee
-        TransferHelper.safeTransferFrom(tokenART, msg.sender, address(this), amountART);
 
         // actionBuilderBadgeWithART(address,uint256,uint256,(address,string,string,string)): 0x6E556DF8
         bytes memory builderCallData = abi.encodeWithSelector(0x6E556DF8, tokenART, amountART, uint32(deadline), badgeInfo);
@@ -341,24 +338,25 @@ contract GreenBTC is
 
         require(whiteARTList[tokenART], "GBTC: ART Not Accepted"); 
 
-        uint256 ratioFeeOffset = IArkreenRECToken(tokenART).getRatioFeeOffset();
-        uint256 amountARTSum = _authVerifyBatch(ratioFeeOffset, gbtcList, sig);                 // verify signature
-        TransferHelper.safeTransferFrom(tokenART, msg.sender, address(this), amountARTSum);
+        {
+            uint256 amountARTSum = _authVerifyBatch(gbtcList, sig);                     // verify signature
+            TransferHelper.safeTransferFrom(tokenART, msg.sender, address(this), amountARTSum);
+            
+            uint256 ratioFeeOffset = IArkreenRECToken(tokenART).getRatioFeeOffset();
+            uint256 amountART = ( amountARTSum *10000 ) / ( 10000 - ratioFeeOffset);
+            bytes memory builderCallData = abi.encodeWithSelector(0x6E556DF8, tokenART, amountART, uint32(deadline), badgeInfo);
+            _actionBuilderBadge(abi.encodePacked(builderCallData, gbtcList[0].minter));       // Pay back to msg.sender already
+        }
 
+        bool ifOpen = (deadline >> 32) != 0;
         for(uint256 index = 0; index < gbtcList.length; index++) {
             GreenBTCInfo calldata gbtc = gbtcList[index];
 
             _checkGBTCData(gbtc, 0x10);
-//            require(dataGBTC[gbtc.height].ARTCount == 0, "GBTC: Already Minted");
-//            require((gbtc.greenType & 0xF0) == 0x10, "GBTC: Wrong ART Type");
+            _mintNFT(gbtc);
+            if(ifOpen) openBox(gbtc.height);
 
-
-            uint256 amountART = (gbtc.ARTCount * 10000) / (10000 - ratioFeeOffset);    // Add Offset fee
-
-            // actionBuilderBadgeWithART(address,uint256,uint256,(address,string,string,string)): 0x6E556DF8
-            bytes memory builderCallData = abi.encodeWithSelector(0x6E556DF8, tokenART, amountART, uint32(deadline), badgeInfo);
-
-            _callActionBuilderBadge(builderCallData, deadline, gbtc);          
+            emit GreenBitCoin(gbtc.height, gbtc.ARTCount, gbtc.minter, gbtc.greenType);
         }
     }
     
@@ -568,7 +566,6 @@ contract GreenBTC is
      * @param sig Signature of the authority
      */
     function _authVerifyBatch(
-        uint256 ratioFeeOffset,
         GreenBTCInfo[] calldata gbtcList, 
         Sig calldata sig
     ) internal view returns(uint256 amountARTSum) {
@@ -576,11 +573,7 @@ contract GreenBTC is
         bytes memory greenBTCData = abi.encode(GREENBTC_BATCH_TYPEHASH, gbtcList);
 
         for(uint256 index = 0; index < gbtcList.length; index++) {
-            if(ratioFeeOffset != 0) {
-                amountARTSum += (gbtcList[index].ARTCount * 10000) / (10000 - ratioFeeOffset);
-            } else {
-                amountARTSum += gbtcList[index].ARTCount;
-            }
+            amountARTSum += gbtcList[index].ARTCount;
         }
 
         bytes32 greenBTCHash = keccak256(greenBTCData);
