@@ -14,9 +14,6 @@ import "./interfaces/IArkreenRegistry.sol";
 import "./interfaces/IArkreenBadge.sol";
 import "./interfaces/IPausable.sol";
 
-// Import this file to use console.log
-// import "hardhat/console.sol";
-
 contract ArkreenRECToken is
     OwnableUpgradeable,
     UUPSUpgradeable,
@@ -150,7 +147,7 @@ contract ArkreenRECToken is
         uint256 detailsCounter;
 
         // Calculate Offset fee 
-        uint256 feeOffset; 
+        uint256 feeOffset;
         if(ratioFeeOffset != 0 && receiverFee != address(0)) {
             feeOffset = amount * ratioFeeOffset / 10000;
             amount = amount - feeOffset;

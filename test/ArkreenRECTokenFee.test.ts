@@ -103,6 +103,9 @@ describe("ArkreenRECToken", () => {
       await arkreenRegistry.setRECIssuance(arkreenRECIssuance.address)
       await arkreenRegistry.setArkreenRetirement(arkreenBadge.address)
 
+      await arkreenRECToken.setReceiverFee(fund_receiver.address)
+      await arkreenRECToken.setRatioFeeOffset(1000)         
+
       return {AKREToken, arkreenMiner, arkreenRegistry, arkreenRECIssuance, arkreenRECToken, arkreenBadge}
     }
 
@@ -192,6 +195,9 @@ describe("ArkreenRECToken", () => {
         await arkreenRECIssuance.connect(maker1).liquidizeREC(tokenID)
       }
   
+      await arkreenRECToken.setReceiverFee(fund_receiver.address)
+      await arkreenRECToken.setRatioFeeOffset(1000)   
+
       // commitOffset
       await mintARECMaker(5000)       
       await expect(arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(0)))
@@ -206,46 +212,57 @@ describe("ArkreenRECToken", () => {
       const totalSupply = await arkreenRECToken.totalSupply()
       await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(10))
       expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(balance_1.sub(expandTo9Decimals(10)))
-      expect(await arkreenRECToken.totalSupply()).to.equal(totalSupply.sub(expandTo9Decimals(10)))
+      expect(await arkreenRECToken.totalSupply()).to.equal(totalSupply.sub(expandTo9Decimals(10).mul(90).div(100)))
+
       const offsetID1 = await arkreenBadge.offsetCounter()
       lastBlock = await ethers.provider.getBlock('latest')
-      const action_1 = [  owner1.address, manager.address, expandTo9Decimals(10),    // Manger is the issuer address
+      const action_1 = [  owner1.address, manager.address, expandTo9Decimals(10).mul(90).div(100),    // Manger is the issuer address
                           tokenID.add(MASK_OFFSET), lastBlock.timestamp, false ]
 
       expect(await arkreenBadge.getOffsetActions(offsetID1)).to.deep.equal(action_1)
 
       expect(await arkreenBadge.partialARECIDExt(arkreenRECToken.address)).to.equal(1)
-      expect(await arkreenBadge.partialAvailableAmountExt(arkreenRECToken.address)).to.equal(balance_1.sub(expandTo9Decimals(10)))
+      expect(await arkreenBadge.partialAvailableAmountExt(arkreenRECToken.address)).to.equal(balance_1.sub(expandTo9Decimals(10).mul(90).div(100)))
       
       await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(10))
       expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(balance_1.sub(expandTo9Decimals(20)))
       const offsetID2 = await arkreenBadge.offsetCounter()
       lastBlock = await ethers.provider.getBlock('latest')
-      const action_2 = [  owner1.address, manager.address, expandTo9Decimals(10),
+      const action_2 = [  owner1.address, manager.address, expandTo9Decimals(10).mul(90).div(100),
                           tokenID.add(MASK_OFFSET), lastBlock.timestamp, false ]
 
       expect(await arkreenBadge.partialARECIDExt(arkreenRECToken.address)).to.equal(1)
-      expect(await arkreenBadge.partialAvailableAmountExt(arkreenRECToken.address)).to.equal(balance_1.sub(expandTo9Decimals(20)))                          
+      expect(await arkreenBadge.partialAvailableAmountExt(arkreenRECToken.address)).to.equal(balance_1.sub(expandTo9Decimals(20).mul(90).div(100)))                          
 
       expect(await arkreenBadge.getOffsetActions(offsetID2)).to.deep.equal(action_2)
 
+      //      await arkreenRECToken.setReceiverFee(fund_receiver.address)
+      //      await arkreenRECToken.setRatioFeeOffset(1000)
+
       await expect(arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(10)))
+              .to.emit(arkreenRECToken, "Transfer")
+              .withArgs(owner1.address, constants.AddressZero, expandTo9Decimals(10).mul(90).div(100))  
+              .to.emit(arkreenRECToken, "Transfer")
+              .withArgs(owner1.address, fund_receiver.address, expandTo9Decimals(10).mul(10).div(100))   
               .to.emit(arkreenRECToken, "OffsetFinished")
-              .withArgs(owner1.address, expandTo9Decimals(10), offsetID2.add(1)) 
+              .withArgs(owner1.address, expandTo9Decimals(10).mul(90).div(100), offsetID2.add(1)) 
 
       expect(await arkreenBadge.partialARECIDExt(arkreenRECToken.address)).to.equal(1)
-      expect(await arkreenBadge.partialAvailableAmountExt(arkreenRECToken.address)).to.equal(balance_1.sub(expandTo9Decimals(30)))     
+      expect(await arkreenBadge.partialAvailableAmountExt(arkreenRECToken.address)).to.equal(balance_1.sub(expandTo9Decimals(30).mul(90).div(100)))     
       
       const recData: RECDataStruct = await arkreenRECIssuance.getRECData(tokenID)
       expect(recData.status).to.equal(BigNumber.from(RECStatus.Retired));      
 
-      expect(await arkreenRECToken.totalOffset()).to.equal(expandTo9Decimals(30))
+      expect(await arkreenRECToken.totalOffset()).to.equal(expandTo9Decimals(30).mul(90).div(100))
       await arkreenBadge.connect(owner1).mintCertificate(
                               owner1.address, owner1.address, "Owner","","Save Earth",[offsetID1,offsetID2])
             
     })
 
     it("ArkreenRECToken: commitOffsetFrom", async () => {
+
+      await arkreenRECToken.setReceiverFee(fund_receiver.address)
+      await arkreenRECToken.setRatioFeeOffset(1000)   
 
       // commitOffsetFrom
       await arkreenRECToken.connect(owner1).approve(owner2.address, expandTo9Decimals(1000))
@@ -257,7 +274,7 @@ describe("ArkreenRECToken", () => {
 
       expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(balance_1.sub(expandTo9Decimals(10)))
       expect(await arkreenRECToken.allowance(owner1.address, owner2.address)).to.equal(allowance_1.sub(expandTo9Decimals(10)))
-      expect(await arkreenRECToken.totalSupply()).to.equal(totalSupply.sub(expandTo9Decimals(10)))
+      expect(await arkreenRECToken.totalSupply()).to.equal(totalSupply.sub(expandTo9Decimals(10).mul(90).div(100)))
       const offsetID1 = await arkreenBadge.offsetCounter()
 
       await arkreenRECToken.connect(owner2).commitOffsetFrom(owner1.address, expandTo9Decimals(10))
@@ -266,20 +283,42 @@ describe("ArkreenRECToken", () => {
 
       await expect(arkreenRECToken.connect(owner2).commitOffsetFrom(owner1.address, expandTo9Decimals(10)))
               .to.emit(arkreenRECToken, "OffsetFinished")
-             .withArgs(owner1.address, expandTo9Decimals(10), offsetID2.add(1))
+             .withArgs(owner1.address, expandTo9Decimals(10).mul(90).div(100), offsetID2.add(1))
 
-      expect(await arkreenRECToken.totalOffset()).to.equal(expandTo9Decimals(30))        
-      const offsetID3 = await arkreenBadge.offsetCounter()              
+      expect(await arkreenRECToken.totalOffset()).to.equal(expandTo9Decimals(30).mul(90).div(100))    
+      const offsetID3 = await arkreenBadge.offsetCounter()    
      
       await arkreenBadge.connect(owner1).mintCertificate(
                              owner1.address, owner1.address, "Owner","","Save Earth",[offsetID1, offsetID2, offsetID3])
-           
+
+      await arkreenRECToken.setReceiverFee(fund_receiver.address)
+      await arkreenRECToken.setRatioFeeOffset(500)        
+
+      await expect(arkreenRECToken.connect(owner2).commitOffsetFrom(owner1.address, expandTo9Decimals(100)))
+              .to.emit(arkreenRECToken, "Transfer")
+              .withArgs(owner1.address, constants.AddressZero, expandTo9Decimals(100).mul(95).div(100))  
+              .to.emit(arkreenRECToken, "Transfer")
+              .withArgs(owner1.address, fund_receiver.address, expandTo9Decimals(100).mul(5).div(100))      
+              .to.emit(arkreenRECToken, "OffsetFinished")
+              .withArgs(owner1.address, expandTo9Decimals(100).mul(95).div(100), offsetID3.add(1))      
+         
    })
 
     it("ArkreenRECToken: mintCertificate: By REC token", async () => {
       // offsetAndMintCertificate
-      await arkreenRECToken.connect(owner1).offsetAndMintCertificate(
-                                              owner1.address, "Owner","Alice","Save Earth",expandTo9Decimals(10)) 
+      await arkreenRECToken.setReceiverFee(fund_receiver.address)
+      await arkreenRECToken.setRatioFeeOffset(1000)   
+
+      await expect(arkreenRECToken.connect(owner1).offsetAndMintCertificate(
+                                              owner1.address, "Owner","Alice","Save Earth",expandTo9Decimals(10)))
+              .to.emit(arkreenRECToken, "Transfer")
+              .withArgs(owner1.address, constants.AddressZero, expandTo9Decimals(10).mul(90).div(100))  
+              .to.emit(arkreenRECToken, "Transfer")
+              .withArgs(owner1.address, fund_receiver.address, expandTo9Decimals(10).mul(10).div(100))      
+              .to.emit(arkreenRECToken, "OffsetFinished")
+              .withArgs(owner1.address, expandTo9Decimals(10).mul(90).div(100), 1)       
+              .to.emit(arkreenBadge, "OffsetCertificateMinted")
+              .withArgs(1)
 
        // commitOffset
       await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(10))
@@ -303,7 +342,7 @@ describe("ArkreenRECToken", () => {
       await arkreenBadge.connect(owner1).updateCertificate(certId, owner1.address, "Kitty","Alice","")
 
       const offsetRecord = [owner1.address, owner1.address, "Kitty", "Alice", "Save Earth", 
-                            BigNumber.from(lastBlock.timestamp), expandTo9Decimals(30), [offsetID1,offsetID2,offsetID3]]
+                            BigNumber.from(lastBlock.timestamp), expandTo9Decimals(30).mul(90).div(100), [offsetID1,offsetID2,offsetID3]]
       expect(await arkreenBadge.getCertificate(certId)).to.deep.equal(offsetRecord)
       
 
@@ -401,7 +440,7 @@ describe("ArkreenRECToken", () => {
       const balance_1 = await arkreenRECToken.balanceOf(owner1.address)
       await expect(arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(1000)))
               .to.emit(arkreenRECToken, "OffsetFinished")
-              .withArgs(owner1.address, expandTo9Decimals(1000), 1) 
+              .withArgs(owner1.address, expandTo9Decimals(1000).mul(90).div(100), 1) 
 
       const balance_2 = await arkreenRECToken.balanceOf(owner1.address)
       expect(balance_2).to.equal(balance_1.sub(expandTo9Decimals(1000)))
@@ -418,11 +457,11 @@ describe("ArkreenRECToken", () => {
       await mintAREC(5000)          // 2
 
       const balance_1 = await arkreenRECToken.balanceOf(owner1.address)
-      await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(500))
+      await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(500))            // 450 used
 
-      await expect(arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(1500)))
+      await expect(arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(1500)))   // 0: 550 used, 1: 1500 * 0.9 - 550 = 800 used  
               .to.emit(arkreenRECToken, "OffsetFinished")
-              .withArgs(owner1.address, expandTo9Decimals(1500), 2) 
+              .withArgs(owner1.address, expandTo9Decimals(1500).mul(90).div(100), 2) 
 
       const balance_2 = await arkreenRECToken.balanceOf(owner1.address)
       expect(balance_2).to.equal(balance_1.sub(expandTo9Decimals(2000)))
@@ -432,8 +471,8 @@ describe("ArkreenRECToken", () => {
       expect(await arkreenRECIssuance.balanceOf(arkreenBadge.address)).to.equal(2)
       expect(await arkreenBadge.detailsCounter()).to.equal(1)
 
-      const detail_0 = [1, expandTo9Decimals(500)]
-      const detail_1 = [2, expandTo9Decimals(1000)]
+      const detail_0 = [1, expandTo9Decimals(550)]
+      const detail_1 = [2, expandTo9Decimals(800)]
 
       const offsetDetails = await arkreenBadge.getOffsetDetails(1)
       expect(offsetDetails[0]).to.deep.equal(detail_0)
@@ -469,18 +508,18 @@ describe("ArkreenRECToken", () => {
       await mintAREC(500)         // 20:  602
 
       const balance_1 = await arkreenRECToken.balanceOf(owner1.address)
-      await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(1500))
+      await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(1500).mul(100).div(90))
 
-      await expect(arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(50000)))
+      await expect(arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(50000).mul(100).div(90)))
               .to.emit(arkreenRECToken, "OffsetFinished")
               .withArgs(owner1.address, expandTo9Decimals(50000), 2) 
 
       const balance_2 = await arkreenRECToken.balanceOf(owner1.address)
-      expect(balance_2).to.equal(balance_1.sub(expandTo9Decimals(1500 +50000)))
+      expect(balance_2).to.equal(balance_1.sub(expandTo9Decimals(1500).mul(100).div(90).add(expandTo9Decimals(50000).mul(100).div(90))))
 
       expect(await arkreenRECToken.latestARECID()).to.equal(20)  // 18, 19, 20
 
-      expect(await arkreenRECIssuance.balanceOf(arkreenBadge.address)).to.equal(17)
+      expect(await arkreenRECIssuance.balanceOf(arkreenBadge.address)).to.equal(17)   //
       expect(await arkreenBadge.detailsCounter()).to.equal(2)
 
       const detail_0 = [4, expandTo9Decimals(8000)]
@@ -528,17 +567,17 @@ describe("ArkreenRECToken", () => {
       await mintAREC(200)         // 24:  691
 
       const balance_1 = await arkreenRECToken.balanceOf(owner1.address)
-      await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(1500))
+      await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(1500).mul(100).div(90))
 
       const balance_1_A = await arkreenRECToken.balanceOf(owner1.address)
-      expect(balance_1_A).to.equal(balance_1.sub(expandTo9Decimals(1500)))
+      expect(balance_1_A).to.equal(balance_1.sub(expandTo9Decimals(1500).mul(100).div(90)))
 
-      await expect(arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(66000)))
+      await expect(arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(66000).mul(100).div(90)))
               .to.emit(arkreenRECToken, "OffsetFinished")
               .withArgs(owner1.address, expandTo9Decimals(60600), 2) 
 
       const balance_2 = await arkreenRECToken.balanceOf(owner1.address)
-      expect(balance_2).to.equal(balance_1.sub(expandTo9Decimals(1500 +60600)))
+      expect(balance_2).to.equal(balance_1.sub(expandTo9Decimals(1500).mul(100).div(90).add(expandTo9Decimals(60600).mul(100).div(90))))
 
       expect(await arkreenRECToken.latestARECID()).to.equal(24)  // 22,23,24
 
@@ -586,21 +625,21 @@ describe("ArkreenRECToken", () => {
       await mintAREC(8000)        // 23:  689
       await mintAREC(200)         // 24:  691
 
-      const tx_1 = await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(500))
+      const tx_1 = await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(500).mul(100).div(90))
       const receipt_1 = await tx_1.wait()
-      expect(receipt_1.gasUsed).to.eq("431647")  // 429551 429573 429595 435553 435586 435300 432982 460991 461138  
+      expect(receipt_1.gasUsed).to.eq("459367")  // 431647(no fee) 429595 435553 435586 435300 432982 460991 461138  
 
-      const tx_2 = await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(800))
+      const tx_2 = await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(800).mul(100).div(90))
       const receipt_2 = await tx_2.wait()
-      expect(receipt_2.gasUsed).to.eq("414959")  // 412863 412907 422169 422158 414450 442460 442607 423814 
+      expect(receipt_2.gasUsed).to.eq("425149")  // 415009 412863(no fee) 412907 422169 422158 414450 442460 442607 423814 
 
-      const tx_3 = await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(200))
+      const tx_3 = await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(200).mul(100).div(90))
       const receipt_3 = await tx_3.wait()
-      expect(receipt_3.gasUsed).to.eq("206361")  // 204263 207832 207824 204554 204554   206361
+      expect(receipt_3.gasUsed).to.eq("216981")  // 206409 204263(no fee) 207832 207824 204554 204554  
 
-      const tx = await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(66000))
+      const tx = await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(66000).mul(100).div(90))
       const receipt = await tx.wait()
-      expect(receipt.gasUsed).to.eq("2110034")  //  2107974 2108392 2108414 2190594 2190925 2753332 2756125 
+      expect(receipt.gasUsed).to.eq("2120654")  // 2110120 2107974(no fee) 2108414 2190594 2190925 2753332 2756125 
     });
   })
 
