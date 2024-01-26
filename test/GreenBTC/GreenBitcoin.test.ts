@@ -1252,10 +1252,10 @@ describe("GreenBTC Test Campaign", () => {
         const lastBlock = await ethers.provider.getBlock('latest')
 
         const tokenID = await arkreenRECIssuance.totalSupply()
-        expect(await arkreenRetirement.totalSupply()).to.deep.equal(3)
-        expect(await arkreenRetirement.offsetCounter()).to.deep.equal(3)
+        expect(await arkreenRetirement.totalSupply()).to.deep.equal(1)
+        expect(await arkreenRetirement.offsetCounter()).to.deep.equal(1)
 
-        const amountART1 = expandTo9Decimals(12)
+        const amountART1 = expandTo9Decimals(12+23+34)
 
         const actionID1 = 1
         const action1 = [  owner2.address, maker1.address, amountART1,                // Manger is the issuer address
@@ -1266,28 +1266,6 @@ describe("GreenBTC Test Campaign", () => {
                               BigNumber.from(lastBlock.timestamp), amountART1, [actionID1]]
         const badgeID1 = 1                            
         expect(await arkreenRetirement.getCertificate(badgeID1)).to.deep.equal(offsetRecord1)
-
-        const amountART2 = expandTo9Decimals(23)
-        const actionID2 = 2
-        const action2 = [  owner2.address, maker1.address, amountART2,                // Manger is the issuer address
-                          tokenID.add(MASK_OFFSET), lastBlock.timestamp, true ]     // Offset action is claimed
-        expect(await arkreenRetirement.getOffsetActions(actionID2)).to.deep.equal(action2)
-
-        const offsetRecord2 = [owner2.address, owner1.address, "Owner1", "Tester", "Just Testing", 
-                              BigNumber.from(lastBlock.timestamp), amountART2, [actionID2]]
-        const badgeID2 = 2                            
-        expect(await arkreenRetirement.getCertificate(badgeID2)).to.deep.equal(offsetRecord2)        
-
-        const amountART3 = expandTo9Decimals(34)
-        const actionID3 = 3
-        const action3 = [  owner2.address, maker1.address, amountART3,                // Manger is the issuer address
-                          tokenID.add(MASK_OFFSET), lastBlock.timestamp, true ]     // Offset action is claimed
-        expect(await arkreenRetirement.getOffsetActions(actionID3)).to.deep.equal(action3)
-
-        const offsetRecord3 = [owner2.address, owner1.address, "Owner1", "Tester", "Just Testing", 
-                              BigNumber.from(lastBlock.timestamp), amountART3, [actionID3]]
-        const badgeID3 = 3                            
-        expect(await arkreenRetirement.getCertificate(badgeID3)).to.deep.equal(offsetRecord3)        
 
         expect(await AKREToken.balanceOf(owner1.address)).to.equal(AKREBefore.sub(amountPay))
 

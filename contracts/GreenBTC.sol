@@ -219,8 +219,6 @@ contract GreenBTC is
     ) public ensure(deadline) {
 
         _checkGBTCData(gbtc, 0x00);
-//        require(dataGBTC[gbtc.height].ARTCount == 0, "GBTC: Already Minted");
-//        require((gbtc.greenType & 0xF0) == 0x00, "GBTC: Wrong ART Type");
        
         _authVerify(gbtc, sig);                         // verify signature
 
@@ -251,38 +249,42 @@ contract GreenBTC is
      * gbtc.miner must be the caller if opening box at the same time 
      */
     function authMintGreenBTCWithApproveBatch(
-        GreenBTCInfo[]  calldata gbtcList, 
-        Sig             calldata sig, 
-        BadgeInfo       calldata badgeInfo, 
-        PayInfo         memory payInfo,
-        uint256                  deadline
+        GreenBTCInfo[]  calldata  gbtcList, 
+        Sig             calldata  sig, 
+        BadgeInfo       calldata  badgeInfo, 
+        PayInfo         memory    payInfo,
+        uint256                   deadline
     ) public ensure(deadline) {
       
+        uint256 amountARTSum = _authVerifyBatch(gbtcList, sig);
         TransferHelper.safeTransferFrom(payInfo.token, msg.sender, address(this), payInfo.amount);
-        payInfo.amount = IArkreenRECToken(tokenCART).getRatioFeeOffset();             // re-use to save memory buffer
-        _authVerifyBatch(gbtcList, sig);                                           // verify signature
 
-        uint256 paymentAmount;
-        for(uint256 index = 0; index < gbtcList.length; index++) {
+        uint256 ratioFeeOffset = IArkreenRECToken(tokenCART).getRatioFeeOffset();
+         
+        // modeAction = 0x02/0x06, bit0 = 0: exact ART amount; bit1 = 1: ArkreenBank is used to get CART token; bit2 = 0: Repay to caller  
+        uint256 modeAction = 0x02;
 
-            GreenBTCInfo calldata gbtc = gbtcList[index];
-
-            _checkGBTCData(gbtc, 0x00);
-//            require(dataGBTC[gbtc.height].ARTCount == 0, "GBTC: Already Minted");
-//            require((gbtc.greenType & 0xF0) == 0x00, "GBTC: Wrong ART Type");
-          
-            // actionBuilderBadge(address,address,uint256,uint256,uint256,uint256,(address,string,string,string)): 0x8D7FCEFD
-            paymentAmount = IERC20(payInfo.token).balanceOf(address(this));         
-
-            // modeAction = 0x02/0x06, bit0 = 0: exact ART amount; bit1 = 1: ArkreenBank is used to get CART token; bit2 = 0: Repay to caller  
-            uint256 modeAction = (index == gbtcList.length - 1) ? 0x02 : 0x06;
-
-            bytes memory builderCallData = abi.encodeWithSelector( 0x8D7FCEFD, payInfo.token, tokenCART, paymentAmount,
-                                                  (gbtc.ARTCount * 10000) / (10000 - payInfo.amount),     // save memory buffer
+        // actionBuilderBadge(address,address,uint256,uint256,uint256,uint256,(address,string,string,string)): 0x8D7FCEFD
+        bytes memory builderCallData = abi.encodeWithSelector( 0x8D7FCEFD, payInfo.token, tokenCART, payInfo.amount,
+                                                  (amountARTSum * 10000) / (10000 - ratioFeeOffset),     // save memory buffer
                                                   modeAction, uint32(deadline), badgeInfo);
 
-            _callActionBuilderBadge(builderCallData, deadline, gbtc);                                                                      
-        }
+        _actionBuilderBadge(abi.encodePacked(builderCallData, gbtcList[0].minter));      // Pay back to msg.sender already
+
+        _mintGreenBTCBatch(deadline, 0x00, gbtcList);
+    }
+
+    function _mintGreenBTCBatch(uint256 deadline, uint8 typeTarget, GreenBTCInfo[] calldata gbtcList) internal {
+        bool ifOpen = (deadline >> 32) != 0;
+        for(uint256 index = 0; index < gbtcList.length; index++) {
+            GreenBTCInfo calldata gbtc = gbtcList[index];
+
+            _checkGBTCData(gbtc, typeTarget);
+            _mintNFT(gbtc);
+            if(ifOpen) openBox(gbtc.height);
+
+            emit GreenBitCoin(gbtc.height, gbtc.ARTCount, gbtc.minter, gbtc.greenType);
+        }      
     }
 
     /** 
@@ -308,9 +310,8 @@ contract GreenBTC is
         _authVerify(gbtc, sig);                                                   // verify signature
 
         uint256 ratioFeeOffset = IArkreenRECToken(tokenART).getRatioFeeOffset();
-
-        TransferHelper.safeTransferFrom(tokenART, msg.sender, address(this), gbtc.ARTCount);
         uint256 amountART = (gbtc.ARTCount * 10000) / (10000 - ratioFeeOffset);    // Add Offset fee
+        TransferHelper.safeTransferFrom(tokenART, msg.sender, address(this), amountART);
 
         // actionBuilderBadgeWithART(address,uint256,uint256,(address,string,string,string)): 0x6E556DF8
         bytes memory builderCallData = abi.encodeWithSelector(0x6E556DF8, tokenART, amountART, uint32(deadline), badgeInfo);
@@ -338,26 +339,16 @@ contract GreenBTC is
 
         require(whiteARTList[tokenART], "GBTC: ART Not Accepted"); 
 
-        {
-            uint256 amountARTSum = _authVerifyBatch(gbtcList, sig);                     // verify signature
-            TransferHelper.safeTransferFrom(tokenART, msg.sender, address(this), amountARTSum);
+        uint256 amountARTSum = _authVerifyBatch(gbtcList, sig);                     // verify signature
             
-            uint256 ratioFeeOffset = IArkreenRECToken(tokenART).getRatioFeeOffset();
-            uint256 amountART = ( amountARTSum *10000 ) / ( 10000 - ratioFeeOffset);
-            bytes memory builderCallData = abi.encodeWithSelector(0x6E556DF8, tokenART, amountART, uint32(deadline), badgeInfo);
-            _actionBuilderBadge(abi.encodePacked(builderCallData, gbtcList[0].minter));       // Pay back to msg.sender already
-        }
+        uint256 ratioFeeOffset = IArkreenRECToken(tokenART).getRatioFeeOffset();
+        uint256 amountART = ( amountARTSum *10000 ) / ( 10000 - ratioFeeOffset);
+        TransferHelper.safeTransferFrom(tokenART, msg.sender, address(this), amountART);
 
-        bool ifOpen = (deadline >> 32) != 0;
-        for(uint256 index = 0; index < gbtcList.length; index++) {
-            GreenBTCInfo calldata gbtc = gbtcList[index];
+        bytes memory builderCallData = abi.encodeWithSelector(0x6E556DF8, tokenART, amountART, uint32(deadline), badgeInfo);
+        _actionBuilderBadge(abi.encodePacked(builderCallData, gbtcList[0].minter));       // Pay back to msg.sender already
 
-            _checkGBTCData(gbtc, 0x10);
-            _mintNFT(gbtc);
-            if(ifOpen) openBox(gbtc.height);
-
-            emit GreenBitCoin(gbtc.height, gbtc.ARTCount, gbtc.minter, gbtc.greenType);
-        }
+        _mintGreenBTCBatch(deadline, 0x10, gbtcList);
     }
     
     /**
