@@ -5,6 +5,8 @@ import '@typechain/hardhat'
 import '@nomiclabs/hardhat-ethers'
 import "hardhat-deploy"
 import "@nomiclabs/hardhat-etherscan"
+//import "@nomicfoundation/hardhat-verify"
+
 import "hardhat-storage-layout"
 import '@nomiclabs/hardhat-waffle'
 import "hardhat-contract-sizer"
@@ -142,6 +144,7 @@ const config: HardhatUserConfig = {
         settings: {
           metadata: {
             bytecodeHash: "none",
+            useLiteralContent: true
           },
           optimizer: {
             enabled: true,
@@ -154,6 +157,7 @@ const config: HardhatUserConfig = {
         settings: {
           metadata: {
             bytecodeHash: "none",
+            useLiteralContent: true
           },
           optimizer: {
             enabled: true,

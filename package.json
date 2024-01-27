@@ -95,7 +95,6 @@
     "deploy:matic_test:ArkreenBadgeImageD": "hardhat --network matic_test deploy --tags ArkreenBadgeImageD",
     "deploy:matic_test:RECBadgeI": "hardhat --network matic_test deploy --tags RECBadgeI",
     "deploy:matic_test:ArkreenRECIssuanceImageD": "hardhat --network matic_test deploy --tags ArkreenRECIssuanceImageD",
-  
     "deploy:matic:gAKRE": "hardhat --network matic deploy --tags gAKRE",
     "deploy:matic:arkReward": "hardhat --network matic deploy --tags arkReward",
     "deploy:matic:AMiner": "hardhat --network matic deploy --tags AMiner",
@@ -145,7 +144,6 @@
     "deploy:matic:ABuilderU": "hardhat --network matic deploy --tags ABuilderU",
     "deploy:matic:ArtBankD": "hardhat --network matic deploy --tags ArtBankD",
     "deploy:matic:ArtBankU": "hardhat --network matic deploy --tags ArtBankU",
-
     "etherscan:matic": "hardhat --network matic etherscan-verify --api-key",
     "deploy:celo_test:gRegistry": "hardhat --network celo_test deploy --tags gRegistry",
     "deploy:celo_test:RECIssueExtD": "hardhat --network celo_test deploy --tags RECIssueExtD --reset",
@@ -160,9 +158,8 @@
     "deploy:celo_test:ArtBankI": "hardhat --network celo_test deploy --tags ArtBankI",
     "deploy:celo_test:MulticallD": "hardhat --network celo_test deploy --tags MulticallD",
     "deploy:celo_test:RECTokenI": "hardhat --network celo_test deploy --tags RECTokenI",
-    "deploy:celo_test:gRegistryD": "hardhat --network celo_test deploy --tags gRegistryD",  
+    "deploy:celo_test:gRegistryD": "hardhat --network celo_test deploy --tags gRegistryD",
     "deploy:celo_test:gRegistryU": "hardhat --network celo_test deploy --tags gRegistryU",
-
     "allowance:celo_test": "hardhat run --network celo_test ./deploy/allowance_manager.ts",
     "confirmAuto:celo_test": "hardhat run --network celo_test ./deploy/confirmIssuance_celo.ts",
     "etherscan:celo_test": "hardhat --network celo_test etherscan-verify --api-url https://api-alfajores.celoscan.io --api-key",
@@ -204,8 +201,9 @@
     "@nomicfoundation/hardhat-chai-matchers": "^1.0.3",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.4",
     "@nomicfoundation/hardhat-toolbox": "^1.0.2",
+    "@nomicfoundation/hardhat-verify": "^2.0.3",
     "@nomiclabs/hardhat-ethers": "^2.1.1",
-    "@nomiclabs/hardhat-etherscan": "^3.1.0",
+    "@nomiclabs/hardhat-etherscan": "3.1.8",
     "@openzeppelin/contracts": "^4.7.3",
     "@openzeppelin/contracts-upgradeable": "^4.7.3",
     "@openzeppelin/hardhat-upgrades": "^1.20.0",
@@ -219,6 +217,7 @@
     "@uniswap/v2-core": "1.0.1",
     "@uniswap/v3-core": "1.0.0",
     "chai": "^4.3.6",
+    "decimal.js": "^10.2.1",
     "dotenv": "^16.0.2",
     "ethereumjs-util": "^6.2.0",
     "ethers": "^5.7.0",
@@ -232,7 +231,7 @@
     "ts-node": "^10.9.1",
     "typechain": "^8.1.0",
     "typescript": "^4.7.4",
-    "decimal.js": "^10.2.1"
+    "source-map": "^0.7.2"
   },
   "dependencies": {
     "@nomiclabs/hardhat-waffle": "^2.0.5",
