@@ -848,7 +848,6 @@ describe("GreenBTC Test Campaign", () => {
         } 
       });     
 
-/*
       it("GreenBTC Test: authMintGreenBTCWithNative", async () => {
         await arkreenRECBank.addNewART( arkreenRECToken.address,  maker1.address)
         await arkreenRECBank.addNewART( arkreenRECTokenESG.address,  maker2.address)  
@@ -929,10 +928,10 @@ describe("GreenBTC Test Campaign", () => {
                                                     badgeInfo, constants_MaxDealine, {value: expandTo18Decimals(24)}))
                       .to.emit(WETH, 'Transfer')
                       .withArgs(greenBitcoin.address, arkreenBuilder.address, expandTo18Decimals(24))                                                           
-//                      .to.emit(WETH, 'Transfer')
-//                      .withArgs(arkreenBuilder.address, constants.AddressZero, expandTo18Decimals(24))                                                 
                       .to.emit(arkreenRECBank, 'ARTSold')
                       .withArgs(arkreenRECTokenESG.address, WETH.address, expandTo9Decimals(12), expandTo18Decimals(24))   
+                      .to.emit(arkreenRECTokenESG, 'Transfer')
+                      .withArgs(arkreenBuilder.address, constants.AddressZero, amountART)                                                 
                       .to.emit(greenBitcoin, 'Transfer')
                       .withArgs(constants.AddressZero, owner2.address, 12345)                                                 
                       .to.emit(greenBitcoin, 'GreenBitCoin')
@@ -1008,7 +1007,7 @@ describe("GreenBTC Test Campaign", () => {
         }
 
       });
-*/
+
       it("GreenBTC Test: authMintGreenBTCWithApprove", async () => {
 
         await arkreenRECBank.addNewART( arkreenRECToken.address,  maker1.address)

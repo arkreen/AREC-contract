@@ -14,7 +14,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     // const NEW_IMPLEMENTATION = "0x2D597ba4358638fFED7918994AaC12c535A93F89"        // 2023/02/25: Initial version
     // const NEW_IMPLEMENTATION = "0x16dB479F500aeE6C1683955e0E34394fe81Be12d"        // 2023/03/14: Upgrade to support sales bank
     // const NEW_IMPLEMENTATION = "0xd320E323293d092d3dcC3533AF477cD14976C31B"        // 2023/10/11: Upgrade to support directly using ART in AREC Builder
-    const NEW_IMPLEMENTATION = "0x4aF1eADF9f2f51395Fc2329ac0ab554DBb7EBF57"           // 2023/12/05: Overpayemnt payback target address is configed with modeAction
+    // const NEW_IMPLEMENTATION = "0x4aF1eADF9f2f51395Fc2329ac0ab554DBb7EBF57"        // 2023/12/05: Overpayemnt payback target address is configed with modeAction
+    const NEW_IMPLEMENTATION = "0x5054ce5432f3597dAFa90b246253F6433b56e3a9"           // 2024/01/27: Upgrade to support UniV3 and Charging offset fee
 
     console.log("Updating HashKey ESG Builder: ", ESG_BUILDER_ADDRESS);  
 
@@ -64,6 +65,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2023/12/05: 
 // yarn deploy:matic_test:ABuilderU
 // Upgrade to implementation: 0x4aF1eADF9f2f51395Fc2329ac0ab554DBb7EBF57
+
+// 2024/01/27: 
+// yarn deploy:matic_test:ABuilderU
+// Upgrade to implementation: 0x5054ce5432f3597dAFa90b246253F6433b56e3a9
 
 export default func;
 func.tags = ["ABuilderU"];

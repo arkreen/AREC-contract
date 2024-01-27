@@ -19,9 +19,6 @@ import "./interfaces/IArkreenRECToken.sol";
 import './GreenBTCType.sol';
 import "./interfaces/IERC20.sol";
 
-// Import this file to use console.log
-//import "hardhat/console.sol";
-
 contract GreenBTC is 
     ContextUpgradeable,
     UUPSUpgradeable,
@@ -149,7 +146,7 @@ contract GreenBTC is
         }
     }
 
-    /*
+    /**
      * @dev Greenize BTC with the native token
      * @param gbtc Bitcoin block info to be greenized
      * @param sig Signature of the authority to Bitcoin block info
@@ -157,7 +154,6 @@ contract GreenBTC is
      * @param deadline LB0-LB3: The deadline to cancel the transaction, LB7: 0x80, Open box at same time,
      * gbtc.miner must be the caller if opening box at the same time 
      */
-/*     
     function authMintGreenBTCWithNative(
         GreenBTCInfo    calldata gbtc,
         Sig             calldata sig,
@@ -180,7 +176,6 @@ contract GreenBTC is
 
         _callActionBuilderBadge(builderCallData, deadline, gbtc);                                 
     }
-*/
 
     function _getFullARTValue( uint256 actionValue ) internal view returns (uint256) {
         uint256 ratioFeeOffset = IArkreenRECToken(tokenCART).getRatioFeeOffset();
@@ -252,7 +247,7 @@ contract GreenBTC is
         GreenBTCInfo[]  calldata  gbtcList, 
         Sig             calldata  sig, 
         BadgeInfo       calldata  badgeInfo, 
-        PayInfo         memory    payInfo,
+        PayInfo         calldata  payInfo,
         uint256                   deadline
     ) public ensure(deadline) {
       
@@ -274,6 +269,10 @@ contract GreenBTC is
         _mintGreenBTCBatch(deadline, 0x00, gbtcList);
     }
 
+    /** 
+     * @dev Mint BTC blocks in batch
+     * @param gbtcList List of the Bitcoin block info to be minted
+     */
     function _mintGreenBTCBatch(uint256 deadline, uint8 typeTarget, GreenBTCInfo[] calldata gbtcList) internal {
         bool ifOpen = (deadline >> 32) != 0;
         for(uint256 index = 0; index < gbtcList.length; index++) {

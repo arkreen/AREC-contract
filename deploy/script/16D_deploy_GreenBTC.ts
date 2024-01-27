@@ -60,6 +60,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:GreenBTCD:  Upgrade for enable pay back config
 // Implemenation:  0x5Ae000aee2BFA8CB76f655FdBCdFe3Cb0e727941
 
+// 2024/01/27
+// yarn deploy:matic_test:GreenBTCD:  Upgrade to support: Charge offset ART, one badge for batch buying
+// Implemenation: 0x331DA2A2E7a92247AFe4A7f96F1bbc7099933527
+
 func.tags = ["GreenBTCD"];
 
 export default func;

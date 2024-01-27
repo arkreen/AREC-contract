@@ -17,7 +17,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     // const AREC_ISSUE_ADDRESS  = "0xFedD52848Cb44dcDBA95df4cf2BCBD71D58df879"
     // const RECTOKEN_ADDRESS    = "0xb0c9dD915f62d0A37792FD2ce497680E909D8c0F"  // ART simu: Need to check
     // const BUILDER_ADDRESS   = "0xA05A9677a9216401CF6800d28005b227F7A3cFae"    // Action Builder address: Simu
-    const ratioFeeToSolidify = 1000                                              // Ratio of the fee to solidify
+    // const ratioFeeToSolidify = 1000                                              // Ratio of the fee to solidify
+    const ratioFeeToOffset = 1000                                                // Ratio of the fee to offset
 
     const ArkreenRECTokenFactory = ArkreenRECToken__factory.connect(ART_ADDRESS, deployer);
 
@@ -29,11 +30,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     // console.log(" Set ArkreenBuilder address to the ART/HART token contract: ", hre.network.name, BUILDER_ADDRESS, ART_ADDRESS );
 
     // Set setRatioFeeToSolidify to the ART/HART token contract: 2023/08/17
-    const setRatioFeeToSolidifyTx = await ArkreenRECTokenFactory.setRatioFeeToSolidify(ratioFeeToSolidify)
-    await setRatioFeeToSolidifyTx.wait()
+    // const setRatioFeeToSolidifyTx = await ArkreenRECTokenFactory.setRatioFeeToSolidify(ratioFeeToSolidify)
+    // await setRatioFeeToSolidifyTx.wait()
 
-    console.log("ArkreenRECToken Tx:", setRatioFeeToSolidifyTx)
-    console.log("Set setRatioFeeToSolidify to the ART/HART token contract: ", hre.network.name, ART_ADDRESS, ratioFeeToSolidify);
+    // Set setRatioFeeToSolidify to the ART/HART token contract: 2024/01/27
+    const setRatioFeeOffsetTx = await ArkreenRECTokenFactory.setRatioFeeOffset(ratioFeeToOffset)
+    await setRatioFeeOffsetTx.wait()
+
+
+    console.log("ArkreenRECToken Tx:", setRatioFeeOffsetTx)
+    console.log("Set setRatioFeeToSolidify to the ART/HART token contract: ", hre.network.name, ART_ADDRESS, ratioFeeToOffset);
 
     //const updateTx = await  ArkreenRECTokenFactory.setClimateBuilder(AREC_ISSUE_ADDRESS)
     //await updateTx.wait()
@@ -105,8 +111,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2023/10/30: Call setClimateBuilder to update climateBuilder: 0x3d5531cF0bC2e8d0658fEc0D1a9995211Ac1f337
 // yarn deploy:celo:RECTokenI
 
-// 2023/05/10: Call setIssuerREC to update AREC_ISSUE_ADDRESS: 0xFedD52848Cb44dcDBA95df4cf2BCBD71D58df879
+// 2023/11/01: Call setIssuerREC to update AREC_ISSUE_ADDRESS: 0x9BBF9f544F3ceD640090f43FF6B820894f66Aaef
 // yarn deploy:celo_test:RECTokenI
+
+// 2024/01/27: Call setRatioFeeOffset on ART: 0xb0c9dD915f62d0A37792FD2ce497680E909D8c0F
+// yarn deploy:matic_test:RECTokenI
+
+// 2024/01/27A: Call setRatioFeeOffset on ART: 0x0999afb673944a7b8e1ef8eb0a7c6ffdc0b43e31
+// yarn deploy:matic_test:RECTokenI
 
 func.tags = ["RECTokenI"];
 
