@@ -421,11 +421,11 @@ describe("GreenBTC Test Campaign", () => {
         const lastBlock = await ethers.provider.getBlock('latest')
 
         const tokenID = await arkreenRECIssuance.totalSupply()
-        const action = [  owner2.address, maker1.address, amountART,                // Manger is the issuer address
+        const action = [  owner1.address, maker1.address, amountART,                // Manger is the issuer address
                           tokenID.add(MASK_OFFSET), lastBlock.timestamp, true ]     // Offset action is claimed
         expect(await arkreenRetirement.getOffsetActions(actionID)).to.deep.equal(action)
 
-        const offsetRecord = [owner2.address, owner1.address, "Owner1", "Tester", "Just Testing", 
+        const offsetRecord = [owner1.address, owner1.address, "Owner1", "Tester", "Just Testing", 
                               BigNumber.from(lastBlock.timestamp), amountART, [actionID]]
         const badgeID = 1                            
         expect(await arkreenRetirement.getCertificate(badgeID)).to.deep.equal(offsetRecord)
@@ -622,11 +622,11 @@ describe("GreenBTC Test Campaign", () => {
         const amountART1 = expandTo9Decimals(12+23+34)
 
         const actionID1 = 1
-        const action1 = [  owner2.address, maker1.address, amountART1,                // Manger is the issuer address
+        const action1 = [  owner1.address, maker1.address, amountART1,                // Manger is the issuer address
                           tokenID.add(MASK_OFFSET), lastBlock.timestamp, true ]     // Offset action is claimed
         expect(await arkreenRetirement.getOffsetActions(actionID1)).to.deep.equal(action1)
 
-        const offsetRecord1 = [owner2.address, owner1.address, "Owner1", "Tester", "Just Testing", 
+        const offsetRecord1 = [owner1.address, owner1.address, "Owner1", "Tester", "Just Testing", 
                               BigNumber.from(lastBlock.timestamp), amountART1, [actionID1]]
         const badgeID1 = 1                            
         expect(await arkreenRetirement.getCertificate(badgeID1)).to.deep.equal(offsetRecord1)
@@ -941,11 +941,11 @@ describe("GreenBTC Test Campaign", () => {
         const lastBlock = await ethers.provider.getBlock('latest')
         
         const tokenID = await arkreenRECIssuance.totalSupply()
-        const action = [  owner2.address, maker1.address, amountART,                // Manger is the issuer address
+        const action = [  owner1.address, maker1.address, amountART,                // Manger is the issuer address
                           tokenID.add(MASK_OFFSET), lastBlock.timestamp, true ]     // Offset action is claimed
         expect(await arkreenRetirement.getOffsetActions(actionID)).to.deep.equal(action)
 
-        const offsetRecord = [owner2.address, owner1.address, "Owner1", "Tester", "Just Testing", 
+        const offsetRecord = [owner1.address, owner1.address, "Owner1", "Tester", "Just Testing", 
                               BigNumber.from(lastBlock.timestamp), amountART, [actionID]]
         const badgeID = 1                            
         expect(await arkreenRetirement.getCertificate(badgeID)).to.deep.equal(offsetRecord)
@@ -1094,18 +1094,18 @@ describe("GreenBTC Test Campaign", () => {
         const lastBlock = await ethers.provider.getBlock('latest')
         
         const tokenID = await arkreenRECIssuance.totalSupply()
-        const action = [  owner2.address, maker1.address, amountART,                // Manger is the issuer address
+        const action = [  owner1.address, maker1.address, amountART,                // Manger is the issuer address
                           tokenID.add(MASK_OFFSET), lastBlock.timestamp, true ]     // Offset action is claimed
         expect(await arkreenRetirement.getOffsetActions(actionID)).to.deep.equal(action)
 
-        const offsetRecord = [owner2.address, owner1.address, "Owner1", "Tester", "Just Testing", 
+        const offsetRecord = [owner1.address, owner1.address, "Owner1", "Tester", "Just Testing", 
                               BigNumber.from(lastBlock.timestamp), amountART, [actionID]]
         const badgeID = 1                            
         expect(await arkreenRetirement.getCertificate(badgeID)).to.deep.equal(offsetRecord)
         expect(await arkreenRECTokenESG.balanceOf(owner1.address)).to.equal(ARECBefore)
 
         // Check Badge owner
-        expect(await arkreenRetirement.ownerOf(badgeID)).to.equal(owner2.address)
+        expect(await arkreenRetirement.ownerOf(badgeID)).to.equal(owner1.address)
 
         // Check dataGBTC
         const _dataGBTC = [ BigNumber.from(12345), expandTo9Decimals(12), owner2.address, 1,
@@ -1257,11 +1257,11 @@ describe("GreenBTC Test Campaign", () => {
         const amountART1 = expandTo9Decimals(12+23+34)
 
         const actionID1 = 1
-        const action1 = [  owner2.address, maker1.address, amountART1,                // Manger is the issuer address
+        const action1 = [  owner1.address, maker1.address, amountART1,                // Manger is the issuer address
                           tokenID.add(MASK_OFFSET), lastBlock.timestamp, true ]     // Offset action is claimed
         expect(await arkreenRetirement.getOffsetActions(actionID1)).to.deep.equal(action1)
 
-        const offsetRecord1 = [owner2.address, owner1.address, "Owner1", "Tester", "Just Testing", 
+        const offsetRecord1 = [owner1.address, owner1.address, "Owner1", "Tester", "Just Testing", 
                               BigNumber.from(lastBlock.timestamp), amountART1, [actionID1]]
         const badgeID1 = 1                            
         expect(await arkreenRetirement.getCertificate(badgeID1)).to.deep.equal(offsetRecord1)
@@ -1351,7 +1351,54 @@ describe("GreenBTC Test Campaign", () => {
                       .to.be.revertedWith("GBTC: Wrong ART Type")       
 
         } 
-                   
+
+        // Over Payment: authMintGreenBTCWithApproveBatch
+        {
+          let greenBTCInfoArray = new Array<GreenBTCInfo>(20)
+          for( let index = 0; index < greenBTCInfoArray.length; index++) {
+            greenBTCInfoArray[index]=  {
+              height:     BigNumber.from(543210).add(index),
+              ARTCount:   expandTo9Decimals(12),  // 12 HART
+              minter:     owner1.address,
+              greenType:  1,
+              blockTime:  'Apr 14, 2009 10:25 PM UTC',
+              energyStr:  '45.234 MWh'
+            }
+          }
+
+          // const receiver = owner1.address
+          const register_digest = getGreenBitcoinDigestBatch(
+                          'Green BTC Club',
+                          greenBitcoin.address, greenBTCInfoArray
+                        )
+    
+          const {v,r,s} = ecsign( Buffer.from(register_digest.slice(2), 'hex'), 
+                                                Buffer.from(privateKeyRegister.slice(2), 'hex'))  
+
+          await arkreenRECToken.connect(owner1).approve(greenBitcoin.address, constants.MaxUint256)  
+
+          const amountPay = expandTo18Decimals(12*20*10 + 5)
+
+          const arkreBefore = await AKREToken.balanceOf(owner1.address) 
+          const arkreGreenBTCBefore = await AKREToken.balanceOf(greenBitcoin.address) 
+
+          const tx = await greenBitcoin.connect(owner1).authMintGreenBTCWithApproveBatch( 
+                            greenBTCInfoArray, {v,r,s}, badgeInfo, {token: AKREToken.address, amount: amountPay}, constants_MaxDealine )  
+
+          const receipt = await tx.wait()
+          console.log("Gas used of authMintGreenBTCWithApproveBatch of 20 items", receipt.gasUsed)
+//        expect(receipt.gasUsed).to.eq("14774178")        // 20: 14193304  14193326       
+          
+          const arkreAfter = await AKREToken.balanceOf(owner1.address) 
+          const arkreGreenBTCAfter = await AKREToken.balanceOf(greenBitcoin.address) 
+
+          console.log("QQQQQQQQQQQQ", arkreBefore.toString(), arkreAfter.toString(), arkreGreenBTCBefore.toString(), arkreGreenBTCAfter.toString())
+          console.log("PPPPPPPPPPPPPPPP", owner1.address, greenBitcoin.address, owner2.address)
+
+          expect(arkreAfter).to.eq(arkreBefore.sub(expandTo18Decimals(12*20*10)))
+
+        }       
+                           
         // Normal: authMintGreenBTCWithApproveBatch: arkreenRECToken: Gasfee
         {
           let greenBTCInfoArray = new Array<GreenBTCInfo>(20)
