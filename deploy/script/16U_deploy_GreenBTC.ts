@@ -22,8 +22,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     // const NEW_IMPLEMENTATION = "0x1fcF387670f4f4835029eCE4acAb5CF327BFc005"       // 2023/10/27: Change image contract, move  all svg logic to image contract
     // const NEW_IMPLEMENTATION = "0xf2F563a63ba82aF85294d8d857dF7e7A22DdaB8B"       // 2023/12/04: Add buying in batch, and buy with opening 
     // const NEW_IMPLEMENTATION = "0x5Ae000aee2BFA8CB76f655FdBCdFe3Cb0e727941"       // 2023/12/05: Upgrade for enable pay back config
-    const NEW_IMPLEMENTATION    = "0x331DA2A2E7a92247AFe4A7f96F1bbc7099933527"       // 2024/01/27: Upgrade to support: Charge offset ART, one badge for batch buying
-    
+    // const NEW_IMPLEMENTATION = "0x331DA2A2E7a92247AFe4A7f96F1bbc7099933527"       // 2024/01/27: Upgrade to support: Charge offset ART, one badge for batch buying
+    const NEW_IMPLEMENTATION    = "0xcFb70419C26A66dBBF5496987b6a207Bfa4a31A9"       // 2024/01/30: Upgrade to skip occupied blocks in batch mode
+
     console.log("Updating GreenBTC: ", GREENBTC_PROXY_ADDRESS, chainID, defaultGasPrice.toString());  
 
     const [deployer] = await ethers.getSigners();
@@ -78,6 +79,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2024/01/27: Upgrade to support: Charge offset ART, one badge for batch buying
 // yarn deploy:matic_test:GreenBTCU : 0x331DA2A2E7a92247AFe4A7f96F1bbc7099933527
+
+// 2024/01/30: Upgrade to skip occupied blocks in batch mode
+// yarn deploy:matic_test:GreenBTCU : 0xcFb70419C26A66dBBF5496987b6a207Bfa4a31A9
 
 export default func;
 func.tags = ["GreenBTCU"];
