@@ -62,8 +62,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //  const NEW_IMPLEMENTATION =  "0x6661cC0df27111c67CAB8c52B1e21fAbd0354143"        // 2024/01/12: Dev Env: Upgrade to add RemoteMinerOnboardBatchClaim and UpdateMinerWhiteListBatchClaim
 //  const NEW_IMPLEMENTATION =  "0xcCfC2109F4997F2c7Da39f1De51620d357EBE471"        // 2024/01/12: Dev Env: Upgrade to add RemoteMinerOnboardBatchClaim and UpdateMinerWhiteListBatchClaim
 //  const NEW_IMPLEMENTATION =  "0x7D4718A6430334556c27503A04B3CAf072BA4e29"        // 2024/01/14: Dev Env,  2024/01/15: Pre Env:: Upgrade to add pretection in RemoteMinerOnboardBatchClaim againt replaying signature
-    const NEW_IMPLEMENTATION =  "0x516846704C4e163bF37d97A6870e4b88d5598e46"        // 2024/02/01: Upgrade to support PlantMiner, and block transferring
-    
+//  const NEW_IMPLEMENTATION =  "0x516846704C4e163bF37d97A6870e4b88d5598e46"        // 2024/02/01: Upgrade to support PlantMiner, and block transferring
+//  const NEW_IMPLEMENTATION =  "0x8844E2EE618C66383627016EDde27F5A4095B7d2"        // 2024/02/02: Upgrade to correct overlapped parameters
+    const NEW_IMPLEMENTATION =  "0x926B113e8fb52EfCeDe65981Fa9ef2731Ab66324"        // 2024/02/02A: Upgrade to correct overlapped parameters
+
     const [deployer] = await ethers.getSigners();
     const ArkreenMinerFactory = ArkreenMiner__factory.connect(MINER_PROXY_ADDRESS, deployer);
 
@@ -179,8 +181,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // immplementaion: 0x516846704C4e163bF37d97A6870e4b88d5598e46
 
 // 2024/02/01C: yarn deploy:matic:AMinerUV10: For production Env. 
-// Dev Env: Upgrade to support PlantMiner, and block transferring
+// Upgrade to support PlantMiner, and block transferring
 // immplementaion: 0x5C3C5f4a3694B89F48D25964070aB68EF82884d4
+
+// 2024/02/02A: yarn deploy:matic_test:AMinerUV10: For Dev Env. 
+// Dev Env: Upgrade to correct overlapped parameters
+// immplementaion: 0x8844E2EE618C66383627016EDde27F5A4095B7d2
+
+// 2024/02/02B: yarn deploy:matic_test:AMinerUV10: For production Env.
+// Upgrade to correct overlapped parameters
+// immplementaion: 0x926B113e8fb52EfCeDe65981Fa9ef2731Ab66324
 
 export default func;
 func.tags = ["AMinerUV10"];

@@ -119,8 +119,8 @@ contract ArkreenMiner is
 
     function postUpdate() external onlyProxy onlyOwner 
     {
-        whiteListBatchPoolIndexHead[0] = whiteListBatchIndexHead;
-        whiteListBatchPoolIndexTail[0] = whiteListBatchIndexTail;
+        whiteListBatchPoolIndexHead[0] = 1207;    // 545, 680 1207, 1512
+//      whiteListBatchPoolIndexTail[0] = 680;    // 545, 680
     }
 
     function _authorizeUpgrade(address newImplementation)

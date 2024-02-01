@@ -77,6 +77,8 @@
     "deploy:matic_test:UUPSProxy": "hardhat --network matic_test deploy --tags UUPSProxy",
     "verify:matic_test": "npx hardhat verify --network matic_test <ADDRESS> <PARAMS>",
     "confirmAuto:matic_test": "hardhat run --network matic_test ./deploy/confirmIssuance.ts",
+    "storageExplorer:matic_test": "hardhat run --network matic_test ./deploy/storageExplorer.ts",
+
     "claim:matic_test": "hardhat run --network matic_test ./deploy/matic-gatherer-v2.ts",
     "deploy:matic_test:all": "hardhat --network matic_test deploy",
     "etherscan:matic_test": "hardhat --network matic_test etherscan-verify --api-key",
@@ -162,6 +164,7 @@
     "deploy:celo_test:gRegistryU": "hardhat --network celo_test deploy --tags gRegistryU",
     "allowance:celo_test": "hardhat run --network celo_test ./deploy/allowance_manager.ts",
     "confirmAuto:celo_test": "hardhat run --network celo_test ./deploy/confirmIssuance_celo.ts",
+
     "etherscan:celo_test": "hardhat --network celo_test etherscan-verify --api-url https://api-alfajores.celoscan.io --api-key",
     "deploy:celo:gRegistry": "hardhat --network celo deploy --tags gRegistry",
     "deploy:celo:RECIssueExtD": "hardhat --network celo deploy --tags RECIssueExtD",

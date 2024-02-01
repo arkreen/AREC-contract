@@ -134,5 +134,13 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // Upgrade to support PlantMiner, and block transferring
 // 0x5C3C5f4a3694B89F48D25964070aB68EF82884d4
 
+// 2024/02/02A: yarn deploy:matic_test:AMinerV10D 
+// Update to correct overlapped paramters: Dev Env
+// 0x8844E2EE618C66383627016EDde27F5A4095B7d2
+
+// 2024/02/02B: yarn deploy:matic_test:AMinerV10D 
+// Update to correct overlapped paramters: Pre-Product
+// 0x926B113e8fb52EfCeDe65981Fa9ef2731Ab66324
+
 export default func;
 func.tags = ["AMinerV10D"];
