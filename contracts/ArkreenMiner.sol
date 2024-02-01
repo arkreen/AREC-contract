@@ -66,13 +66,17 @@ contract ArkreenMiner is
     mapping(uint256 => uint256) private whiteListBatchPoolIndexTail;
     mapping(address => uint256) private claimTimestamp;   // protect againt replay 
 
+    uint256 public totalPlantMiner;                   // Total amount of plant miner
+    bool    public bTransferAllowed;                  // Allow miner transfer
+
     // Events
     event MinerOnboarded(address indexed owner, address indexed miner);
     event MinerOnboardedBatch(address indexed owner, address[] minersBatch);
     event StandardMinerOnboarded(address indexed owner, address indexed miner);
     event RemoteMinersInBatch(address[] owners, address[] miners);
     event SocketMinerOnboarded(address indexed owner, address indexed miner);
-    
+    event PlantMinerOnboarded(address indexed owner, address indexed miner);
+
     modifier ensure(uint256 deadline) {
         require(block.timestamp <= deadline, 'Arkreen Miner: EXPIRED');
         _;
@@ -468,7 +472,9 @@ contract ArkreenMiner is
         require(!miner.isContract(), 'Arkreen Miner: Not EOA Address');
         require(AllMinersToken[miner] == 0, "Arkreen Miner: Miner Repeated");
         MinerType minerType = MinerType(whiteListMiner[miner]);
-        require((minerType == MinerType.StandardMiner) || (minerType == MinerType.SocketMiner), 'Arkreen Miner: Wrong Miner');        
+        require((minerType == MinerType.StandardMiner) || 
+                (minerType == MinerType.SocketMiner) ||
+                (minerType == MinerType.PlantMiner), 'Arkreen Miner: Wrong Miner');        
 
         // Check signature
         bytes32 hashRegister = keccak256(abi.encode(STANDARD_MINER_TYPEHASH, owner, miner, deadline));
@@ -489,11 +495,14 @@ contract ArkreenMiner is
 
         // Increase the counter of total standard/socket miner 
         if(minerType == MinerType.StandardMiner) { 
-          totalStandardMiner += 1;
-          emit StandardMinerOnboarded(owner,  miner);   // emit onboarding event
+            totalStandardMiner += 1;
+            emit StandardMinerOnboarded(owner,  miner);   // emit onboarding event
+        } else if(minerType == MinerType.SocketMiner) {
+            totalSocketMiner += 1;
+            emit SocketMinerOnboarded(owner,  miner);
         } else {
-          totalSocketMiner += 1;
-          emit SocketMinerOnboarded(owner,  miner);
+            totalPlantMiner += 1;
+            emit PlantMinerOnboarded(owner,  miner);
         }
 
         delete whiteListMiner[miner]; 
@@ -579,18 +588,18 @@ contract ArkreenMiner is
      * @param addressMiners List of the miners
      */
     function UpdateMinerWhiteList(uint8 typeMiner, address[] calldata addressMiners) external onlyMinerManager {
-      address tempAddress;
-      for(uint256 index; index < addressMiners.length; index++) {
-        tempAddress = addressMiners[index];
-        if(typeMiner == 0xFF) {
-          delete whiteListMiner[tempAddress];
-          continue;
+        address tempAddress;
+        for(uint256 index; index < addressMiners.length; index++) {
+            tempAddress = addressMiners[index];
+            if(typeMiner == 0xFF) {
+                delete whiteListMiner[tempAddress];
+                continue;
+            }
+            // Checked for non-existence
+            require( tempAddress != address(0) && !tempAddress.isContract(), 'Arkreen Miner: Wrong Address');     
+            require( whiteListMiner[tempAddress] == 0, 'Arkreen Miner: Miners Repeated');      
+            whiteListMiner[tempAddress] = uint8(typeMiner);
         }
-        // Checked for non-existence
-        require( tempAddress != address(0) && !tempAddress.isContract(), 'Arkreen Miner: Wrong Address');     
-        require( whiteListMiner[tempAddress] == 0, 'Arkreen Miner: Miners Repeated');      
-        whiteListMiner[tempAddress] = uint8(typeMiner);
-      }
     }
 
     /**
@@ -658,6 +667,13 @@ contract ArkreenMiner is
     }    
 
     /**
+     * @dev Enable miner transferring
+     */
+    function enableTransfer() external onlyOwner {
+        bTransferAllowed = true;
+    }
+
+    /**
      * @dev Withdraw all the onboarding fee
      * @param token address of the token to withdraw, USDC/ARKE
      */
@@ -673,7 +689,19 @@ contract ArkreenMiner is
             uint256 balance = IERC20(token).balanceOf(address(this));
             TransferHelper.safeTransfer(token, receiver, balance);
         }
-      }
+    }
+
+    /**
+     * @dev Hook that is called before any token transfer.
+     */
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal virtual override (ERC721EnumerableUpgradeable) {
+        require(bTransferAllowed || (from == address(0)), 'ARB: Transfer Not Allowed');
+        super._beforeTokenTransfer(from, to, tokenId);
+    }
 
     function tokenURI(uint256 tokenId) public view override returns (string memory){
         return super.tokenURI(tokenId);

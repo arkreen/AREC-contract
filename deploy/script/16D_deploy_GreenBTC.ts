@@ -68,6 +68,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:GreenBTCD:  Upgrade to skip occupied blocks in batch mode
 // Implemenation: 0xcFb70419C26A66dBBF5496987b6a207Bfa4a31A9
 
+// 2024/02/02
+// yarn deploy:matic_test:GreenBTCD:  Upgrade to swap the event position of OpenBox and GreenBitCoin
+// Implemenation: 0xa806AC934936562a21f568D94610E54E47bb237a
+
 func.tags = ["GreenBTCD"];
 
 export default func;

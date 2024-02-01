@@ -126,5 +126,13 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // Upgrade to add pretection in RemoteMinerOnboardBatchClaim againt replaying signature
 // 0x7D4718A6430334556c27503A04B3CAf072BA4e29
 
+// 2024/02/01: yarn deploy:matic_test:AMinerV10D 
+// Upgrade to support PlantMiner, and block transferring
+// 0x516846704C4e163bF37d97A6870e4b88d5598e46
+
+// 2024/02/01A: yarn deploy:matic:AMinerV10D 
+// Upgrade to support PlantMiner, and block transferring
+// 0x5C3C5f4a3694B89F48D25964070aB68EF82884d4
+
 export default func;
 func.tags = ["AMinerV10D"];

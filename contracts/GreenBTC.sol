@@ -187,13 +187,11 @@ contract GreenBTC is
         uint256 deadline,
         GreenBTCInfo calldata gbtc
     ) internal {
-        _actionBuilderBadge(abi.encodePacked(builderCallData, _msgSender()));     // Pay back to msg.sender already
+        _actionBuilderBadge(abi.encodePacked(builderCallData, _msgSender()));       // Pay back to msg.sender already
 
         _mintNFT(gbtc);
 
         if((deadline >> 32) !=0) openBox(gbtc.height);
-
-        emit GreenBitCoin(gbtc.height, gbtc.ARTCount, gbtc.minter, gbtc.greenType);
     }
 
     /** 
@@ -515,6 +513,7 @@ contract GreenBTC is
         dataNFT[gbtc.height] = nft;
 
         _mint(gbtc.minter, gbtc.height);
+        emit GreenBitCoin(gbtc.height, gbtc.ARTCount, gbtc.minter, gbtc.greenType);
     }
 
     /**
@@ -563,11 +562,10 @@ contract GreenBTC is
 
             _checkGBTCData(gbtc, typeTarget);
             _mintNFT(gbtc);
+
             if(ifOpen) openBox(gbtc.height);
 
             amountARTSum += gbtcList[index].ARTCount;
-
-            emit GreenBitCoin(gbtc.height, gbtc.ARTCount, gbtc.minter, gbtc.greenType);
         }      
     }
 

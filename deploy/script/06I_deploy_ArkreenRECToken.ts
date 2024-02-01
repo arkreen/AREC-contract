@@ -12,13 +12,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   console.log("Update ArkreenRECToken: ", CONTRACTS.RECToken, deployer.address, defaultGasPrice.toString());  
 
   if(hre.network.name === 'matic_test') {
-    // const ART_ADDRESS    = "0xb0c9dD915f62d0A37792FD2ce497680E909D8c0F"        // ART simu: Need to check
-    const ART_ADDRESS = "0x0999afb673944a7b8e1ef8eb0a7c6ffdc0b43e31"              // HART simu
+    const ART_ADDRESS    = "0xb0c9dD915f62d0A37792FD2ce497680E909D8c0F"        // ART simu: Need to check
+    // const ART_ADDRESS = "0x0999afb673944a7b8e1ef8eb0a7c6ffdc0b43e31"              // HART simu
     // const AREC_ISSUE_ADDRESS  = "0xFedD52848Cb44dcDBA95df4cf2BCBD71D58df879"
     // const RECTOKEN_ADDRESS    = "0xb0c9dD915f62d0A37792FD2ce497680E909D8c0F"  // ART simu: Need to check
     // const BUILDER_ADDRESS   = "0xA05A9677a9216401CF6800d28005b227F7A3cFae"    // Action Builder address: Simu
     // const ratioFeeToSolidify = 1000                                              // Ratio of the fee to solidify
-    const ratioFeeToOffset = 1000                                                // Ratio of the fee to offset
+    // const ratioFeeToOffset = 1000                                                // Ratio of the fee to offset
+    const ratioFeeToOffset = 0                                                      // close the Ratio of the fee to offset
 
     const ArkreenRECTokenFactory = ArkreenRECToken__factory.connect(ART_ADDRESS, deployer);
 
@@ -118,6 +119,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:RECTokenI
 
 // 2024/01/27A: Call setRatioFeeOffset on ART: 0x0999afb673944a7b8e1ef8eb0a7c6ffdc0b43e31
+// yarn deploy:matic_test:RECTokenI
+
+// 2024/02/01: Call setRatioFeeOffset to close ART offset fee on ART: 0xb0c9dD915f62d0A37792FD2ce497680E909D8c0F
 // yarn deploy:matic_test:RECTokenI
 
 func.tags = ["RECTokenI"];

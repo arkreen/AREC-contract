@@ -7,7 +7,11 @@ enum MinerType {
     StandardMiner,            // 2
     RemoteMiner,              // 3
     APIMiner,                 // 4
-    SocketMiner               // 5
+    SocketMiner,              // 5
+    SKIP_6,                   // 6
+    SKIP_7,                   // 7
+    SKIP_8,                   // 8
+    PlantMiner                // 9
 }
 
 enum MinerStatus {

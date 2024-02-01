@@ -251,6 +251,96 @@ describe("ArkreenMiner", () => {
       const minerNFT = await ArkreenMiner.tokenOfOwnerByIndex(receiver, 0)
       expect(await ArkreenMiner.AllMinerInfo(minerNFT)).to.deep.eq(minerInfo);
     })
+
+    it("Onboarding standard Miner: Onboarding an new Socket Miner", async () => {
+      const receiver = receivers[3]
+      const miner = miners[3]
+      const digest = getOnboardingStandardMinerDigest(
+        'Arkreen Miner',
+        ArkreenMiner.address,
+        { owner: receiver, miner: miner},
+        constants.MaxUint256
+      )
+      await ArkreenMiner.setManager(Register_Authority, register_authority.address)
+      const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyRegister.slice(2), 'hex'))
+      const signature: SigStruct = { v, r, s }  
+      
+      await ArkreenMiner.connect(manager).UpdateMinerWhiteList(MinerType.SocketMiner, miners)  
+      await expect(ArkreenMiner.connect(owner1).StandardMinerOnboard(receiver, miner, constants.MaxUint256, signature))
+              .to.emit(ArkreenMiner, "SocketMinerOnboarded")
+              .withArgs(receiver, miner);
+      expect(await ArkreenMiner.totalSocketMiner()).to.equal(1);
+      expect(await ArkreenMiner.totalSupply()).to.equal(1);
+      expect(await ArkreenMiner.balanceOf(receiver)).to.equal(1);
+      
+      const lastBlock = await ethers.provider.getBlock('latest')
+      const timestamp = lastBlock.timestamp
+      const minerInfo = [miner, MinerType.SocketMiner, MinerStatus.Normal, timestamp]
+      const minerNFT = await ArkreenMiner.tokenOfOwnerByIndex(receiver, 0)
+      expect(await ArkreenMiner.AllMinerInfo(minerNFT)).to.deep.eq(minerInfo);
+    })
+
+    it("Onboarding standard Miner: Onboarding an new Plant Miner", async () => {
+      const receiver = receivers[3]
+      const miner = miners[3]
+      const digest = getOnboardingStandardMinerDigest(
+        'Arkreen Miner',
+        ArkreenMiner.address,
+        { owner: receiver, miner: miner},
+        constants.MaxUint256
+      )
+      await ArkreenMiner.setManager(Register_Authority, register_authority.address)
+      const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyRegister.slice(2), 'hex'))
+      const signature: SigStruct = { v, r, s }  
+      
+      await ArkreenMiner.connect(manager).UpdateMinerWhiteList(MinerType.PlantMiner, miners)  
+      await expect(ArkreenMiner.connect(owner1).StandardMinerOnboard(receiver, miner, constants.MaxUint256, signature))
+              .to.emit(ArkreenMiner, "PlantMinerOnboarded")
+              .withArgs(receiver, miner);
+      expect(await ArkreenMiner.totalPlantMiner()).to.equal(1);
+      expect(await ArkreenMiner.totalSupply()).to.equal(1);
+      expect(await ArkreenMiner.balanceOf(receiver)).to.equal(1);
+      
+      const lastBlock = await ethers.provider.getBlock('latest')
+      const timestamp = lastBlock.timestamp
+      const minerInfo = [miner, MinerType.PlantMiner, MinerStatus.Normal, timestamp]
+      const minerNFT = await ArkreenMiner.tokenOfOwnerByIndex(receiver, 0)
+      expect(await ArkreenMiner.AllMinerInfo(minerNFT)).to.deep.eq(minerInfo);
+    })
+
+    it("Onboarding standard Miner: Transfer checking", async () => {
+      const receiver = receivers[3]
+      const miner = miners[3]
+      const digest = getOnboardingStandardMinerDigest(
+        'Arkreen Miner',
+        ArkreenMiner.address,
+        { owner: owner1.address, miner: miner},
+        constants.MaxUint256
+      )
+      await ArkreenMiner.setManager(Register_Authority, register_authority.address)
+      const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyRegister.slice(2), 'hex'))
+      const signature: SigStruct = { v, r, s }  
+      
+      await ArkreenMiner.connect(manager).UpdateMinerWhiteList(MinerType.PlantMiner, miners)  
+      await expect(ArkreenMiner.connect(owner1).StandardMinerOnboard(owner1.address, miner, constants.MaxUint256, signature))
+              .to.emit(ArkreenMiner, "PlantMinerOnboarded")
+              .withArgs(owner1.address, miner);
+      expect(await ArkreenMiner.totalPlantMiner()).to.equal(1);
+      expect(await ArkreenMiner.totalSupply()).to.equal(1);
+      expect(await ArkreenMiner.balanceOf(owner1.address)).to.equal(1);
+      
+      const lastBlock = await ethers.provider.getBlock('latest')
+      const timestamp = lastBlock.timestamp
+      const minerInfo = [miner, MinerType.PlantMiner, MinerStatus.Normal, timestamp]
+      const minerNFT = await ArkreenMiner.tokenOfOwnerByIndex(owner1.address, 0)
+      expect(await ArkreenMiner.AllMinerInfo(minerNFT)).to.deep.eq(minerInfo);
+      
+      await expect(ArkreenMiner.connect(owner1).transferFrom( owner1.address, receiver, 1)).
+              to.be.revertedWith("ARB: Transfer Not Allowed")       
+
+      await ArkreenMiner.enableTransfer()                
+      await ArkreenMiner.connect(owner1).transferFrom( owner1.address, receiver, 1)
+    })
   })
 
   describe("ArkreenMiner: Update Miner White List", () => {
@@ -1099,7 +1189,8 @@ describe("ArkreenMiner", () => {
       expect(await ArkreenMiner.numberOfWhiteListBatch(0)).to.deep.eq(0);
 
       const receipt = await tx.wait()
-      expect(receipt.gasUsed).to.eq("8149734")  // 8149722 8149630 8149648 8149715 8149747 8140408 8140420 8147392 8147392, 8147380  8121659 8121568 8122040
+      console.log("Gas fee of mining 50 remote miners:", receipt.gasUsed)
+      expect(receipt.gasUsed).to.eq("8162039")  // 8149734 8149722 8149630 8149648 8149715 8149747 8140408 8140420 8147392 8147392, 8147380  8121659 8121568 8122040
 
       await expect(ArkreenMiner.connect(owner1).RemoteMinerOnboardNativeBatch(receiver, 1, signature, {value: minerValue}))
               .to.be.revertedWith("Arkreen Miner: Wrong Miner Number")
