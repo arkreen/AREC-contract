@@ -146,6 +146,8 @@
     "deploy:matic:ABuilderU": "hardhat --network matic deploy --tags ABuilderU",
     "deploy:matic:ArtBankD": "hardhat --network matic deploy --tags ArtBankD",
     "deploy:matic:ArtBankU": "hardhat --network matic deploy --tags ArtBankU",
+    "deploy:matic:GreenBTCD": "hardhat --network matic deploy --tags GreenBTCD",
+
     "etherscan:matic": "hardhat --network matic etherscan-verify --api-key",
     "deploy:celo_test:gRegistry": "hardhat --network celo_test deploy --tags gRegistry",
     "deploy:celo_test:RECIssueExtD": "hardhat --network celo_test deploy --tags RECIssueExtD --reset",

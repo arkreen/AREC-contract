@@ -3,11 +3,16 @@ import { DeployFunction } from "hardhat-deploy/types";
 import { CONTRACTS } from "../constants";
 import { ethers } from "hardhat";
 import { ArkreenRECToken__factory } from "../../typechain";
+import { BigNumber } from "ethers";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const [deployer] = await ethers.getSigners();
 
   console.log("Update ArkreenRECToken: ", CONTRACTS.RECToken, deployer.address);  
+
+  const { getChainId } = hre;
+  const chainID = await getChainId()
+  const defaultGasPrice = (chainID === '80001') ? BigNumber.from(6_000_000_000) : BigNumber.from(80_000_000_000)
 
   if(hre.network.name === 'matic_test') {
 //    const RECTOKEN_ADDRESS    = "0xb0c9dd915f62d0a37792fd2ce497680e909d8c0f"      // Need to check: Simulation mode
@@ -41,21 +46,27 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   } 
 
   if(hre.network.name === 'matic') {
-    const RECTOKEN_ADDRESS    = "0x815bFE3aaCF765c9E0A4DdEb98Ad710a4Fb860d3"        // Need to check
-    //  const NEW_IMPLEMENTATION  = "0xbdb320004dd108bd6bbba948db992f7b4b3bdbf4"    // 1. Old implemenation
+    // const RECTOKEN_ADDRESS    = "0x815bFE3aaCF765c9E0A4DdEb98Ad710a4Fb860d3"     // Need to check
+    // const RECTOKEN_ADDRESS    = "0x58E4D14ccddD1E993e6368A8c5EAa290C95caFDF"     // Need to check, ART on MATIC Mainnet
+    // const RECTOKEN_ADDRESS    = "0x0D7899F2D36344ed21829D4EBC49CC0d335B4A06"  // Need to check, cART on MATIC Mainnet
+    const RECTOKEN_ADDRESS       = "0x93b3bb6C51A247a27253c33F0d0C2FF1d4343214"     // Need to check, HART on MATIC Mainnet
+
+    // const NEW_IMPLEMENTATION  = "0xbdb320004dd108bd6bbba948db992f7b4b3bdbf4"     // 1. Old implemenation
     // const NEW_IMPLEMENTATION  = "0x1356Dc92E42a8fB17f2A5AE747543E4d3ADED899"     // 2. Add solidity and offset traceback
-    const NEW_IMPLEMENTATION  = "0x69B7231876608Bdb3Cf9c0C7303620C375Df0aB3"        // 6. Add getARECInfo(uint256 number)
+    // const NEW_IMPLEMENTATION  = "0x69B7231876608Bdb3Cf9c0C7303620C375Df0aB3"     // 6. Add getARECInfo(uint256 number)
   
+    const NEW_IMPLEMENTATION  = "0x8fABa56a1636AFda9DD84Cb1826eAaF44db05087"        //2024/02/03: Upgrade to support charging Offset fee, and removing code regarding triggerUpgradeAmount 
+
     const ArkreenRECTokenFactory = ArkreenRECToken__factory.connect(RECTOKEN_ADDRESS, deployer);
 
     //   const callData = ArkreenRECTokenFactory.interface.encodeFunctionData("postUpdate")
     //   const updateTx = ArkreenRECManagerFactory.interface.encodeFunctionData("upgradeToAndCall", [NEW_IMPLEMENTATION, callData])
     //   const updateTx = await ArkreenRECTokenFactory.upgradeToAndCall(NEW_IMPLEMENTATION, callData)
 
-    const updateTx = await  ArkreenRECTokenFactory.upgradeTo(NEW_IMPLEMENTATION)
-    await updateTx.wait()
-
+    const updateTx = await ArkreenRECTokenFactory.upgradeTo(NEW_IMPLEMENTATION, {gasPrice: defaultGasPrice})
     console.log("callData, update", updateTx)
+
+    await updateTx.wait()
     console.log("ArkreenRECToken Updated to %s: ", hre.network.name, ArkreenRECTokenFactory.address);
   } 
 
@@ -68,6 +79,18 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/01/27:A: Upgrade for charging offset fee: HART(0x0999AFb673944a7B8E1Ef8eb0a7c6FFDc0b43E31)
 // yarn deploy:matic_test:RECTokenU
 // 0x4F86bfe6D41844008a12e9397971c4C9786FfcC3
+
+// 2024/02/03: Upgrade ART on Polygon mainnet to support charging Offset fee, and removing code regarding triggerUpgradeAmount
+// yarn deploy:matic:RECTokenU
+// 0x8fABa56a1636AFda9DD84Cb1826eAaF44db05087
+
+// 2024/02/03B: Upgrade cART on Polygon mainnet to support charging Offset fee, and removing code regarding triggerUpgradeAmount
+// yarn deploy:matic:RECTokenU
+// 0x8fABa56a1636AFda9DD84Cb1826eAaF44db05087
+
+// 2024/02/03C: Upgrade HART on Polygon mainnet to support charging Offset fee, and removing code regarding triggerUpgradeAmount
+// yarn deploy:matic:RECTokenU
+// 0x8fABa56a1636AFda9DD84Cb1826eAaF44db05087
 
 func.tags = ["RECTokenU"];
 

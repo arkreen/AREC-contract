@@ -6,7 +6,7 @@ import { BigNumber } from "ethers";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
-  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6000000000) : BigNumber.from(100000000000)
+  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6000000000) : BigNumber.from(80_000_000_000)
  
   if(hre.network.name === 'matic_test') {
     
@@ -38,7 +38,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   if(hre.network.name === 'matic') {
     
     const ESG_BUILDER_ADDRESS = "0x7073Ea8C9B0612F3C3FE604425E2af7954c4c92e"          // ArkreenBuilder
-    const NEW_IMPLEMENTATION = "0x076bB3051f273Ea6f6AA76e41797241124B3B157"           // 2023/10/30: Upgrade to support ART offset directly
+    // const NEW_IMPLEMENTATION = "0x076bB3051f273Ea6f6AA76e41797241124B3B157"        // 2023/10/30: Upgrade to support ART offset directly
+    const NEW_IMPLEMENTATION = "0x3E458Ff2c39fe10636003e02C1DdA387b455Ee6F"           // 2024/02/03: Upgrade to support UniV3 and Charging offset fee
 
     console.log("Updating ESG Builder: ", ESG_BUILDER_ADDRESS);  
 
@@ -69,6 +70,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/01/27: 
 // yarn deploy:matic_test:ABuilderU
 // Upgrade to implementation: 0x5054ce5432f3597dAFa90b246253F6433b56e3a9
+
+// 2024/02/03: Upgrade on Matic Mainnet
+// yarn deploy:matic:ABuilderU
+// Upgrade to implementation: 0x3E458Ff2c39fe10636003e02C1DdA387b455Ee6F
 
 export default func;
 func.tags = ["ABuilderU"];

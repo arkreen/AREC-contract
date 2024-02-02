@@ -72,6 +72,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:GreenBTCD:  Upgrade to swap the event position of OpenBox and GreenBitCoin
 // Implemenation: 0xa806AC934936562a21f568D94610E54E47bb237a
 
+// 2024/02/03
+// yarn deploy:matic:GreenBTCD:  Upgrade to support: Charge offset ART, one badge for batch buying
+// Implemenation: 0xAC591f8caf3a100b14D4AdD264AB2eE086E5fB09
+
 func.tags = ["GreenBTCD"];
 
 export default func;

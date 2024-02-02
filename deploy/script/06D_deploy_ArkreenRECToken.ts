@@ -27,9 +27,13 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:RECTokenD
 // 0x0a451317bb231ba332340ef63d7da926f669c614
 
-// 2023/03/03: Upgrade to support charging Offfset fee 
+// 2024/01/27: Upgrade to support charging Offfset fee 
 // yarn deploy:matic_test:RECTokenD
 // 0x4F86bfe6D41844008a12e9397971c4C9786FfcC3
+
+// 2024/02/03: Upgrade to support charging Offset fee, and removing code regarding triggerUpgradeAmount  
+// yarn deploy:matic:RECTokenD
+// 0x8fABa56a1636AFda9DD84Cb1826eAaF44db05087
 
 func.tags = ["RECTokenD"];
 

@@ -45,7 +45,7 @@ contract ArkreenRECToken is
 
 //    uint256 partialARECID;                                // AREC NFT ID partialy offset
 //    uint256 partialAvailableAmount;                       // Amount available for partial offset
-    uint256 public triggerUpgradeAmount;                    // The amount to trigger solidify upgrade, must keep
+    uint256 public triggerUpgradeAmount;                    // The amount to trigger solidify upgrade, must keep !!!!!!
     address public climateBuilder;
     uint256 public ratioFeeOffset;                          // Percentage in basis point (10000) to charge for offseting ART
 
@@ -112,23 +112,6 @@ contract ArkreenRECToken is
      * @dev Internal offset function of the RE token, the RE tokens are burned
      */
     function _offset(address account, address owner, uint256 amount) internal virtual returns (uint256 offsetActionId) {
-
-        if(totalOffset < triggerUpgradeAmount) {                                // To check whether triggering upgrade
-            uint256 offsetAmount = triggerUpgradeAmount - totalOffset;
-            offsetAmount = (offsetAmount > amount) ? amount: offsetAmount;
-            amount -= offsetAmount;
-            _burn(account, offsetAmount);
-
-            // Track total retirement amount in TCO2 factory
-            address badgeContractU = IArkreenRegistry(arkreenRegistry).getArkreenRetirement();
-            offsetActionId = IArkreenBadge(badgeContractU).registerOffset(owner, issuerREC, offsetAmount, 0);
-            totalOffset += offsetAmount;
-
-            emit OffsetFinished(owner, offsetAmount, offsetActionId);
-            if(amount == 0) {
-                return offsetActionId;
-            }
-        }
 
         require(amount != 0, 'ART: Zero Offset');
 
@@ -407,10 +390,6 @@ contract ArkreenRECToken is
     function setReceiverFee(address receiver) external onlyOwner {
         require(receiver != address(0), 'ART: Wrong Address');
         receiverFee = receiver;
-    }
-
-    function setTriggerAmount(uint256 amount) external onlyOwner {
-        triggerUpgradeAmount = amount;
     }
 
     function setClimateBuilder(address builder) external onlyOwner {
