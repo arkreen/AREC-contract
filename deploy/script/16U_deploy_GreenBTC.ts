@@ -9,7 +9,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { getChainId } = hre;
 
   const chainID = await getChainId()
-  const defaultGasPrice = (chainID === '80001') ? BigNumber.from(6000000000) : BigNumber.from(50000000000)
+  const defaultGasPrice = (chainID === '80001') ? BigNumber.from(6000000000) : BigNumber.from(40_000_000_000)
 
   if(hre.network.name === 'matic_test') {
     const GREENBTC_PROXY_ADDRESS  = "0x770cB90378Cb59665BbF623a72b90f427701C825"     // 2023/10/24: Green BTC proxy
@@ -38,8 +38,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
  } 
 
  if(hre.network.name === 'matic') {
-  const GREENBTC_PROXY_ADDRESS  = "0x770cB90378Cb59665BbF623a72b90f427701C825"     // 2023/10/24: Green BTC proxy
-  const NEW_IMPLEMENTATION    = "0x9a1FC5338303b7E675a9cFfA2050aa7300760b5F"       // 2023/10/26: Add ART type check, and check minter is not zero
+  const GREENBTC_PROXY_ADDRESS  = "0xDf51F3DCD849f116948A5B23760B1ca0B5425BdE"    // 2023/10/27: Green BTC proxy on Polygon Mainnet
+  // const NEW_IMPLEMENTATION   = "0x85304b15f0762c0b2752C60e29D04843b17D79c7"    // 2024/10/27: Original implementation
+  const NEW_IMPLEMENTATION      = "0xAC591f8caf3a100b14D4AdD264AB2eE086E5fB09"    // 2024/02/03: Upgrade to the latest verstion: Charge offset ART and skip occupied blocks in batch mode
       
   console.log("Updating GreenBTC: ", GREENBTC_PROXY_ADDRESS, chainID, defaultGasPrice.toString());  
 
@@ -84,8 +85,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/01/30: Upgrade to skip occupied blocks in batch mode
 // yarn deploy:matic_test:GreenBTCU : 0xcFb70419C26A66dBBF5496987b6a207Bfa4a31A9
 
-// 2024/02/02: Upgrade to skip occupied blocks in batch mode
+// 2024/02/02: Upgrade to swap the event position of OpenBox and GreenBitCoin
 // yarn deploy:matic_test:GreenBTCU : 0xa806AC934936562a21f568D94610E54E47bb237a
+
+// 2024/02/03: Polygon Mainnet: Upgrade to the latest verstion: Charge offset ART and skip occupied blocks in batch mode
+// yarn deploy:matic:GreenBTCU : 0xAC591f8caf3a100b14D4AdD264AB2eE086E5fB09
 
 export default func;
 func.tags = ["GreenBTCU"];
