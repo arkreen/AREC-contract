@@ -34,7 +34,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //      const NEW_IMPLEMENTATION = "0x113102Ee8e450B27A19397d8e94c4232DF430064"     // 8. Try to add HashKey feature, checking if RECData mapping is compatible
 //      const NEW_IMPLEMENTATION = "0x8Dc3cd4666909D09aCf8d7197fD4E5F43D7ae4aB"     // 9. Upgrade to support ESG Features (2023/2/26)
 //      const NEW_IMPLEMENTATION = "0x5e9a9a89e4B5229Ec5789e2dA1C995a3b1224275"     // 10. Remove if caller is Miner checking in simu mode (2023/2/26)
-        const NEW_IMPLEMENTATION = "0x829e71F96A35ff3ba1c0BfE388d8d470c95106A6"     // 10. 2024/01/01: Addd AREC NFT Image
+//      const NEW_IMPLEMENTATION = "0x829e71F96A35ff3ba1c0BfE388d8d470c95106A6"     // 10. 2024/01/01: Addd AREC NFT Image
+        const NEW_IMPLEMENTATION = "0x96CF764dad84a8B377C8696201e05D49259A59B4"     // 11. 2024/02/12: Remove miner checking for simu mode
 
         // Matic Test net
 //      const REC_ISSUANCE_ADDRESS = "0x7370c2166d7720c41f0931f0bbf67e10d00b0d18"   // Need to check  // MATIC Testnet
@@ -86,6 +87,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:RECIssueU
 
 // 2024/01/01: Addd AREC NFT Image: 0x829e71F96A35ff3ba1c0BfE388d8d470c95106A6
+// yarn deploy:matic_test:RECIssueU
+
+// 2024/02/20: Remove miner checking for simu mode: 0x96CF764dad84a8B377C8696201e05D49259A59B4
 // yarn deploy:matic_test:RECIssueU
 
 func.tags = ["RECIssueU"];

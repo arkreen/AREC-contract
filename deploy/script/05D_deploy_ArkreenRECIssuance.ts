@@ -36,9 +36,13 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:RECIssueD
 // 0x966721720dC732464D2C5594AfF9b0Aa52E1b0e8
 
-// 2024/01/01: Add "setTokenAKRE"
+// 2024/01/01: Add "setARECImage"
 // yarn deploy:matic_test:RECIssueD
 // 0x829e71F96A35ff3ba1c0BfE388d8d470c95106A6
+
+// 2024/02/20: Remove miner checking for simulation mode
+// yarn deploy:matic_test:RECIssueD
+// 0x96CF764dad84a8B377C8696201e05D49259A59B4
 
 func.tags = ["RECIssueD"];
 
