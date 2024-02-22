@@ -1,8 +1,14 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 //import { CONTRACTS } from "../constants";
+import { BigNumber } from "ethers";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
+
+  const { getChainId } = hre;
+
+  const chainID = await getChainId()
+  const defaultGasPrice = (chainID === '80001') ? BigNumber.from(6_000_000_000) : BigNumber.from(100_000_000_000)
 
     const arkReward = "ArkreenReward"
 
@@ -20,10 +26,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const VALIDATOR_ADDRESS     = "0xF013aC5bF29Fc3DcAd2f89510eCfAeca79d5042e"
 */
 
+/*
     // 2023/12/29: Paranet on mainnet
     const AKRE_TOKEN_ADDRESS    = "0x990393E7540883260BBEBf1960C77b78Ad5F0146"
     const VALIDATOR_ADDRESS     = "0xF013aC5bF29Fc3DcAd2f89510eCfAeca79d5042e"
+*/
 
+    // 2024/02/22: Arkreem Mainnet Launch on Polygon mainnet
+    const AKRE_TOKEN_ADDRESS    = "0xE9c21De62C5C5d0cEAcCe2762bF655AfDcEB7ab3"
+    const VALIDATOR_ADDRESS     = "0x1E1A152D1C77A16863e97DAf18E99f85a5F0a605"
+ 
     const { deployments, getNamedAccounts } = hre;
     const { deploy } = deployments;
     const { deployer } = await getNamedAccounts();
@@ -42,6 +54,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         },
         log: true,
         skipIfAlreadyDeployed: false,
+        gasPrice: defaultGasPrice
     });
 
     console.log("ArkreenReward deployed to %s: ", hre.network.name, ArkreenReward.address);
@@ -61,6 +74,21 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:arkReward  
 // Proxy:           0x7654db08Da620bC36e9F15F40De7FeEf9265a808         
 // Implementaion:   0x82c7ae0b76Cead58Ad93aAc462139E396Df50Fb8
+
+// 2024/02/22: Arkreen Mainnet Launch on Polygon mainnet (Cannot be exactly matched, Aborted)
+// yarn deploy:matic:arkReward
+// Proxy:           0xD758CCd350C6fE798B7532CA8BAA0a161F64e6c2            
+// Implementaion:   0xB1E67d7516290fe55C3e99cCef15830cfF5Cf37E
+
+// 2024/02/22A: Arkreen Mainnet Launch on Polygon mainnet
+// yarn deploy:matic:arkReward
+// Proxy:           0xDcF10d429c0422Af80790bC810A33189771D643d (Deployed by proxy)            
+// Implementaion:   0xF8b41C01622Ad43148a0DdF844F60dE334d8a119
+
+// 2024/02/22B: Arkreen deployment to verify 
+// yarn deploy:matic_test:arkReward
+// Proxy:           0x6e5b52BAcc7431aBE2Ea767f8de01130E2bBec9F            
+// Implementaion:   0x6d9f00596E2eD8082538e9df74F4bbed9Db74005
 
 func.tags = ["arkReward"];
 

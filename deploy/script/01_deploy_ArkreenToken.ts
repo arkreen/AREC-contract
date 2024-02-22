@@ -25,11 +25,17 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const name = ''
     const symbol = ''
 */
+/*
     // AKRE of Paranet on testnet // 2023/12/29
     const foundationAddr = '0x364a71eE7a1C9EB295a4F4850971a1861E9d3c7D'
     const name = ''
     const symbol = ''
-
+*/
+    // AKRE on Polygon mainnet for Arkreen mainnet Launch // 2024/02/22
+    const foundationAddr = '0xA997bF1f0678B63815fBabe573825170715eBecc'
+    const name = ''
+    const symbol = ''
+   
     const ArkreenToken = await deploy(CONTRACTS.AKRE, {
       from: deployer,
       proxy: {
@@ -45,7 +51,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       skipIfAlreadyDeployed: false,
     });
 
-    console.log("ArkreenToken deployed to %s: ", hre.network.name, ArkreenToken.address);
+    console.log("ArkreenToken deployed to %s: ", hre.network.name, ArkreenToken.address, foundationAddr);
     
 };
 
@@ -63,6 +69,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:ARKE
 // Proxy:           0x990393E7540883260BBEBf1960C77b78Ad5F0146
 // Implementation:  0x883e8627cc13281eae70c84918Fb7fb6e044E897
+
+// 2024/02/22: deploy AKRE on Polygon mainnet for Arkreen mainnet Launch
+// yarn deploy:matic:ARKE
+// Proxy:           0xE9c21De62C5C5d0cEAcCe2762bF655AfDcEB7ab3
+// Implementation:  0x0fad83bc38790c2dc2ef8f30f9b5ced473ffffdf
 
 func.tags = ["ARKE"];
 

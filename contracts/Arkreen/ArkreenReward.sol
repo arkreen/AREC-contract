@@ -11,8 +11,8 @@ import "./ArkreenToken.sol";
 
 contract ArkreenReward is 
         ContextUpgradeable,
-        OwnableUpgradeable, 
         PausableUpgradeable,
+        OwnableUpgradeable, 
         UUPSUpgradeable
 {
     using AddressUpgradeable for address;
@@ -47,11 +47,6 @@ contract ArkreenReward is
         ERC20Contract = ArkreenToken(tokenAKRE);
         validationAddress = validationAddr;
         
-        // address owner = _msgSender();
-        // assembly {
-        //     sstore(0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103, owner)
-        // }
- 
         _DOMAIN_SEPARATOR = keccak256(
             abi.encode(
                 keccak256('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)'),
@@ -61,7 +56,6 @@ contract ArkreenReward is
                 address(this)
             )
         );  
-
     }   
 
     function pause() external onlyOwner{
@@ -107,12 +101,10 @@ contract ArkreenReward is
         emit UserWithdraw(receiver, value, nonce);
     }
 
-
     function _authorizeUpgrade(address newImplementation)
         internal
         virtual
         override
         onlyOwner
     {}
-
 }

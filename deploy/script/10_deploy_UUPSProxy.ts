@@ -7,8 +7,12 @@ import { CONTRACTS } from "../constants";
 //import { ArkreenRECIssuance__factory } from "../../typechain";
 //import { ArkreenMiner__factory } from "../../typechain";
 //import { ArkreenBadge__factory } from "../../typechain";
-import { ArkreenBuilder__factory } from "../../typechain";
-import { GreenBTC__factory } from "../../typechain";
+//import { ArkreenBuilder__factory } from "../../typechain";
+//import { GreenBTC__factory } from "../../typechain";
+
+import { ArkreenReward__factory } from "../../typechain";
+
+import { BigNumber } from "ethers";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
@@ -19,6 +23,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { deployer } = await getNamedAccounts();
 
   console.log("Deploying: ", CONTRACTS.UUPSProxy, deployer);  
+
+  const { getChainId } = hre;
+
+  const chainID = await getChainId()
+  const defaultGasPrice = (chainID === '80001') ? BigNumber.from(20_000_000_000) : BigNumber.from(100_000_000_000)
 
   /* // Verification is difficult in this deployment mode 
   const ArkreenMinerV10Factory = await ethers.getContractFactory("ArkreenMinerV10");
@@ -124,6 +133,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   });
 */
 
+/*
   // Proxy of ArkreenBuilder
   // 2023/12/13: Polygon testnet Dev env 
   const IMPLEMENTATION_ADDRESS  = "0x4aF1eADF9f2f51395Fc2329ac0ab554DBb7EBF57"    // 2023/12/13: ArkreenBuilder Implementation 
@@ -133,16 +143,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   
   // 2023/12/13:  
   const callData = ArkreenBuilder__factory.createInterface().encodeFunctionData("initialize",[ROUTER_ADDRESS, RECBANK_ADDRESS, NATIVE_TOKEN_ADDRESS])     // Create new ArkreenBadge
-
-  console.log("IMPLEMENTATION_ADDRESS, deployer, callData", IMPLEMENTATION_ADDRESS, deployer, callData)
-
-  const UUPSProxyContract = await deploy(CONTRACTS.UUPSProxy, {
-      from: deployer,
-      args: [IMPLEMENTATION_ADDRESS, deployer, callData],
-      log: true,
-      skipIfAlreadyDeployed: false,
-  });
-
+*/
 
 /*
   // Proxy of GreenBTC
@@ -179,6 +180,25 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   });
 */
 
+  // Proxy of ArkreenReward
+  // 2024/02/22: Polygon Mainnet ArkreenReward
+  const IMPLEMENTATION_ADDRESS  = "0xF8b41C01622Ad43148a0DdF844F60dE334d8a119"    // 2024/02/22: ArkreenReward Implementation 
+  const AKRE_TOKEN_ADDRESS    = "0xE9c21De62C5C5d0cEAcCe2762bF655AfDcEB7ab3"
+  const VALIDATOR_ADDRESS     = "0x1E1A152D1C77A16863e97DAf18E99f85a5F0a605"
+  
+  // 2024/02/24:  
+  const callData = ArkreenReward__factory.createInterface().encodeFunctionData("initialize",[AKRE_TOKEN_ADDRESS, VALIDATOR_ADDRESS])     // Create new ArkreenReward
+
+  console.log("IMPLEMENTATION_ADDRESS, deployer, callData", IMPLEMENTATION_ADDRESS, deployer, callData)
+
+  const UUPSProxyContract = await deploy(CONTRACTS.UUPSProxy, {
+      from: deployer,
+      args: [IMPLEMENTATION_ADDRESS, deployer, callData],
+      log: true,
+      skipIfAlreadyDeployed: false,
+      gasPrice: defaultGasPrice
+  });
+
   console.log("UUPSProxy deployed to %s: ", hre.network.name, UUPSProxyContract.address);
 
 };
@@ -214,6 +234,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2023/12/13:  ArkreenBuilder
 // yarn deploy:matic_test:UUPSProxy
 // Proxy:   0xC88535788B4e45966c529D8b3FAd027d1E2d5a0a
+
+// 2024/02/22:  ArkreenReward
+// yarn deploy:matic:UUPSProxy
+// Proxy:   0xDcF10d429c0422Af80790bC810A33189771D643d
+
 
 export default func;
 func.tags = ["UUPSProxy"];
