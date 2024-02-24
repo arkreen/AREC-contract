@@ -10,9 +10,6 @@ import "./libraries/BytesLib.sol";
 
 import "./ArkreenBadgeType.sol";
 
-// Import this file to use console.log
-// import "hardhat/console.sol";
-
 contract ArkreenBadgeImage {
  
     using Strings for uint128;

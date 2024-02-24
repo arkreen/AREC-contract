@@ -3,11 +3,14 @@ import { DeployFunction } from "hardhat-deploy/types";
 import { CONTRACTS } from "../constants";
 import { ethers } from "hardhat";
 import { ArkreenRECIssuance__factory } from "../../typechain";
+import { BigNumber } from "ethers";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     const [deployer] = await ethers.getSigners();
     console.log("Updating ArkreenRECIssuance: ", CONTRACTS.RECIssuance, deployer.address);  
+
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6_000_000_000) : BigNumber.from(100_000_000_000)
 
 //    Cannot be verified in this way    
 //    const ArkreenRECIssuanceFactory = await ethers.getContractFactory("ArkreenRECIssuance");
@@ -62,16 +65,17 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       const REC_ISSUANCE_ADDRESS = "0x954585adF9425F66a0a2FD8e10682EB7c4F1f1fD"       // AREC formal release
       
       // const NEW_IMPLEMENTATION = "0x0730A83F7a141BBea876C0fCfd2e9BED3e4C195F"  // 1. Original 
-//    const NEW_IMPLEMENTATION = "0xEf06990Ee1c2F2694acd87b189d0EbA84DdB7124"     // 2. Upgrade to support solidify and offset traceback
-      const NEW_IMPLEMENTATION = "0x966721720dC732464D2C5594AfF9b0Aa52E1b0e8"     // 3. 2023/04/02: Add "setTokenAKRE"
-
+      // const NEW_IMPLEMENTATION = "0xEf06990Ee1c2F2694acd87b189d0EbA84DdB7124"  // 2. Upgrade to support solidify and offset traceback
+      // const NEW_IMPLEMENTATION = "0x966721720dC732464D2C5594AfF9b0Aa52E1b0e8"  // 3. 2023/04/02: Add "setTokenAKRE"
+      const NEW_IMPLEMENTATION = "0x7a6Bba59bcA319071da51631518228c10e2CFc8d"     // 4. 2024/02/22: Add "setARECImage"
+      
       const [deployer] = await ethers.getSigners();
       const ArkreenRECIssuanceFactory = ArkreenRECIssuance__factory.connect(REC_ISSUANCE_ADDRESS, deployer);
 
-      //      const callData = ArkreenRECIssuanceFactory.interface.encodeFunctionData("postUpdate")
-      //      const callData = ArkreenRECIssuanceFactory.interface.encodeFunctionData("postUpdate", [])
-      //      const updateTx = await ArkreenRECIssuanceFactory.upgradeToAndCall(NEW_IMPLEMENTATION, callData)
-      const updateTx = await ArkreenRECIssuanceFactory.upgradeTo(NEW_IMPLEMENTATION)
+      // const callData = ArkreenRECIssuanceFactory.interface.encodeFunctionData("postUpdate")
+      // const callData = ArkreenRECIssuanceFactory.interface.encodeFunctionData("postUpdate", [])
+      // const updateTx = await ArkreenRECIssuanceFactory.upgradeToAndCall(NEW_IMPLEMENTATION, callData)
+      const updateTx = await ArkreenRECIssuanceFactory.upgradeTo(NEW_IMPLEMENTATION, {gasPrice: defaultGasPrice})
       await updateTx.wait()
 
       console.log("callData, update", updateTx)
@@ -91,6 +95,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2024/02/20: Remove miner checking for simu mode: 0x96CF764dad84a8B377C8696201e05D49259A59B4
 // yarn deploy:matic_test:RECIssueU
+
+// 2024/02/22: Addd AREC NFT Image: 0x7a6Bba59bcA319071da51631518228c10e2CFc8d
+// yarn deploy:matic:RECIssueU
 
 func.tags = ["RECIssueU"];
 

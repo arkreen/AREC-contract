@@ -1,11 +1,14 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { CONTRACTS } from "../constants";
+import { BigNumber } from "ethers";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { deployments, getNamedAccounts } = hre;
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
+
+  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6_000_000_000) : BigNumber.from(100_000_000_000)
 
   console.log("Deploying: ", CONTRACTS.RECIssuance, deployer);  
 
@@ -15,6 +18,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       args: [],
       log: true,
       skipIfAlreadyDeployed: false,
+      gasPrice: defaultGasPrice
   });
 
   console.log("ArkreenRECIssuance deployed to %s: ", hre.network.name, ArkreenRECIssuance.address);
@@ -43,6 +47,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/02/20: Remove miner checking for simulation mode
 // yarn deploy:matic_test:RECIssueD
 // 0x96CF764dad84a8B377C8696201e05D49259A59B4
+
+// 2024/02/22: Add "setARECImage" on Polygon mainnet for mainnet launch
+// yarn deploy:matic:RECIssueD
+// 0x7a6Bba59bcA319071da51631518228c10e2CFc8d
 
 func.tags = ["RECIssueD"];
 

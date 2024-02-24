@@ -3,9 +3,12 @@ import { DeployFunction } from "hardhat-deploy/types";
 import { CONTRACTS } from "../constants";
 import { ethers } from "hardhat";
 import { ArkreenBadge__factory } from "../../typechain";
+import { BigNumber } from "ethers";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const [deployer] = await ethers.getSigners();
+
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6_000_000_000) : BigNumber.from(120_000_000_000)
 
     console.log("Update ArkreenBadge: ", CONTRACTS.RECBadge, deployer.address);  
   
@@ -55,8 +58,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
  
       const PROXY_ADDRESS = "0x1e5132495cdaBac628aB9F5c306722e33f69aa24"            // Need to check: Normal release
 //    const NEW_IMPLEMENTATION = '0xE6264Ed46380BBf28AEF18ECB2fD1F4C92aa59F5'       // 2023/04/18: Upgrade to remove the 3-day limitation of updateCertificate
-      const NEW_IMPLEMENTATION = '0x0A4E902c05F2eb26D6796e1649879c1201436E11'       // 2023/07/11: Upgrade to add ABI getOffsetDetails and add the 3-day limitation of updateCertificate
-      
+//    const NEW_IMPLEMENTATION = '0x0A4E902c05F2eb26D6796e1649879c1201436E11'       // 2023/07/11: Upgrade to add ABI getOffsetDetails and add the 3-day limitation of updateCertificate
+      const NEW_IMPLEMENTATION = '0x2b12BBf2213Ccbb4685106D50E7D7dff760e7E1D'       // 2024/02/22: Upgrade to supporting image url and event OffsetAttached
+    
       const [deployer] = await ethers.getSigners();
 
       const feeData = await deployer.getFeeData()
@@ -80,7 +84,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
       const  ArkreenBadgeFactory = ArkreenBadge__factory.connect(PROXY_ADDRESS, deployer);
       
-      const updateTx = await  ArkreenBadgeFactory.upgradeTo(NEW_IMPLEMENTATION)
+      const updateTx = await  ArkreenBadgeFactory.upgradeTo(NEW_IMPLEMENTATION, {gasPrice: defaultGasPrice})
       await updateTx.wait()
       
       console.log("callData, update", updateTx)
@@ -118,6 +122,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // Upgrade to add ABI getOffsetDetails and add the 3-day limitation of updateCertificate
 
 // 2024/01/01: yarn deploy:matic_test:RECBadgeU:  0x5C653b445BE2bdEB6f8f3CD099FC801865Cab835
+// Deploy Badge contract supporting image url and event OffsetAttached
+
+// 2024/02/22: yarn deploy:matic:RECBadgeU:  0x2b12BBf2213Ccbb4685106D50E7D7dff760e7E1D
 // Deploy Badge contract supporting image url and event OffsetAttached
 
 func.tags = ["RECBadgeU"];

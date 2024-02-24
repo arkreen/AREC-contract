@@ -3,6 +3,7 @@ pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/utils/Base64.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
+import '@openzeppelin/contracts/access/Ownable.sol';
 
 import "./libraries/FormattedStrings.sol";
 import "./libraries/TransferHelper.sol";
@@ -11,16 +12,29 @@ import "./libraries/DateTime.sol";
 
 import "./ArkreenRECIssuanceType.sol";
 
-// Import this file to use console.log
-// import "hardhat/console.sol";
+interface IArkreenRECIssuanceImageLogo {
+    function getARECLogoImage(uint256 logoId) external pure returns(bytes memory);
+}
 
-contract ArkreenRECIssuanceImage {
+contract ArkreenRECIssuanceImage is Ownable{
  
     using Strings for uint128;
     using Strings for uint256;
     using Strings for address;
     using FormattedStrings for uint256;
     using BytesLib for bytes;
+
+    IArkreenRECIssuanceImageLogo public imageLogo;
+    address public arkreenRECIssuance;
+
+    constructor(address arecNFT, address neWImageLogo) {
+        arkreenRECIssuance = arecNFT;
+        imageLogo = IArkreenRECIssuanceImageLogo(neWImageLogo);
+    }
+
+    function setImageLogo(address neWImageLogo) onlyOwner public {
+        imageLogo = IArkreenRECIssuanceImageLogo(neWImageLogo);
+    }
 
     function _decimalTruncate(string memory _str, uint256 decimalDigits) internal pure returns (string memory) {
         bytes memory strBytes = bytes(_str);
@@ -83,7 +97,7 @@ contract ArkreenRECIssuanceImage {
         uint256 tokenId,
         address owner,
         RECData memory recData
-    ) external pure returns(string memory) {
+    ) external view returns(string memory) {
 
         bytes memory dataURI;
         string memory tokenString = tokenId.toString();
@@ -135,9 +149,10 @@ contract ArkreenRECIssuanceImage {
         return string(abi.encodePacked("data:application/json;base64,", Base64.encode(dataURI)));
     }
 
-    function getARECSVGImage(uint256 tokenId, address owner, RECData memory recData) internal pure returns(string memory) {
+    function getARECSVGImage(uint256 tokenId, address owner, RECData memory recData) internal view returns(string memory) {
 
         bytes memory imgBytes;
+        bytes memory imgLogoBytes= imageLogo.getARECLogoImage(1);
         
         imgBytes = abi.encodePacked(
             '<svg viewBox="0 0 900 744" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">'
@@ -151,7 +166,8 @@ contract ArkreenRECIssuanceImage {
                 '<path stroke="#2F2F34" d="M.5.5h899v743H.5z"/>'
                 '<path stroke="#DBDBE4" d="M24.5 24.5h851v695h-851z"/>'
                 '<path stroke="#DBDBE4" d="M32.5 32.5h835v679h-835z"/>'
-                '<g>'
+                '<g>',
+                imgLogoBytes,
                 '<path d="M482 88c0 17.673-14.327 32-32 32-17.673 0-32-14.327-32-32 0-17.673 14.327-32'
                     ' 32-32 17.673 0 32 14.327 32 32z" fill="#00913A"/>'
                 '<path d="M449.53 87.816l-6.583 10.543c-.632 1.013.095 2.329 1.288 2.329h23.366c1.342 0 2.16-1.478'
@@ -204,10 +220,8 @@ contract ArkreenRECIssuanceImage {
             string memory artAmount = _decimalTruncate(toFixedPoint(recData.amountREC, 9), 4);
             bytes memory fullARTString = bytes("AREC certificates, representing ")
                                             .concat(bytes(artAmount))
-                                            .concat(bytes(' MWh of electricity generated from renewable sources, recoreded in the link'));
+                                            .concat(bytes(' MWh of electricity generated from renewable sources, in the AREC NFT'));
             
-            _decimalTruncate(toFixedPoint(recData.amountREC, 9), 4);
-
             imgBytes = abi.encodePacked(imgBytes,
 
                 '<g transform="translate(50,344)">'
@@ -232,21 +246,34 @@ contract ArkreenRECIssuanceImage {
                         '</textPath>'
                     '</text>'
                 '</g>'
+             );    
+        }
+
+        {
+            string memory linkHead = 'https://polygonscan.com/nft/';
+            string memory arkreenRECIssuanceString = arkreenRECIssuance.toHexString();
+            string memory tokenString = tokenId.toString();
+
+            imgBytes = abi.encodePacked(imgBytes,
                 '<g transform="translate(50,444)">'
                     '<text class="f" font-size="12px" font-weight="700" fill="#2f2f34">'
                         '<textPath xlink:href="#center" startOffset="50%">',
-                          recData.url,
+                          linkHead,
+                          arkreenRECIssuanceString,
+                          '/',
+                          tokenString,
                       '</textPath>'
                     '</text>'
                 '</g>'
+
                 '<g transform="translate(50,470)">'
                     '<text class="f4" font-size="12px" fill="#5D5D68">'
                         '<textPath xlink:href="#center" startOffset="50%">'
-                            'This certificate relates to the electricity generation located at or in'
+                          'This certificate relates to the electricity generation located at or in'
                         '</textPath>'
                     '</text>'
                 '</g>'
-            );    
+             );    
         }
 
         {

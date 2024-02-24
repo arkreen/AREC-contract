@@ -76,8 +76,12 @@ describe("ArkreenRECIssuance", () => {
       
       await arkreenRECIssuance.setESGExtAddress(arkreenRECIssuanceExt.address)
 
+      const ArkreenRECIssuanceImageLogoFactory = await ethers.getContractFactory("ArkreenRECIssuanceImageLogo")
+      const arkreenRECIssuanceImageLogo = await ArkreenRECIssuanceImageLogoFactory.deploy()
+      await arkreenRECIssuanceImageLogo.deployed()
+
       const ArkreenRECIssuanceImageFactory = await ethers.getContractFactory("ArkreenRECIssuanceImage")
-      const arkreenRECIssuanceImage = await ArkreenRECIssuanceImageFactory.deploy()
+      const arkreenRECIssuanceImage = await ArkreenRECIssuanceImageFactory.deploy(arkreenRECIssuance.address,arkreenRECIssuanceImageLogo.address)
       await arkreenRECIssuanceImage.deployed()
 
       await arkreenRECIssuance.setARECImage(arkreenRECIssuanceImage.address)
@@ -931,7 +935,7 @@ describe("ArkreenRECIssuance", () => {
         amountREC: expandTo9Decimals(1000), 
         cID: "bafybeihepmxz4ytc4ht67j73nzurkvsiuxhsmxk27utnopzptpo7wuigte",
         region: 'Beijing',
-        url:"", memo:""
+        url:"https://bafybeihepmxz4ytc4ht67j73nzurkvsiuxhsmxk27utnopzptpo7wuigte.ipfs.dweb.link", memo:""
       } 
 
       const mintFee = expandTo18Decimals(1000).mul(50)

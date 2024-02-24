@@ -2,12 +2,11 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { ethers } from "hardhat";
 import { ArkreenBadge__factory } from "../../typechain";
+import { BigNumber } from "ethers";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
-    let PROXY_ADDRESS
-    let tokenIDList: number[] = []
-    let metaDatList: string[] = []
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6_000_000_000) : BigNumber.from(100_000_000_000)
 
     const [deployer] = await ethers.getSigners();
 
@@ -17,17 +16,36 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
       const  ArkreenBadgeFactory = ArkreenBadge__factory.connect(PROXY_ADDRESS, deployer);
 
-//      const updateTx = await  ArkreenBadgeFactory.setBadgeImage(IMAGE_URL)
-//      await updateTx.wait()
-//      console.log("callData, update", updateTx)
-//      console.log(" ArkreenBadge updated to %s: ", hre.network.name,  ArkreenBadgeFactory.address);
+      //      const updateTx = await  ArkreenBadgeFactory.setBadgeImage(IMAGE_URL)
+      //      await updateTx.wait()
+      //      console.log("callData, update", updateTx)
+      //      console.log(" ArkreenBadge updated to %s: ", hre.network.name,  ArkreenBadgeFactory.address);
 
       const image = await  ArkreenBadgeFactory.tokenURI(161)
       console.log(" ArkreenBadge updated to %s: ", hre.network.name,  ArkreenBadgeFactory.address, image);
       
     }
     else if(hre.network.name === 'matic')  {                                  // Matic Mainnet for test
-      PROXY_ADDRESS = "0x3d5531cF0bC2e8d0658fEc0D1a9995211Ac1f337"            // Need to check
+      // const PROXY_ADDRESS = "0x3d5531cF0bC2e8d0658fEc0D1a9995211Ac1f337"   // Need to check
+      const PROXY_ADDRESS = "0x1e5132495cdaBac628aB9F5c306722e33f69aa24"      // Need to check, Mainnet Launch
+
+      const IMAGE_URL = '0x9b2987e8B169402B535efF2d328440593b8B5240'          // 2024/02/22: Image contract supporting image url
+
+      const  ArkreenBadgeFactory = ArkreenBadge__factory.connect(PROXY_ADDRESS, deployer);
+
+      const updateTx = await ArkreenBadgeFactory.setBadgeImage(IMAGE_URL, {gasPrice: defaultGasPrice})
+      await updateTx.wait()
+
+      console.log("callData, update", updateTx)
+      console.log(" ArkreenBadge updated to %s: ", hre.network.name,  ArkreenBadgeFactory.address);
+
+      const image = await ArkreenBadgeFactory.tokenURI(321)
+      console.log(" ArkreenBadge updated to %s: ", hre.network.name,  ArkreenBadgeFactory.address, image);
+
+      /*
+      let PROXY_ADDRESS
+      let tokenIDList: number[] = []
+      let metaDatList: string[] = []
 
       tokenIDList = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
       metaDatList = [ 'bafkreiefvf5z6zhpr2ppfsdfw2s7ca5pwkrpznrjbgy2m6ywx6txrf7hce',
@@ -41,16 +59,17 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
                       'bafkreih2sjqcpgfglyd5bg7ew4gynvpljmogv3bkemvochloogpkgbb6pi',
                       'bafkreihfv24u4fykvzb4db4ync57rabx7cwmkzqvncxltbcccwhaaaewrm'
                     ]
-    } 
+      */
 
-/*    
-    // 2023/04/03
-    const ArkreenBadgeFactory = ArkreenBadge__factory.connect(PROXY_ADDRESS as string, deployer);
-    const updateCIDTx = await ArkreenBadgeFactory.updateCID(tokenIDList, metaDatList)
-    await updateCIDTx.wait()
-    console.log("ArkreenBadge updateCID is executed: ", hre.network.name, new Date().toLocaleString(),
-                                    tokenIDList, metaDatList );    
-*/
+      /*    
+          // 2023/04/03
+          const ArkreenBadgeFactory = ArkreenBadge__factory.connect(PROXY_ADDRESS as string, deployer);
+          const updateCIDTx = await ArkreenBadgeFactory.updateCID(tokenIDList, metaDatList)
+          await updateCIDTx.wait()
+          console.log("ArkreenBadge updateCID is executed: ", hre.network.name, new Date().toLocaleString(),
+                                          tokenIDList, metaDatList );    
+      */                    
+    } 
 
 };
 
@@ -59,6 +78,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2024/01/01: yarn deploy:matic_test:RECBadgeI
 // Update image contract supporting image url:  0x65c78eaC38aa9B5eaa871d6cd22598E011aC1164
+
+// 2024/02/22: yarn deploy:matic:RECBadgeI
+// Update image contract supporting image url:  0x9b2987e8B169402B535efF2d328440593b8B5240
 
 func.tags = ["RECBadgeI"];
 

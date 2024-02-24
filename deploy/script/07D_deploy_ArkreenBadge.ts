@@ -1,11 +1,14 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { CONTRACTS } from "../constants";
+import { BigNumber } from "ethers";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const { deployments, getNamedAccounts } = hre;
     const { deploy } = deployments;
     const { deployer } = await getNamedAccounts();
+
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6_000_000_000) : BigNumber.from(120_000_000_000)
 
     console.log("Deploying: ", CONTRACTS.RECBadge, deployer);  
 
@@ -14,6 +17,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         args: [],
         log: true,
         skipIfAlreadyDeployed: false,
+        gasPrice: defaultGasPrice
     });
 
     console.log("ArkreenBadge deployed to %s: ", hre.network.name, ArkreenBadge.address);
@@ -54,6 +58,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/01/01: Deploy Badge contract supporting image url and event OffsetAttached
 // yarn deploy:matic_test:RECBadgeD
 // 0x978808Ee68CB73188f8b5b33625a72F0bb1E5b5F
+
+// 2024/02/22: Deploy Badge contract supporting image url and event OffsetAttached
+// yarn deploy:matic:RECBadgeD
+// 0x2b12BBf2213Ccbb4685106D50E7D7dff760e7E1D
 
 func.tags = ["RECBadgeD"];
 

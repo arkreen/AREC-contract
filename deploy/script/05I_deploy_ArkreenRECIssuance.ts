@@ -64,9 +64,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 */
 
 //      const IMAGE_URL_ADDRESS = "0x5F8dE063558Ffb782760A0dC6de6108c4387356e"               // (2024/01/01A): Update Image URL Contract
-        const IMAGE_URL_ADDRESS = "0xB4B19F8381bf6a44CDc8591294683Bf21C8997cb"               // (2024/01/01B): Fix bug
+//      const IMAGE_URL_ADDRESS = "0xB4B19F8381bf6a44CDc8591294683Bf21C8997cb"               // (2024/01/01B): Fix bug
+        const IMAGE_URL_ADDRESS = "0xA881049ba78A8f1b314AaF557C507332cC5D7DD8"               // (2024/02/23): To Add Arkreen logo
 
-        // 2024/01/01A, 2024/01/01B
+        // 2024/01/01A, 2024/01/01B, 2024/02/23
         const updateTx = await ArkreenRECIssuanceFactory.setARECImage(IMAGE_URL_ADDRESS)
         await updateTx.wait()
         console.log("ArkreenRECIssuance: updateARECMintPrice:", hre.network.name, 
@@ -98,8 +99,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       const REC_ISSUANCE_ADDRESS      = "0x954585adF9425F66a0a2FD8e10682EB7c4F1f1fD"        // 2023/03/22
 
       const [deployer] = await ethers.getSigners();
-//    const ArkreenRECIssuanceExtFactory = ArkreenRECIssuance__factory.connect(REC_ISSUANCE_ADDRESS, deployer);
-      const ArkreenRECIssuanceExtFactory = ArkreenRECIssuanceExt__factory.connect(REC_ISSUANCE_ADDRESS, deployer);           
+      const ArkreenRECIssuanceFactory = ArkreenRECIssuance__factory.connect(REC_ISSUANCE_ADDRESS, deployer);
+//    const ArkreenRECIssuanceExtFactory = ArkreenRECIssuanceExt__factory.connect(REC_ISSUANCE_ADDRESS, deployer);           
 
       /////////////////////////////////////////////////////////
       // 2023/04/02
@@ -149,6 +150,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       }
 */
 
+/*
       //////////////////////////////////////////////////////
       // 2023/04/04, 2023/10/18
       // function manageMVPAddress(bool op, address[] calldata listMVP) 
@@ -160,6 +162,20 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
       console.log("callData, update", updateTx)
       console.log("ArkreenRECIssuance Updated to %s: ", hre.network.name, ArkreenRECIssuanceExtFactory.address);
+*/
+
+      //////////////////////////////////////////////////////
+      const IMAGE_URL_ADDRESS = "0xf1c78E697440Ff8eECDf411E7CeC3fF26957971b"               // (2024/02/24): To Add Arkreen logo
+
+      // 2024/02/024
+      const updateTx = await ArkreenRECIssuanceFactory.setARECImage(IMAGE_URL_ADDRESS)
+      await updateTx.wait()
+      console.log("ArkreenRECIssuance: updateARECMintPrice:", hre.network.name, 
+                                            ArkreenRECIssuanceFactory.address, IMAGE_URL_ADDRESS);
+
+      const imageUrl = await ArkreenRECIssuanceFactory.tokenURI(1000)
+      console.log("ArkreenRECIssuance: updateARECMintPrice:", hre.network.name, imageUrl)
+
   } 
 
     if(hre.network.name === 'celo_test') {
@@ -315,6 +331,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2024/01/01B： Called setARECImage: 0xB4B19F8381bf6a44CDc8591294683Bf21C8997cb
 // yarn deploy:matic_test:RECIssueI
+
+// 2024/02/23： Called setARECImage: 0xA881049ba78A8f1b314AaF557C507332cC5D7DD8
+// yarn deploy:matic_test:RECIssueI
+
+// 2024/02/24： Called setARECImage: 0xf1c78E697440Ff8eECDf411E7CeC3fF26957971b
+// yarn deploy:matic:RECIssueI
 
 func.tags = ["RECIssueI"];
 
