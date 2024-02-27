@@ -11,6 +11,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const [deployer] = await ethers.getSigners();
     console.log("Updating ArkreenRECIssuance: ", CONTRACTS.RECIssuance, deployer.address);  
 
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6_000_000_000) : BigNumber.from(80_000_000_000)
+
 //    Cannot be verified in this way    
 //    const ArkreenRECIssuanceFactory = await ethers.getContractFactory("ArkreenRECIssuance");
 //    const ArkreenRECIssuance_Upgrade = await ArkreenRECIssuanceFactory.deploy();
@@ -96,7 +98,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     if(hre.network.name === 'matic') {
 //    const REC_ISSUANCE_ADDRESS      = "0x45D0c0E2480212A60F1a9f2A820F1d7d6472CA6B"        // Need to check, Version Test
-      const REC_ISSUANCE_ADDRESS      = "0x954585adF9425F66a0a2FD8e10682EB7c4F1f1fD"        // 2023/03/22
+      const REC_ISSUANCE_ADDRESS      = "0x954585adF9425F66a0a2FD8e10682EB7c4F1f1fD"        // 2023/03/22, 2024/02/27
 
       const [deployer] = await ethers.getSigners();
       const ArkreenRECIssuanceFactory = ArkreenRECIssuance__factory.connect(REC_ISSUANCE_ADDRESS, deployer);
@@ -121,12 +123,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //    await updateTx.wait()      
 
       /////////////////////////////////////////////////////////
-/*      
 //    const AKREToken_ADDRESS         = "0x960C67B8526E6328b30Ed2c2fAeA0355BEB62A83"        // 2023/03/22: gAKRE
-      const AKREToken_ADDRESS         = "0x21B101f5d61A66037634f7e1BeB5a733d9987D57"        // 2023/05/22: tAKRE
+//    const AKREToken_ADDRESS         = "0x21B101f5d61A66037634f7e1BeB5a733d9987D57"        // 2023/05/22: tAKRE
+      const AKREToken_ADDRESS         = "0xE9c21De62C5C5d0cEAcCe2762bF655AfDcEB7ab3"        // 2024/02/27: AKRE
 
-      const AKREToken_PRICE           = BigNumber.from(100000000000)                        // 2023/03/22: 10**11
-
+      const AKREToken_PRICE           = BigNumber.from(100000000000)                        // 2023/03/22: 10**11, 2024/02/27
+/*
       // 2023/03/22
       // function updateARECMintPrice(address token, uint256 price)
 //    const updateTx = await ArkreenRECIssuanceExtFactory.updateARECMintPrice(AKREToken_ADDRESS, AKREToken_PRICE)
@@ -150,6 +152,29 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       }
 */
 
+      {
+        // 2024/02/27
+        // Remove the tAKRE
+        const AKREToken_ADDRESS_OLD = "0x21B101f5d61A66037634f7e1BeB5a733d9987D57"
+        console.log("ArkreenRECIssuance Remove Mint Price:", hre.network.name, AKREToken_ADDRESS_OLD);
+        const updateTx = await ArkreenRECIssuanceFactory.updateARECMintPrice(AKREToken_ADDRESS_OLD, 0, {gasPrice: defaultGasPrice})
+        await updateTx.wait()    
+      }
+      
+      {
+        // 2024/02/27
+        const updateTx = await ArkreenRECIssuanceFactory.setTokenAKRE(AKREToken_ADDRESS, {gasPrice: defaultGasPrice} )
+        await updateTx.wait()        
+      }
+
+      {
+        // 2024/02/27
+        // function updateARECMintPrice(address token, uint256 price)
+        console.log("ArkreenRECIssuance Update Mint Price:", hre.network.name, AKREToken_ADDRESS, AKREToken_PRICE);
+        const updateTx = await ArkreenRECIssuanceFactory.updateARECMintPrice(AKREToken_ADDRESS, AKREToken_PRICE, {gasPrice: defaultGasPrice} )
+        await updateTx.wait()      
+      }
+
 /*
       //////////////////////////////////////////////////////
       // 2023/04/04, 2023/10/18
@@ -165,6 +190,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 */
 
       //////////////////////////////////////////////////////
+/*      
       const IMAGE_URL_ADDRESS = "0xf1c78E697440Ff8eECDf411E7CeC3fF26957971b"               // (2024/02/24): To Add Arkreen logo
 
       // 2024/02/024
@@ -175,6 +201,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
       const imageUrl = await ArkreenRECIssuanceFactory.tokenURI(1000)
       console.log("ArkreenRECIssuance: updateARECMintPrice:", hre.network.name, imageUrl)
+*/
 
   } 
 
@@ -336,6 +363,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:RECIssueI
 
 // 2024/02/24： Called setARECImage: 0xf1c78E697440Ff8eECDf411E7CeC3fF26957971b
+// yarn deploy:matic:RECIssueI
+
+// 2024/02/27： Called updateARECMintPrice(remove tKARE)/ setTokenAKRE(AKRE）/ updateARECMintPrice (add tAKRE)
 // yarn deploy:matic:RECIssueI
 
 func.tags = ["RECIssueI"];
