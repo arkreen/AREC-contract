@@ -5,51 +5,33 @@ import { BigNumber } from "ethers";
 async function main() {
   const contract_address = '0xDf51F3DCD849f116948A5B23760B1ca0B5425BdE'           // Green BTC on Polygon
 
-
-  for(let index = 0 ; index < 20; index ++) {
+  for(let index = 0 ; index < 30; index ++) {
     let itemData = await ethers.provider.getStorageAt(contract_address, 350 + index) 
     console.log("555555555555555:", itemData)
   }
-
-  
-/*  
-  //const slot = 363                                                              // add the storage slot of contract you want to access
-  const whiteListBatchIndexHead = await ethers.provider.getStorageAt(contract_address, 363) 
-  console.log("whiteListBatchIndexHead :", whiteListBatchIndexHead)
-
-  const whiteListBatchIndexTail  = await ethers.provider.getStorageAt(contract_address, 364) 
-  console.log("whiteListBatchIndexTail :", whiteListBatchIndexTail )
-
-  const whiteListBatchPoolIndexHeadKey = 0
-  const whiteListBatchPoolIndexHeadSlot = utils.keccak256(
-    utils.defaultAbiCoder.encode(
-      ['uint256', 'uint256'],
-      [whiteListBatchPoolIndexHeadKey , 365]                // index
-    )
-  )
-
-  const whiteListBatchPoolIndexTailSlot = utils.keccak256(
-    utils.defaultAbiCoder.encode(
-      ['uint256', 'uint256'],
-      [whiteListBatchPoolIndexHeadKey , 366]
-    )
-  )
-
-  const whiteListBatchPoolIndexHead  = await ethers.provider.getStorageAt(contract_address, whiteListBatchPoolIndexHeadSlot) 
-  console.log("whiteListBatchPoolIndexHead :", whiteListBatchPoolIndexHead )
-
-  const whiteListBatchPoolIndexTail  = await ethers.provider.getStorageAt(contract_address, whiteListBatchPoolIndexTailSlot) 
-  console.log("whiteListBatchPoolIndexTail :", whiteListBatchPoolIndexTail  )
-
-  for(let index = 455; index < 455+300+10; index++) {
-    const whiteListMinerBatchSlot = utils.keccak256(
-        utils.defaultAbiCoder.encode(['uint256', 'uint256'],  [index , 362])
-      )
-    const whiteListMinerBatch  = await ethers.provider.getStorageAt(contract_address, whiteListMinerBatchSlot) 
-    console.log("whiteListMinerBatch in index:", index, whiteListMinerBatch  )
-  }
-  */
 }
+
+/*
+555555555555555: 0x0000000000000000000000000000000000000000000000000000000000000000
+555555555555555: 0x94e263363c89b0abe215976f022425d5fcf36ce18819e51125e9fe1fde613c8b
+555555555555555: 0x000000000000000000000000bebe239ca18baca579f5b82c1c290fc951fb954c
+555555555555555: 0x0000000000000000000000000de4fb23694c1532815ad90fd1689c7234242fe3
+555555555555555: 0x00000000000000000000000081f0b102a4d21b1bdac5c0c4cb350d0c30388892
+555555555555555: 0x0000000000000000000000007073ea8c9b0612f3c3fe604425e2af7954c4c92e
+555555555555555: 0x0000000000000000000000000d7899f2d36344ed21829d4ebc49cc0d335b4a06
+555555555555555: 0x0000000000000000000000000d500b1d8e8ef31e21c99d1db9a6444d3adf1270
+555555555555555: 0x0000000000000000000000000000000000000000000000000000000000002114
+555555555555555: 0x0000000000000000000000000000000000000000000000000000000000000000
+555555555555555: 0x0000000000000000000000000000000000000000000000000000000000000000
+555555555555555: 0x0000000000000000000000000000000000000000000000000000000000000000
+555555555555555: 0x0000000000000000000000000000000000000000000000000000000000000000
+555555555555555: 0x0000000000000000000000000000000000000000000000000000000000000005
+555555555555555: 0x0000000000000000000000000000000000000000000000000000000000000000
+555555555555555: 0x0000000000000000000000000000000000000000000000000000000000000000
+555555555555555: 0x0000000000000000000000000000000000000000000000000000000000000000
+555555555555555: 0x0000000000000000000000000000000000000000000000000000000000000000
+555555555555555: 0x0000000000000000000000000000000000000000000000000000000000000000
+*/
 
 // We recommend this pattern to be able to use async/await everywhere
 // and properly handle errors.

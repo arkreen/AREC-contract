@@ -59,6 +59,8 @@ contract GreenBTC is
 
     uint256 public luckyRate;  
 
+    uint256 internal openingBoxListOffset;
+
     event GreenBitCoin(uint256 height, uint256 ARTCount, address minter, uint8 greenType);
     event OpenBox(address opener, uint256 tokenID, uint256 blockNumber);
 
@@ -362,7 +364,8 @@ contract GreenBTC is
         uint256 revealCount;
         uint256 skipCount;
 
-        for (uint256 index = 0; index < openingListLength; index++) {
+        uint256 overtimeCount;
+        for (uint256 index = openingBoxListOffset; index < openingListLength; index++) {
             OpenInfo memory openInfo = openingBoxList[index];
             uint256 tokenID = openInfo.tokenID;
             uint256 openHeight = openInfo.openHeight + 1;               // Hash of the next block determining the result
@@ -386,13 +389,21 @@ contract GreenBTC is
             } else {
                 overtimeBoxList.push(openInfo);
                 dataNFT[tokenID].seed = overtimeBoxList.length - 1;     // Save index to make it easy to reveal with hash value
+
+                overtimeCount++;
+                if(overtimeCount == 256) break;
             } 
         }
 
-        delete openingBoxList;                                          // delete the while list
-
-        for (uint256 index = 0; index < skipCount; index++) {           // Also works for empty skipList
-            openingBoxList.push(skipList[index]);
+        if (overtimeCount == 256) {
+            openingBoxListOffset += overtimeCount;
+        } else {
+            delete openingBoxList;                                          // delete the while list
+            
+            openingBoxListOffset = 0;
+            for (uint256 index = 0; index < skipCount; index++) {           // Also works for empty skipList
+                openingBoxList.push(skipList[index]);
+            }
         }
 
         // Set the final reveal length if necessary
