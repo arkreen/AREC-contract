@@ -383,20 +383,20 @@ describe("GreenBTC Test Campaign", () => {
 
         while(true) {
           const openingBoxListBefore = await greenBitcoin.getOpeningBoxList()
-          const openingBoxListOffsetBefore = await greenBitcoin.openingBoxListOffset()
+          const openingBoxListOvertimedBefore = await greenBitcoin.getOpeningOvertimed()
           const overtimeBoxListBefore = await greenBitcoin.getOvertimeBoxList()
           
-          console.log("Reveal BeFore:", openingBoxListBefore.length, openingBoxListOffsetBefore.toString(), overtimeBoxListBefore.length)
+          console.log("Reveal BeFore:", openingBoxListBefore.length, openingBoxListOvertimedBefore.toString(), overtimeBoxListBefore.length)
 
           const revealBoxesTx = await greenBitcoin.revealBoxes()
           const receipt = await revealBoxesTx.wait()
                   
           const openingBoxListAfter = await greenBitcoin.getOpeningBoxList()
-          const openingBoxListOffsetAfter = await greenBitcoin.openingBoxListOffset()
+          const openingBoxListOvertimedAfter = await greenBitcoin.getOpeningOvertimed()
           const overtimeBoxListAfter = await greenBitcoin.getOvertimeBoxList()
-          console.log("Reveal After:", openingBoxListAfter.length, openingBoxListOffsetAfter.toString(),  overtimeBoxListAfter.length, receipt.gasUsed)
+          console.log("Reveal After:", openingBoxListAfter.length, openingBoxListOvertimedAfter.toString(),  overtimeBoxListAfter.length, receipt.gasUsed)
 
-          if(openingBoxListOffsetAfter.eq(0)) break
+          if(openingBoxListOvertimedAfter.eq(0)) break
         }
 
         const overtimeBoxListAfter = await greenBitcoin.getOvertimeBoxList()

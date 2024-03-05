@@ -59,7 +59,7 @@ contract GreenBTC is
 
     uint256 public luckyRate;  
 
-    uint256 public openingBoxListOffset;
+    uint256 internal openingBoxListOffset;
 
     event GreenBitCoin(uint256 height, uint256 ARTCount, address minter, uint8 greenType);
     event OpenBox(address opener, uint256 tokenID, uint256 blockNumber);
@@ -385,24 +385,24 @@ contract GreenBTC is
                 dataNFT[tokenID].seed = random;
 
                 revealList[revealCount++] = tokenID;                    // Prepare for return data 
-
+                overtimeCount++;
             } else {
                 overtimeBoxList.push(openInfo);
                 dataNFT[tokenID].seed = overtimeBoxList.length - 1;     // Save index to make it easy to reveal with hash value
-
                 overtimeCount++;
-                if(overtimeCount == 100) break;
             } 
+
+            if(overtimeCount == 100) break;
         }
 
         if (overtimeCount == 100) {
             openingBoxListOffset += overtimeCount;
         } else {
             delete openingBoxList;                                          // delete the while list
-            
             openingBoxListOffset = 0;
+
             for (uint256 index = 0; index < skipCount; index++) {           // Also works for empty skipList
-                openingBoxList.push(skipList[index]);
+                openingBoxList.push(skipList[index]);						// Copying memory array to storage not yet supported
             }
         }
 
@@ -486,6 +486,14 @@ contract GreenBTC is
      */
     function getOvertimeBoxList() public view returns (OpenInfo[] memory) {
         return overtimeBoxList;
+    }
+
+        /**
+     * @dev Return the number of the opened box in the opening list to be opened.
+     * If the return value is non-zero, need to call revealBoxes repeatly 
+     */
+    function getOpeningOvertimed() public view returns (uint256) {
+        return openingBoxListOffset;
     }
 
     /**

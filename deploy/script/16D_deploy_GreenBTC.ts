@@ -9,7 +9,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { deployer } = await getNamedAccounts();
 
   const chainID = await getChainId()
-  const defaultGasPrice = (chainID === '80001') ? BigNumber.from(6000000000) : BigNumber.from(50000000000)
+  const defaultGasPrice = (chainID === '80001') ? BigNumber.from(6_000_000_000) : BigNumber.from(100_000_000_000)
 
   console.log("Deploying: ", CONTRACTS.GreenBTC, deployer, chainID, defaultGasPrice.toString());  
 
@@ -75,6 +75,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/02/03
 // yarn deploy:matic:GreenBTCD:  Upgrade to support: Charge offset ART, one badge for batch buying
 // Implemenation: 0xAC591f8caf3a100b14D4AdD264AB2eE086E5fB09
+
+// 2024/03/06
+// yarn deploy:matic:GreenBTCD:  Upgrade to handle OpenList overtimed
+// Implemenation: 0xB05EDA9785B7C44Ac5dF78c21c577148cDb865d7
 
 func.tags = ["GreenBTCD"];
 
