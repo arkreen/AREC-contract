@@ -13,6 +13,8 @@ contract Airdrop is Ownable {
     address public from;
     uint256 public value;
 
+    event Airdopped( uint256 indexed totalRecipient, uint256 totalValue );
+
     constructor (address _token, address _from, uint256 _value ) {
         token = _token;
         from = _from;
@@ -20,26 +22,33 @@ contract Airdrop is Ownable {
     }
 
     function setParams(address _token, address _from, uint256 _value) external onlyOwner {
-        if (_token != address(0)) {
-            token = _token;
-        } if (from != address(0)) {
-            from = _from;
-        } else if (_value != 0) {
-            value = _value;
-        }
+        token = _token;
+        from = _from;
+        value = _value;
     }
 
     function airdrop(address[] calldata recipients) external onlyOwner {
-        address pool = from;
         for (uint256 index = 0; index < recipients.length; index++)
-            require(IERC20(token).transferFrom(pool, recipients[index], value));
+            if (from == address(0)) {
+                require(IERC20(token).transfer(recipients[index], value));
+            } else {
+                require(IERC20(token).transferFrom(from, recipients[index], value));
+            }     
     }
 
     function airdropWithValue(address[] calldata recipients, uint256[] calldata values) external onlyOwner {
         require(recipients.length == values.length, "Wrong Length" );
-        address pool = from;
-        for (uint256 index = 0; index < recipients.length; index++)
-            require(IERC20(token).transferFrom(pool, recipients[index], values[index]));
+        uint256 totalValue = 0;
+        
+        for (uint256 index = 0; index < recipients.length; index++) {
+            if (from == address(0)) {
+                require(IERC20(token).transfer(recipients[index], values[index]));
+            } else {
+                require(IERC20(token).transferFrom(from, recipients[index], values[index]));
+            }
+            totalValue = totalValue + values[index];
+        }
+        emit Airdopped(recipients.length, totalValue); 
     }
 
     function airdropGeneric(address dropToken, address dropFrom, uint256 dropValue, address[] calldata recipients) external onlyOwner {
@@ -52,5 +61,4 @@ contract Airdrop is Ownable {
         for (uint256 index = 0; index < recipients.length; index++)
             require(IERC20(dropToken).transferFrom(dropFrom, recipients[index], values[index]));
     }
-
 }

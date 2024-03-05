@@ -99,6 +99,8 @@
     "deploy:matic_test:ArkreenRECIssuanceImageD": "hardhat --network matic_test deploy --tags ArkreenRECIssuanceImageD",
     "deploy:matic_test:ArkreenRECIssuanceImageLogoD": "hardhat --network matic_test deploy --tags ArkreenRECIssuanceImageLogoD",
 
+    "deploy:matic_test:AirdropD": "hardhat --network matic_test deploy --tags AirdropD",
+
     "deploy:matic:gAKRE": "hardhat --network matic deploy --tags gAKRE",
     "deploy:matic:arkReward": "hardhat --network matic deploy --tags arkReward",
     "deploy:matic:AMiner": "hardhat --network matic deploy --tags AMiner",
@@ -154,6 +156,9 @@
     "deploy:matic:ArkreenBadgeImageD": "hardhat --network matic deploy --tags ArkreenBadgeImageD",
     "deploy:matic:ArkreenRECIssuanceImageLogoD": "hardhat --network matic deploy --tags ArkreenRECIssuanceImageLogoD",
     "deploy:matic:ArkreenRECIssuanceImageD": "hardhat --network matic deploy --tags ArkreenRECIssuanceImageD",
+    "deploy:matic:AirdropD": "hardhat --network matic deploy --tags AirdropD",
+
+    "storageExplorerGreenBTC:matic": "hardhat run --network matic ./deploy/storageExplorerGreenBTC.ts",
 
     "etherscan:matic": "hardhat --network matic etherscan-verify --api-key",
     "deploy:celo_test:gRegistry": "hardhat --network celo_test deploy --tags gRegistry",

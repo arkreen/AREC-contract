@@ -8,7 +8,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
   console.log("Deploying: ", 'Multicall', deployer);  
 
-  const Multicall = await deploy('Multicall', {
+  //const Multicall = await deploy('./contracts/test/Multicall.sol/Multicall', {
+  const Multicall = await deploy('MulticallS', {
       from: deployer,
       args: [],
       log: true,
@@ -37,6 +38,17 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2023/11/01
 // deploy:celo:MulticallD:  deployed on Celo mainnet
 // 0xB63e71D6FB9F0b3717239474E6BD189930a3F201
+
+// 2024/02/28
+// deploy:matic_test:MulticallD:  deployed on mumbi testnet to add checkIfContract 
+// 0x693a7f1dc9c9fee79c4c6c33f4515bf19493d4b3, 
+// 0x4aa366702b747f44ba3373968ce4289c0fb38555
+
+// 2024/02/28A
+// deploy:matic:MulticallD:  deployed on Polygon mainet to add checkIfContract 
+// 
+// 
+
 
 func.tags = ["MulticallD"];
 
