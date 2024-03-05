@@ -59,7 +59,7 @@ contract GreenBTC is
 
     uint256 public luckyRate;  
 
-    uint256 internal openingBoxListOffset;
+    uint256 public openingBoxListOffset;
 
     event GreenBitCoin(uint256 height, uint256 ARTCount, address minter, uint8 greenType);
     event OpenBox(address opener, uint256 tokenID, uint256 blockNumber);
@@ -391,11 +391,11 @@ contract GreenBTC is
                 dataNFT[tokenID].seed = overtimeBoxList.length - 1;     // Save index to make it easy to reveal with hash value
 
                 overtimeCount++;
-                if(overtimeCount == 256) break;
+                if(overtimeCount == 100) break;
             } 
         }
 
-        if (overtimeCount == 256) {
+        if (overtimeCount == 100) {
             openingBoxListOffset += overtimeCount;
         } else {
             delete openingBoxList;                                          // delete the while list
