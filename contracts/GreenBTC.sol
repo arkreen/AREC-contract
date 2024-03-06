@@ -352,14 +352,15 @@ contract GreenBTC is
      * @dev Reveal all the opened boxes stored internally. All overtime boxes will be moved to another list. 
      * waiting for another revealing with hash value.
      */
-    function revealBoxes() public onlyManager {
+    function revealBoxes() public {
 
         uint256 openingListLength = openingBoxList.length;
         require (openingListLength != 0, 'GBTC: Empty List');
 
-        uint256[] memory revealList = new uint256[](openingListLength);
-        bool[] memory wonList = new bool[](openingListLength);
-        OpenInfo[] memory skipList = new OpenInfo[](openingListLength);
+        uint256[] memory revealList = new uint256[](100);
+        bool[] memory wonList = new bool[](100);
+        OpenInfo[] memory skipList;
+        bool initSkipList;
 
         uint256 revealCount;
         uint256 skipCount;
@@ -371,7 +372,12 @@ contract GreenBTC is
             uint256 openHeight = openInfo.openHeight + 1;               // Hash of the next block determining the result
 
             if (block.number <= openHeight) {
-                skipList[skipCount++] = openInfo;
+                if (!initSkipList) {
+                    skipList = new OpenInfo[](openingListLength - index);
+                    initSkipList = true;
+                }
+
+                skipList[skipCount++] = openInfo;         // Member "push" is not available in memory[] outside of storage
             } else if ( block.number <= openHeight + 256 ) {
                 address owner = dataNFT[tokenID].opener;
                 uint256 random = uint256(keccak256(abi.encodePacked(tokenID, owner, blockhash(openHeight))));

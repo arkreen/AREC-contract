@@ -180,7 +180,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // Dev Env: Upgrade to support PlantMiner, and block transferring
 // immplementaion: 0x516846704C4e163bF37d97A6870e4b88d5598e46
 
-// 2024/02/01C: yarn deploy:matic:AMinerUV10: For production Env. 
+// 2024/02/01C: yarn deploy:matic:AMinerUV10: For production Env. (Need to upgrade with foundation wallet)
 // Upgrade to support PlantMiner, and block transferring
 // immplementaion: 0x5C3C5f4a3694B89F48D25964070aB68EF82884d4
 

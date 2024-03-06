@@ -59,8 +59,8 @@ contract ArkreenMiner is
 
     // Miner white list for sales in batch, mapping from index to miner address
     mapping(uint256 => address) private whiteListMinerBatch;
-    uint256 private whiteListBatchIndexHead;
-    uint256 private whiteListBatchIndexTail;
+    uint256 private whiteListBatchIndexHead;                // Not used after upgrading remoteType support, but need to keep
+    uint256 private whiteListBatchIndexTail;                // Not used after upgrading remoteType support, but need to keep
 
     mapping(uint256 => uint256) private whiteListBatchPoolIndexHead;
     mapping(uint256 => uint256) private whiteListBatchPoolIndexTail;
@@ -119,8 +119,8 @@ contract ArkreenMiner is
 
     function postUpdate() external onlyProxy onlyOwner 
     {
-        whiteListBatchPoolIndexHead[0] = 1207;    // 545, 680 1207, 1512
-//      whiteListBatchPoolIndexTail[0] = 680;    // 545, 680
+        whiteListBatchPoolIndexHead[0] = whiteListBatchIndexHead;
+        whiteListBatchPoolIndexTail[0] = whiteListBatchIndexTail;
     }
 
     function _authorizeUpgrade(address newImplementation)
