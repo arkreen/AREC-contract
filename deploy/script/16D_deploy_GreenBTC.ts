@@ -84,6 +84,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:GreenBTCD:  Upgrade to optimize the gas usage of revealBoxes
 // Implemenation: 0x859343C2b08fAbAba27A0887852bda7e5724cF6B
 
+// 2024/03/06B
+// yarn deploy:matic:GreenBTCD:  Upgrade to optimize the gas usage of deleting big array in storage 
+// Implemenation: 0xBC66D05918F79ea139254E662441eCf528360348
+
 func.tags = ["GreenBTCD"];
 
 export default func;

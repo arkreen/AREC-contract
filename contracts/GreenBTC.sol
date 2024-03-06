@@ -359,8 +359,6 @@ contract GreenBTC is
 
         uint256[] memory revealList = new uint256[](100);
         bool[] memory wonList = new bool[](100);
-        OpenInfo[] memory skipList;
-        bool initSkipList;
 
         uint256 revealCount;
         uint256 skipCount;
@@ -372,12 +370,7 @@ contract GreenBTC is
             uint256 openHeight = openInfo.openHeight + 1;               // Hash of the next block determining the result
 
             if (block.number <= openHeight) {
-                if (!initSkipList) {
-                    skipList = new OpenInfo[](openingListLength - index);
-                    initSkipList = true;
-                }
-
-                skipList[skipCount++] = openInfo;         // Member "push" is not available in memory[] outside of storage
+                skipCount++;
             } else if ( block.number <= openHeight + 256 ) {
                 address owner = dataNFT[tokenID].opener;
                 uint256 random = uint256(keccak256(abi.encodePacked(tokenID, owner, blockhash(openHeight))));
@@ -400,20 +393,24 @@ contract GreenBTC is
 
             if(overtimeCount == 100) break;
         }
+ 
+        openingBoxListOffset += overtimeCount;
 
-        if (overtimeCount == 100) {
-            openingBoxListOffset += overtimeCount;
-        } else {
-            delete openingBoxList;                                          // delete the while list
-            openingBoxListOffset = 0;
+        if (skipCount == 0) {
+            uint256 popLength = openingListLength;
+            if (popLength > 100) popLength = 100;
 
-            for (uint256 index = 0; index < skipCount; index++) {           // Also works for empty skipList
-                openingBoxList.push(skipList[index]);						// Copying memory array to storage not yet supported
+            for (uint256 index = 0; index < popLength; index++) {
+                openingBoxList.pop();
+            }
+
+            if (openingBoxListOffset > openingBoxList.length) {
+                openingBoxListOffset = openingBoxList.length;
             }
         }
 
         // Set the final reveal length if necessary
-        if (revealCount < openingListLength) {
+        if (revealCount < 100) {
           assembly {
               mstore(revealList, revealCount)
               mstore(wonList, revealCount)

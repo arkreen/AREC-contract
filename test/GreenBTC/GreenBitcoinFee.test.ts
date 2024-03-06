@@ -2033,8 +2033,13 @@ describe("GreenBTC Test Campaign", () => {
         expect((await greenBitcoin.dataNFT(34567))[3]).to.deep.equal(false)  
         
         const openingBoxList11 = await greenBitcoin.getOpeningBoxList()
+        const openingOvertimed = await greenBitcoin.getOpeningOvertimed()
 
-        expect(openingBoxList11[0].tokenID).to.equal(34567)                   // only 34567 left
+        expect(openingOvertimed).to.equal(2)  
+
+        expect(openingBoxList11[0].tokenID).to.equal(12345)                 
+        expect(openingBoxList11[1].tokenID).to.equal(23456)                 
+        expect(openingBoxList11[2].tokenID).to.equal(34567)                 
 
         await mine(1)
 
@@ -2308,8 +2313,15 @@ describe("GreenBTC Test Campaign", () => {
         expect((await greenBitcoin.dataNFT(56789))[3]).to.deep.equal(false)  
         
         const openingBoxList11 = await greenBitcoin.getOpeningBoxList()
-        expect(openingBoxList11.length).to.equal(1) 
-        expect(openingBoxList11[0].tokenID).to.equal(56789)                   // only 56789 left
+        expect(openingBoxList11.length).to.equal(6) 
+
+        const openingOvertimed = await greenBitcoin.getOpeningOvertimed()
+
+        expect(openingOvertimed).to.equal(5)  
+
+        expect(openingBoxList11[0].tokenID).to.equal(12345)                   //
+        expect(openingBoxList11[5].tokenID).to.equal(56789)                   // only 56789 left
+
 
         const overtimeBoxList = await greenBitcoin.getOvertimeBoxList() 
         expect(overtimeBoxList.length).to.equal(3) 
