@@ -415,5 +415,23 @@ describe("GreenBTC Test Campaign", () => {
           index += length
         }
       });
+
+      it("GreenBTC Test: restoreOvertimeBoxList", async () => {
+
+          const tokenIdList = Array.from(Array(256).keys())
+          const openHeightList = Array.from(Array(256).keys()).map(i =>(i+1000))
+
+          const tx = await greenBitcoin.restoreOvertimeBoxList(tokenIdList, openHeightList)
+
+          const receipt = await tx.wait()
+          console.log("restoreOvertimeBoxList gas price: ", receipt.gasUsed)
+
+          const overtimeBoxList = await greenBitcoin.getOvertimeBoxList()
+
+          console.log('overtimeBoxList:', overtimeBoxList, overtimeBoxList.length )
+
+      })
+
     })  
-});
+
+})

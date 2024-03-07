@@ -396,7 +396,7 @@ contract GreenBTC is
  
         openingBoxListOffset += overtimeCount;
 
-        if (skipCount == 0) {
+        if ((skipCount == 0) && (openingBoxListOffset == openingListLength)) {
             uint256 popLength = openingListLength;
             if (popLength > 100) popLength = 100;
 
@@ -433,8 +433,8 @@ contract GreenBTC is
         uint256 overtimeListLength = overtimeBoxList.length;
         require (overtimeListLength != 0, 'GBTC: Empty Overtime List');
 
-        uint256[] memory revealList = new uint256[](overtimeListLength);
-        bool[] memory wonList = new bool[](overtimeListLength);
+        uint256[] memory revealList = new uint256[](lengthReveal);
+        bool[] memory wonList = new bool[](lengthReveal);
 
         uint256 revealCount;
         for (uint256 index = 0; index < lengthReveal; index++) {
@@ -469,12 +469,17 @@ contract GreenBTC is
             revealList[revealCount++] = tokenID;                            // Prepare for return data 
         }
 
-        // Set the final reveal length
-        assembly {
-            mstore(revealList, revealCount)     
-        }
-
         emit RevealBoxes(revealList, wonList);
+    }
+
+    /**
+     * @dev Restore the OvertimeBox informatioon in case of abnormal situation
+     */
+    function restoreOvertimeBoxList(uint64[] calldata tokenIdList, uint64[] calldata openHeightList) public onlyOwner {
+        for (uint256 index = 0; index < tokenIdList.length; index++) {
+            OpenInfo memory openInfo = OpenInfo(tokenIdList[index], openHeightList[index]);
+            overtimeBoxList.push(openInfo);
+        }
     }
 
     /**

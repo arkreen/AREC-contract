@@ -9,7 +9,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { getChainId } = hre;
 
   const chainID = await getChainId()
-  const defaultGasPrice = (chainID === '80001') ? BigNumber.from(6000000000) : BigNumber.from(200_000_000_000)
+  const defaultGasPrice = (chainID === '80001') ? BigNumber.from(6000000000) : BigNumber.from(250_000_000_000)
 
   if(hre.network.name === 'matic_test') {
     const GREENBTC_PROXY_ADDRESS  = "0x770cB90378Cb59665BbF623a72b90f427701C825"     // 2023/10/24: Green BTC proxy
@@ -43,7 +43,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   // const NEW_IMPLEMENTATION   = "0xAC591f8caf3a100b14D4AdD264AB2eE086E5fB09"    // 2024/02/03: Upgrade to the latest verstion: Charge offset ART and skip occupied blocks in batch mode
   // const NEW_IMPLEMENTATION   = "0xB05EDA9785B7C44Ac5dF78c21c577148cDb865d7"    // 2024/03/06: Upgrade to handle OpenList overtimed
   // const NEW_IMPLEMENTATION   = "0x859343C2b08fAbAba27A0887852bda7e5724cF6B"    // 2024/03/06A: Upgrade to optimize the gas usage of revealBoxes
-  const NEW_IMPLEMENTATION      = "0xBC66D05918F79ea139254E662441eCf528360348"    // 2024/03/06B: Upgrade to optimize the gas usage of deleting big array in storage
+  // const NEW_IMPLEMENTATION   = "0xBC66D05918F79ea139254E662441eCf528360348"    // 2024/03/06B: Upgrade to optimize the gas usage of deleting big array in storage
+  const NEW_IMPLEMENTATION      = "0xa4F20c70668ACee2648908c94884d7A8A2A726c6"    // 2024/03/07: Upgrade to restore the restore OvertimeBox list
 
   console.log("Updating GreenBTC: ", GREENBTC_PROXY_ADDRESS, chainID, defaultGasPrice.toString());  
 
@@ -102,6 +103,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2024/03/06B: Polygon Mainnet: Upgrade to optimize the gas usage of deleting big array in storage 
 // yarn deploy:matic:GreenBTCU : 0xBC66D05918F79ea139254E662441eCf528360348
+
+// 2024/03/07: Polygon Mainnet: Upgrade to restore the restore OvertimeBox list
+// yarn deploy:matic:GreenBTCU : 0xa4F20c70668ACee2648908c94884d7A8A2A726c6
 
 export default func;
 func.tags = ["GreenBTCU"];

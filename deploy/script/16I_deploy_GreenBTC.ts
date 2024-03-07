@@ -4,6 +4,8 @@ import { ethers } from "hardhat";
 import { GreenBTC__factory } from "../../typechain";
 import { BigNumber } from "ethers";
 
+import OpenList from "../OpenList.json";
+
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     let GREENBTC_ADDRESS
@@ -16,7 +18,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     let WMATIC_ADDRESS
     let AKRE_ADDRESS
 
-    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6000000000) : BigNumber.from(100000000000)
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6_000_000_000) : BigNumber.from(280_000_000_000)
 
     if(hre.network.name === 'matic_test')  {    
       // 2023/10/20, Test Net Simulation 
@@ -119,12 +121,33 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       console.log("GreenBTCContract approveBuilder is executed: %s: ", hre.network.name, GREENBTC_ADDRESS, 
                                         [USDC_ADDRESS, USDT_ADDRESS, ART_ADDRESS] );
 */                                        
-                                        
+
+/*
       // 2023/10/27, 2023/11/13
       // Set Image Contract address
       const setImageContractTx = await GreenBTCFactory.setImageContract(IMAGE_ADDRESS, {gasPrice: defaultGasPrice})
       await setImageContractTx.wait()
       console.log("GreenBTCContract setImageContract is executed: %s: ", hre.network.name, IMAGE_ADDRESS);
+*/
+
+      // 2024/03/07
+      // Restore Overtime Box List
+      for (let index = 0 ; index < OpenList.greenBTCBlocks.length; ) {
+        let length = OpenList.greenBTCBlocks.length - index
+        if (length >= 250) length = 250
+
+        const tokenIdList = OpenList.greenBTCBlocks.slice(index, index+length).map( item => item.heightBTC)
+        const openHeightList = OpenList.greenBTCBlocks.slice(index, index+length).map( item => item.openBlockHeight)
+
+        // console.log(index, tokenIdList, openHeightList)
+
+        const setImageContractTx = await GreenBTCFactory.restoreOvertimeBoxList(tokenIdList, openHeightList, {gasPrice: defaultGasPrice})
+        await setImageContractTx.wait()
+        console.log("GreenBTCContract restoreOvertimeBoxList is executed: ", hre.network.name, index);
+
+        index = index + length
+  
+      }
 
 /*      
       //  2023/10/27
@@ -196,6 +219,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2023/11/13: Add metadata to NFT image, Green BTC -> GreenBTC, and change slogan
 // call setImageContract:   0xDf51F3DCD849f116948A5B23760B1ca0B5425BdE
+// yarn deploy:matic:GreenBTCI
+
+// 2024/03/07: Restore Overtime Box List
+// call restoreOvertimeBoxList: 0xDf51F3DCD849f116948A5B23760B1ca0B5425BdE
 // yarn deploy:matic:GreenBTCI
 
 func.tags = ["GreenBTCI"];
