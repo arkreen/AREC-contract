@@ -9,7 +9,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { deployer } = await getNamedAccounts();
 
   const chainID = await getChainId()
-  const defaultGasPrice = (chainID === '80001') ? BigNumber.from(6_000_000_000) : BigNumber.from(280_000_000_000)
+  const defaultGasPrice = (chainID === '80001') ? BigNumber.from(6_000_000_000) : BigNumber.from(150_000_000_000)
 
   console.log("Deploying: ", CONTRACTS.GreenBTC, deployer, chainID, defaultGasPrice.toString());  
 
@@ -18,7 +18,6 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       args: [],
       log: true,
       skipIfAlreadyDeployed: false,
-      nonce: 216,
       gasPrice: defaultGasPrice
   });
 
@@ -92,6 +91,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/03/07
 // yarn deploy:matic:GreenBTCD:  Upgrade to restore the restore OvertimeBox list
 // Implemenation: 0xa4F20c70668ACee2648908c94884d7A8A2A726c6
+
+// 2024/03/08
+// yarn deploy:matic:GreenBTCD:  Upgrade to restore the restore OvertimeBox list by updating
+// Implemenation: 0xbe02b9b4Eb01d81493f4fb211E0D1F90D0CE37b4
 
 func.tags = ["GreenBTCD"];
 

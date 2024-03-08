@@ -4,7 +4,7 @@ import { ethers } from "hardhat";
 import { GreenBTC__factory } from "../../typechain";
 import { BigNumber } from "ethers";
 
-import OpenList from "../OpenList.json";
+import OpenList from "../OpenListNew.json";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
@@ -18,7 +18,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     let WMATIC_ADDRESS
     let AKRE_ADDRESS
 
-    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6_000_000_000) : BigNumber.from(280_000_000_000)
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6_000_000_000) : BigNumber.from(200_000_000_000)
 
     if(hre.network.name === 'matic_test')  {    
       // 2023/10/20, Test Net Simulation 
@@ -130,23 +130,24 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       console.log("GreenBTCContract setImageContract is executed: %s: ", hre.network.name, IMAGE_ADDRESS);
 */
 
-      // 2024/03/07
+      // 2024/03/07, 2024/03/08
       // Restore Overtime Box List
+      //let nonce = 236     // Checking .............
       for (let index = 0 ; index < OpenList.greenBTCBlocks.length; ) {
         let length = OpenList.greenBTCBlocks.length - index
-        if (length >= 250) length = 250
+        if (length >= 100) length = 100
 
         const tokenIdList = OpenList.greenBTCBlocks.slice(index, index+length).map( item => item.heightBTC)
         const openHeightList = OpenList.greenBTCBlocks.slice(index, index+length).map( item => item.openBlockHeight)
 
-        // console.log(index, tokenIdList, openHeightList)
-
-        const setImageContractTx = await GreenBTCFactory.restoreOvertimeBoxList(tokenIdList, openHeightList, {gasPrice: defaultGasPrice})
-        await setImageContractTx.wait()
+//      console.log(index, tokenIdList, openHeightList)
         console.log("GreenBTCContract restoreOvertimeBoxList is executed: ", hre.network.name, index);
+        const restoreOvertimeBoxListExtTx = await GreenBTCFactory.restoreOvertimeBoxListExt(index, tokenIdList, openHeightList, {gasPrice: defaultGasPrice})
+
+        console.log("GreenBTCContract restoreOvertimeBoxList hash: ", hre.network.name, restoreOvertimeBoxListExtTx.hash);
+        await restoreOvertimeBoxListExtTx.wait()
 
         index = index + length
-  
       }
 
 /*      
@@ -222,6 +223,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:GreenBTCI
 
 // 2024/03/07: Restore Overtime Box List
+// call restoreOvertimeBoxList: 0xDf51F3DCD849f116948A5B23760B1ca0B5425BdE
+// yarn deploy:matic:GreenBTCI
+
+// 2024/03/08: Restore OvertimeBox list by updating
 // call restoreOvertimeBoxList: 0xDf51F3DCD849f116948A5B23760B1ca0B5425BdE
 // yarn deploy:matic:GreenBTCI
 

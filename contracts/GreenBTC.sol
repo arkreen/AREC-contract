@@ -475,10 +475,14 @@ contract GreenBTC is
     /**
      * @dev Restore the OvertimeBox informatioon in case of abnormal situation
      */
-    function restoreOvertimeBoxList(uint64[] calldata tokenIdList, uint64[] calldata openHeightList) public onlyOwner {
+    function restoreOvertimeBoxListExt(uint256 offset, uint64[] calldata tokenIdList, uint64[] calldata openHeightList) public onlyOwner {
+        require((offset + tokenIdList.length) <= overtimeBoxList.length, 'Wrong Offset');
         for (uint256 index = 0; index < tokenIdList.length; index++) {
             OpenInfo memory openInfo = OpenInfo(tokenIdList[index], openHeightList[index]);
-            overtimeBoxList.push(openInfo);
+            overtimeBoxList[offset + index] = openInfo;
+
+            uint256 tokenID = tokenIdList[index];
+            dataNFT[tokenID].seed = offset + index;
         }
     }
 

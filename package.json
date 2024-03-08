@@ -159,6 +159,7 @@
     "deploy:matic:AirdropD": "hardhat --network matic deploy --tags AirdropD",
 
     "storageExplorerGreenBTC:matic": "hardhat run --network matic ./deploy/storageExplorerGreenBTC.ts",
+    "GreenBTCTest:matic": "hardhat run --network matic ./deploy/GreenBTCTest.ts",
 
     "etherscan:matic": "hardhat --network matic etherscan-verify --api-key",
     "deploy:celo_test:gRegistry": "hardhat --network celo_test deploy --tags gRegistry",

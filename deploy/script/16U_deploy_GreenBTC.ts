@@ -9,7 +9,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { getChainId } = hre;
 
   const chainID = await getChainId()
-  const defaultGasPrice = (chainID === '80001') ? BigNumber.from(6000000000) : BigNumber.from(250_000_000_000)
+  const defaultGasPrice = (chainID === '80001') ? BigNumber.from(6000000000) : BigNumber.from(150_000_000_000)
 
   if(hre.network.name === 'matic_test') {
     const GREENBTC_PROXY_ADDRESS  = "0x770cB90378Cb59665BbF623a72b90f427701C825"     // 2023/10/24: Green BTC proxy
@@ -44,7 +44,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   // const NEW_IMPLEMENTATION   = "0xB05EDA9785B7C44Ac5dF78c21c577148cDb865d7"    // 2024/03/06: Upgrade to handle OpenList overtimed
   // const NEW_IMPLEMENTATION   = "0x859343C2b08fAbAba27A0887852bda7e5724cF6B"    // 2024/03/06A: Upgrade to optimize the gas usage of revealBoxes
   // const NEW_IMPLEMENTATION   = "0xBC66D05918F79ea139254E662441eCf528360348"    // 2024/03/06B: Upgrade to optimize the gas usage of deleting big array in storage
-  const NEW_IMPLEMENTATION      = "0xa4F20c70668ACee2648908c94884d7A8A2A726c6"    // 2024/03/07: Upgrade to restore the restore OvertimeBox list
+  // const NEW_IMPLEMENTATION   = "0xa4F20c70668ACee2648908c94884d7A8A2A726c6"    // 2024/03/07: Upgrade to restore the restore OvertimeBox list
+  const NEW_IMPLEMENTATION      = "0xbe02b9b4Eb01d81493f4fb211E0D1F90D0CE37b4"    // 2024/03/08: Upgrade to restore the restore OvertimeBox list by updating
 
   console.log("Updating GreenBTC: ", GREENBTC_PROXY_ADDRESS, chainID, defaultGasPrice.toString());  
 
@@ -106,6 +107,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2024/03/07: Polygon Mainnet: Upgrade to restore the restore OvertimeBox list
 // yarn deploy:matic:GreenBTCU : 0xa4F20c70668ACee2648908c94884d7A8A2A726c6
+
+// 2024/03/08: Polygon Mainnet: Upgrade to restore the restore OvertimeBox list by updating
+// yarn deploy:matic:GreenBTCU : 0xbe02b9b4Eb01d81493f4fb211E0D1F90D0CE37b4
 
 export default func;
 func.tags = ["GreenBTCU"];
