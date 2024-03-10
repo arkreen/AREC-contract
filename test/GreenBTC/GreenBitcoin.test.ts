@@ -173,6 +173,8 @@ describe("GreenBTC Test Campaign", () => {
                                 arkreenRECTokenESG.address, WETH.address ]) as GreenBTC
       await greenBitcoin.deployed();
       await greenBitcoin.approveBuilder([AKREToken.address, WETH.address])
+
+      await greenBitcoin.setNewCaps(200, 100, 500);
               
       const GreenBTCImageFactory = await ethers.getContractFactory("GreenBTCImage");
       greenBTCImage = await GreenBTCImageFactory.deploy()
@@ -805,7 +807,7 @@ describe("GreenBTC Test Campaign", () => {
            
           const receipt = await tx.wait()
           console.log("Gas used of authMintGreenBTCWithARTBatch of 10 items", receipt.gasUsed)
-//        expect(receipt.gasUsed).to.eq("7169162")        // 10: 7181278   7169162     
+          //        expect(receipt.gasUsed).to.eq("7169162")        // 10: 7181278   7169162     
         } 
         
 
@@ -839,7 +841,7 @@ describe("GreenBTC Test Campaign", () => {
 
           const receipt = await tx.wait()
           console.log("Gas used of authMintGreenBTCWithARTBatch(Open) of 20 items", receipt.gasUsed)
-//        expect(receipt.gasUsed).to.eq("14169028")        // 20: 14193304  14193326    
+          //        expect(receipt.gasUsed).to.eq("14169028")        // 20: 14193304  14193326    
 
           const _dataNFT1 = [owner1.address, 67890, true, false, false, 0]
           expect(await greenBitcoin.dataNFT(67890)).to.deep.equal(_dataNFT1)
@@ -1975,8 +1977,8 @@ describe("GreenBTC Test Campaign", () => {
 
         expect(openingOvertimed).to.equal(2)  
 
-        expect(openingBoxList11[0].tokenID).to.equal(12345)                 
-        expect(openingBoxList11[1].tokenID).to.equal(23456)                 
+        expect(openingBoxList11[0].tokenID).to.equal(0)                 
+        expect(openingBoxList11[1].tokenID).to.equal(0)                 
         expect(openingBoxList11[2].tokenID).to.equal(34567)                 
 
         await mine(1)
@@ -2257,7 +2259,11 @@ describe("GreenBTC Test Campaign", () => {
 
         expect(openingOvertimed).to.equal(5)  
 
-        expect(openingBoxList11[0].tokenID).to.equal(12345)                   //
+        expect(openingBoxList11[0].tokenID).to.equal(0)                   //
+        expect(openingBoxList11[1].tokenID).to.equal(0)                   //
+        expect(openingBoxList11[2].tokenID).to.equal(0)                   //
+        expect(openingBoxList11[3].tokenID).to.equal(0)                   //
+        expect(openingBoxList11[4].tokenID).to.equal(0)                   //
         expect(openingBoxList11[5].tokenID).to.equal(56789)                   // only 56789 left
 
 

@@ -173,6 +173,8 @@ describe("GreenBTC Test Campaign", () => {
                                 arkreenRECTokenESG.address, WETH.address ]) as GreenBTC
       await greenBitcoin.deployed();
       await greenBitcoin.approveBuilder([AKREToken.address, WETH.address])
+
+      await greenBitcoin.setNewCaps(200, 100, 800);
               
       const GreenBTCImageFactory = await ethers.getContractFactory("GreenBTCImage");
       greenBTCImage = await GreenBTCImageFactory.deploy()
@@ -246,13 +248,13 @@ describe("GreenBTC Test Campaign", () => {
           
           let recMintRequest: RECRequestStruct = { 
             issuer: manager.address, startTime, endTime,
-            amountREC: expandTo9Decimals(10000), 
+            amountREC: expandTo9Decimals(20000), 
             cID: "bafybeihepmxz4ytc4ht67j73nzurkvsiuxhsmxk27utnopzptpo7wuigte",
             region: 'Beijing',
             url:"", memo:""
           } 
 
-          const mintFee = expandTo18Decimals(10000* 1000)
+          const mintFee = expandTo18Decimals(20000* 1000)
           const nonce1 = await AKREToken.nonces(owner1.address)
           const digest1 = await getApprovalDigest(
                                   AKREToken,
@@ -279,7 +281,7 @@ describe("GreenBTC Test Campaign", () => {
 
         {
           let signature: SignatureStruct
-          const mintFee = expandTo18Decimals(10000 *1000)    
+          const mintFee = expandTo18Decimals(20000 *1000)    
           let tokenID: BigNumber          
 
           const nonce1 = await AKREToken.nonces(owner1.address)
@@ -294,7 +296,7 @@ describe("GreenBTC Test Campaign", () => {
 
           await arkreenRECIssuanceExt.manageMVPAddress(true,[owner1.address])      
 
-          await arkreenRECIssuanceExt.connect(owner1).mintESGBatch(1, expandTo9Decimals(10000), signature)
+          await arkreenRECIssuanceExt.connect(owner1).mintESGBatch(1, expandTo9Decimals(20000), signature)
           tokenID = await arkreenRECIssuanceExt.totalSupply()
 
           await arkreenRECIssuanceExt.connect(owner1).updateRECDataExt(tokenID, startTime, endTime, cID, region, url, memo)                     
@@ -311,7 +313,6 @@ describe("GreenBTC Test Campaign", () => {
 
       ///////////////////////////////////////////
       // #############################
-
       it("GreenBTC Test: revealBoxes", async () => {
 
         await arkreenRECBank.addNewART( arkreenRECToken.address,  maker1.address)
@@ -341,7 +342,7 @@ describe("GreenBTC Test Campaign", () => {
  
          // 2nd Block: authMintGreenBTCWithApprove    
         let hashTable = new Array<string>(500)
-        for (let index = 0; index <500; index++) { 
+        for (let index = 0; index < 500; index++) { 
           if ( (index % 100) == 0 ) {
             console.log("Buy GreenBTC block", index)
           }
@@ -416,6 +417,154 @@ describe("GreenBTC Test Campaign", () => {
         }
       });
 
+      it("GreenBTC Test: authMintGreenBTCWithARTBatch", async () => {
+        await arkreenRECBank.addNewART( arkreenRECToken.address,  maker1.address)
+        await arkreenRECBank.addNewART( arkreenRECTokenESG.address,  maker2.address)  
+        
+        await arkreenRECBank.connect(maker1).depositART( arkreenRECToken.address,  expandTo9Decimals(9000))
+        await arkreenRECBank.connect(maker2).depositART( arkreenRECTokenESG.address,  expandTo9Decimals(9000))
+
+        await arkreenRECToken.setClimateBuilder(arkreenBuilder.address)
+        await arkreenRECTokenESG.setClimateBuilder(arkreenBuilder.address)
+
+        await greenBitcoin.mangeARTTokens([arkreenRECToken.address, arkreenRECTokenESG.address], true)   
+        await greenBitcoin.approveBuilder([arkreenRECToken.address, arkreenRECTokenESG.address])
+
+        await arkreenBuilder.mangeTrustedForwarder(greenBitcoin.address, true)
+        await arkreenRECToken.connect(owner1).approve(greenBitcoin.address, constants.MaxUint256)  
+
+        const badgeInfo =  {
+          beneficiary:    owner1.address,
+          offsetEntityID: 'Owner1',
+          beneficiaryID:  'Tester',
+          offsetMessage:  "Just Testing"
+        }    
+
+        // Normal: authMintGreenBTCWithARTBatch(Open): arkreenRECToken: Gasfee
+        for( let batch = 0; batch < 62; batch++) {        // 99 Overtime + 199 releal + 500 remove
+
+            let greenBTCInfoArray = new Array<GreenBTCInfo>(30)
+            for( let index = 0; index < greenBTCInfoArray.length; index++) {
+              greenBTCInfoArray[index]=  {
+                height:     BigNumber.from(67890 + batch * 100 ).add(index),
+                ARTCount:   expandTo9Decimals(12).div(10),  // 12 HART
+                minter:     owner1.address,
+                greenType:  0x12,
+                blockTime:  'Apr 14, 2009 10:25 PM UTC',
+                energyStr:  '45.234 MWh'
+              }
+            }
+
+            let greenBTCInfoArrayX = new Array<GreenBTCInfo>(49)
+            for( let index = 0; index < greenBTCInfoArrayX.length; index++) {
+              greenBTCInfoArrayX[index]=  {
+                height:     BigNumber.from(67890 + batch * 100 ).add(index),
+                ARTCount:   expandTo9Decimals(12).div(10),  // 12 HART
+                minter:     owner1.address,
+                greenType:  0x12,
+                blockTime:  'Apr 14, 2009 10:25 PM UTC',
+                energyStr:  '45.234 MWh'
+              }
+            }
+
+            // const receiver = owner1.address
+            const register_digest = getGreenBitcoinDigestBatch(
+                            'Green BTC Club',
+                            greenBitcoin.address, (batch != 55 ) &&  (batch != 61 ) ? greenBTCInfoArray : greenBTCInfoArrayX
+                          )
+      
+            const {v,r,s} = ecsign( Buffer.from(register_digest.slice(2), 'hex'), 
+                                                  Buffer.from(privateKeyRegister.slice(2), 'hex'))  
+
+            let tx
+            let receipt                                                
+            if((batch != 55 ) && (batch != 61 )) {
+              tx = await greenBitcoin.connect(owner1).authMintGreenBTCWithARTBatch( 
+                                greenBTCInfoArray, {v,r,s}, badgeInfo, arkreenRECToken.address, constants_MaxDealineAndOpen )  
+              receipt = await tx.wait() 
+            } else {
+              tx = await greenBitcoin.connect(owner1).authMintGreenBTCWithARTBatch( 
+                                greenBTCInfoArrayX, {v,r,s}, badgeInfo, arkreenRECToken.address, constants_MaxDealineAndOpen )  
+              receipt = await tx.wait() 
+            }
+
+            if (batch == 55) await mine(233-97)
+
+            const openingBoxList = await greenBitcoin.getOpeningBoxList() 
+            console.log("AAAAAAAAAAA", batch, receipt.blockNumber, openingBoxList.length)
+            if( ((batch % 5) ==0) && (batch < 70) ) {                         
+              await mine(97)
+            }
+        }
+
+        for (let index = 0; index < 30; index++ ) {
+          const revealBoxesTx = await greenBitcoin.revealBoxes()
+          const openingBoxList = await greenBitcoin.getOpeningBoxList() 
+          const openingOvertimed = await greenBitcoin.getOpeningOvertimed() 
+          const overtimeBoxList = await greenBitcoin.getOvertimeBoxList() 
+          const receipt = await revealBoxesTx.wait()
+          console.log("Index:", index, receipt.blockNumber, receipt.gasUsed, openingBoxList.length,  openingOvertimed, overtimeBoxList.length)
+          if (openingBoxList.length == 0) break;
+        }
+/*
+        Index: 0 BigNumber { value: "4677850" } 3049 BigNumber { value: "100" } 100
+        Index: 1 BigNumber { value: "4663550" } 3049 BigNumber { value: "200" } 200
+        Index: 2 BigNumber { value: "4663550" } 3049 BigNumber { value: "300" } 300
+        Index: 3 BigNumber { value: "4663550" } 3049 BigNumber { value: "400" } 400
+        Index: 4 BigNumber { value: "4663550" } 3049 BigNumber { value: "500" } 500
+        Index: 5 BigNumber { value: "4663550" } 3049 BigNumber { value: "600" } 600
+        Index: 6 BigNumber { value: "4663550" } 3049 BigNumber { value: "700" } 700
+        Index: 7 BigNumber { value: "4663550" } 3049 BigNumber { value: "800" } 800
+        Index: 8 BigNumber { value: "4663550" } 3049 BigNumber { value: "900" } 900
+        Index: 9 BigNumber { value: "4663550" } 3049 BigNumber { value: "1000" } 1000
+        Index: 10 BigNumber { value: "4663550" } 3049 BigNumber { value: "1100" } 1100
+        Index: 11 BigNumber { value: "4663550" } 3049 BigNumber { value: "1200" } 1200
+        Index: 12 BigNumber { value: "4663550" } 3049 BigNumber { value: "1300" } 1300
+        Index: 13 BigNumber { value: "4663550" } 3049 BigNumber { value: "1400" } 1400
+        Index: 14 BigNumber { value: "4663550" } 3049 BigNumber { value: "1500" } 1500
+        Index: 15 BigNumber { value: "4663550" } 3049 BigNumber { value: "1600" } 1600
+        Index: 16 BigNumber { value: "10641075" } 3049 BigNumber { value: "1899" } 1699
+        Index: 17 BigNumber { value: "6068518" } 3049 BigNumber { value: "2099" } 1699
+        Index: 18 BigNumber { value: "6068518" } 3049 BigNumber { value: "2299" } 1699
+        Index: 19 BigNumber { value: "6068125" } 3049 BigNumber { value: "2499" } 1699
+        Index: 20 BigNumber { value: "6067732" } 3049 BigNumber { value: "2699" } 1699
+        Index: 21 BigNumber { value: "6068911" } 3049 BigNumber { value: "2899" } 1699
+        Index: 22 BigNumber { value: "5592634" } 2549 BigNumber { value: "2549" } 1699
+        Index: 23 BigNumber { value: "1372662" } 2049 BigNumber { value: "2049" } 1699
+        Index: 24 BigNumber { value: "1372662" } 1549 BigNumber { value: "1549" } 1699
+        Index: 25 BigNumber { value: "1372662" } 1049 BigNumber { value: "1049" } 1699
+        Index: 26 BigNumber { value: "1372662" } 549 BigNumber { value: "549" } 1699
+        Index: 27 BigNumber { value: "1372662" } 49 BigNumber { value: "49" } 1699
+        Index: 28 BigNumber { value: "168809" } 0 BigNumber { value: "0" } 1699
+              √ GreenBTC Test: authMintGreenBTCWithARTBatch (519794ms)
+
+        Index: 0 1524 BigNumber { value: "4677850" } 1898 BigNumber { value: "100" } 100
+        Index: 1 1525 BigNumber { value: "4663550" } 1898 BigNumber { value: "200" } 200
+        Index: 2 1526 BigNumber { value: "4663550" } 1898 BigNumber { value: "300" } 300
+        Index: 3 1527 BigNumber { value: "4663550" } 1898 BigNumber { value: "400" } 400
+        Index: 4 1528 BigNumber { value: "4663550" } 1898 BigNumber { value: "500" } 500
+        Index: 5 1529 BigNumber { value: "4663550" } 1898 BigNumber { value: "600" } 600
+        Index: 6 1530 BigNumber { value: "4663550" } 1898 BigNumber { value: "700" } 700
+        Index: 7 1531 BigNumber { value: "4663550" } 1898 BigNumber { value: "800" } 800
+        Index: 8 1532 BigNumber { value: "4663550" } 1898 BigNumber { value: "900" } 900
+        Index: 9 1533 BigNumber { value: "4663550" } 1898 BigNumber { value: "1000" } 1000
+        Index: 10 1534 BigNumber { value: "4663550" } 1898 BigNumber { value: "1100" } 1100
+        Index: 11 1535 BigNumber { value: "4663550" } 1898 BigNumber { value: "1200" } 1200
+        Index: 12 1536 BigNumber { value: "4663550" } 1898 BigNumber { value: "1300" } 1300
+        Index: 13 1537 BigNumber { value: "4663550" } 1898 BigNumber { value: "1400" } 1400
+        Index: 14 1538 BigNumber { value: "4663550" } 1898 BigNumber { value: "1500" } 1500
+        Index: 15 1539 BigNumber { value: "4663550" } 1898 BigNumber { value: "1600" } 1600
+        Index: 16 1540 BigNumber { value: "12138376" } 1098 BigNumber { value: "1098" } 1699
+        Index: 17 1541 BigNumber { value: "2167062" } 298 BigNumber { value: "298" } 1699
+        Index: 18 1542 BigNumber { value: "828161" } 0 BigNumber { value: "0" } 1699
+              √ GreenBTC Test: authMintGreenBTCWithARTBatch (245577ms)
+
+*/
+
+      });     
+
+
+/*
       it("GreenBTC Test: restoreOvertimeBoxList", async () => {
 
           const tokenIdList = Array.from(Array(256).keys())
@@ -431,6 +580,7 @@ describe("GreenBTC Test Campaign", () => {
           console.log('overtimeBoxList:', overtimeBoxList, overtimeBoxList.length )
 
       })
+*/
 
     })  
 

@@ -61,6 +61,10 @@ contract GreenBTC is
 
     uint256 internal openingBoxListOffset;
 
+    uint256 public overtimeRevealCap;
+    uint256 public normalRevealCap;
+    uint256 public removeRevealCap;
+
     event GreenBitCoin(uint256 height, uint256 ARTCount, address minter, uint8 greenType);
     event OpenBox(address opener, uint256 tokenID, uint256 blockNumber);
 
@@ -357,13 +361,17 @@ contract GreenBTC is
         uint256 openingListLength = openingBoxList.length;
         require (openingListLength != 0, 'GBTC: Empty List');
 
-        uint256[] memory revealList = new uint256[](100);
-        bool[] memory wonList = new bool[](100);
+        uint256 revealcap = normalRevealCap;
+        uint256 overtimeCap = overtimeRevealCap;
+        uint256 removeCap = removeRevealCap;
+
+        uint256[] memory revealList = new uint256[](revealcap);       // reveal 200 blocks once a time
+        bool[] memory wonList = new bool[](revealcap);
 
         uint256 revealCount;
         uint256 skipCount;
+        uint256 allRevealCount;
 
-        uint256 overtimeCount;
         for (uint256 index = openingBoxListOffset; index < openingListLength; index++) {
             OpenInfo memory openInfo = openingBoxList[index];
             uint256 tokenID = openInfo.tokenID;
@@ -383,22 +391,28 @@ contract GreenBTC is
                 dataNFT[tokenID].reveal = true;
                 dataNFT[tokenID].seed = random;
 
-                revealList[revealCount++] = tokenID;                    // Prepare for return data 
-                overtimeCount++;
+                revealList[revealCount] = tokenID;                    // Prepare for return data 
+
+                delete openingBoxList[index];
+                allRevealCount++;
+
+                revealCount++;
+                if(revealCount == revealcap) break;
             } else {
                 overtimeBoxList.push(openInfo);
                 dataNFT[tokenID].seed = overtimeBoxList.length - 1;     // Save index to make it easy to reveal with hash value
-                overtimeCount++;
-            } 
 
-            if(overtimeCount == 100) break;
+                delete openingBoxList[index];
+                allRevealCount++;
+                if(allRevealCount == overtimeCap) break;
+            } 
         }
  
-        openingBoxListOffset += overtimeCount;
+        openingBoxListOffset += allRevealCount;
 
         if ((skipCount == 0) && (openingBoxListOffset == openingListLength)) {
             uint256 popLength = openingListLength;
-            if (popLength > 100) popLength = 100;
+            if (popLength > removeCap) popLength = removeCap;
 
             for (uint256 index = 0; index < popLength; index++) {
                 openingBoxList.pop();
@@ -410,7 +424,7 @@ contract GreenBTC is
         }
 
         // Set the final reveal length if necessary
-        if (revealCount < 100) {
+        if (revealCount < revealcap) {
           assembly {
               mstore(revealList, revealCount)
               mstore(wonList, revealCount)
@@ -473,17 +487,12 @@ contract GreenBTC is
     }
 
     /**
-     * @dev Restore the OvertimeBox informatioon in case of abnormal situation
+     * @dev Set new caps
      */
-    function restoreOvertimeBoxListExt(uint256 offset, uint64[] calldata tokenIdList, uint64[] calldata openHeightList) public onlyOwner {
-        require((offset + tokenIdList.length) <= overtimeBoxList.length, 'Wrong Offset');
-        for (uint256 index = 0; index < tokenIdList.length; index++) {
-            OpenInfo memory openInfo = OpenInfo(tokenIdList[index], openHeightList[index]);
-            overtimeBoxList[offset + index] = openInfo;
-
-            uint256 tokenID = tokenIdList[index];
-            dataNFT[tokenID].seed = offset + index;
-        }
+    function setNewCaps(uint256 newNormalCap, uint256 newOvertimeCap, uint256 newRemoveCap) public {
+        if( newNormalCap != 0) normalRevealCap = newNormalCap;
+        if( newOvertimeCap != 0) overtimeRevealCap = newOvertimeCap;
+        if( newRemoveCap != 0) removeRevealCap = newRemoveCap;
     }
 
     /**

@@ -45,7 +45,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   // const NEW_IMPLEMENTATION   = "0x859343C2b08fAbAba27A0887852bda7e5724cF6B"    // 2024/03/06A: Upgrade to optimize the gas usage of revealBoxes
   // const NEW_IMPLEMENTATION   = "0xBC66D05918F79ea139254E662441eCf528360348"    // 2024/03/06B: Upgrade to optimize the gas usage of deleting big array in storage
   // const NEW_IMPLEMENTATION   = "0xa4F20c70668ACee2648908c94884d7A8A2A726c6"    // 2024/03/07: Upgrade to restore the restore OvertimeBox list
-  const NEW_IMPLEMENTATION      = "0xbe02b9b4Eb01d81493f4fb211E0D1F90D0CE37b4"    // 2024/03/08: Upgrade to restore the restore OvertimeBox list by updating
+  // const NEW_IMPLEMENTATION   = "0xbe02b9b4Eb01d81493f4fb211E0D1F90D0CE37b4"    // 2024/03/08: Upgrade to restore the restore OvertimeBox list by updating
+  const NEW_IMPLEMENTATION      = "0x81eaB74123513E30Da96aDf4B41b5Ba51d9E650E"    // 2024/03/10: Upgrade to support revealcap: overtimeRevealCap, normalRevealCap, removeRevealCap
 
   console.log("Updating GreenBTC: ", GREENBTC_PROXY_ADDRESS, chainID, defaultGasPrice.toString());  
 
@@ -110,6 +111,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2024/03/08: Polygon Mainnet: Upgrade to restore the restore OvertimeBox list by updating
 // yarn deploy:matic:GreenBTCU : 0xbe02b9b4Eb01d81493f4fb211E0D1F90D0CE37b4
+
+// 2024/03/10: Polygon Mainnet: Upgrade to support revealcap: overtimeRevealCap, normalRevealCap, removeRevealCap
+// yarn deploy:matic:GreenBTCU : 0x81eaB74123513E30Da96aDf4B41b5Ba51d9E650E
 
 export default func;
 func.tags = ["GreenBTCU"];
