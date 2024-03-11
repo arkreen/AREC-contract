@@ -35,6 +35,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     let MATIC_PRICE    
     let AKRE_PRICE
 
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6_000_000_000) : BigNumber.from(200_000_000_000)
+
+
     if(hre.network.name === 'matic_test') {    
       // 2023/03/14, simulation 
       // RECBANK_ADDRESS   = "0x7ee6D2A14d6Db71339a010d44793B27895B36d50"   
@@ -198,16 +201,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
       USDC_ADDRESS      = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"          // USDC address
       USDT_ADDRESS      = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F"          // USDT address
-      WNATIVE_ADDRESS    = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"          // WMATIC address
-      AKRE_ADDRESS      = "0x21b101f5d61a66037634f7e1beb5a733d9987d57"          // tAKRE address
+      WNATIVE_ADDRESS    = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"         // WMATIC address
+      // AKRE_ADDRESS      = "0x21b101f5d61a66037634f7e1beb5a733d9987d57"       // tAKRE address
+      AKRE_ADDRESS      = "0xE9c21De62C5C5d0cEAcCe2762bF655AfDcEB7ab3"          // AKRE address
 
-      USDC_PRICE =      BigNumber.from(50).mul(BigNumber.from(10).pow(5))       // 5 USDC
-      USDT_PRICE =      BigNumber.from(50).mul(BigNumber.from(10).pow(5))       // 5 USDT
-      MATIC_PRICE=      expandTo15Decimals(5000)                                // 5 MATIC, 
-//    AKRE_PRICE =      expandTo18Decimals(200)                                 // 200 AKRE
+      USDC_PRICE =      BigNumber.from(100).mul(BigNumber.from(10).pow(5))       // 5 USDC  // 10 USDC, 2023/03/11
+      USDT_PRICE =      BigNumber.from(100).mul(BigNumber.from(10).pow(5))       // 5 USDT  // 10 USDT, 2023/03/11
+      MATIC_PRICE=      expandTo15Decimals(10000)                                // 5 MATIC, 
+      AKRE_PRICE =      expandTo18Decimals(1000)                                 // 1000 AKRE
    
       const [deployer, controller] = await ethers.getSigners();
-      const defaultGasPrice = BigNumber.from(100000000000)
 
       console.log("Deployer and controller are", deployer.address, controller.address)
 
@@ -223,20 +226,21 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   //    const addNewARTTRx = await ArkreenRECBankFactory.addNewART(HART_AREC as string , ART_CONTROLLER as string);
   //    await addNewARTTRx.wait()
 
+/*  
       // 2023/10/25, addNewART CART
       const addNewARTTRx = await ArkreenRECBankFactory.addNewART(CART_AREC, CART_CONTROLLER, {gasPrice: defaultGasPrice});
       await addNewARTTRx.wait()
-
+*/
       // Called by controller, Account 2
-      // 2023/04/06,  2023/04/10
-  //    const changeSalePriceUSDSC = await ArkreenRECBankFactory.connect(controller).changeSalePrice(HART_AREC as string, 
-  //                                    USDC_ADDRESS as string, USDC_PRICE as BigNumber)
-  //    await changeSalePriceUSDSC.wait()
+      // 2023/04/06,  2023/04/10, 2024/03/11
+      const changeSalePriceUSDSC = await ArkreenRECBankFactory.connect(controller).changeSalePrice(HART_AREC as string, 
+                                      USDC_ADDRESS as string, USDC_PRICE as BigNumber, {gasPrice: defaultGasPrice})
+      await changeSalePriceUSDSC.wait()
 
-      // 2023/04/06, 2023/04/10
-  //    const changeSalePriceUSDST = await ArkreenRECBankFactory.connect(controller).changeSalePrice(HART_AREC as string, 
-  //                                    USDT_ADDRESS as string, USDT_PRICE as BigNumber)
-  //    await changeSalePriceUSDST.wait()
+      // 2023/04/06, 2023/04/10, 2024/03/11
+      const changeSalePriceUSDST = await ArkreenRECBankFactory.connect(controller).changeSalePrice(HART_AREC as string, 
+                                      USDT_ADDRESS as string, USDT_PRICE as BigNumber, {gasPrice: defaultGasPrice} )
+      await changeSalePriceUSDST.wait()
 
 /*
       // 2023/04/10
@@ -433,6 +437,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 1. Action: addNewART (ART/HART/CART)
 // 2. changeSalePrice (ART/HART/CART => USDC/USDT/WMATIC/tAKRE)
 // 3. Approve(RECBANK_ADDRESS) (ART/HART/CART)
+
+// 2024/03/11: （OK）
+// yarn deploy:matic:ArtBankI
+// 1. changeSalePrice (HART => USDC/USDT: 10USDC/USDT)
 
 func.tags = ["ArtBankI"];
 

@@ -152,6 +152,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       }
 */
 
+/*
       // 2024/03/10
       // Set revealcap: overtimeRevealCap, normalRevealCap, removeRevealCap
       const overtimeRevealCap = 100
@@ -163,6 +164,15 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
       await setNewCapsTx.wait()
       console.log("GreenBTCContract setNewCaps: ", hre.network.name, normalRevealCap, overtimeRevealCap, removeRevealCap, setNewCapsTx.hash, );
+*/
+
+      // 2024/03/11
+      const hCART = "0x93b3bb6C51A247a27253c33F0d0C2FF1d4343214"                  // hART
+      console.log("GreenBTCContract setCARTContract: ", hre.network.name, hCART);
+      const setNewCapsTx = await GreenBTCFactory.setCARTContract(hCART, {gasPrice: defaultGasPrice})
+
+      await setNewCapsTx.wait()
+      console.log("GreenBTCContract setCARTContract: ", hre.network.name, hCART);
 
 /*      
       //  2023/10/27
@@ -246,6 +256,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2024/03/10: Set revealcap: overtimeRevealCap, normalRevealCap, removeRevealCap
 // call restoreOvertimeBoxList: 0xDf51F3DCD849f116948A5B23760B1ca0B5425BdE
+// yarn deploy:matic:GreenBTCI
+
+// 2024/03/11: Set setCARTContract to HART
+// call setCARTContract: 0xDf51F3DCD849f116948A5B23760B1ca0B5425BdE
 // yarn deploy:matic:GreenBTCI
 
 func.tags = ["GreenBTCI"];
