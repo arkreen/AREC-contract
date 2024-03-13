@@ -34,8 +34,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     let USDT_PRICE
     let MATIC_PRICE    
     let AKRE_PRICE
+    let CELO_PRICE
 
-    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6_000_000_000) : BigNumber.from(200_000_000_000)
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6_000_000_000) : BigNumber.from(8_000_000_000)
 
 
     if(hre.network.name === 'matic_test') {    
@@ -349,24 +350,54 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       WNATIVE_ADDRESS  = "0x471EcE3750Da237f93B8E339c536989b8978a438"         // CELO native asset: Celo
 //    AKRE_ADDRESS    = "0x54e1c534f59343c56549c76d1bdccc8717129832"          // AKRE address
 
-      USDC_PRICE      = BigNumber.from(10).mul(BigNumber.from(10).pow(18))     // 10 USDC, 10**18
-//    USDT_PRICE      = BigNumber.from(10).mul(BigNumber.from(10).pow(18))     // 10 USDT, 10**18
-      MATIC_PRICE     = BigNumber.from(20).mul(BigNumber.from(10).pow(18))     // 20 Celo
+      USDC_PRICE      = BigNumber.from(3).mul(BigNumber.from(10).pow(18))     // 3 USDC, 10**18
+//    USDT_PRICE      = BigNumber.from(3).mul(BigNumber.from(10).pow(18))     // 3 USDT, 10**18
+      CELO_PRICE      = BigNumber.from(2).mul(BigNumber.from(10).pow(18))     // 2 Celo
 //    AKRE_PRICE      = expandTo18Decimals(200)                               // 200 AKRE
 
-      const [deployer] = await ethers.getSigners();
+      const [deployer, controller] = await ethers.getSigners();
 
       // Approve HashKeyESGBTCContract to Tranfer-From the specified tokens
       const ArkreenRECBankFactory = ArkreenRECBank__factory.connect(RECBANK_ADDRESS as string, deployer);
-     
+
+      const ArkreenRECTokenFactory = ArkreenRECToken__factory.connect(CART_AREC as string, deployer);
+
+/*      
       // 2023/11/01: Called from Account 1
       const addNewARTTRx = await ArkreenRECBankFactory.addNewART(CART_AREC as string , CART_CONTROLLER as string);
       await addNewARTTRx.wait()
-    
+*/
+
+/*
+      // 2024/03/12
+      console.log('Change CELO price:', CART_AREC, WNATIVE_ADDRESS, CELO_PRICE.toString())
+      const changeSalePriceCELO = await ArkreenRECBankFactory.connect(controller).changeSalePrice(CART_AREC as string, 
+                                      WNATIVE_ADDRESS as string, CELO_PRICE as BigNumber)
+      await changeSalePriceCELO.wait()   
+
+      // 2024/03/12
+      console.log('Change USDC price:', CART_AREC, USDC_ADDRESS, CELO_PRICE.toString())
+      const changeSalePriceUSDC = await ArkreenRECBankFactory.connect(controller).changeSalePrice(CART_AREC as string, 
+                                      USDC_ADDRESS as string, USDC_PRICE as BigNumber )
+      await changeSalePriceUSDC.wait()  
+*/
+      // 2024/03/12: Deposit cART
+      //const approveTrx = await ArkreenRECTokenFactory.connect(controller).approve(RECBANK_ADDRESS as string, constants.MaxUint256) // 2024/03/12
+      //await approveTrx.wait()
+
+      console.log('Deposit cART to Bank contract ', CART_AREC)
+      const balance = await ArkreenRECTokenFactory.balanceOf(controller.address)
+
+      console.log('AAAAAAAAAAAAAAA', balance.toString())
+
+//    const depositARTTrx = await ArkreenRECBankFactory.connect(controller).callStatic["depositART"](CART_AREC as string,  balance)
+
+      const depositARTTrx = await ArkreenRECBankFactory.connect(controller).depositART(CART_AREC as string, balance)
+      await depositARTTrx.wait()  
+
+      console.log('BBBBBBBBBBB', depositARTTrx, balance.toString())
     }
-
 };
-
 
 // 2023/04/05
 // yarn deploy:matic:ArtBankI
@@ -441,6 +472,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/03/11: （OK）
 // yarn deploy:matic:ArtBankI
 // 1. changeSalePrice (HART => USDC/USDT: 10USDC/USDT)
+
+// 2024/03/12:
+// yarn deploy:celo:ArtBankI
+// 1. changeSalePrice (cART => USDC/CELO: 3USDC/2CELO)
+
+// 2024/03/12A:
+// yarn deploy:celo:ArtBankI
+// 1. depositART
 
 func.tags = ["ArtBankI"];
 

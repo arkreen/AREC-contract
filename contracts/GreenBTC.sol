@@ -606,7 +606,9 @@ contract GreenBTC is
             if(ifOpen) openBox(gbtc.height);
 
             amountARTSum += gbtcList[index].ARTCount;
-        }      
+        }
+        require(amountARTSum != 0, "GBTC: No Block Available");
+
     }
 
 

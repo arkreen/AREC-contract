@@ -33,6 +33,7 @@ import { boolean } from "hardhat/internal/core/params/argumentTypes";
 
 const constants_MaxDealine = BigNumber.from('0xFFFFFFFF')
 const constants_MaxDealineAndOpen = constants_MaxDealine.or(BigNumber.from(1).shl(63))
+const constants_MaxDealineAndOpenSkip = constants_MaxDealine.or(BigNumber.from(3).shl(62))
 
 
 describe("GreenBTC Test Campaign", () => {
@@ -1469,6 +1470,46 @@ describe("GreenBTC Test Campaign", () => {
           console.log("Gas used of authMintGreenBTCWithApproveBatch(Open) of 20 items", receipt.gasUsed)
 //        expect(receipt.gasUsed).to.eq("15290477")        // 20: 15290477       
         }    
+
+
+        // Normal: authMintGreenBTCWithApproveBatch: arkreenRECToken: Gasfee
+        // Buy and open
+        {
+          let greenBTCInfoArray = new Array<GreenBTCInfo>(20)
+          for( let index = 0; index < greenBTCInfoArray.length; index++) {
+            greenBTCInfoArray[index]=  {
+              height:     BigNumber.from(88901).add(index),
+              ARTCount:   expandTo9Decimals(12),  // 12 HART
+              minter:     owner1.address,
+              greenType:  1,
+              blockTime:  'Apr 14, 2009 10:25 PM UTC',
+              energyStr:  '45.234 MWh'
+            }
+          }
+
+          // const receiver = owner1.address
+          const register_digest = getGreenBitcoinDigestBatch(
+                          'Green BTC Club',
+                          greenBitcoin.address, greenBTCInfoArray
+                        )
+    
+          const {v,r,s} = ecsign( Buffer.from(register_digest.slice(2), 'hex'), 
+                                                Buffer.from(privateKeyRegister.slice(2), 'hex'))  
+
+          await arkreenRECToken.connect(owner1).approve(greenBitcoin.address, constants.MaxUint256)  
+
+          const amountPay = expandTo18Decimals(12*20*10)
+          await greenBitcoin.connect(owner1).authMintGreenBTCWithApproveBatch( 
+                            greenBTCInfoArray, {v,r,s}, badgeInfo, {token: AKREToken.address, amount: amountPay}, constants_MaxDealineAndOpenSkip )  
+
+          const {v:v1, r:r1, s:s1} = ecsign( Buffer.from(register_digest.slice(2), 'hex'), 
+                            Buffer.from(privateKeyRegister.slice(2), 'hex'))  
+
+          await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithApproveBatch( 
+                              greenBTCInfoArray, {v:v1, r:r1, s:s1}, badgeInfo, {token: AKREToken.address, amount: amountPay}, constants_MaxDealineAndOpenSkip )
+                              ).to.be.revertedWith("GBTC: No Block Available")     
+        }    
+
       });
       
       it("GreenBTC Test: openBox", async () => {
