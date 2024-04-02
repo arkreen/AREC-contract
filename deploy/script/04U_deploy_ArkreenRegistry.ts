@@ -3,6 +3,7 @@ import { DeployFunction } from "hardhat-deploy/types";
 import { CONTRACTS } from "../constants";
 import { ethers } from "hardhat";
 import { ArkreenRegistry__factory } from "../../typechain";
+import { BigNumber } from "ethers";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const { deployments, getNamedAccounts } = hre;
@@ -10,6 +11,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const { deployerAddress } = await getNamedAccounts();
 
     console.log("Deploying Updated ArkreenRegistry: ", CONTRACTS.gRegistry, deployerAddress);  
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6_000_000_000) : BigNumber.from(180_000_000_000)
 
     if(hre.network.name === 'matic_test') {
 //      const REGISTRY_ADDRESS    =   "0x047eb5205251c5fc8a21ba8f8d46f57df62013c8"       // Need to check  // Simulation
@@ -48,7 +50,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     
     else if(hre.network.name === 'matic') {
         const REGISTRY_ADDRESS    =   "0xb17faCaCA106fB3D216923DB6CaBFC7C0517029d"       // MATIC mainnet normal release
-        const NEW_IMPLEMENTATION  =   "0x8668dD561a693aB7F8B48b599B692F2EFB070937"       // 2023/04/04: Upgrade to update tAKRE
+//      const NEW_IMPLEMENTATION  =   "0x8668dD561a693aB7F8B48b599B692F2EFB070937"       // 2023/04/04: Upgrade to update tAKRE
+        const NEW_IMPLEMENTATION  =   "0xB9a6E42721fE09db7e2d4AD178aD9A5A6c46C313"       // 2024/03/29: Upgrade to update the issuer of Universal ART
       
         const [deployer] = await ethers.getSigners();
         const ArkreenRegistryFactory = ArkreenRegistry__factory.connect(REGISTRY_ADDRESS, deployer);
@@ -56,7 +59,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //      const callData = ArkreenRegistryFactory.interface.encodeFunctionData("postUpdate")
 //      const updateTx = ArkreenRegistryFactory.interface.encodeFunctionData("upgradeToAndCall", [NEW_IMPLEMENTATION, callData])
 //      const updateTx = await ArkreenRegistryFactory.upgradeToAndCall(NEW_IMPLEMENTATION, callData)
-        const updateTx = await ArkreenRegistryFactory.upgradeTo(NEW_IMPLEMENTATION)
+        const updateTx = await ArkreenRegistryFactory.upgradeTo(NEW_IMPLEMENTATION, {gasPrice: defaultGasPrice})
         await updateTx.wait()
 
         console.log("callData, update", updateTx)
@@ -72,6 +75,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2024/01/11A: yarn deploy:celo_test:gRegistryU
 // Upgrade to update tAKRE
+
+// 2024/03/29: yarn deploy:matic:gRegistryU: 0xB9a6E42721fE09db7e2d4AD178aD9A5A6c46C313
+// Upgrade to update the issuer of Universal ART 
 
 func.tags = ["gRegistryU"];
 

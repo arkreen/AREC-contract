@@ -10,7 +10,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     console.log("Initialize ArkreenRegistry: ", CONTRACTS.gRegistry );  
 
-    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6_000_000_000) : BigNumber.from(80_000_000_000)
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6_000_000_000) : BigNumber.from(160_000_000_000)
 
     if(hre.network.name === 'matic_test') {
         // Simulation mode 
@@ -191,28 +191,40 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         const tokenPay                    = "0xA906175C2f72BB2D8d16427dda524CBD324Cc510"    // 2023/04/04:  tAKRE
 */
 
-/*
-        // 2023/10/18:  Matic mainnet Normal release
-        const issuer                      = "0xaa65582453e121d463A51251E9d8C2BAd27ad99c"
-        const tokenREC                    = "0x0D7899F2D36344ed21829D4EBC49CC0d335B4A06"
-        const tokenPay                    = "0x21b101f5d61a66037634f7e1beb5a733d9987d57"    // 2023/10/18:  tAKRE
 
-        const idAsset =  "Classic Based AREC Token"
+//        // 2023/10/18:  Matic mainnet Normal release
+//        const issuer                      = "0xaa65582453e121d463A51251E9d8C2BAd27ad99c"
+//        const tokenREC                    = "0x0D7899F2D36344ed21829D4EBC49CC0d335B4A06"
+//        const tokenPay                    = "0x21b101f5d61a66037634f7e1beb5a733d9987d57"    // 2023/10/18:  tAKRE
+
+//        const idAsset =  "Classic Based AREC Token"
+//        const rateToIssue = BigNumber.from(100).mul(BigNumber.from(10).pow(18))
+//        const rateToLiquidize = 1000
+//        const description = 	"Bridged AREC ERC20 token based on redeemed classic REC assets."                        
+
+/*
+        // 2024/03/28:  Matic mainnet Normal release, new asset: Universal Arkreen REC Token
+        const issuer                      = "0xaa65582453e121d463A51251E9d8C2BAd27ad99c"
+        const tokenREC                    = "0x58E4D14ccddD1E993e6368A8c5EAa290C95caFDF"
+        const tokenPay                    = "0xE9c21De62C5C5d0cEAcCe2762bF655AfDcEB7ab3"    // 2024/03/28: AKRE Mainnet
+
+        const idAsset =  "Universal Arkreen REC Token"
         const rateToIssue = BigNumber.from(100).mul(BigNumber.from(10).pow(18))
         const rateToLiquidize = 1000
-        const description = 	"Bridged AREC ERC20 token based on redeemed classic REC assets."                        
+        const description = 	"Universal AREC ERC20 token based on redeemed classic REC assets."                        
 
         const [deployer] = await ethers.getSigners();
         const ArkreenRegistryFactory = ArkreenRegistry__factory.connect(ArkreenRegistry_address, deployer);
 
 //      function newAssetAREC(string calldata idAsset, address issuer, address tokenREC, address tokenPay,
 //                              uint128 rateToIssue, uint16 rateToLiquidize, string calldata description)
-        const updateTxIssuance = await ArkreenRegistryFactory.newAssetAREC(idAsset, issuer, tokenREC,
-                                                        tokenPay, rateToIssue, rateToLiquidize, description, {gasPrice: BigNumber.from(100_000_000_000)})
+        const newAssetARECTx = await ArkreenRegistryFactory.newAssetAREC(idAsset, issuer, tokenREC,
+                                                        tokenPay, rateToIssue, rateToLiquidize, description, 
+                                                        // {gasPrice: defaultGasPrice} 
+                                                        )
                                                         
-        console.log("updateTxIssuance", updateTxIssuance)
-        await updateTxIssuance.wait()
-
+        console.log("newAssetAREC: ", newAssetARECTx)
+        await newAssetARECTx.wait()
         console.log("ArkreenRegistry newAssetAREC is executed: %s: ", hre.network.name, ArkreenRegistry_address);
 */
 
@@ -226,12 +238,19 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         const ArkreenRegistryFactory = ArkreenRegistry__factory.connect(ArkreenRegistry_address, deployer);
 
         // 2024/02/27(idxAsset = 1), 2024/02/27A(idxAsset = 2)
-        const manageAssetARECExtTx = await ArkreenRegistryFactory.manageAssetARECExt(2, 0x08, 
-                                              '', constants.AddressZero, constants.AddressZero, tokenPay, {gasPrice: defaultGasPrice})
-                                                        
+//        const manageAssetARECExtTx = await ArkreenRegistryFactory.manageAssetARECExt(2, 0x08, 
+//                                              '', constants.AddressZero, constants.AddressZero, tokenPay, {gasPrice: defaultGasPrice})
+
+        // 2024/03/29: call manageAssetARECExt to update the issuer of Universal ART
+        const issuerART = "0xFedD52848Cb44dcDBA95df4cf2BCBD71D58df879"
+        const manageAssetARECExtTx = await ArkreenRegistryFactory.manageAssetARECExt(3, 0x02, 
+                                              '', issuerART, constants.AddressZero, constants.AddressZero,
+                                              {nonce: 246, gasPrice: defaultGasPrice}
+                                              )
+
+
         console.log("manageAssetARECExt", manageAssetARECExtTx)
         await manageAssetARECExtTx.wait()
-
         console.log("ArkreenRegistry newAssetAREC is executed: %s: ", hre.network.name, ArkreenRegistry_address);
 
     } 
@@ -413,6 +432,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:gRegistryI
 
 // 2024/02/27A: call manageAssetARECExt for Arkreen mainnet launch to update AKRE as payment token for cART
+// yarn deploy:matic:gRegistryI
+
+// 2024/03/28: call newAssetAREC on Arkreen mainnet to add a new asset type: Universal Arkreen REC Token
+// yarn deploy:matic:gRegistryI
+
+// 2024/03/29: call manageAssetARECExt to update the issuer of Universal ART
 // yarn deploy:matic:gRegistryI
 
 func.tags = ["gRegistryI"];

@@ -8,10 +8,10 @@ import { BigNumber } from "ethers";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
-    const [deployer] = await ethers.getSigners();
+    const [deployer, controller] = await ethers.getSigners();
     console.log("Updating ArkreenRECIssuance: ", CONTRACTS.RECIssuance, deployer.address);  
 
-    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6_000_000_000) : BigNumber.from(80_000_000_000)
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6_000_000_000) : BigNumber.from(150_000_000_000)
 
 //    Cannot be verified in this way    
 //    const ArkreenRECIssuanceFactory = await ethers.getContractFactory("ArkreenRECIssuance");
@@ -152,6 +152,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       }
 */
 
+/*
       {
         // 2024/02/27
         // Remove the tAKRE
@@ -173,6 +174,28 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         console.log("ArkreenRECIssuance Update Mint Price:", hre.network.name, AKREToken_ADDRESS, AKREToken_PRICE);
         const updateTx = await ArkreenRECIssuanceFactory.updateARECMintPrice(AKREToken_ADDRESS, AKREToken_PRICE, {gasPrice: defaultGasPrice} )
         await updateTx.wait()      
+      }
+*/
+      {
+        // 2024/03/30
+
+        // function updateARECMintPrice(address token, uint256 price)
+        // function updateRECData(uint256 tokenID, address issuer, string memory region, string memory url, string memory memo)
+        const tokenID = 5863
+        const issuer = "0xfedd52848cb44dcdba95df4cf2bcbd71d58df879"
+        const region = ""
+        const url = ""
+        const memo = ""
+
+        console.log("ArkreenRECIssuance Update Mint Price:", hre.network.name, tokenID, issuer, region, url, memo);
+        
+        const callData = ArkreenRECIssuanceFactory.interface.encodeFunctionData("updateRECData", 
+                                                                      [tokenID, issuer, region, url, memo])
+                
+        const updateTx = await ArkreenRECIssuanceFactory.connect(controller).updateRECData(tokenID, issuer, region, url, memo, {gasPrice: defaultGasPrice} )
+        await updateTx.wait()      
+        
+        console.log("ArkreenRECIssuance Update Mint Price:", hre.network.name, tokenID, issuer, region, url, memo, callData);
       }
 
 /*
@@ -280,13 +303,50 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       //////////////////////////////////////////////////////
       // 2023/11/01
       // function manageMVPAddress(bool op, address[] calldata listMVP) 
+/*      
       const MVP_ADDRESS = "0x1249B1eABcAE642CF3Cb1e512a0075CEe92769BE"            // 2023/11/01
 
       const updateTx = await ArkreenRECIssuanceExtFactory.manageMVPAddress(true, [MVP_ADDRESS])
       await updateTx.wait()
 
       console.log("callData, update", updateTx)
-      console.log("ArkreenRECIssuance Updated to %s: ", hre.network.name, ArkreenRECIssuanceExtFactory.address, MVP_ADDRESS);                                                                    
+      console.log("ArkreenRECIssuance Updated to %s: ", hre.network.name, ArkreenRECIssuanceExtFactory.address, MVP_ADDRESS);  
+*/ 
+
+      interface UpdateRECDataExtData {
+                                        tokenID: BigNumber
+                                        startTime: BigNumber
+                                        endTime: BigNumber
+                                        cID: string
+                                        region: string
+                                        url: string 
+                                        memo: string
+                                      }
+
+
+    let updateRECDataExtData: UpdateRECDataExtData = {
+      tokenID:    BigNumber.from(0),
+      startTime:  BigNumber.from(0),
+      endTime:    BigNumber.from(0),
+      cID:        '',
+      region:     '',
+      url:        '',
+      memo:       ''
+    }
+
+    const updateTx = await ArkreenRECIssuanceExtFactory.updateRECDataExt(
+                        updateRECDataExtData.tokenID, 
+                        updateRECDataExtData.startTime, 
+                        updateRECDataExtData.endTime, 
+                        updateRECDataExtData.cID, 
+                        updateRECDataExtData.region, 
+                        updateRECDataExtData.url, 
+                        updateRECDataExtData.memo
+                      )
+    await updateTx.wait()
+
+    console.log("callData, update", updateTx)
+    console.log("ArkreenRECIssuance Updated to %s: ", hre.network.name, ArkreenRECIssuanceExtFactory.address);  
 
   } 
 
@@ -366,6 +426,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:RECIssueI
 
 // 2024/02/27： Called updateARECMintPrice(remove tKARE)/ setTokenAKRE(AKRE）/ updateARECMintPrice (add tAKRE)
+// yarn deploy:matic:RECIssueI
+
+// 2024/03/30： Called updateRECData to update the REC data (UART)
 // yarn deploy:matic:RECIssueI
 
 func.tags = ["RECIssueI"];

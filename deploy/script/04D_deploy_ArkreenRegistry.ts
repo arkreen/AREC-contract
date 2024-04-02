@@ -1,6 +1,7 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { CONTRACTS } from "../constants";
+import { BigNumber } from "ethers";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { deployments, getNamedAccounts } = hre;
@@ -9,12 +10,15 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
   console.log("Deploying: ", CONTRACTS.gRegistry, deployer);  
 
+  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6_000_000_000) : BigNumber.from(150_000_000_000)
+
   // For Simulation mode, need to remove the checking if being miner
   const ArkreenRegistry = await deploy(CONTRACTS.gRegistry, {
       from: deployer,
       args: [],
       log: true,
       skipIfAlreadyDeployed: false,
+      gasPrice: defaultGasPrice, 
   });
 
   console.log("ArkreenRegistry deployed to %s: ", hre.network.name, ArkreenRegistry.address);
@@ -35,6 +39,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/01/11A: Upgrade to update REC issuer on Celo Network (Bug Fixed)
 // yarn deploy:celo_test:gRegistryD
 // 0xB2Dda4591b015BC96632FEB0d24B65AB7485959f
+
+// 2024/03/29: Upgrade to update REC issuer on Polygon Network (Bug Fixed)
+// yarn deploy:matic:gRegistryD
+// 0xB9a6E42721fE09db7e2d4AD178aD9A5A6c46C313
 
 func.tags = ["gRegistryD"];
 

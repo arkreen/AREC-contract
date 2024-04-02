@@ -7,7 +7,7 @@ struct GreenBTCInfo {
     address     minter;             // Minter of the respective NFT
     uint8       greenType;          // High nibble:  ART type: 0, CART, 1, Arkreen ART; Low nibble: mint type, 1: system, 2: user;
     string      blockTime;          // For NFT display
-    string      energyStr;          // For NTT display
+    string      energyStr;          // For NFT display
 }
 
 struct NFTStatus {

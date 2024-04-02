@@ -211,7 +211,7 @@ contract ArkreenRECIssuance is
 
         // Only rejected REC can be cancelled
         RECData storage recData = allRECData[tokenID];
-        require(recData.status == uint8(RECStatus.Rejected), 'AREC: Wrong Status');  
+        require(recData.status <= uint8(RECStatus.Rejected), 'AREC: Wrong Status');  
 
         // Check issuer address
         require(IArkreenRegistry(arkreenRegistry).isRECIssuer(issuer), 'AREC: Wrong Issuer');

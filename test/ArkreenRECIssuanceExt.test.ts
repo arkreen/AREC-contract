@@ -94,7 +94,7 @@ describe("ArkreenRECIssuanceExt", () => {
       
       const ArkreenRetirementFactory = await ethers.getContractFactory("ArkreenBadge")
       const arkreenRetirement = await upgrades.deployProxy(ArkreenRetirementFactory,[arkreenRegistry.address]) as ArkreenBadge
-      await arkreenRetirement.deployed()           
+      await arkreenRetirement.deployed()  
   
       await AKREToken.transfer(owner1.address, expandTo18Decimals(100000))
       await AKREToken.connect(owner1).approve(arkreenRECIssuance.address, expandTo18Decimals(100000))

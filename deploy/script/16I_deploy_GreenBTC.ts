@@ -18,7 +18,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     let WMATIC_ADDRESS
     let AKRE_ADDRESS
 
-    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6_000_000_000) : BigNumber.from(200_000_000_000)
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6_000_000_000) : BigNumber.from(250_000_000_000)
 
     if(hre.network.name === 'matic_test')  {    
       // 2023/10/20, Test Net Simulation 
@@ -166,13 +166,24 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       console.log("GreenBTCContract setNewCaps: ", hre.network.name, normalRevealCap, overtimeRevealCap, removeRevealCap, setNewCapsTx.hash, );
 */
 
+/*
       // 2024/03/11
-      const hCART = "0x93b3bb6C51A247a27253c33F0d0C2FF1d4343214"                  // hART
+      //const hCART = "0x93b3bb6C51A247a27253c33F0d0C2FF1d4343214"                // hART
+
       console.log("GreenBTCContract setCARTContract: ", hre.network.name, hCART);
       const setNewCapsTx = await GreenBTCFactory.setCARTContract(hCART, {gasPrice: defaultGasPrice})
 
       await setNewCapsTx.wait()
       console.log("GreenBTCContract setCARTContract: ", hre.network.name, hCART);
+*/
+      // 2024/03/14
+      const cART = "0x0D7899F2D36344ed21829D4EBC49CC0d335B4A06"                  // cART
+
+      console.log("GreenBTCContract setCARTContract: ", hre.network.name, cART);
+      const setNewCapsTx = await GreenBTCFactory.setCARTContract(cART, {gasPrice: defaultGasPrice})
+
+      await setNewCapsTx.wait()
+      console.log("GreenBTCContract setCARTContract: ", hre.network.name, cART);
 
 /*      
       //  2023/10/27
@@ -261,6 +272,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/03/11: Set setCARTContract to HART
 // call setCARTContract: 0xDf51F3DCD849f116948A5B23760B1ca0B5425BdE
 // yarn deploy:matic:GreenBTCI
+
+// 2024/03/14: Set setCARTContract to cART
+// call setCARTContract: 0xDf51F3DCD849f116948A5B23760B1ca0B5425BdE
+// yarn deploy:matic:GreenBTCI
+
 
 func.tags = ["GreenBTCI"];
 

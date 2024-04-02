@@ -440,11 +440,20 @@ describe("ArkreenRECIssuance", () => {
                 .to.be.revertedWith("AREC: Not Owner") 
 
         await expect(arkreenRECIssuance.connect(owner1).updateRECData(tokenID, maker1.address, region, url, memo ))
-                .to.be.revertedWith("AREC: Wrong Status") 
+                .to.be.revertedWith("AREC: Wrong Issuer") 
 
         await arkreenRECIssuance.connect(manager).rejectRECRequest(tokenID)  
         await expect(arkreenRECIssuance.connect(owner1).updateRECData(tokenID, maker1.address, region, url, memo ))
-                .to.be.revertedWith("AREC: Wrong Issuer")           
+                .to.be.revertedWith("AREC: Wrong Issuer")  
+                
+        let arkreenRECIssuanceExt: ArkreenRECIssuanceExt
+        arkreenRECIssuanceExt = ArkreenRECIssuanceExt__factory.connect(arkreenRECIssuance.address, deployer);
+
+        await arkreenRECIssuanceExt.connect(owner1).cancelRECRequest(tokenID )
+
+        await expect(arkreenRECIssuance.connect(owner1).updateRECData(tokenID, manager.address, region, url, memo ))
+                .to.be.revertedWith("AREC: Wrong Status")      
+
       })
 
       it("ArkreenRECIssuance: updateRECData Normal", async () => {

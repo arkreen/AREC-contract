@@ -20,7 +20,7 @@ import "./GreenBTCType.sol";
 import "./interfaces/IERC20.sol";
 import "./GreenBTCStorage.sol";
 
-contract GreenBTC is 
+contract GreenBTCPro is 
     ContextUpgradeable,
     UUPSUpgradeable,
     OwnableUpgradeable,
@@ -83,69 +83,7 @@ contract GreenBTC is
     function _authorizeUpgrade(address newImplementation) internal virtual override onlyOwner
     {}
 
-    function setManager(address newManager) public onlyOwner{
-        require(newManager != address(0), "GBTC: Zero Address"); 
-        manager = newManager;
-    }
-
-    function setAuthorizer(address newAuthAddress) public onlyOwner {
-        require(newAuthAddress != address(0), "GBTC: Zero Address"); 
-        authorizer = newAuthAddress;
-    }
-
-    function setImageContract(address newImageContract) public onlyOwner {
-        require(newImageContract != address(0), "GBTC: Zero Address");
-        greenBtcImage = newImageContract;
-    }
-
-    function setCARTContract(address newCARTToken) public onlyOwner {
-        require(newCARTToken != address(0), "GBTC: Zero Address");
-        tokenCART = newCARTToken;
-    }
-
-    function setGreenBTCPro(address newGreenBTCPro) public onlyOwner {
-        require(newGreenBTCPro != address(0), "GBTC: Zero Address");
-        greenBTCPro = newGreenBTCPro;
-    }
-
-    function setLuckyRate(uint256 newRate) public onlyOwner {
-        require(newRate <= 20, "GBTC: Too More");
-        luckyRate = newRate;
-    }
-
     /**
-     * @dev Approve the tokens which can be transferred from this GreenBTC contract by arkreenBuilder
-     * @param tokens The token list
-     */
-    function approveBuilder(address[] calldata tokens) public onlyOwner {
-        require(arkreenBuilder != address(0), "GBTC: No Builder");
-        for(uint256 i = 0; i < tokens.length; i++) {
-            TransferHelper.safeApprove(tokens[i], arkreenBuilder, type(uint256).max);
-        }
-    }
-
-    function callGreenBTCPro (address greenBTCPro) internal virtual {
-        assembly {
-            // Copy msg.data. We take full control of memory in this inline assembly
-            // block because it will not return to Solidity code. We overwrite the
-            // Solidity scratch pad at memory position 0.
-            calldatacopy(0, 0, calldatasize())
-
-            // Call the implementation.
-            // out and outsize are 0 because we don't know the size yet.
-            let result := delegatecall(gas(), greenBTCPro, 0, calldatasize(), 0, 0)
-
-            // Copy the returned data.
-            returndatacopy(0, 0, returndatasize())
-
-            switch result
-            // delegatecall returns 0 on error.
-            case 0 { revert(0, returndatasize()) }
-            default { return(0, returndatasize()) }
-        }
-    }    
-
-    /*
      * @dev Greenize BTC with the native token
      * @param gbtc Bitcoin block info to be greenized
      * @param sig Signature of the authority to Bitcoin block info
@@ -153,14 +91,27 @@ contract GreenBTC is
      * @param deadline LB0-LB3: The deadline to cancel the transaction, LB7: 0x80, Open box at same time,
      * gbtc.miner must be the caller if opening box at the same time 
      */
-    // Warning is kept just for explorer decoding 
-    function authMintGreenBTCWithNative( 
-        GreenBTCInfo  calldata,     // gbtc,
-        Sig           calldata,     // sig,
-        BadgeInfo     calldata,     // badgeInfo,
-        uint256       deadline
+    function authMintGreenBTCWithNative(
+        GreenBTCInfo    calldata gbtc,
+        Sig             calldata sig,
+        BadgeInfo       calldata badgeInfo,
+        uint256                  deadline
     ) public payable ensure(deadline) {
-        callGreenBTCPro(greenBTCPro);
+
+        require(dataGBTC[gbtc.height].ARTCount == 0, "GBTC: Already Minted");
+        
+        _authVerify(gbtc, sig);                         //verify signature
+
+        IWETH(tokenNative).deposit{value: msg.value}(); // Wrap MATIC to WMATIC 
+
+        // bit0 = 1: exact payment amount; bit1 = 1: ArkreenBank is used to get CART token; bit2 = 0: Repay to caller  
+        uint256 modeAction = 0x03;                      
+        
+        // actionBuilderBadge(address,address,uint256,uint256,uint256,uint256,(address,string,string,string)): 0x8D7FCEFD  
+        bytes memory builderCallData = abi.encodeWithSelector( 0x8D7FCEFD, tokenNative, tokenCART, msg.value,
+                                            _getFullARTValue(gbtc.ARTCount), modeAction, uint32(deadline), badgeInfo);
+
+        _callActionBuilderBadge(builderCallData, deadline, gbtc);                                 
     }
 
     function _getFullARTValue( uint256 actionValue ) internal view returns (uint256) {
@@ -186,9 +137,8 @@ contract GreenBTC is
      * @param sig Signature of the authority to Bitcoin block info
      * @param badgeInfo Information that will logged in Arkreen climate badge
      * @param payInfo Address and amount of the token that will be used to pay for offsetting ART
-     * @param deadline LB0-LB3: The deadline to cancel the transaction, 
-     *                 LB7: 0x80, Open box at same time, gbtc.miner must be the caller if opening box at the same time 
-     *                 LB6: ratio,
+     * @param deadline LB0-LB3: The deadline to cancel the transaction, LB7: 0x80, Open box at same time,
+     * gbtc.miner must be the caller if opening box at the same time 
      */
     function authMintGreenBTCWithApprove(
         GreenBTCInfo    calldata gbtc, 
@@ -338,20 +288,133 @@ contract GreenBTC is
      * waiting for another revealing with hash value.
      */
     function revealBoxes() public {
-      callGreenBTCPro(greenBTCPro);
+
+        uint256 openingListLength = openingBoxList.length;
+        require (openingListLength != 0, "GBTC: Empty List");
+
+        uint256 revealcap = normalRevealCap;
+        uint256 overtimeCap = overtimeRevealCap;
+        uint256 removeCap = removeRevealCap;
+
+        uint256[] memory revealList = new uint256[](revealcap);       // reveal 200 blocks once a time
+        bool[] memory wonList = new bool[](revealcap);
+
+        uint256 revealCount;
+        uint256 skipCount;
+        uint256 allRevealCount;
+
+        for (uint256 index = openingBoxListOffset; index < openingListLength; index++) {
+            OpenInfo memory openInfo = openingBoxList[index];
+            uint256 tokenID = openInfo.tokenID;
+            uint256 openHeight = openInfo.openHeight + 1;               // Hash of the next block determining the result
+
+            if (block.number <= openHeight) {
+                skipCount++;
+            } else if ( block.number <= openHeight + 256 ) {
+                address owner = dataNFT[tokenID].opener;
+                uint256 random = uint256(keccak256(abi.encodePacked(tokenID, owner, blockhash(openHeight))));
+
+                if ((random % 100) < luckyRate) { 
+                  dataNFT[tokenID].won = true;
+                  wonList[revealCount] = true;
+                }
+
+                dataNFT[tokenID].reveal = true;
+                dataNFT[tokenID].seed = random;
+
+                revealList[revealCount] = tokenID;                    // Prepare for return data 
+
+                delete openingBoxList[index];
+                allRevealCount++;
+
+                revealCount++;
+                if(revealCount == revealcap) break;
+            } else {
+                overtimeBoxList.push(openInfo);
+                dataNFT[tokenID].seed = overtimeBoxList.length - 1;     // Save index to make it easy to reveal with hash value
+
+                delete openingBoxList[index];
+                allRevealCount++;
+                if(allRevealCount == overtimeCap) break;
+            } 
+        }
+ 
+        openingBoxListOffset += allRevealCount;
+
+        if ((skipCount == 0) && (openingBoxListOffset == openingListLength)) {
+            uint256 popLength = openingListLength;
+            if (popLength > removeCap) popLength = removeCap;
+
+            for (uint256 index = 0; index < popLength; index++) {
+                openingBoxList.pop();
+            }
+
+            if (openingBoxListOffset > openingBoxList.length) {
+                openingBoxListOffset = openingBoxList.length;
+            }
+        }
+
+        // Set the final reveal length if necessary
+        if (revealCount < revealcap) {
+          assembly {
+              mstore(revealList, revealCount)
+              mstore(wonList, revealCount)
+          }
+        }
+
+        emit RevealBoxes(revealList, wonList);
     }
 
-    /*
+    /**
      * @dev Reveal the overtime boxes given in the input list.
      * @param tokenList All the token IDs of the NFT to be revealed.
      * @param hashList All the hash values of the block next after to block the NFT is minted.
      */
-    // Warning is kept just for explorer decoding 
-    function revealBoxesWithHash(
-        uint256[] calldata,   //tokenList, 
-        uint256[] calldata    // hashList
-    ) public {  // onlyManager is checked in Pro
-        callGreenBTCPro(greenBTCPro);
+    function revealBoxesWithHash(uint256[] calldata tokenList, uint256[] calldata hashList) public onlyManager {
+
+        uint256 lengthReveal = hashList.length; 
+        require( tokenList.length == lengthReveal,  "GBTC: Wrong Length" );
+
+        uint256 overtimeListLength = overtimeBoxList.length;
+        require (overtimeListLength != 0, "GBTC: Empty Overtime List");
+
+        uint256[] memory revealList = new uint256[](lengthReveal);
+        bool[] memory wonList = new bool[](lengthReveal);
+
+        uint256 revealCount;
+        for (uint256 index = 0; index < lengthReveal; index++) {
+
+            uint256 tokenID = tokenList[index];
+
+            // Can not repeat revealing, and can not reveal while not opened
+            require(dataNFT[tokenID].open != dataNFT[tokenID].reveal, "GBTC: Wrong Overtime Status" );  
+
+            uint256 indexOvertime = dataNFT[tokenID].seed;          // seed is re-used to store the index in overtime list
+
+            address owner = dataNFT[tokenID].opener;
+            uint256 random = uint256(keccak256(abi.encodePacked(tokenID, owner, hashList[index])));
+
+            if((random % 100) < luckyRate) {
+                dataNFT[tokenID].won = true;
+                wonList[revealCount] = true;
+            }
+
+            dataNFT[tokenID].reveal = true;
+            dataNFT[tokenID].seed = random;
+
+            // Remove the revealed item by replacing with the last item
+            uint256 overtimeLast = overtimeBoxList.length - 1;
+            if( indexOvertime < overtimeLast) {
+                OpenInfo memory openInfo = overtimeBoxList[overtimeLast];
+                overtimeBoxList[indexOvertime] = openInfo;
+                dataNFT[openInfo.tokenID].seed = indexOvertime;
+            }
+            overtimeBoxList.pop();
+
+            revealList[revealCount++] = tokenID;                            // Prepare for return data 
+        }
+
+        emit RevealBoxes(revealList, wonList);
     }
 
     /**
