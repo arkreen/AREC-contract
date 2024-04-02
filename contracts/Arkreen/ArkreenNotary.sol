@@ -31,6 +31,11 @@ contract ArkreenNotary is
         _;
     }
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     //initialize
     function initialize(address manager_) external virtual initializer {
         __UUPSUpgradeable_init();

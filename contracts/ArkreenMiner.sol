@@ -337,15 +337,15 @@ contract ArkreenMiner is
         newMiner.timestamp = uint32(block.timestamp);    
 
         // mint new remote miner
-        _mintMiner(owner, miner, newMiner);
         delete whiteListMiner[miner];
+        _mintMiner(owner, miner, newMiner);
     }
 
     function _mintMiner( address owner, address miner, Miner memory newMiner) internal {
         uint256 realMinerID = totalSupply() + 1;
-        _safeMint(owner, realMinerID);
         AllMinersToken[miner] = realMinerID;
         AllMinerInfo[realMinerID] = newMiner;
+        _safeMint(owner, realMinerID);
     }
 
     /**

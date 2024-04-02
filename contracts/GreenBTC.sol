@@ -489,7 +489,7 @@ contract GreenBTC is
     /**
      * @dev Set new caps
      */
-    function setNewCaps(uint256 newNormalCap, uint256 newOvertimeCap, uint256 newRemoveCap) public {
+    function setNewCaps(uint256 newNormalCap, uint256 newOvertimeCap, uint256 newRemoveCap) public onlyOwner {
         if( newNormalCap != 0) normalRevealCap = newNormalCap;
         if( newOvertimeCap != 0) overtimeRevealCap = newOvertimeCap;
         if( newRemoveCap != 0) removeRevealCap = newRemoveCap;
