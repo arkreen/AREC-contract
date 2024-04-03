@@ -6,6 +6,7 @@ import '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol';
 import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
+import '@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol';
 
 import "./ArkreenToken.sol";
 
@@ -92,7 +93,7 @@ contract ArkreenReward is
 
         bytes32 withdrawHash = keccak256(abi.encode(_REWARD_TYPEHASH, receiver, value, nonce));
         bytes32 digest = keccak256(abi.encodePacked('\x19\x01', _DOMAIN_SEPARATOR, withdrawHash));
-        address recoveredAddress = ecrecover(digest, v, r, s);
+        address recoveredAddress = ECDSAUpgradeable.recover(digest, v, r, s);
 
         require(recoveredAddress == validationAddress, "signer doesn't not match or singature error");
         nonces[_msgSender()] += 1;

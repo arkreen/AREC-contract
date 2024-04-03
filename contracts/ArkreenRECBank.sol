@@ -246,16 +246,22 @@ contract ArkreenRECBank is
         address receiver = artSaleInfo[artToken].fundReceiver;
         if (receiver == address(0)) receiver = msg.sender;
 
-        uint256 balance = saleIncome[artToken][payToken].amountReceived;
+        uint256 amountReceived = saleIncome[artToken][payToken].amountReceived;
+        saleIncome[artToken][payToken].amountReceived = 0;
+
         if (payToken == tokenNative) {
-            uint256 amountNative=  IERC20(tokenNative).balanceOf(address(this));
-            IWETH(tokenNative).withdraw(amountNative);
-            TransferHelper.safeTransferETH(receiver, balance);
+             uint256 amountNative=  IERC20(tokenNative).balanceOf(address(this));
+            if (amountNative > 0) {
+              IWETH(tokenNative).withdraw(amountNative);
+            }
+            TransferHelper.safeTransferETH(receiver, amountReceived);
         }    
         else {
-            TransferHelper.safeTransfer(payToken, receiver, balance);
+            uint256 balance = IERC20(payToken).balanceOf(address(this));
+            if (amountReceived > balance) amountReceived = balance;
+            TransferHelper.safeTransfer(payToken, receiver, amountReceived);
         }
-        emit Withdraw(artToken, payToken, balance);    
+        emit Withdraw(artToken, payToken, amountReceived);    
     }
 
     /**
