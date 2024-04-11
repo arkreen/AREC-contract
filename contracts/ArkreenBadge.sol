@@ -15,7 +15,6 @@ import "./interfaces/IArkreenRECIssuance.sol";
 import "./interfaces/IArkreenBadgeImage.sol";
 import "./interfaces/IERC5192.sol";
 import "./ArkreenBadgeType.sol";  
-
 import "./libraries/MemArrays.sol";  
 
 contract ArkreenBadge is
@@ -323,14 +322,13 @@ contract ArkreenBadge is
               require(partialAvailableAmountBridge[from] == 0, 'ARB: Partial Left');
               partialARECIDBridge[from] = tokenId;
               partialAvailableAmountBridge[from] = amountREC;
-              return this.onERC721Received.selector;
             }
-            else{
+            else {
               require(partialAvailableAmountExt[from] == 0, 'ARB: Partial Left');
               partialARECIDExt[from] = tokenId;
               partialAvailableAmountExt[from] = amountREC;
-              return this.onERC721Received.selector;
             }
+            return this.onERC721Received.selector;
         }
 
         require( keccak256(data) == keccak256("Redeem"), 'ARB: Refused');
@@ -463,6 +461,6 @@ contract ArkreenBadge is
     // Add SBT interface(0.1.1)
     // Add offset trace function (0.2.0)
     function getVersion() external pure virtual returns (string memory) {
-        return "0.2.0";
+        return "0.3.0";
     }
 }

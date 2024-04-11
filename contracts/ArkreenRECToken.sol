@@ -6,7 +6,6 @@ import '@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol';
 import '@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol';
 import '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
-//import '@openzeppelin/contracts/access/AccessControl.sol';
 
 import "./ArkreenRECIssuanceType.sol";
 import "./interfaces/IArkreenRECIssuance.sol";
@@ -139,9 +138,9 @@ contract ArkreenRECToken is
 
         (partialAvailableAmount, partialARECID) = IArkreenBadge(badgeContract).getDetailStatus(address(this));
 
+        bool bBridge;
         if(amount > partialAvailableAmount) {
             while(true) {
-                bool bBridge = (steps >= MAX_SKIP);
                 if (bBridge) {
                     (partialAvailableAmount, partialARECID) = IArkreenBadge(badgeContract).getBridgeDetailStatus(address(this));
                     partialARECID |= (1 << 255);                                    // Set the bridge flag
@@ -150,11 +149,16 @@ contract ArkreenRECToken is
                 if(partialAvailableAmount == 0) {
                     uint256 curAREC;
                     if (bBridge) {
-                        curAREC = allBridgeARECLiquidized[latestBridgeARECID];             // Get the ID at AREC NFT loop head
-                        if((steps >= (MAX_SKIP + 5)) || (curAREC == 0)) break;             // No bridge REC available
-                        _removeBridge(latestBridgeARECID, curAREC);                        // Remove from the loop
+                        curAREC = allBridgeARECLiquidized[latestBridgeARECID];                      // Get the ID at AREC NFT loop head
+                        require( curAREC != 0, "ART: Too More Offset" );                            // No bridge REC available
+                        _removeBridge(latestBridgeARECID, curAREC);                                 // Remove from the loop
                     } else {
                         curAREC = allARECLiquidized[latestARECID];                  // Get the ID at AREC NFT loop head
+                        if (curAREC == 0) { 
+                            if(allBridgeARECLiquidized[latestBridgeARECID] == 0) break;
+                            bBridge = true;                                         // If no AREC ART available, use bridge ART
+                            continue;
+                        }    
                         _remove(latestARECID, curAREC);                             // Remove from the loop
                     }
 
@@ -176,9 +180,17 @@ contract ArkreenRECToken is
                 
                 (detailsCounter, partialAvailableAmount) = 
                                 IArkreenBadge(badgeContract).registerDetail(amountRegister, partialARECID, (steps==0));
-                steps++;
+
                 amountFilled += amountRegister;
                 amount -= amountRegister;
+
+                if (!bBridge) {                
+                    steps++;
+                    if (steps >= MAX_SKIP) {
+                        if(allBridgeARECLiquidized[latestBridgeARECID] == 0) break;
+                        bBridge = true;
+                    }
+                }
 
                 if(amount==0) break;
             }
@@ -293,7 +305,7 @@ contract ArkreenRECToken is
             latestARECID = (preAREC == latestARECID) ? 0 : preAREC;     // if the last AREC is the only AREC
             nextAREC = 0;
         } 
-        delete allARECLiquidized[curAREC];                      // delete the current AREC
+        delete allARECLiquidized[curAREC];                              // delete the current AREC
     }
 
     /**
@@ -307,7 +319,7 @@ contract ArkreenRECToken is
         nextAREC = allBridgeARECLiquidized[curAREC];
         allBridgeARECLiquidized[preAREC] = nextAREC;
 
-        if(curAREC == latestBridgeARECID) {                                      // if remove last AREC
+        if(curAREC == latestBridgeARECID) {                                       // if remove last AREC
             latestBridgeARECID = (preAREC == latestBridgeARECID) ? 0 : preAREC;   // if the last AREC is the only AREC
             nextAREC = 0;
         } 
@@ -331,21 +343,19 @@ contract ArkreenRECToken is
         if ((idAssetOfBridge != 0 ) && (idAsset == idAssetOfBridge)) {
             if(latestBridgeARECID == 0) {                                              // handle the bridge liquidized loop
                 allBridgeARECLiquidized[tokenId] = tokenId;                            // build the loop list
-                latestBridgeARECID = tokenId;
             } else {
                 allBridgeARECLiquidized[tokenId] = allBridgeARECLiquidized[latestBridgeARECID];   // Point to loop head
                 allBridgeARECLiquidized[latestBridgeARECID] = tokenId;                            // Add to the loop
-                latestBridgeARECID = tokenId;                                                     // refresh the newest AREC
             }
+            latestBridgeARECID = tokenId;                                                         // refresh the newest AREC
         } else {
             if(latestARECID == 0) {
                 allARECLiquidized[tokenId] = tokenId;                           // build the loop list
-                latestARECID = tokenId;
             } else {
                 allARECLiquidized[tokenId] = allARECLiquidized[latestARECID];   // Point to loop head
                 allARECLiquidized[latestARECID] = tokenId;                      // Add to the loop
-                latestARECID = tokenId;                                         // refresh the newest AREC
             }
+            latestARECID = tokenId;                                             // refresh the newest AREC
         }
 
         totalLiquidized += amountREC;

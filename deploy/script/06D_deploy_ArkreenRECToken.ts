@@ -35,6 +35,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:RECTokenD
 // 0x8fABa56a1636AFda9DD84Cb1826eAaF44db05087
 
+// 2024/04/11: Upgrade to support Bridge REC liquidization loop and Offset status tracking
+// yarn deploy:matic:RECTokenD
+// 0x188E8F524CE105ba4bBe9421516EfABbFD6824a4
+
 func.tags = ["RECTokenD"];
 
 export default func;

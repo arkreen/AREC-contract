@@ -47,15 +47,15 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
   if(hre.network.name === 'matic') {
     // const RECTOKEN_ADDRESS    = "0x815bFE3aaCF765c9E0A4DdEb98Ad710a4Fb860d3"     // Need to check
-    // const RECTOKEN_ADDRESS    = "0x58E4D14ccddD1E993e6368A8c5EAa290C95caFDF"     // Need to check, ART on MATIC Mainnet
-    // const RECTOKEN_ADDRESS    = "0x0D7899F2D36344ed21829D4EBC49CC0d335B4A06"  // Need to check, cART on MATIC Mainnet
-    const RECTOKEN_ADDRESS       = "0x93b3bb6C51A247a27253c33F0d0C2FF1d4343214"     // Need to check, HART on MATIC Mainnet
+    const RECTOKEN_ADDRESS    = "0x58E4D14ccddD1E993e6368A8c5EAa290C95caFDF"        // Need to check, ART on MATIC Mainnet
+    // const RECTOKEN_ADDRESS    = "0x0D7899F2D36344ed21829D4EBC49CC0d335B4A06"     // Need to check, cART on MATIC Mainnet
+    // const RECTOKEN_ADDRESS       = "0x93b3bb6C51A247a27253c33F0d0C2FF1d4343214"     // Need to check, HART on MATIC Mainnet
 
     // const NEW_IMPLEMENTATION  = "0xbdb320004dd108bd6bbba948db992f7b4b3bdbf4"     // 1. Old implemenation
     // const NEW_IMPLEMENTATION  = "0x1356Dc92E42a8fB17f2A5AE747543E4d3ADED899"     // 2. Add solidity and offset traceback
     // const NEW_IMPLEMENTATION  = "0x69B7231876608Bdb3Cf9c0C7303620C375Df0aB3"     // 6. Add getARECInfo(uint256 number)
-  
-    const NEW_IMPLEMENTATION  = "0x8fABa56a1636AFda9DD84Cb1826eAaF44db05087"        //2024/02/03: Upgrade to support charging Offset fee, and removing code regarding triggerUpgradeAmount 
+    // const NEW_IMPLEMENTATION  = "0x8fABa56a1636AFda9DD84Cb1826eAaF44db05087"     //2024/02/03: Upgrade to support charging Offset fee, and removing code regarding triggerUpgradeAmount 
+    const NEW_IMPLEMENTATION  = "0x188E8F524CE105ba4bBe9421516EfABbFD6824a4"        //2024/04/11: Upgrade to support Bridge REC liquidization loop and Offset status tracking
 
     const ArkreenRECTokenFactory = ArkreenRECToken__factory.connect(RECTOKEN_ADDRESS, deployer);
 
@@ -63,7 +63,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     //   const updateTx = ArkreenRECManagerFactory.interface.encodeFunctionData("upgradeToAndCall", [NEW_IMPLEMENTATION, callData])
     //   const updateTx = await ArkreenRECTokenFactory.upgradeToAndCall(NEW_IMPLEMENTATION, callData)
 
-    const updateTx = await ArkreenRECTokenFactory.upgradeTo(NEW_IMPLEMENTATION, {gasPrice: defaultGasPrice})
+    const updateTx = await ArkreenRECTokenFactory.upgradeTo(NEW_IMPLEMENTATION /*, {gasPrice: defaultGasPrice}*/ )
     console.log("callData, update", updateTx)
 
     await updateTx.wait()
@@ -91,6 +91,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/02/03C: Upgrade HART on Polygon mainnet to support charging Offset fee, and removing code regarding triggerUpgradeAmount
 // yarn deploy:matic:RECTokenU
 // 0x8fABa56a1636AFda9DD84Cb1826eAaF44db05087
+
+// 2024/04/11: Upgrade to support Bridge REC liquidization loop and Offset status tracking
+// yarn deploy:matic:RECTokenU
+// 0x188E8F524CE105ba4bBe9421516EfABbFD6824a4
 
 func.tags = ["RECTokenU"];
 

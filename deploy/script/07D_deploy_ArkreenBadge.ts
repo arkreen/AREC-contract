@@ -63,6 +63,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:RECBadgeD
 // 0x2b12BBf2213Ccbb4685106D50E7D7dff760e7E1D
 
+// 2024/04/11: Deploy badge contract supporting Bridge REC liquidization loop and Offset status tracking
+// yarn deploy:matic:RECBadgeD
+// 0x6945bb796a83A2fEAbD7cd29AaaFD84626695B3d
+
 func.tags = ["RECBadgeD"];
 
 export default func;

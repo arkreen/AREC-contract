@@ -53,12 +53,21 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   
     const ArkreenRECTokenFactory = ArkreenRECToken__factory.connect(RECTOKEN_ADDRESS, deployer);
 
+    /*
     // Set ArkreenBuilder address to the ART token contract: 2023/10/30
     const setClimateBuilderTx = await ArkreenRECTokenFactory.setClimateBuilder( BUILDER_ADDRESS, {gasPrice: defaultGasPrice} )
     await setClimateBuilderTx.wait()
 
     console.log("callData setClimateBuilder", setClimateBuilderTx)
     console.log("ArkreenRECToken setClimateBuilder to %s: ", hre.network.name, ArkreenRECTokenFactory.address);
+    */
+
+    // Set Bridged Asset Type to the ART token contract: 2024/04/11
+    const setBridgedAssetTypeTx = await ArkreenRECTokenFactory.setBridgedAssetType(3 /*, {gasPrice: defaultGasPrice}*/ )
+    await setBridgedAssetTypeTx.wait()
+    
+    console.log("callData setBridgedAssetType", setBridgedAssetTypeTx)
+    console.log("ArkreenRECToken setBridgedAssetType to %s: ", hre.network.name, ArkreenRECTokenFactory.address);
 
     /*
     const updateTx = await  ArkreenRECTokenFactory.setIssuerREC(AREC_ISSUE_ADDRESS)
@@ -123,6 +132,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2024/02/01: Call setRatioFeeOffset to close ART offset fee on ART: 0xb0c9dD915f62d0A37792FD2ce497680E909D8c0F
 // yarn deploy:matic_test:RECTokenI
+
+// 2024/04/11: Call setBridgedAssetType to update bridge Type 3
+// yarn deploy:matic:RECTokenI
 
 func.tags = ["RECTokenI"];
 
