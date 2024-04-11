@@ -3,7 +3,9 @@ import { utils } from 'ethers'
 import { BigNumber } from "ethers";
 
 async function main() {
-  const contract_address = '0xDf51F3DCD849f116948A5B23760B1ca0B5425BdE'           // Green BTC on Polygon
+  // const contract_address = '0xDf51F3DCD849f116948A5B23760B1ca0B5425BdE'        // Green BTC on Polygon
+  const contract_address = '0x1e5132495cdaBac628aB9F5c306722e33f69aa24'           // Badge on Polygon
+  
 
   for(let index = 0 ; index < 30; index ++) {
     let itemData = await ethers.provider.getStorageAt(contract_address, 350 + index) 

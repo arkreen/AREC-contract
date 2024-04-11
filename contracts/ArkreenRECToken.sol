@@ -43,11 +43,12 @@ contract ArkreenRECToken is
     uint256 public latestARECID;                            // NFT ID of the latest AREC added to the loop 
     uint256 public ratioFeeToSolidify;                      // Percentage in basis point (10000) to charge for solidifying ART to AREC NFT
 
-//    uint256 partialARECID;                                // AREC NFT ID partialy offset
-//    uint256 partialAvailableAmount;                       // Amount available for partial offset
-    uint256 public triggerUpgradeAmount;                    // The amount to trigger solidify upgrade, must keep !!!!!!
+    uint256 public idAssetOfBridge;                         // The ID of the asset that comes from AREC bridge
     address public climateBuilder;
     uint256 public ratioFeeOffset;                          // Percentage in basis point (10000) to charge for offseting ART
+
+    mapping(uint256 => uint256) public allBridgeARECLiquidized;    // Loop of all AREC ID: 1st-> 2nd-> ..-> last-> 1st
+    uint256 public latestBridgeARECID;                             // NFT ID of the latest AREC added to the loop 
 
     // Events
     event OffsetFinished(address indexed offsetEntity, uint256 amount, uint256 offsetId);
@@ -81,7 +82,7 @@ contract ArkreenRECToken is
         issuerREC = issuer;
     }
 
-    function postUpdate() external onlyProxy onlyOwner 
+    function postUpdate() external onlyProxy onlyOwner
     {}
 
     function _authorizeUpgrade(address newImplementation) internal virtual override onlyOwner
@@ -139,15 +140,31 @@ contract ArkreenRECToken is
         (partialAvailableAmount, partialARECID) = IArkreenBadge(badgeContract).getDetailStatus(address(this));
 
         if(amount > partialAvailableAmount) {
-            while(steps < MAX_SKIP) {
+            while(true) {
+                bool bBridge = (steps >= MAX_SKIP);
+                if (bBridge) {
+                    (partialAvailableAmount, partialARECID) = IArkreenBadge(badgeContract).getBridgeDetailStatus(address(this));
+                    partialARECID |= (1 << 255);                                    // Set the bridge flag
+                }
+
                 if(partialAvailableAmount == 0) {
-                    uint256 curAREC = allARECLiquidized[latestARECID];        // Get the ID at AREC NFT loop head
-                    _remove(latestARECID, curAREC);                   // Remove from the loop
-                    IArkreenRECIssuance(issuanceAREC).safeTransferFrom(address(this), badgeContract, curAREC);  // Send to Badge contract
+                    uint256 curAREC;
+                    if (bBridge) {
+                        curAREC = allBridgeARECLiquidized[latestBridgeARECID];             // Get the ID at AREC NFT loop head
+                        if((steps >= (MAX_SKIP + 5)) || (curAREC == 0)) break;             // No bridge REC available
+                        _removeBridge(latestBridgeARECID, curAREC);                        // Remove from the loop
+                    } else {
+                        curAREC = allARECLiquidized[latestARECID];                  // Get the ID at AREC NFT loop head
+                        _remove(latestARECID, curAREC);                             // Remove from the loop
+                    }
+
+                    // Send to Badge contract
+                    bytes memory data = bBridge ? bytes("Bridge"): bytes("") ;
+                    IArkreenRECIssuance(issuanceAREC).safeTransferFrom(address(this), badgeContract, curAREC, data);
 
                     (, uint128 amountREC, , ) = IArkreenRECIssuance(issuanceAREC).getRECDataCore(curAREC);
                     partialAvailableAmount = amountREC;
-                    partialARECID = curAREC;
+                    partialARECID = bBridge ? (curAREC + (1 << 255)) : curAREC;      // Set the Bridge flag
                 }
 
                 if(amount <= partialAvailableAmount) {
@@ -279,6 +296,24 @@ contract ArkreenRECToken is
         delete allARECLiquidized[curAREC];                      // delete the current AREC
     }
 
+    /**
+     * @dev Remove the AREC NFT specified by curAREC from the liquidized Bridge list.
+     * @param preAREC The AREC NFT just previous in the list
+     * @param curAREC The AREC NFT to remove
+     * @return nextAREC the next AREC NFT ID if curAREC is not the last in the list
+     *         otherwise, returns 0 while curAREC is the last in the list
+     */
+    function _removeBridge(uint256 preAREC, uint256 curAREC) internal returns (uint256 nextAREC) {
+        nextAREC = allBridgeARECLiquidized[curAREC];
+        allBridgeARECLiquidized[preAREC] = nextAREC;
+
+        if(curAREC == latestBridgeARECID) {                                      // if remove last AREC
+            latestBridgeARECID = (preAREC == latestBridgeARECID) ? 0 : preAREC;   // if the last AREC is the only AREC
+            nextAREC = 0;
+        } 
+        delete allBridgeARECLiquidized[curAREC];                                  // delete the current AREC
+    }
+
      /// @dev Receive hook to liquidize Arkreen RE Certificate into RE ERC20 Token
     function onERC721Received(
         address, /* operator */
@@ -290,16 +325,27 @@ contract ArkreenRECToken is
         // Check calling from REC Manager
         require( IArkreenRegistry(arkreenRegistry).getRECIssuance() == msg.sender, 'ART: Not From REC Issuance');
 
-        (, uint128 amountREC, uint8 status, ) = IArkreenRECIssuance(msg.sender).getRECDataCore(tokenId);
+        (, uint128 amountREC, uint8 status, uint16 idAsset) = IArkreenRECIssuance(msg.sender).getRECDataCore(tokenId);
         require(status == uint256(RECStatus.Certified), 'ART: Wrong Status');
-        
-        if(latestARECID == 0) {
-            allARECLiquidized[tokenId] = tokenId;                           // build the loop list
-            latestARECID = tokenId;
+
+        if ((idAssetOfBridge != 0 ) && (idAsset == idAssetOfBridge)) {
+            if(latestBridgeARECID == 0) {                                              // handle the bridge liquidized loop
+                allBridgeARECLiquidized[tokenId] = tokenId;                            // build the loop list
+                latestBridgeARECID = tokenId;
+            } else {
+                allBridgeARECLiquidized[tokenId] = allBridgeARECLiquidized[latestBridgeARECID];   // Point to loop head
+                allBridgeARECLiquidized[latestBridgeARECID] = tokenId;                            // Add to the loop
+                latestBridgeARECID = tokenId;                                                     // refresh the newest AREC
+            }
         } else {
-            allARECLiquidized[tokenId] = allARECLiquidized[latestARECID];   // Point to loop head
-            allARECLiquidized[latestARECID] = tokenId;                      // Add to the loop
-            latestARECID = tokenId;                                         // refresh the newest AREC
+            if(latestARECID == 0) {
+                allARECLiquidized[tokenId] = tokenId;                           // build the loop list
+                latestARECID = tokenId;
+            } else {
+                allARECLiquidized[tokenId] = allARECLiquidized[latestARECID];   // Point to loop head
+                allARECLiquidized[latestARECID] = tokenId;                      // Add to the loop
+                latestARECID = tokenId;                                         // refresh the newest AREC
+            }
         }
 
         totalLiquidized += amountREC;
@@ -317,8 +363,11 @@ contract ArkreenRECToken is
     }
 
     /**
-     * @dev set the ratio of liquidization fee
-     */     
+     * @dev Get AREC NFT info of the given number.
+     * @param number The number of the AREC NFT to get
+     * @return numAREC the number of the AREC NFT the info available
+     *         amountAREC AREC NFT info. The info not avaiable is empty
+     */
     function getARECInfo(uint256 number) external view returns (uint256 numAREC, ARECAmount[] memory amountAREC) {
         amountAREC = new ARECAmount[](number);
         if(latestARECID == 0) return (numAREC, amountAREC);
@@ -376,12 +425,20 @@ contract ArkreenRECToken is
         if(receiverFee == address(0)) return 0;
         return ratioFeeOffset;
     }  
+
     /**
      * @dev set the ratio of fee to offset ART as a climate action
      */     
     function setRatioFeeOffset(uint256 ratio) external onlyOwner {
         require(ratio <10000, 'ART: Wrong Data');
         ratioFeeOffset = ratio;
+    }  
+
+    /**
+     * @dev set the asset ID of the bridge REC
+     */     
+    function setBridgedAssetType(uint256 idAsset) external onlyOwner {
+        idAssetOfBridge = idAsset;
     }  
 
     /**

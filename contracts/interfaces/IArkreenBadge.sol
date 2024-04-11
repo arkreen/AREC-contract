@@ -6,5 +6,6 @@ interface IArkreenBadge {
     function mintCertificate(address, address, string calldata, string calldata,
                               string calldata, uint256[] calldata) external;
     function getDetailStatus(address) external view returns (uint256, uint256);
+    function getBridgeDetailStatus(address) external view returns (uint256, uint256);
     function registerDetail(uint256 amount, uint256 tokenId, bool bNew) external returns (uint256, uint256);    
 }

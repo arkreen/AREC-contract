@@ -18,9 +18,6 @@ import "./ArkreenBadgeType.sol";
 
 import "./libraries/MemArrays.sol";  
 
-// Import this file to use console.log
-// import "hardhat/console.sol";
-
 contract ArkreenBadge is
     OwnableUpgradeable,
     UUPSUpgradeable,
@@ -84,10 +81,13 @@ contract ArkreenBadge is
     function registerDetail(uint256 amount, uint256 tokenId, bool bNew) external returns (uint256, uint256) {
 
         // The caller should be the REC token contract
-        require( IArkreenRegistry(arkreenRegistry).tokenRECs(msg.sender) != address(0), 'ARB: Caller Not Allowed');
-        require(tokenId == partialARECIDExt[msg.sender], 'ARB: Error TokenId');
+        bool bBridge = ((tokenId >> 255) != 0);
+        tokenId = uint64(tokenId);
 
-        uint256 curAmount = partialAvailableAmountExt[msg.sender];
+        require( IArkreenRegistry(arkreenRegistry).tokenRECs(msg.sender) != address(0), 'ARB: Caller Not Allowed');
+        require(tokenId == (bBridge ? partialARECIDBridge[msg.sender] : partialARECIDExt[msg.sender]), 'ARB: Error TokenId');
+
+        uint256 curAmount = bBridge ? partialAvailableAmountBridge[msg.sender] : partialAvailableAmountExt[msg.sender];
         if(bNew) {
             // Only register new details while offsetting more than current paratial amount
             require(amount == curAmount, 'ARB: Wrong New');    
@@ -100,14 +100,21 @@ contract ArkreenBadge is
         offsetDetail.amount = uint128(amount);
         offsetDetail.tokenId = uint64(tokenId);
 
-        OffsetDetails[detailsCounter].push(offsetDetail);            
-        curAmount = (partialAvailableAmountExt[msg.sender] -= amount);   // if bNew is true, partialAvailableAmountExt will be 0
+        OffsetDetails[detailsCounter].push(offsetDetail);  
+  
+        // if bNew is true, partialAvailableAmountExt will be 0
+        curAmount = bBridge ? (partialAvailableAmountBridge[msg.sender] -= amount)
+                           : (partialAvailableAmountExt[msg.sender] -= amount);   
         
         return (detailsCounter, curAmount);
     }
 
     function getDetailStatus(address tokenAREC) external view returns (uint256, uint256) {
         return (partialAvailableAmountExt[tokenAREC], partialARECIDExt[tokenAREC]);
+    }
+
+    function getBridgeDetailStatus(address tokenAREC) external view returns (uint256, uint256) {
+        return (partialAvailableAmountBridge[tokenAREC], partialARECIDBridge[tokenAREC]);
     }
 
     /** 
@@ -125,7 +132,7 @@ contract ArkreenBadge is
     ) external returns (uint256) {
         address RECIssuance = IArkreenRegistry(arkreenRegistry).getRECIssuance();
         bool isRECIssuance = (msg.sender == RECIssuance);
-        bool isOffsetTokenId = (tokenId == 0) || ((tokenId >> 64) != 0);        // FLAG_OFFSET = 1<<64, to compliant with old design 
+        bool isOffsetTokenId = ((tokenId >> 64) != 0);        // FLAG_OFFSET = 1<<64, to compliant with old design 
 
         // Check called from the REC token contract, or from the REC issuance contrarct
         require( isRECIssuance || issuerREC == IArkreenRegistry(arkreenRegistry).tokenRECs(msg.sender), 'ARB: Wrong Issuer');
@@ -140,14 +147,12 @@ contract ArkreenBadge is
         offsetCounter = offsetId;
 
         if(isOffsetTokenId) {
-            if(tokenId != 0) {                          // to be compliant with old design
-                tokenId = uint64(tokenId);
-                if(tokenId ==0) {
-                    tokenId = partialARECIDExt[msg.sender] + (1<<63);
-                    partialAvailableAmountExt[msg.sender] -= amount;
-                } else {
-                    tokenId = uint64(detailsCounter) + (3<< 62);
-                }
+            tokenId = uint64(tokenId);
+            if(tokenId == 0) {
+                tokenId = partialARECIDExt[msg.sender] + (1<<63);
+                partialAvailableAmountExt[msg.sender] -= amount;
+            } else {
+                tokenId = uint64(detailsCounter) + (3<< 62);
             }
         }
 
@@ -314,10 +319,18 @@ contract ArkreenBadge is
 
         if(from == IArkreenRegistry(arkreenRegistry).getRECToken(issuer, idAsset)) {
             require(status == uint256(RECStatus.Retired), 'ARB: Wrong Status'); 
-            require(partialAvailableAmountExt[from] == 0, 'ARB: Partial Left');
-            partialARECIDExt[from] = tokenId;
-            partialAvailableAmountExt[from] = amountREC;
-            return this.onERC721Received.selector;
+            if ( keccak256(data) == keccak256("Bridge")) {
+              require(partialAvailableAmountBridge[from] == 0, 'ARB: Partial Left');
+              partialARECIDBridge[from] = tokenId;
+              partialAvailableAmountBridge[from] = amountREC;
+              return this.onERC721Received.selector;
+            }
+            else{
+              require(partialAvailableAmountExt[from] == 0, 'ARB: Partial Left');
+              partialARECIDExt[from] = tokenId;
+              partialAvailableAmountExt[from] = amountREC;
+              return this.onERC721Received.selector;
+            }
         }
 
         require( keccak256(data) == keccak256("Redeem"), 'ARB: Refused');
