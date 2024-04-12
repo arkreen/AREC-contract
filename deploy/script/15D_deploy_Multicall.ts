@@ -46,7 +46,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2024/02/28A
 // deploy:matic:MulticallD:  deployed on Polygon mainet to add checkIfContract 
-// 
+// 0x701de9963521b0c2e1495d902082479ad6e76b59
+
+// 2024/04/12
+// deploy:matic:MulticallD:  deployed on Polygon mainet to return ETH/MATIC value in aggregate
+// 0xB1C60361396Fb1136c015ac0Fc3823E5d3fa3067
 // 
 
 

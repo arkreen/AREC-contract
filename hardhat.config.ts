@@ -14,10 +14,31 @@ import "hardhat-gas-reporter"
 import "solidity-coverage"
 import "@openzeppelin/hardhat-upgrades"
 //import { NetworkUserConfig } from "hardhat/types";
+import * as readlineSync from 'readline-sync';
+import { Wallet } from 'ethers'
 
 import { config as dotEnvConfig } from "dotenv"
 
 dotEnvConfig()
+
+/*
+let password: string
+const promptString = 'Please input the password: >> '
+password = readlineSync.question(promptString, {hideEchoBack: true}).trim().toLowerCase()
+let trxWallet: Wallet
+
+export async function getWallet() {
+  async function getWalletAsync() {
+    trxWallet = await Wallet.fromEncryptedJson(process.env.MATIC_PRIVATE_KEY_ENC!, password)
+  }
+  await getWalletAsync()
+}
+
+//getWallet()
+
+// const trxWallet = Wallet.fromEncryptedJson(process.env.MATIC_PRIVATE_KEY_ENC!, password)
+// console.log("AAAAAAAAAA", password, trxWallet!)
+*/
 
 function getAPIKey(network: string): string {
   let apiKey: string
@@ -94,6 +115,7 @@ const config: HardhatUserConfig = {
       url: getURL("matic"),
       chainId: 137,
       accounts: [process.env.MATIC_PRIVATE_KEY as string, process.env.MATIC_CONTROLLER_KEY as string],
+//      accounts: [trxWallet!.privateKey as string, process.env.MATIC_CONTROLLER_KEY as string],
     },
     BSC_TEST: {
       url: "https://data-seed-prebsc-2-s1.binance.org:8545/",
