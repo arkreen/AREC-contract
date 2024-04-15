@@ -2,12 +2,15 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { ethers, upgrades } from "hardhat";
 import { CONTRACTS } from "../constants";
+import { BigNumber } from "ethers";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   // Check following address
   let AKREToken_ADDRESS
   let MANAGER_ADDRESS
   let REGISTER_ADDRESS
+
+  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6_000_000_000) : BigNumber.from(300_000_000_000)
 
   if(hre.network.name === 'localhost') {
     AKREToken_ADDRESS = "0xa0cE9DC3d93F4c84aAACd8DA3f66Cd6dA9D5b1F8"
@@ -83,7 +86,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       from: deployer,
       args: [],
       log: true,
-      skipIfAlreadyDeployed: false,
+      skipIfAlreadyDeployed: false
+//    gasPrice: defaultGasPrice
   });
 
   console.log("ArkreenMiner deployed to %s: ", hre.network.name, ArkreenMiner.address);
@@ -141,6 +145,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/02/02B: yarn deploy:matic_test:AMinerV10D 
 // Update to correct overlapped paramters: Pre-Product
 // 0x926B113e8fb52EfCeDe65981Fa9ef2731Ab66324
+
+// 2024/04/12: yarn deploy:matic:AMinerV10D 
+// Update to correct according audit result and prepare for upgrading on mainnet
+// 0x4bfE8d12b01756A04AB9762D28ebCF4210E9A59B
 
 export default func;
 func.tags = ["AMinerV10D"];

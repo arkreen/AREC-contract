@@ -93,7 +93,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const MINER_PROXY_ADDRESS = "0xbf8eF5D950F78eF8edBB8674a48cDACa675831Ae"       // Miner Contract in production env
 //  const NEW_IMPLEMENTATION =  "0x7a0Df5eFfdbb91DF24cb7F7dB2500ce9721a7A78"       // 2023/05/10: Original Implementation
 //  const NEW_IMPLEMENTATION =  "0x604e10b67736773BD5517fF628e350F443Db85F0"       // 2023/09/12: Upgrade: 1)Socket Miner, 2) Batch sales
-    const NEW_IMPLEMENTATION =  "0x5C3C5f4a3694B89F48D25964070aB68EF82884d4"       // 2024/02/01: Upgrade to support PlantMiner, and block transferring
+//  const NEW_IMPLEMENTATION =  "0x5C3C5f4a3694B89F48D25964070aB68EF82884d4"       // 2024/02/01: Upgrade to support PlantMiner, and block transferring
+    const NEW_IMPLEMENTATION =  "0x4bfE8d12b01756A04AB9762D28ebCF4210E9A59B"       // 2024/04/12: Update to correct according audit result and prepare for upgrading on mainnet
 
     const [deployer] = await ethers.getSigners();
     const ArkreenMinerFactory = ArkreenMiner__factory.connect(MINER_PROXY_ADDRESS, deployer);
@@ -106,12 +107,19 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     // 2024/02/01: Upgrade to support PlantMiner, and block transferring, !!!!!!!!!!!!! call postUpdate
     const callData = ArkreenMinerFactory.interface.encodeFunctionData("postUpdate")
+
+    const upgradeToAndCallData = ArkreenMinerFactory.interface.encodeFunctionData("upgradeToAndCall", [NEW_IMPLEMENTATION, callData])
+
+    //const updateTx = await ArkreenMinerFactory.callStatic['upgradeToAndCall'](NEW_IMPLEMENTATION, callData)
+
+    /*
     const updateTx = await ArkreenMinerFactory.upgradeToAndCall(NEW_IMPLEMENTATION, callData)
 
     //const updateTx = await ArkreenMinerFactory.upgradeTo(NEW_IMPLEMENTATION)
     await updateTx.wait()
+    */
 
-    console.log("Update Trx:", updateTx)
+    console.log("Update Trx:", upgradeToAndCallData)
     console.log("Game miner Updated: ", hre.network.name, ArkreenMinerFactory.address);
   } 
 };
@@ -191,6 +199,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/02/02B: yarn deploy:matic_test:AMinerUV10: For production Env.
 // Upgrade to correct overlapped parameters
 // immplementaion: 0x926B113e8fb52EfCeDe65981Fa9ef2731Ab66324
+
+// 2024/04/12: yarn deploy:matic:AMinerUV10: For production Env. (Need to upgrade with foundation wallet)
+// Update to correct according audit result and prepare for upgrading on mainnet
+// immplementaion: 0x4bfE8d12b01756A04AB9762D28ebCF4210E9A59B
 
 export default func;
 func.tags = ["AMinerUV10"];

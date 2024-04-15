@@ -336,7 +336,7 @@ describe("ArkreenMiner", () => {
       expect(await ArkreenMiner.AllMinerInfo(minerNFT)).to.deep.eq(minerInfo);
       
       await expect(ArkreenMiner.connect(owner1).transferFrom( owner1.address, receiver, 1)).
-              to.be.revertedWith("ARB: Transfer Not Allowed")       
+              to.be.revertedWith("Arkreen Miner: Transfer Not Allowed")       
 
       await ArkreenMiner.enableTransfer()                
       await ArkreenMiner.connect(owner1).transferFrom( owner1.address, receiver, 1)
