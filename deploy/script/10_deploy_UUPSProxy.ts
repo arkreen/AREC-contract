@@ -10,7 +10,8 @@ import { CONTRACTS } from "../constants";
 //import { ArkreenBuilder__factory } from "../../typechain";
 //import { GreenBTC__factory } from "../../typechain";
 
-import { ArkreenReward__factory } from "../../typechain";
+//import { ArkreenReward__factory } from "../../typechain";
+import { ArkreenToken__factory } from "../../typechain";
 
 import { BigNumber } from "ethers";
 
@@ -24,10 +25,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
   console.log("Deploying: ", CONTRACTS.UUPSProxy, deployer);  
 
-  const { getChainId } = hre;
-
-  const chainID = await getChainId()
-  const defaultGasPrice = (chainID === '80001') ? BigNumber.from(20_000_000_000) : BigNumber.from(100_000_000_000)
+  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(100_000_000_000)
 
   /* // Verification is difficult in this deployment mode 
   const ArkreenMinerV10Factory = await ethers.getContractFactory("ArkreenMinerV10");
@@ -180,6 +178,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   });
 */
 
+/*
   // Proxy of ArkreenReward
   // 2024/02/22: Polygon Mainnet ArkreenReward
   const IMPLEMENTATION_ADDRESS  = "0xF8b41C01622Ad43148a0DdF844F60dE334d8a119"    // 2024/02/22: ArkreenReward Implementation 
@@ -188,6 +187,18 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   
   // 2024/02/24:  
   const callData = ArkreenReward__factory.createInterface().encodeFunctionData("initialize",[AKRE_TOKEN_ADDRESS, VALIDATOR_ADDRESS])     // Create new ArkreenReward
+*/
+
+  // Proxy of ArkreenToken on Amoy testnet
+  // 2024/04/15: Amoy testnet ArkreenToken
+  const IMPLEMENTATION_ADDRESS  = "0xd83C9743B17426C28Cf3FD12966cc9873D009ABF"    // 2024/04/15: ArkreenToken Implementation 
+  const amount = 10_000_000_000
+  const foundationAddr = '0xB53B96e1eF29cB14313c18Fa6374AB87df59BcD9'
+  const name = ''
+  const symbol = ''
+  
+  // 2024/04/15:  
+  const callData = ArkreenToken__factory.createInterface().encodeFunctionData("initialize",[amount, foundationAddr, name, symbol])
 
   console.log("IMPLEMENTATION_ADDRESS, deployer, callData", IMPLEMENTATION_ADDRESS, deployer, callData)
 
@@ -238,6 +249,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/02/22:  ArkreenReward
 // yarn deploy:matic:UUPSProxy
 // Proxy:   0xDcF10d429c0422Af80790bC810A33189771D643d
+
+// 2024/02/22:  ArkreenToken
+// yarn deploy:matic_test:UUPSProxy
+// Proxy: 0xd092e1f47d4e5d1C1A3958D7010005e8e9B48206 
+
 
 
 export default func;

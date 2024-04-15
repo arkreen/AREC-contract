@@ -177,8 +177,12 @@
     "deploy:celo_test:RECTokenI": "hardhat --network celo_test deploy --tags RECTokenI",
     "deploy:celo_test:gRegistryD": "hardhat --network celo_test deploy --tags gRegistryD",
     "deploy:celo_test:gRegistryU": "hardhat --network celo_test deploy --tags gRegistryU",
+
+    "deploy:celo_test:ARKE": "hardhat --network celo_test deploy --tags ARKE --reset",
+
     "allowance:celo_test": "hardhat run --network celo_test ./deploy/allowance_manager.ts",
     "confirmAuto:celo_test": "hardhat run --network celo_test ./deploy/confirmIssuance_celo.ts",
+
 
     "etherscan:celo_test": "hardhat --network celo_test etherscan-verify --api-url https://api-alfajores.celoscan.io --api-key",
     "deploy:celo:gRegistry": "hardhat --network celo deploy --tags gRegistry",

@@ -42,8 +42,10 @@ export async function getWallet() {
 
 function getAPIKey(network: string): string {
   let apiKey: string
-  if((network === 'matic')||(network ==='matic_test')) {
+  if(network === 'matic') {
     apiKey = process.env.POLYGONSCAN_API_KEY as string
+  } else if(network ==='matic_test') {
+    apiKey = process.env.OKLINK_API_KEY as string
   } else if((network === 'celo')||(network ==='celo_test')) {
     apiKey = process.env.CELOSCAN_API_KEY as string
   } else {
@@ -59,6 +61,8 @@ function getAPIKey(network: string): string {
 // https://rpc.ankr.com/polygon_mumbai
 // https://celo-mainnet.infura.io/v3/0ab4ce267db54906802cb43b24e5b0f7
 // https://celo-alfajores.infura.io/v3/0ab4ce267db54906802cb43b24e5b0f7
+// https://rpc-amoy.polygon.technology/ （OK）
+// https://80002.rpc.thirdweb.com       （NOK）
 
 function getURL(network:string): string {
   let url: string
@@ -70,7 +74,7 @@ function getURL(network:string): string {
   } else if(network === 'matic') {
     url = `https://polygon-rpc.com/`
   } else if(network === 'matic_test') {
-    url = `https://rpc.ankr.com/polygon_mumbai`
+    url = `https://rpc-amoy.polygon.technology/`
   } else if(network === 'goerli') {
     url = `https://goerli.infura.io/v3/`+ projectID
   } else if(network === 'rinkeby') {
@@ -244,10 +248,10 @@ const config: HardhatUserConfig = {
       },
       {
         network: "matic_test",
-        chainId: 80001,
+        chainId: 80002,
         urls: {
           apiURL: getURL("matic_test"),
-          browserURL: "https://mumbai.polygonscan.com/"
+          browserURL: "https://www.oklink.com/amoy"
         }
       },
     ]

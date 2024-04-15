@@ -118,10 +118,7 @@ contract ArkreenMiner is
     }
 
     function postUpdate() external onlyProxy onlyOwner 
-    {
-        whiteListBatchPoolIndexHead[0] = whiteListBatchIndexHead;
-        whiteListBatchPoolIndexTail[0] = whiteListBatchIndexTail;
-    }
+    {}
 
     function _authorizeUpgrade(address newImplementation)
         internal

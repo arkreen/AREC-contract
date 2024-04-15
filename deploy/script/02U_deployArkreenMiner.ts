@@ -72,15 +72,18 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     // 2024/01/12: Dev Env, 2024/01/12B: Dev Env: make parameter public
     // 2024/01/15: Pre Env, Upgrade to add RemoteMinerOnboardBatchClaim and UpdateMinerWhiteListBatchClaim, re-use impl
     // 2024/02/01: Dev Env, 2024/02/01B: Pre-Env: support PlantMiner, and block transferring
-    const callData = ArkreenMinerFactory.interface.encodeFunctionData("postUpdate")
-    const updateTx = await ArkreenMinerFactory.upgradeToAndCall(NEW_IMPLEMENTATION, callData)
+    //const callData = ArkreenMinerFactory.interface.encodeFunctionData("postUpdate")
+    //const updateTx = await ArkreenMinerFactory.upgradeToAndCall(NEW_IMPLEMENTATION, callData)
+
+    const key1 = await ArkreenMinerFactory.AllManagers(0)
+    const key2 = await ArkreenMinerFactory.AllManagers(2)
 
     // 2024/01/12A: Dev Env, Revert to 0x8aFFe644eD9ae6D9DEC5672cDd927dd8eF29d9EF
     // 2024/01/14: Dev Env: Upgrade to add pretection in RemoteMinerOnboardBatchClaim againt replaying signature
 //    const updateTx = await ArkreenMinerFactory.upgradeTo(NEW_IMPLEMENTATION)
 //    await updateTx.wait()
 
-    console.log("Update Trx:", updateTx)
+    console.log("Update Trx:", key1, key2)
     console.log("ArkreenMiner Updated to: ", hre.network.name, ArkreenMinerFactory.address, NEW_IMPLEMENTATION);
  } 
 

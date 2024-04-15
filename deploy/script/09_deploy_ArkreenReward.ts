@@ -5,10 +5,7 @@ import { BigNumber } from "ethers";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
-  const { getChainId } = hre;
-
-  const chainID = await getChainId()
-  const defaultGasPrice = (chainID === '80001') ? BigNumber.from(6_000_000_000) : BigNumber.from(100_000_000_000)
+  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(100_000_000_000)
 
     const arkReward = "ArkreenReward"
 
@@ -32,10 +29,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const VALIDATOR_ADDRESS     = "0xF013aC5bF29Fc3DcAd2f89510eCfAeca79d5042e"
 */
 
-    // 2024/02/22: Arkreem Mainnet Launch on Polygon mainnet
+/*
+    // 2024/02/22: Arkreen Mainnet Launch on Polygon mainnet
     const AKRE_TOKEN_ADDRESS    = "0xE9c21De62C5C5d0cEAcCe2762bF655AfDcEB7ab3"
     const VALIDATOR_ADDRESS     = "0x1E1A152D1C77A16863e97DAf18E99f85a5F0a605"
- 
+*/
+
+    // 2024/04/15: Polygon amoy testnet 
+    const AKRE_TOKEN_ADDRESS    = "0xd092e1f47d4e5d1C1A3958D7010005e8e9B48206"
+    const VALIDATOR_ADDRESS     = "0x8C4D62477F70C7Ea628B52dbF37DcC2E5e4043E2"
+
     const { deployments, getNamedAccounts } = hre;
     const { deploy } = deployments;
     const { deployer } = await getNamedAccounts();
@@ -89,6 +92,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:arkReward
 // Proxy:           0x6e5b52BAcc7431aBE2Ea767f8de01130E2bBec9F            
 // Implementaion:   0x6d9f00596E2eD8082538e9df74F4bbed9Db74005
+
+// 2024/04/15: Reward deployment
+// yarn deploy:matic_test:arkReward
+// Proxy:           0x78F018BF6af8C9A366735CFf0689486A0855bF89            
+// Implementaion:   0xeb0a8d25cc479825e6Ca942D516a1534C32dFBe4
+
 
 func.tags = ["arkReward"];
 

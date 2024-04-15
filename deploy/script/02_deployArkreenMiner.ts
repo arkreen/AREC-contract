@@ -37,11 +37,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //  MANAGER_ADDRESS   = "0xc99b92e8d827aa21cd3ff8fb9576316d90120191"
 //  REGISTER_ADDRESS  = "0x58aCE9F0f042bC3DDb1f3d929f32C7931FFdA215"
 
-    AKREToken_ADDRESS = "0x8Ab2299351585097101c91FE4b098d95c18D28a7"
+//    AKREToken_ADDRESS = "0x8Ab2299351585097101c91FE4b098d95c18D28a7"
+//    MANAGER_ADDRESS   = "0xdc641760adAe486Ba9c9878C1f3831c26EbFEAaa"
+//    REGISTER_ADDRESS  = "0xdc641760adAe486Ba9c9878C1f3831c26EbFEAaa"
+//    WMATIC_ADDRESS    = "0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889"            // WMATIC address
+
+    // 2024/04/15: Amoy testnet 
+    AKREToken_ADDRESS = "0xd092e1f47d4e5d1C1A3958D7010005e8e9B48206"
     MANAGER_ADDRESS   = "0xdc641760adAe486Ba9c9878C1f3831c26EbFEAaa"
     REGISTER_ADDRESS  = "0xdc641760adAe486Ba9c9878C1f3831c26EbFEAaa"
-    WMATIC_ADDRESS    = "0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889"            // WMATIC address
-
+    WMATIC_ADDRESS    = "0x0ae690aad8663aab12a671a6a0d74242332de85f"            // WMATIC address
 
 //////////////////////////////////////////////////////////////
 
@@ -121,6 +126,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // Proxy:           failed for low value 
 // Proxy deployed:  0xbf8eF5D950F78eF8edBB8674a48cDACa675831Ae  (05/10)
 // Implementation:  0x7a0Df5eFfdbb91DF24cb7F7dB2500ce9721a7A78
+
+// 2024/04/15: yarn deploy:matic_test:AMiner 
+// Deployed on Polygon Amoy testnet 
+// Proxy:           0xF390caaF4FF0d297e0b4C3c1527D707C75541736
+// Implementation:  0x723f5C282F1e0a131bA80b220C5895f9066f7642
 
 export default func;
 func.tags = ["AMiner"];
