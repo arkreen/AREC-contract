@@ -8,12 +8,14 @@ import { BigNumber } from "ethers";
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const [deployer] = await ethers.getSigners();
 
-  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6000000000) : BigNumber.from(100000000000)
+  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(100000000000)
   console.log("Update ArkreenRECToken: ", CONTRACTS.RECToken, deployer.address, defaultGasPrice.toString());  
 
   if(hre.network.name === 'matic_test') {
-    const ART_ADDRESS    = "0xb0c9dD915f62d0A37792FD2ce497680E909D8c0F"        // ART simu: Need to check
-    // const ART_ADDRESS = "0x0999afb673944a7b8e1ef8eb0a7c6ffdc0b43e31"              // HART simu
+    // const ART_ADDRESS    = "0xb0c9dD915f62d0A37792FD2ce497680E909D8c0F"        // ART simu: Need to check
+    // const ART_ADDRESS = "0x0999afb673944a7b8e1ef8eb0a7c6ffdc0b43e31"           // HART simu
+    const ART_ADDRESS = "0x615835Cc22064a17df5A3E8AE22F58e67bCcB778"              // Amoy testnet
+
     // const AREC_ISSUE_ADDRESS  = "0xFedD52848Cb44dcDBA95df4cf2BCBD71D58df879"
     // const RECTOKEN_ADDRESS    = "0xb0c9dD915f62d0A37792FD2ce497680E909D8c0F"  // ART simu: Need to check
     // const BUILDER_ADDRESS   = "0xA05A9677a9216401CF6800d28005b227F7A3cFae"    // Action Builder address: Simu
@@ -34,6 +36,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     // const setRatioFeeToSolidifyTx = await ArkreenRECTokenFactory.setRatioFeeToSolidify(ratioFeeToSolidify)
     // await setRatioFeeToSolidifyTx.wait()
 
+/*  
     // Set setRatioFeeToSolidify to the ART/HART token contract: 2024/01/27
     const setRatioFeeOffsetTx = await ArkreenRECTokenFactory.setRatioFeeOffset(ratioFeeToOffset)
     await setRatioFeeOffsetTx.wait()
@@ -44,6 +47,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     //const updateTx = await  ArkreenRECTokenFactory.setClimateBuilder(AREC_ISSUE_ADDRESS)
     //await updateTx.wait()
+*/
+    // Set Bridged Asset Type to the ART token contract: 2024/04/16 (Amoy testnet)
+    const setBridgedAssetTypeTx = await ArkreenRECTokenFactory.setBridgedAssetType(2, {gasPrice: defaultGasPrice} )
+    await setBridgedAssetTypeTx.wait()
+    
+    console.log("callData setBridgedAssetType", setBridgedAssetTypeTx)
+    console.log("ArkreenRECToken setBridgedAssetType to %s: ", hre.network.name, ArkreenRECTokenFactory.address);
+
   }
   
   if(hre.network.name === 'matic') {
@@ -135,6 +146,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2024/04/11: Call setBridgedAssetType to update bridge Type 3
 // yarn deploy:matic:RECTokenI
+
+// 2024/04/11: Call setBridgedAssetType to update bridge Type 2 (Amoy test)
+// yarn deploy:matic_test:RECTokenI
 
 func.tags = ["RECTokenI"];
 

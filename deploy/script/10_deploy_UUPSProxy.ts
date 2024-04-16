@@ -254,7 +254,5 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:UUPSProxy
 // Proxy: 0xd092e1f47d4e5d1C1A3958D7010005e8e9B48206 
 
-
-
 export default func;
 func.tags = ["UUPSProxy"];

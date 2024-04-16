@@ -98,8 +98,11 @@
     "deploy:matic_test:RECBadgeI": "hardhat --network matic_test deploy --tags RECBadgeI",
     "deploy:matic_test:ArkreenRECIssuanceImageD": "hardhat --network matic_test deploy --tags ArkreenRECIssuanceImageD",
     "deploy:matic_test:ArkreenRECIssuanceImageLogoD": "hardhat --network matic_test deploy --tags ArkreenRECIssuanceImageLogoD",
+    "deploy:matic_test:ArkreenRECIssuanceImageI": "hardhat --network matic_test deploy --tags ArkreenRECIssuanceImageI",
 
     "deploy:matic_test:AirdropD": "hardhat --network matic_test deploy --tags AirdropD",
+    "deploy:matic_test:USDT": "hardhat --network matic_test deploy --tags USDT",
+    "deploy:matic_test:USDTI": "hardhat --network matic_test deploy --tags USDTI",
 
     "deploy:matic:gAKRE": "hardhat --network matic deploy --tags gAKRE",
     "deploy:matic:arkReward": "hardhat --network matic deploy --tags arkReward",

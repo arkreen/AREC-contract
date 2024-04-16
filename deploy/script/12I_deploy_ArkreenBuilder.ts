@@ -19,7 +19,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     let CART_ADDRESS
 
     const defaultGasPrice = (hre.network.name === 'matic_test') 
-                          ? BigNumber.from(6000000000) 
+                          ? BigNumber.from(3_000_000_000) 
                           : (hre.network.name === 'matic')
                           ? BigNumber.from(200000000000)
                           : (hre.network.name === 'celo_test')

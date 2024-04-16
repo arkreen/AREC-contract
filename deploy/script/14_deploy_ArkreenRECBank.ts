@@ -1,13 +1,17 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { CONTRACTS } from "../constants";
+import { BigNumber } from "ethers";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     let NATIVE_ADDRESS
 
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(300_000_000_000)
+
     if(hre.network.name === 'matic_test')  {                                  // Simulation
-      NATIVE_ADDRESS    = "0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889"        // WMATIC address
+      // NATIVE_ADDRESS    = "0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889"     // WMATIC address
+      NATIVE_ADDRESS    = "0x0ae690aad8663aab12a671a6a0d74242332de85f"        // WMATIC address (Amoy test)
     }
     else if(hre.network.name === 'matic')  {                                  // Matic Mainnet for test
       NATIVE_ADDRESS = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"           // WMATIC
@@ -37,6 +41,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         },
         log: true,
         skipIfAlreadyDeployed: false,
+        gasPrice: defaultGasPrice
     });
 
 
@@ -67,6 +72,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:ArtBank
 // Proxy:           0x9e1dde2912a804e39e5b19c8b670a6cee0b1ca7a
 // Implementation:  0xBB17d9b933F631024cA4cF45391E7302CD527489
+
+// 2024/04/16 (Amoy Testnet)
+// yarn deploy:matic_test:ArtBank 
+// Proxy:           0xf9aAcFf1B292F82b60662e47610C570ef58d3c70
+// Implementation:  0x294cD2b719c8C70869b521C1Af20bF7c84AD65Bf
 
 func.tags = ["ArtBank"];
 

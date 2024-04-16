@@ -7,7 +7,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6_000_000_000) : BigNumber.from(80_000_000_000)
+  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(80_000_000_000)
 
   console.log("Deploying: ", 'ArkreenRECIssuanceImage', deployer, defaultGasPrice.toString());  
 
@@ -17,9 +17,15 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const arkreenRECIssuanceImageLogo = '0x865a3129677A2d38A85386940F5140Dbb5021efa'
   */
 
+  /*
   // Polygon Testnet (Simu)
   const arkreenRECIssuance = '0x954585adF9425F66a0a2FD8e10682EB7c4F1f1fD'
   const arkreenRECIssuanceImageLogo = '0x58105aa8Aba5d55B8c0962a1C924827e4CACeeB8'
+  */
+
+  // Amoy testnet Dev Env
+  const arkreenRECIssuance = '0x4fc1d9188610377eA22C577054Fe42627eE49459'
+  const arkreenRECIssuanceImageLogo = '0x1BdB1555bDc425183ad56FcB31c06205726FEFB0'
 
   const GreenBTCImage = await deploy('ArkreenRECIssuanceImage', {
       from: deployer,
@@ -47,6 +53,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/02/24: Arkreen mainnet launch on Polygon: Add ArkreenRECIssuanceImageLogo to store Arkreen logo
 // yarn deploy:matic:ArkreenRECIssuanceImageD
 // 0xf1c78E697440Ff8eECDf411E7CeC3fF26957971b
+
+// 2024/04/16: Amoy testnet: Deploy ArkreenRECIssuanceImageLogo
+// yarn deploy:matic_test:ArkreenRECIssuanceImageD
+// 0xD5e8666620eaf809D32c5F2D739C49953FBd6e12
 
 func.tags = ["ArkreenRECIssuanceImageD"];
 

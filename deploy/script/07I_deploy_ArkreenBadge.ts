@@ -6,23 +6,26 @@ import { BigNumber } from "ethers";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
-    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6_000_000_000) : BigNumber.from(100_000_000_000)
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(100_000_000_000)
 
     const [deployer] = await ethers.getSigners();
 
     if(hre.network.name === 'matic_test')  {   
-      const PROXY_ADDRESS = "0x5C653b445BE2bdEB6f8f3CD099FC801865Cab835"      // Need to check: Simu mode
-      const IMAGE_URL = '0x65c78eaC38aa9B5eaa871d6cd22598E011aC1164'          // 2024/01/01: Image contract supporting image url
+//      const PROXY_ADDRESS = "0x5C653b445BE2bdEB6f8f3CD099FC801865Cab835"      // Need to check: Simu mode
+//      const IMAGE_URL = '0x65c78eaC38aa9B5eaa871d6cd22598E011aC1164'          // 2024/01/01: Image contract supporting image url
+
+      const PROXY_ADDRESS = "0x8a459D94F30dB4FC5b6e8F1950d67287AF0Bc77C"      // Need to check: Amoy Dev
+      const IMAGE_URL = '0xd10eA37C185CC3eaA952b3c27D5ec754d40C1741'          // 2024/04/16(Amoy dev): Image contract supporting image url
 
       const  ArkreenBadgeFactory = ArkreenBadge__factory.connect(PROXY_ADDRESS, deployer);
 
-      //      const updateTx = await  ArkreenBadgeFactory.setBadgeImage(IMAGE_URL)
-      //      await updateTx.wait()
-      //      console.log("callData, update", updateTx)
-      //      console.log(" ArkreenBadge updated to %s: ", hre.network.name,  ArkreenBadgeFactory.address);
+      const updateTx = await  ArkreenBadgeFactory.setBadgeImage(IMAGE_URL, {gasPrice: defaultGasPrice})
+      await updateTx.wait()
+      console.log("callData, update", updateTx)
+      console.log(" ArkreenBadge updated to %s: ", hre.network.name,  ArkreenBadgeFactory.address);
 
-      const image = await  ArkreenBadgeFactory.tokenURI(161)
-      console.log(" ArkreenBadge updated to %s: ", hre.network.name,  ArkreenBadgeFactory.address, image);
+      //const image = await  ArkreenBadgeFactory.tokenURI(161)
+      //console.log(" ArkreenBadge updated to %s: ", hre.network.name,  ArkreenBadgeFactory.address, image);
       
     }
     else if(hre.network.name === 'matic')  {                                  // Matic Mainnet for test
@@ -81,6 +84,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2024/02/22: yarn deploy:matic:RECBadgeI
 // Update image contract supporting image url:  0x9b2987e8B169402B535efF2d328440593b8B5240
+
+// 2024/04/16: yarn deploy:matic_test:RECBadgeI
+// Update image contract supporting image url:  0xd10eA37C185CC3eaA952b3c27D5ec754d40C1741
 
 func.tags = ["RECBadgeI"];
 

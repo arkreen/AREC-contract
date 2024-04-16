@@ -11,10 +11,17 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     let WMATIC_ADDRESS
     
     if(hre.network.name === 'matic_test')  {                                  // Simulation
+      // Simulation
+      // AUTHORIZER_ADDRESS  = "0x2df522C2bF3E570caA22FBBd06d1A120B4Dc29a8"      // Authorizeried address
+      // BUILDER_ADDRESS   = "0xa05a9677a9216401cf6800d28005b227f7a3cfae"        // ArkreenBuilder address
+      // CART_ADDRESS      = "0x0999afb673944a7b8e1ef8eb0a7c6ffdc0b43e31"        // HashKey ART token address
+      // WMATIC_ADDRESS    = "0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889"        // WMATIC address   
+
+      // Amoy testnet, 2024/04/16
       AUTHORIZER_ADDRESS  = "0x2df522C2bF3E570caA22FBBd06d1A120B4Dc29a8"      // Authorizeried address
-      BUILDER_ADDRESS   = "0xa05a9677a9216401cf6800d28005b227f7a3cfae"        // ArkreenBuilder address
-      CART_ADDRESS      = "0x0999afb673944a7b8e1ef8eb0a7c6ffdc0b43e31"        // HashKey ART token address
-      WMATIC_ADDRESS    = "0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889"        // WMATIC address      
+      BUILDER_ADDRESS   = "0x12De6c1FB46B64e3DA5bFDD274E98B9103353dF7"        // ArkreenBuilder address
+      CART_ADDRESS      = "0x78A2620C3fb96100Dc551Db657005eEeF270F0DF"        // HashKey ART token address
+      WMATIC_ADDRESS    = "0x0ae690AAD8663aaB12a671A6A0d74242332de85f"        // WMATIC address   
     }
     else if(hre.network.name === 'matic')  {        // Matic Mainnet for test
       AUTHORIZER_ADDRESS  = "0x0dE4fB23694c1532815Ad90fd1689c7234242FE3"      // Authorizeried address
@@ -27,7 +34,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const { deploy } = deployments;
     const { deployer } = await getNamedAccounts();
 
-    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6000000000) : BigNumber.from(100000000000)
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(100000000000)
 
     console.log("Deploying: ", CONTRACTS.GreenBTC, deployer);  
     const GreenBTC = await deploy(CONTRACTS.GreenBTC, {
@@ -74,6 +81,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:GreenBTC    
 // Proxy:         0xDf51F3DCD849f116948A5B23760B1ca0B5425BdE   (Manually)  
 // Implementaion: 0x85304b15f0762c0b2752C60e29D04843b17D79c7
+
+// 2023/04/16 （Amoy testnet）
+// yarn deploy:matic_test:GreenBTC   
+// Proxy:                  
+// Implementaion: 
 
 func.tags = ["GreenBTC"];
 

@@ -7,7 +7,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6_000_000_000) : BigNumber.from(80_000_000_000)
+  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(80_000_000_000)
 
   console.log("Deploying: ", 'ArkreenRECIssuanceImageLogo', deployer, defaultGasPrice.toString());  
 
@@ -29,6 +29,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/02/24: Arkreen mainnet launch on Polygon:  ArkreenRECIssuanceImageLogo
 // yarn deploy:matic:ArkreenRECIssuanceImageLogoD
 // 0x58105aa8Aba5d55B8c0962a1C924827e4CACeeB8
+
+// 2024/04/15: Amoy testnet:  ArkreenRECIssuanceImageLogo
+// yarn deploy:matic_test:ArkreenRECIssuanceImageLogoD
+// 0x1BdB1555bDc425183ad56FcB31c06205726FEFB0
 
 func.tags = ["ArkreenRECIssuanceImageLogoD"];
 

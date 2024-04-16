@@ -18,9 +18,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       ISSUER_ADDRESS      = "0x576Ab950B8B3B18b7B53F7edd8A47986a44AE6F4"      
     }  
     else if(hre.network.name === 'matic_test')  {     // Simulation
-      AKREToken_ADDRESS   = "0x54e1c534f59343c56549c76d1bdccc8717129832"
-      REGISTRY_ADDRESS    = "0x047eb5205251c5fc8a21ba8f8d46f57df62013c8"
-      ISSUER_ADDRESS      = "0x576Ab950B8B3B18b7B53F7edd8A47986a44AE6F4"
+      // AKREToken_ADDRESS   = "0x54e1c534f59343c56549c76d1bdccc8717129832"
+      // REGISTRY_ADDRESS    = "0x047eb5205251c5fc8a21ba8f8d46f57df62013c8"
+      // ISSUER_ADDRESS      = "0x576Ab950B8B3B18b7B53F7edd8A47986a44AE6F4"
+
+      // 2024/04/15 Amoy Testnet
+      AKREToken_ADDRESS   = "0xd092e1f47d4e5d1C1A3958D7010005e8e9B48206"
+      REGISTRY_ADDRESS    = "0x908C77c31bA81C2FC0Ec15Ce53cFd65f9c4aEECc"
+      ISSUER_ADDRESS      = "0xF1CF65Dbfa9cCEe650a053E218F5788F63bDA60E"
     } 
 //    else if(hre.network.name === 'matic_test')  {     // real game miner
 //      AKREToken_ADDRESS   = "0x6c28fF02d3A132FE52D022db1f25a33d91caeCA2"
@@ -51,11 +56,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     ///const ART_NAME = 'HashKey AREC Token'
     ///const SYMBOL = 'HART'
 
-    // const ART_NAME = ''         
-    // const SYMBOL = ''
+    const ART_NAME = ''         
+    const SYMBOL = ''
 
-    const ART_NAME  = 'Classic Based AREC Token'
-    const SYMBOL    = 'CART'
+    //const ART_NAME  = 'Classic Based AREC Token'
+    //const SYMBOL    = 'CART'
 
     console.log("Deploying: ", CONTRACTS.RECToken, deployer);  
     const ArkreenRECToken = await deploy(CONTRACTS.RECToken, {
@@ -69,6 +74,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
               // 2023/02/26: Name and Symbol can be customized for HashKey ESG project, test simulation
               // 2023/11/01: Celo Maninet
+              // 2024/04/15: Amoy testnet, "ART"
               args: [REGISTRY_ADDRESS, ISSUER_ADDRESS, ART_NAME, SYMBOL]
             },
           },
@@ -94,6 +100,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:celo:RECToken
 // Proxy:           0x9BBF9f544F3ceD640090f43FF6B820894f66Aaef
 // Implementation:  0xC039075e8abB0821BB0e7DDF43718345900C19c8
+
+// 2024/04/15
+// yarn deploy:matic_test:RECToken (ART)
+// Proxy:           0x615835Cc22064a17df5A3E8AE22F58e67bCcB778
+// Implementation:  0xB0DAFF3eE3A9D17441f3E5A558786A842ece0a62
 
 func.tags = ["RECToken"];
 

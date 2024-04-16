@@ -63,6 +63,7 @@ function getAPIKey(network: string): string {
 // https://celo-alfajores.infura.io/v3/0ab4ce267db54906802cb43b24e5b0f7
 // https://rpc-amoy.polygon.technology/ （OK）
 // https://80002.rpc.thirdweb.com       （NOK）
+// https://api-amoy.polygonscan.com/api
 
 function getURL(network:string): string {
   let url: string
@@ -132,6 +133,18 @@ const config: HardhatUserConfig = {
   },
   solidity: {
     compilers: [
+      {
+        version: "0.6.6",
+        settings: {
+          metadata: {
+            bytecodeHash: "none",
+          },
+          optimizer: {
+            enabled: true,
+            runs: 500,
+          },
+        },
+      },
       {
         version: "0.7.6",
         settings: {
@@ -251,7 +264,7 @@ const config: HardhatUserConfig = {
         chainId: 80002,
         urls: {
           apiURL: getURL("matic_test"),
-          browserURL: "https://www.oklink.com/amoy"
+          browserURL: "https://amoy.polygonscan.com/"
         }
       },
     ]

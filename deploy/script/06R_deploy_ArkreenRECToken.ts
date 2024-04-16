@@ -2,6 +2,7 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { CONTRACTS } from "../constants";
 import { ArkreenRECToken__factory } from "../../typechain";
+import { BigNumber } from "ethers";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const { deployments, getNamedAccounts } = hre;
@@ -9,6 +10,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const { deployer } = await getNamedAccounts();
 
     console.log("Deploying: ", CONTRACTS.RECToken, deployer);  
+
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(300_000_000_000)
 
     if(hre.network.name === 'matic_test') {
 
@@ -39,16 +42,24 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       ///const SYMBOL    = 'hART'                  // 2023/12/12
 
       // 2023/12/12B: Matic testnet, Depoly cART for Dev env: 
-      const IMPLEMENTATION_ADDRESS  = "0x0a451317bb231ba332340ef63d7da926f669c614"      // 2023/12/12B: Dev deploymnet
-      const REGISTRY_ADDRESS   = "0xfEcbD33525d9B869e5f3CaB895cd6D7A666209ee"           // 2023/12/12B:
-      const ISSUER_ADDRESS     = "0x392a051d030629188d60299232C3bFB34b8Af1e6"           // 2023/12/12B: 
+      // const IMPLEMENTATION_ADDRESS  = "0x0a451317bb231ba332340ef63d7da926f669c614"      // 2023/12/12B: Dev deploymnet
+      ///const REGISTRY_ADDRESS   = "0xfEcbD33525d9B869e5f3CaB895cd6D7A666209ee"           // 2023/12/12B:
+      // const ISSUER_ADDRESS     = "0x392a051d030629188d60299232C3bFB34b8Af1e6"           // 2023/12/12B: 
 
-      const ART_NAME  = 'Classic Based AREC Token'  // 2023/12/12B
-      const SYMBOL    = 'cART'                      // 2023/12/12B
+      // const ART_NAME  = 'Classic Based AREC Token'  // 2023/12/12B
+      // const SYMBOL    = 'cART'                      // 2023/12/12B
 
-      // 2023/06/08, 2023/12/12, 2023/12/12B
+      // 2024/04/15: Amoy testnet, deploy CART based on ART implementation of ArkreenRECToken
+      const IMPLEMENTATION_ADDRESS  = "0xB0DAFF3eE3A9D17441f3E5A558786A842ece0a62"  // 2024/04/16: copy ART token
+    
+      const REGISTRY_ADDRESS   = "0x908C77c31bA81C2FC0Ec15Ce53cFd65f9c4aEECc"       // 2024/04/16:
+      const ISSUER_ADDRESS     = "0x392a051d030629188d60299232C3bFB34b8Af1e6"       // 2024/04/16
+      const ART_NAME  = 'Classic Based AREC Token'
+      const SYMBOL    = 'CART'
+
+      // 2023/06/08, 2023/12/12, 2023/12/12B, 2024/04/16
       const callData = ArkreenRECToken__factory.createInterface().encodeFunctionData("initialize", // Create new ArkreenRECToken
-                                          [REGISTRY_ADDRESS, ISSUER_ADDRESS, ART_NAME, SYMBOL])    // 2023/05/09 // 2023/06/08, 2023/12/12, 2023/12/12B
+                                          [REGISTRY_ADDRESS, ISSUER_ADDRESS, ART_NAME, SYMBOL])    // 2023/05/09 // 2023/06/08, 2023/12/12, 2023/12/12B, 2024/04/16
 
       console.log("IMPLEMENTATION_ADDRESS, deployer, callData", IMPLEMENTATION_ADDRESS, deployer, callData)
 
@@ -57,6 +68,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
           args: [IMPLEMENTATION_ADDRESS, deployer, callData],
           log: true,
           skipIfAlreadyDeployed: false,
+          gasPrice: defaultGasPrice
       });
       console.log("ArkreenRECToken Proxy is deployed to %s: ", hre.network.name, ArkreenRECToken.address);
   }   
@@ -73,6 +85,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     // 2023/10/18: Matic mainnet, deploy CART based on ART implementation of ArkreenRECToken
     const IMPLEMENTATION_ADDRESS  = "0xfE6B6fe2a965453c2B30f0E2159b346C61DbCA59"  // 2023/04/04: copy ART token
+    
     const REGISTRY_ADDRESS   = "0xb17faCaCA106fB3D216923DB6CaBFC7C0517029d"       // 2023/04/04:
     const ISSUER_ADDRESS     = "0xaa65582453e121d463A51251E9d8C2BAd27ad99c"       // 2023/10/18
     const ART_NAME  = 'Classic Based AREC Token'
@@ -122,6 +135,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // for Dev env, cART token:  
 // yarn deploy:matic_test:RECTokenR
 // 0x9031550a0aE38337a19E4eFA372B3e6b0FE94D3f
+
+// 2024/04/16: Deploy the ArkreenRECToken Proxy based on the implementation: 0xB0DAFF3eE3A9D17441f3E5A558786A842ece0a62
+// for Dev env, cART token:  
+// yarn deploy:matic_test:RECTokenR
+// 0x78A2620C3fb96100Dc551Db657005eEeF270F0DF
+
 
 func.tags = ["RECTokenR"];
 

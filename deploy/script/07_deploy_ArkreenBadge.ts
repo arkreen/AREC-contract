@@ -1,9 +1,12 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { CONTRACTS } from "../constants";
+import { BigNumber } from "ethers";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     let REGISTRY_ADDRESS
+
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6_000_000_000) : BigNumber.from(100_000_000_000)
    
     if(hre.network.name === 'localhost') {
       REGISTRY_ADDRESS   = "0x364a71eE7a1C9EB295a4F4850971a1861E9d3c7D"
@@ -15,7 +18,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //    } 
     else if(hre.network.name === 'matic_test')  {
 //    REGISTRY_ADDRESS   = "0x61a914363ef99aabca69504cee5ccfd5523c845d"
-      REGISTRY_ADDRESS   = "0xfEcbD33525d9B869e5f3CaB895cd6D7A666209ee"   // ArkreenRegistry for dev environment
+//    REGISTRY_ADDRESS   = "0xfEcbD33525d9B869e5f3CaB895cd6D7A666209ee"   // ArkreenRegistry for dev environment
+      REGISTRY_ADDRESS   = "0x908C77c31bA81C2FC0Ec15Ce53cFd65f9c4aEECc"   // ArkreenRegistry Amoy testnet // 2024/04/15
     } 
     else if(hre.network.name === 'matic')  {                           // Matic Mainnet for test
 //    REGISTRY_ADDRESS   = "0x3E8A27dA0BF241f588141659cBb6Bd39717527F1"   // Version test
@@ -50,6 +54,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         },
         log: true,
         skipIfAlreadyDeployed: false,
+        gasPrice: defaultGasPrice
     });
 
     console.log("ArkreenBadge deployed to %s: ", hre.network.name, ArkreenBadge.address);
@@ -79,6 +84,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:celo:RECBadge
 // Proxy:           0x5EfbbB0a60110cCda7342A7230A32A4E78815f76
 // Implementation:  0x8aA572eE9c7991dc059a2Ae18844858B1Eb274F0
+
+// 2024/04/15
+// yarn deploy:matic_test:RECBadge
+// Proxy:           0x8a459D94F30dB4FC5b6e8F1950d67287AF0Bc77C
+// Implementation:  0x4db0ba23261Fd5905d0Ba15b3eb35F334BeEbEA5
 
 func.tags = ["RECBadge"];
 

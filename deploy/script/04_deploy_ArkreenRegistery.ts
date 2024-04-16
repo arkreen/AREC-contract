@@ -46,6 +46,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // Proxy:           0x960C67B8526E6328b30Ed2c2fAeA0355BEB62A83
 // Implementation:  0x953AAc5A0205CCdD6E0b4107ffB0a0ef7155F5bE
 
+// 2024/04/15
+// yarn deploy:matic_test:gRegistry （Amoy testnet）
+// Proxy:           0x908C77c31bA81C2FC0Ec15Ce53cFd65f9c4aEECc
+// Implementation:  0xe0D844D2E69B0aA5EF844F1cf35eC275921F8e6F
+
 func.tags = ["gRegistry"];
 
 export default func;

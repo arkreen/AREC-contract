@@ -36,8 +36,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     let AKRE_PRICE
     let CELO_PRICE
 
-    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6_000_000_000) : BigNumber.from(8_000_000_000)
-
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(8_000_000_000)
 
     if(hre.network.name === 'matic_test') {    
       // 2023/03/14, simulation 
@@ -52,6 +51,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       // WNATIVE_ADDRESS  = "0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889"         // WMATIC address
       // AKRE_ADDRESS    = "0x54e1c534f59343c56549c76d1bdccc8717129832"          // AKRE address
 
+      /*
       // 2023/12/13, Dev env 
       RECBANK_ADDRESS   = "0x9e1dde2912a804e39e5b19c8b670a6cee0b1ca7a"          // 2023/12/13 HART Bank Address
 
@@ -64,11 +64,24 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       USDT_ADDRESS    = "0xA02f6adc7926efeBBd59Fd43A84f4E0c0c91e832"            // USDT address
       WNATIVE_ADDRESS  = "0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889"           // WMATIC address
       AKRE_ADDRESS    = "0x8Ab2299351585097101c91FE4b098d95c18D28a7"            // AKRE address
+      */
+
+      // 2024/04/16, Amoy Testnet
+      RECBANK_ADDRESS   = "0xf9aAcFf1B292F82b60662e47610C570ef58d3c70"          // 2023/12/13 HART Bank Address
+
+      ART_CONTROLLER    = "0xB53B96e1eF29cB14313c18Fa6374AB87df59BcD9"          // HART_Controller
+      ART_AREC          = "0x615835Cc22064a17df5A3E8AE22F58e67bCcB778"          // AREC ART token
+      CART_AREC         = "0x78A2620C3fb96100Dc551Db657005eEeF270F0DF"          // CART REC Token
+
+      USDC_ADDRESS    = "0x41e94eb019c0762f9bfcf9fb1e58725bfb0e7582"            // USDC address
+      USDT_ADDRESS    = "0xc7767ae828E4830e2f800981E573f333d1E492b5"            // USDT address
+      WNATIVE_ADDRESS = "0x0ae690aad8663aab12a671a6a0d74242332de85f"            // WMATIC address
+      AKRE_ADDRESS    = "0xd092e1f47d4e5d1C1A3958D7010005e8e9B48206"            // AKRE address
 
       USDC_PRICE      = BigNumber.from(2).mul(BigNumber.from(10).pow(4))        // 0.02 USDC, 10**6
-      USDT_PRICE      = BigNumber.from(2).mul(BigNumber.from(10).pow(4))        // 0.02 USDT, 10**6
+      USDT_PRICE      = BigNumber.from(10).mul(BigNumber.from(10).pow(6))       // 10 USDT, 10**6
       MATIC_PRICE     = BigNumber.from(5).mul(BigNumber.from(10).pow(15))       // 0.005 MATIC, as Test MATIC is too less
-      AKRE_PRICE      = expandTo18Decimals(100)                                 // 100 tAKRE
+      AKRE_PRICE      = expandTo18Decimals(100)                                 // 100 AKRE
 
       const [deployer] = await ethers.getSigners();
 
@@ -80,32 +93,38 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       // await addNewARTTRx.wait()
 
       // 2023/12/13: Polygon testnet Dev env, add ART_AREC/HART_AREC/CART_AREC
+      // 2024/04/16
+/*      
       let addNewARTTRx
       {
-        addNewARTTRx = await ArkreenRECBankFactory.addNewART(ART_AREC as string , ART_CONTROLLER as string);  // 2023/12/13
+        addNewARTTRx = await ArkreenRECBankFactory.addNewART(ART_AREC as string , ART_CONTROLLER as string);  // 2023/12/13, // 2024/04/16
         await addNewARTTRx.wait()
-        addNewARTTRx = await ArkreenRECBankFactory.addNewART(HART_AREC as string , ART_CONTROLLER as string); // 2023/12/13
-        await addNewARTTRx.wait()
-        addNewARTTRx = await ArkreenRECBankFactory.addNewART(CART_AREC as string , ART_CONTROLLER as string); // 2023/12/13
+//      addNewARTTRx = await ArkreenRECBankFactory.addNewART(HART_AREC as string , ART_CONTROLLER as string); // 2023/12/13
+//      await addNewARTTRx.wait()
+        addNewARTTRx = await ArkreenRECBankFactory.addNewART(CART_AREC as string , ART_CONTROLLER as string); // 2023/12/13, // 2024/04/16
         await addNewARTTRx.wait()
       }
-
+*/  
       // 2023/12/13: Polygon testnet Dev env,  set ART_AREC/HART_AREC/CART_AREC sale price
+      // 2024/04/16
       let changeSalePrice
       {
+//        changeSalePrice = await ArkreenRECBankFactory.changeSalePrice(ART_AREC as string,        // 2023/12/13
+//                                    USDC_ADDRESS as string, USDC_PRICE as BigNumber)
+//        await changeSalePrice.wait()
+        console.log("ART changeSalePrice USDT")
         changeSalePrice = await ArkreenRECBankFactory.changeSalePrice(ART_AREC as string,        // 2023/12/13
-                                    USDC_ADDRESS as string, USDC_PRICE as BigNumber)
+                                    USDT_ADDRESS as string, USDT_PRICE as BigNumber, {gasPrice: defaultGasPrice} )
         await changeSalePrice.wait()
+        console.log("ART changeSalePrice WMATIC")
         changeSalePrice = await ArkreenRECBankFactory.changeSalePrice(ART_AREC as string,        // 2023/12/13
-                                    USDT_ADDRESS as string, USDT_PRICE as BigNumber)
+                                    WNATIVE_ADDRESS as string, MATIC_PRICE as BigNumber, {gasPrice: defaultGasPrice} )
         await changeSalePrice.wait()
+        console.log("ART changeSalePrice AKRE")
         changeSalePrice = await ArkreenRECBankFactory.changeSalePrice(ART_AREC as string,        // 2023/12/13
-                                    WNATIVE_ADDRESS as string, MATIC_PRICE as BigNumber)
+                                    AKRE_ADDRESS as string, AKRE_PRICE as BigNumber, {gasPrice: defaultGasPrice} )
         await changeSalePrice.wait()
-        changeSalePrice = await ArkreenRECBankFactory.changeSalePrice(ART_AREC as string,        // 2023/12/13
-                                    AKRE_ADDRESS as string, AKRE_PRICE as BigNumber)
-        await changeSalePrice.wait()
-
+/*
         changeSalePrice = await ArkreenRECBankFactory.changeSalePrice(HART_AREC as string,        // 2023/12/13
                                     USDC_ADDRESS as string, USDC_PRICE as BigNumber)
         await changeSalePrice.wait()
@@ -118,36 +137,46 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         changeSalePrice = await ArkreenRECBankFactory.changeSalePrice(HART_AREC as string,        // 2023/12/13
                                     AKRE_ADDRESS as string, AKRE_PRICE as BigNumber)
         await changeSalePrice.wait()
-
+*/
+        console.log("CART changeSalePrice USDC")
         changeSalePrice = await ArkreenRECBankFactory.changeSalePrice(CART_AREC as string,        // 2023/12/13
-                                    USDC_ADDRESS as string, USDC_PRICE as BigNumber)
+                                    USDC_ADDRESS as string, USDC_PRICE as BigNumber, {gasPrice: defaultGasPrice} )
         await changeSalePrice.wait()
+        console.log("CART changeSalePrice USDT")        
         changeSalePrice = await ArkreenRECBankFactory.changeSalePrice(CART_AREC as string,        // 2023/12/13
-                                    USDT_ADDRESS as string, USDT_PRICE as BigNumber)
+                                    USDT_ADDRESS as string, USDT_PRICE as BigNumber, {gasPrice: defaultGasPrice} )
         await changeSalePrice.wait()
+        console.log("CART changeSalePrice WMATIC")
         changeSalePrice = await ArkreenRECBankFactory.changeSalePrice(CART_AREC as string,        // 2023/12/13
-                                    WNATIVE_ADDRESS as string, MATIC_PRICE as BigNumber)
+                                    WNATIVE_ADDRESS as string, MATIC_PRICE as BigNumber, {gasPrice: defaultGasPrice} )
         await changeSalePrice.wait()
+        console.log("CART changeSalePrice AKRE")
         changeSalePrice = await ArkreenRECBankFactory.changeSalePrice(CART_AREC as string,        // 2023/12/13
-                                    AKRE_ADDRESS as string, AKRE_PRICE as BigNumber)
+                                    AKRE_ADDRESS as string, AKRE_PRICE as BigNumber, {gasPrice: defaultGasPrice} )
         await changeSalePrice.wait()
       }
 
       // Need to use HART controler
       // 2023/12/13: Approve RECBANK_ADDRESS, Called by controller
       let ArkreenRECTokenFactory
+      // 2024/04/16
       let approveTrx
       {
+        console.log("Appove RECBANK of ART")        
         ArkreenRECTokenFactory = ArkreenRECToken__factory.connect(ART_AREC as string, deployer);
-        approveTrx = await ArkreenRECTokenFactory.approve(RECBANK_ADDRESS as string, constants.MaxUint256)  // 2023/12/13
+        approveTrx = await ArkreenRECTokenFactory.approve(RECBANK_ADDRESS as string, 
+                                    constants.MaxUint256, {gasPrice: defaultGasPrice} )  // 2023/12/13, 2024/04/16
         await approveTrx.wait()
 
+/*        
         ArkreenRECTokenFactory = ArkreenRECToken__factory.connect(HART_AREC as string, deployer);
         approveTrx = await ArkreenRECTokenFactory.approve(RECBANK_ADDRESS as string, constants.MaxUint256)  // 2023/12/13
         await approveTrx.wait()
-
+*/
+        console.log("Appove RECBANK of CART")        
         ArkreenRECTokenFactory = ArkreenRECToken__factory.connect(CART_AREC as string, deployer);
-        approveTrx = await ArkreenRECTokenFactory.approve(RECBANK_ADDRESS as string, constants.MaxUint256) // 2023/12/13
+        approveTrx = await ArkreenRECTokenFactory.approve(RECBANK_ADDRESS as string, 
+                                  constants.MaxUint256, {gasPrice: defaultGasPrice} ) // 2023/12/13, 2024/04/16
         await approveTrx.wait()
       }
 
@@ -480,6 +509,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/03/12A:
 // yarn deploy:celo:ArtBankI
 // 1. depositART
+
+// 2024/04/16
+// yarn deploy:matic_test:ArtBankI
+// Action 1 (ART+ CART): addNewART 
+// Action 2 (ART+ CART): changeSalePrice(USDC), changeSalePrice(USDT), changeSalePrice(WMATIC), changeSalePrice(AKRE)   
+// Action 3 (ART+ CART): approve(RECBANK_ADDRESS)
 
 func.tags = ["ArtBankI"];
 

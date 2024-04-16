@@ -2,11 +2,14 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { CONTRACTS } from "../constants";
 import { constants } from "ethers";
+import { BigNumber } from "ethers";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     let AKREToken_ADDRESS
     let REGISTRY_ADDRESS
+
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6_000_000_000) : BigNumber.from(100_000_000_000)
     
     if(hre.network.name === 'localhost') {
       AKREToken_ADDRESS = "0xa0cE9DC3d93F4c84aAACd8DA3f66Cd6dA9D5b1F8"
@@ -16,8 +19,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       REGISTRY_ADDRESS   = "0xc99b92e8d827aa21cd3ff8fb9576316d90120191"
     }    
     else if(hre.network.name === 'matic_test')  {     // Simulation
-        AKREToken_ADDRESS   = "0x54e1c534f59343c56549c76d1bdccc8717129832"
-        REGISTRY_ADDRESS   = "0x047eb5205251c5fc8a21ba8f8d46f57df62013c8"
+      // AKREToken_ADDRESS   = "0x54e1c534f59343c56549c76d1bdccc8717129832"
+      // REGISTRY_ADDRESS   = "0x047eb5205251c5fc8a21ba8f8d46f57df62013c8"
+
+      // 2024/04/15, Polygon Amoy testnet
+      AKREToken_ADDRESS   = "0xd092e1f47d4e5d1C1A3958D7010005e8e9B48206"
+      REGISTRY_ADDRESS    = "0x908C77c31bA81C2FC0Ec15Ce53cFd65f9c4aEECc"
     } 
 //    else if(hre.network.name === 'matic_test')  {       // real game miner
 //      AKREToken_ADDRESS   = "0x6c28fF02d3A132FE52D022db1f25a33d91caeCA2"
@@ -59,6 +66,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         },
         log: true,
         skipIfAlreadyDeployed: false,
+        gasPrice: defaultGasPrice
     });
 
     console.log("ArkreenRECIssuance deployed to %s: ", hre.network.name, ArkreenRECIssuance.address);
@@ -78,6 +86,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:celo:RECIssue
 // Proxy:           0xbB4b287Fdd601662eCf17fB6EDF3943A15D1b63e
 // Implementation:  0x2F4277E7Ec4FC9980Aa4F81d82E30575550099A9
+
+// 2024/04/15
+// yarn deploy:matic_test:RECIssue
+// Proxy:           0x4fc1d9188610377eA22C577054Fe42627eE49459
+// Implementation:  0xb54e6975D445Dd2CFC055454A0a2F49F15Fe418c
 
 func.tags = ["RECIssue"];
 

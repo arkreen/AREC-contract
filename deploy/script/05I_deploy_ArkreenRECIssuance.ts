@@ -11,7 +11,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const [deployer, controller] = await ethers.getSigners();
     console.log("Updating ArkreenRECIssuance: ", CONTRACTS.RECIssuance, deployer.address);  
 
-    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6_000_000_000) : BigNumber.from(150_000_000_000)
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(150_000_000_000)
 
 //    Cannot be verified in this way    
 //    const ArkreenRECIssuanceFactory = await ethers.getContractFactory("ArkreenRECIssuance");
@@ -20,35 +20,38 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     if(hre.network.name === 'matic_test') {
       
-        const REC_ISSUANCE_ADDRESS = "0x95f56340889642a41b913c32d160d2863536e073"       // Need to check  // Simu mode
+//      const REC_ISSUANCE_ADDRESS = "0x95f56340889642a41b913c32d160d2863536e073"       // Need to check  // Simu mode
 //      const REC_ISSUANCE_ADDRESS = "0x7370c2166D7720c41F0931f0bbF67e10d00B0D18"       // Need to check  // Matic testnet
 //      const REC_ISSUANCE_ADDRESS = "0x32Dbe18BBc2C752203b6e1bE87EdE5655A091dFa"       // Need to check  // Dev environment // 2023/12/12
 //      const REC_ISSUANCE_ADDRESS = "0x9745918BAF66e3634502bF9a6C07AD320291D211"       // 2023/06/08: Pre-production Env
+        const REC_ISSUANCE_ADDRESS = "0x4fc1d9188610377eA22C577054Fe42627eE49459"       // 2024/04/15 // Ploygon Amoy testnet
 
         const [deployer] = await ethers.getSigners();
         const ArkreenRECIssuanceFactory = ArkreenRECIssuance__factory.connect(REC_ISSUANCE_ADDRESS, deployer);     
-//      const ArkreenRECIssuanceExtFactory = ArkreenRECIssuanceExt__factory.connect(REC_ISSUANCE_ADDRESS, deployer);
+        const ArkreenRECIssuanceExtFactory = ArkreenRECIssuanceExt__factory.connect(REC_ISSUANCE_ADDRESS, deployer);
 
 /*          
-        // 2023/03/28
+        // 2023/03/28, 2024/04/15
         // function setESGExtAddress(address addrESGExt)         
 //      const REC_ISSUANCE_EXT_ADDRESS  = "0x53abcbfc0818039bac5f72429af025eaf566b624"        // 2023/03/28, reuse simu deployment
 //      const REC_ISSUANCE_EXT_ADDRESS  = "0x0babee40f62d946d5de5beec48c5c4c453c6b1f0"        // 2023/04/02, bug in cancelRECRequest corrected
 //      const REC_ISSUANCE_EXT_ADDRESS  = "0x0babee40f62d946d5de5beec48c5c4c453c6b1f0"        // 2023/05/09, reuse for dev environment
 //      const REC_ISSUANCE_EXT_ADDRESS  = "0x0bABeE40F62D946d5DE5beEC48C5C4c453C6b1F0"        // 2023/06/08, reuse for dev environment
+        const REC_ISSUANCE_EXT_ADDRESS  = "0xC409b1c8809e7af02c01FcC0084a3fd89f703609"        // 2024/04/15, Amoy testnet
         
-        // 2023/06/08 
-        const updateTx = await ArkreenRECIssuanceExtFactory.setESGExtAddress(REC_ISSUANCE_EXT_ADDRESS)
+        // 2023/06/08, 2024/04/15 
+        const updateTx = await ArkreenRECIssuanceFactory.setESGExtAddress(REC_ISSUANCE_EXT_ADDRESS)
         await updateTx.wait()     
 
         console.log("callData, update", updateTx)
-        console.log("ArkreenRECIssuance: set MVP address to %s: ", hre.network.name, ArkreenRECIssuanceExtFactory.address,
+        console.log("ArkreenRECIssuance: set ESGExt address to %s: ", hre.network.name, ArkreenRECIssuanceFactory.address,
                                                                     REC_ISSUANCE_EXT_ADDRESS );
-*/                                                                    
+*/
 
-/*
+
 //      const MVP_ADDRESS = "0x8d832f73D678cFd2dA04401b18973Ed146Db1ABA"                // (2023/2/26): Simu mode, MVP address, account 6
 
+        // 2024/04/16 (Amoy testnet)
         const MVP_ADDRESS1 = "0x364a71eE7a1C9EB295a4F4850971a1861E9d3c7D"               // (2023/2/27): Simu mode, MVP address, account 1
         const MVP_ADDRESS2 = "0xB53B96e1eF29cB14313c18Fa6374AB87df59BcD9"               // (2023/2/27): Simu mode, MVP address, account 2
         const MVP_ADDRESS3 = "0x576Ab950B8B3B18b7B53F7edd8A47986a44AE6F4"               // (2023/2/27): Simu mode, MVP address, account 3
@@ -58,42 +61,43 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         // 1. 2023/03/28
         // const updateTx = await ArkreenRECIssuanceExtFactory.manageMVPAddress(true, [MVP_ADDRESS1, MVP_ADDRESS2, MVP_ADDRESS3])
         
-        // 2023/12/12
+        // 2023/12/12, 2024/04/16
         const updateTx = await ArkreenRECIssuanceExtFactory.manageMVPAddress(true, [MVP_ADDRESS1, MVP_ADDRESS2, MVP_ADDRESS3, MVP_ADDRESS4])
         await updateTx.wait()
         console.log("ArkreenRECIssuance: updateARECMintPrice:", hre.network.name, ArkreenRECIssuanceExtFactory.address,
-                                MVP_ADDRESS1, MVP_ADDRESS2, MVP_ADDRESS3, MVP_ADDRESS4 );   
-*/
+                                MVP_ADDRESS1, MVP_ADDRESS2, MVP_ADDRESS3, MVP_ADDRESS4, {gasPrice: defaultGasPrice} );   
 
+/*
 //      const IMAGE_URL_ADDRESS = "0x5F8dE063558Ffb782760A0dC6de6108c4387356e"               // (2024/01/01A): Update Image URL Contract
 //      const IMAGE_URL_ADDRESS = "0xB4B19F8381bf6a44CDc8591294683Bf21C8997cb"               // (2024/01/01B): Fix bug
-        const IMAGE_URL_ADDRESS = "0xA881049ba78A8f1b314AaF557C507332cC5D7DD8"               // (2024/02/23): To Add Arkreen logo
+//      const IMAGE_URL_ADDRESS = "0xA881049ba78A8f1b314AaF557C507332cC5D7DD8"               // (2024/02/23): To Add Arkreen logo
+        const IMAGE_URL_ADDRESS = "0xD5e8666620eaf809D32c5F2D739C49953FBd6e12"               // (2024/04/15): To Add Arkreen logo (Amoy Testnet)
 
-        // 2024/01/01A, 2024/01/01B, 2024/02/23
+        // 2024/01/01A, 2024/01/01B, 2024/02/23, 2024/05/16
         const updateTx = await ArkreenRECIssuanceFactory.setARECImage(IMAGE_URL_ADDRESS)
         await updateTx.wait()
         console.log("ArkreenRECIssuance: updateARECMintPrice:", hre.network.name, 
-                        ArkreenRECIssuanceFactory.address, IMAGE_URL_ADDRESS);
+                        ArkreenRECIssuanceFactory.address, IMAGE_URL_ADDRESS, {gasPrice: defaultGasPrice});
 
-        const imageUrl = await ArkreenRECIssuanceFactory.tokenURI(287)
-        console.log("ArkreenRECIssuance: updateARECMintPrice:", hre.network.name, imageUrl)
+//        const imageUrl = await ArkreenRECIssuanceFactory.tokenURI(287)
+//        console.log("ArkreenRECIssuance: updateARECMintPrice:", hre.network.name, imageUrl)
+*/
 
 /*
-      // 2023/05/09, 2023/06/08
+      // 2023/05/09, 2023/06/08, 2024/04/16
       // const AKREToken_ADDRESS      = "0x8Ab2299351585097101c91FE4b098d95c18D28a7"        // 2023/05/09: gAKRE
-      const AKREToken_ADDRESS         = "0xc83DEd2B70F25C0EB0ef1cDE993DEaA3fAE91314"        // 2023/06/08: tAKRE
+      // const AKREToken_ADDRESS      = "0xc83DEd2B70F25C0EB0ef1cDE993DEaA3fAE91314"        // 2023/06/08: tAKRE
+      const AKREToken_ADDRESS         = "0xd092e1f47d4e5d1C1A3958D7010005e8e9B48206"        // 2024/04/16: AKRE (Amoy Dev)
 
-      // 2023/06/08
-      const AKREToken_PRICE           = BigNumber.from(100000000000)                        // 2023/05/09: 10**11
+      const AKREToken_PRICE           = BigNumber.from(100_000_000_000)                     // 2023/05/09: 10**11, 2024/04/16
 
-      // 2023/06/08
       // function updateARECMintPrice(address token, uint256 price)
-      const updateTx = await ArkreenRECIssuanceFactory.updateARECMintPrice(AKREToken_ADDRESS, AKREToken_PRICE)
+      const updateTx = await ArkreenRECIssuanceFactory.updateARECMintPrice(AKREToken_ADDRESS, AKREToken_PRICE, {gasPrice: defaultGasPrice})
       await updateTx.wait()
 
       console.log("ArkreenRECIssuance: updateARECMintPrice:", hre.network.name, ArkreenRECIssuanceFactory.address,
-                                                                  AKREToken_ADDRESS, AKREToken_PRICE );   
-*/                                                                  
+                                                                  AKREToken_ADDRESS, AKREToken_PRICE ); 
+*/                            
     } 
 
     if(hre.network.name === 'matic') {
@@ -430,6 +434,18 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2024/03/30： Called updateRECData to update the REC data (UART)
 // yarn deploy:matic:RECIssueI
+
+// 2024/04/15： Called setESGExtAddress, Must call setESGExtAddress First
+// yarn deploy:matic_test:RECIssueI
+
+// 2024/04/16A： Called setARECImage (Emoy testnet)
+// yarn deploy:matic_test:RECIssueI
+
+// 2024/04/16B： Called updateARECMintPrice (Emoy testnet)
+// yarn deploy:matic_test:RECIssueI
+
+// 2024/04/16C： Called manageMVPAddress: Add Issuer address for Amoy testnet
+// yarn deploy:matic_test:RECIssueI
 
 func.tags = ["RECIssueI"];
 
