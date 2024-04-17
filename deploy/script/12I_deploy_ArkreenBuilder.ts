@@ -48,6 +48,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       // WNATIVE_ADDRESS  = "0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889"       // WMATIC address
       // AKRE_ADDRESS    = "0x54e1c534f59343c56549c76d1bdccc8717129832"        // AKRE address
 
+/*      
       // 2023/12/13, Polygon testnet Dev env 
       BUILDER_ADDRESS    = "0xC88535788B4e45966c529D8b3FAd027d1E2d5a0a"          // Action Builder address
       ART_ADDRESS        = "0x70FdFE7DA492080A8F0233F67C5B48D36d8ceE8b"          // AREC ART token
@@ -59,6 +60,17 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       USDT_ADDRESS      = "0xA02f6adc7926efeBBd59Fd43A84f4E0c0c91e832"            // USDT address
       WNATIVE_ADDRESS   = "0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889"            // WMATIC address
       AKRE_ADDRESS      = "0x8Ab2299351585097101c91FE4b098d95c18D28a7"            // AKRE address
+*/
+      // 2024/04/19, Amoy testnet Dev env 
+      BUILDER_ADDRESS    = "0x12De6c1FB46B64e3DA5bFDD274E98B9103353dF7"          // Action Builder address
+      GREEN_BTC_ADDRESS  = "0x2Bb79dB8b6149F7499CA1bA7eeBE9E736be4dBA9"          // Green BTC Address
+      ART_ADDRESS        = "0x615835Cc22064a17df5A3E8AE22F58e67bCcB778"          // AREC ART token
+      CART_ADDRESS       = "0x78A2620C3fb96100Dc551Db657005eEeF270F0DF"          // CART REC Token
+      USDC_ADDRESS       = "0x41e94eb019c0762f9bfcf9fb1e58725bfb0e7582"          // USDC address
+      USDT_ADDRESS       = "0xc7767ae828E4830e2f800981E573f333d1E492b5"          // USDT address
+      WNATIVE_ADDRESS    = "0x0ae690AAD8663aaB12a671A6A0d74242332de85f"          // WMATIC address
+      AKRE_ADDRESS       = "0xd092e1f47d4e5d1C1A3958D7010005e8e9B48206"          // AKRE address
+
     }
     else if(hre.network.name === 'matic')  {        // Matic Mainnet for test
 
@@ -104,7 +116,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     console.log(" Set ArkreenBuilder address to the HART token contract: ", hre.network.name, BUILDER_ADDRESS, CART_ADDRESS );
 */
 
+/*
     // 2023/12/13, Polygon testnet Dev Env 
+    // 2024/04/17, Amoy testnet
     // Set ArkreenBuilder address to the HART token contract
     let ArkreenRECTokenFactory
     let setClimateBuilderTx 
@@ -113,9 +127,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       setClimateBuilderTx = await ArkreenRECTokenFactory.setClimateBuilder( BUILDER_ADDRESS as string, {gasPrice: defaultGasPrice})
       await setClimateBuilderTx.wait()
 
-      ArkreenRECTokenFactory = ArkreenRECToken__factory.connect(HART_ADDRESS as string, deployer);
-      setClimateBuilderTx = await ArkreenRECTokenFactory.setClimateBuilder( BUILDER_ADDRESS as string, {gasPrice: defaultGasPrice})
-      await setClimateBuilderTx.wait()
+      // No Hart on Amoy testnet
+      // ArkreenRECTokenFactory = ArkreenRECToken__factory.connect(HART_ADDRESS as string, deployer);
+      // setClimateBuilderTx = await ArkreenRECTokenFactory.setClimateBuilder( BUILDER_ADDRESS as string, {gasPrice: defaultGasPrice})
+      // await setClimateBuilderTx.wait()
 
       ArkreenRECTokenFactory = ArkreenRECToken__factory.connect(CART_ADDRESS as string, deployer);
       setClimateBuilderTx = await ArkreenRECTokenFactory.setClimateBuilder( BUILDER_ADDRESS as string, {gasPrice: defaultGasPrice})
@@ -124,6 +139,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       console.log(" Set ArkreenBuilder address to the HART token contract: ", hre.network.name, 
                                                     BUILDER_ADDRESS, ART_ADDRESS, HART_ADDRESS, CART_ADDRESS );
     }
+*/
 
 /*
     // 2023/3/15, 2023/04/05
@@ -135,10 +151,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
                                                     BUILDER_ADDRESS, HSKESG_ADDRESS );    
 */
 
+    let ArkreenBuilderFactory = ArkreenBuilder__factory.connect(BUILDER_ADDRESS as string, deployer);
+
 /*
     // 2023/09/07, 2023/09/12, 2023/10/13, 2023/10/23, 2023/10/24
+    // 2024/04/17
     console.log("ArkreenBuilder mangeTrustedForwarder:", BUILDER_ADDRESS, GREEN_BTC_ADDRESS, deployer.address)
-    const ArkreenBuilderFactory = ArkreenBuilder__factory.connect(BUILDER_ADDRESS as string, deployer);
 
     const mangeTrustedForwarderTx = await ArkreenBuilderFactory.mangeTrustedForwarder(GREEN_BTC_ADDRESS as string, true, { gasPrice: defaultGasPrice })
     await mangeTrustedForwarderTx.wait()
@@ -173,13 +191,17 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     // 2023/08/25: Celo_test, Approve USDT_ADDRESS, USDC_ADDRESS, NATIVE_ADDRESS
     // 2023/11/01: Celo, Approve USDC_ADDRESS, NATIVE_ADDRESS
-    const ArkreenBuilderFactory = ArkreenBuilder__factory.connect(BUILDER_ADDRESS as string, deployer);
+
+/* // Celo
+//    ArkreenBuilderFactory = ArkreenBuilder__factory.connect(BUILDER_ADDRESS as string, deployer);
 //  const approveArtBankTx = await ArkreenBuilderFactory.approveArtBank(
 //                                                [USDC_ADDRESS, WNATIVE_ADDRESS] as string[])
+*/
 
     // 2023/12/13: Polygon testnet Dev env
+    // 2024/04/17: Amoy testnet Dev env
     const approveArtBankTx = await ArkreenBuilderFactory.approveArtBank(
-                                                [USDC_ADDRESS, USDT_ADDRESS, WNATIVE_ADDRESS, AKRE_ADDRESS] as string[])
+                            [USDC_ADDRESS, USDT_ADDRESS, WNATIVE_ADDRESS, AKRE_ADDRESS] as string[], { gasPrice: defaultGasPrice })
     await approveArtBankTx.wait()
     console.log("ArkreenBuilder approveRouter is executed: %s: ", hre.network.name, BUILDER_ADDRESS, 
                                                 [USDC_ADDRESS, USDT_ADDRESS, WNATIVE_ADDRESS, AKRE_ADDRESS] );                              
@@ -238,6 +260,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:ABuilderI
 // 1. setClimateBuilder:    (ART/HART/CART)   
 // 2. approveArtBank:       (USDC_ADDRESS, USDT_ADDRESS, WNATIVE_ADDRESS, AKRE_ADDRESS)   
+
+// 2024/04/17 （Amoy testnet)
+// yarn deploy:matic_test:ABuilderI
+// 1. setClimateBuilder:    (ART/CART)   
+// 2. mangeTrustedForwarder
+// 3. approveArtBank:       (USDC_ADDRESS, USDT_ADDRESS, WNATIVE_ADDRESS, AKRE_ADDRESS)   
 
 func.tags = ["ABuilderI"];
 

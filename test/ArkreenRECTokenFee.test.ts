@@ -103,6 +103,7 @@ describe("ArkreenRECToken", () => {
       await arkreenRegistry.setRECIssuance(arkreenRECIssuance.address)
       await arkreenRegistry.setArkreenRetirement(arkreenBadge.address)
 
+      await arkreenRECToken.setOffsetMappingLimit(20)
       await arkreenRECToken.setReceiverFee(fund_receiver.address)
       await arkreenRECToken.setRatioFeeOffset(1000)         
 

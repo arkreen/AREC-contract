@@ -39,6 +39,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:RECTokenD
 // 0x188E8F524CE105ba4bBe9421516EfABbFD6824a4
 
+// 2024/04/16: Upgrade to support using different offsetMappingLimit
+// yarn deploy:matic:RECTokenD
+// 0x0D13dD754f90215613748f8685F5ff96601d48D5
+
 func.tags = ["RECTokenD"];
 
 export default func;

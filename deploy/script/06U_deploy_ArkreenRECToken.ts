@@ -55,16 +55,18 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     // const NEW_IMPLEMENTATION  = "0x1356Dc92E42a8fB17f2A5AE747543E4d3ADED899"     // 2. Add solidity and offset traceback
     // const NEW_IMPLEMENTATION  = "0x69B7231876608Bdb3Cf9c0C7303620C375Df0aB3"     // 6. Add getARECInfo(uint256 number)
     // const NEW_IMPLEMENTATION  = "0x8fABa56a1636AFda9DD84Cb1826eAaF44db05087"     //2024/02/03: Upgrade to support charging Offset fee, and removing code regarding triggerUpgradeAmount 
-    const NEW_IMPLEMENTATION  = "0x188E8F524CE105ba4bBe9421516EfABbFD6824a4"        //2024/04/11: Upgrade to support Bridge REC liquidization loop and Offset status tracking
+    // const NEW_IMPLEMENTATION  = "0x188E8F524CE105ba4bBe9421516EfABbFD6824a4"     //2024/04/11: Upgrade to support Bridge REC liquidization loop and Offset status tracking
+    const NEW_IMPLEMENTATION  = "0x0D13dD754f90215613748f8685F5ff96601d48D5"        //2024/04/17: Upgrade to support using different offsetMappingLimit
 
     const ArkreenRECTokenFactory = ArkreenRECToken__factory.connect(RECTOKEN_ADDRESS, deployer);
 
-    //   const callData = ArkreenRECTokenFactory.interface.encodeFunctionData("postUpdate")
-    //   const updateTx = ArkreenRECManagerFactory.interface.encodeFunctionData("upgradeToAndCall", [NEW_IMPLEMENTATION, callData])
-    //   const updateTx = await ArkreenRECTokenFactory.upgradeToAndCall(NEW_IMPLEMENTATION, callData)
-
-    const updateTx = await ArkreenRECTokenFactory.upgradeTo(NEW_IMPLEMENTATION /*, {gasPrice: defaultGasPrice}*/ )
+    const callData = ArkreenRECTokenFactory.interface.encodeFunctionData("postUpdate")
+    //const updateTx = ArkreenRECManagerFactory.interface.encodeFunctionData("upgradeToAndCall", [NEW_IMPLEMENTATION, callData])
+    const updateTx = await ArkreenRECTokenFactory.upgradeToAndCall(NEW_IMPLEMENTATION, callData)
     console.log("callData, update", updateTx)
+
+//    const updateTx = await ArkreenRECTokenFactory.upgradeTo(NEW_IMPLEMENTATION /*, {gasPrice: defaultGasPrice}*/ )
+//    console.log("callData, update", updateTx)
 
     await updateTx.wait()
     console.log("ArkreenRECToken Updated to %s: ", hre.network.name, ArkreenRECTokenFactory.address);
@@ -95,6 +97,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/04/11: Upgrade to support Bridge REC liquidization loop and Offset status tracking
 // yarn deploy:matic:RECTokenU
 // 0x188E8F524CE105ba4bBe9421516EfABbFD6824a4
+
+// 2024/04/17: Upgrade to support using different offsetMappingLimit
+// yarn deploy:matic:RECTokenU
+// 0x0D13dD754f90215613748f8685F5ff96601d48D5
 
 func.tags = ["RECTokenU"];
 

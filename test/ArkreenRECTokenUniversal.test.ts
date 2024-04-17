@@ -112,6 +112,7 @@ describe("ArkreenRECToken", () => {
       await arkreenRegistry.addRECIssuer(manager.address, arkreenRECToken.address, "Arkreen Issuer")
       await arkreenRegistry.setRECIssuance(arkreenRECIssuance.address)
       await arkreenRegistry.setArkreenRetirement(arkreenBadge.address)
+      await arkreenRECToken.setOffsetMappingLimit(20)
 
       arkreenRECIssuanceExt = ArkreenRECIssuanceExt__factory.connect(arkreenRECIssuance.address, deployer);
 

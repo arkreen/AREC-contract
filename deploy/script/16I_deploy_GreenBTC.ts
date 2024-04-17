@@ -24,14 +24,19 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       // 2023/10/20, Test Net Simulation 
       //GREENBTC_ADDRESS  = "0x26fa0cc54eC938DB5919b0ABc8353016f3BD81b1"    // 2023/10/20 GreenBTC address
       //GREENBTC_ADDRESS  = "0x8Cc0B065318ACf3Ac761FE5A19Caf68074034006"    // 2023/10/23 GreenBTC address re-deployed
-      GREENBTC_ADDRESS  = "0x770cB90378Cb59665BbF623a72b90f427701C825"      // 2023/10/24 GreenBTC address re-deployed as ERC721EnumerableUpgradeable
+      GREENBTC_ADDRESS  = "0x2Bb79dB8b6149F7499CA1bA7eeBE9E736be4dBA9"      // 2023/10/24 GreenBTC address re-deployed as ERC721EnumerableUpgradeable
 
       // WMATIC_ADDRESS  = "0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889"     // WMATIC address
       // AKRE_ADDRESS    = "0x54e1c534f59343c56549c76d1bdccc8717129832"     // AKRE address
          
-      USDC_ADDRESS    = "0x0FA8781a83E46826621b3BC094Ea2A0212e71B23"        // USDC address
-      CART_ADDRESS    = "0x0999afb673944a7b8e1ef8eb0a7c6ffdc0b43e31"        // CART address
-      ART_ADDRESS     = "0xb0c9dD915f62d0A37792FD2ce497680E909D8c0F"        // ART address
+      // USDC_ADDRESS    = "0x0FA8781a83E46826621b3BC094Ea2A0212e71B23"     // USDC address
+      // CART_ADDRESS = "0x0999afb673944a7b8e1ef8eb0a7c6ffdc0b43e31"        // CART address
+      // ART_ADDRESS  = "0xb0c9dD915f62d0A37792FD2ce497680E909D8c0F"        // ART address
+
+      USDC_ADDRESS    = "0x41e94eb019c0762f9bfcf9fb1e58725bfb0e7582"        // USDC address (Amoy testnet)
+      USDT_ADDRESS    = "0xc7767ae828E4830e2f800981E573f333d1E492b5"        // USDC address (Amoy testnet)
+      CART_ADDRESS    = "0x78A2620C3fb96100Dc551Db657005eEeF270F0DF"        // CART address (Amoy testnet)
+      ART_ADDRESS     = "0x615835Cc22064a17df5A3E8AE22F58e67bCcB778"        // ART address (Amoy testnet)
 
       //IMAGE_ADDRESS   = "0xC75501B7410Ff630A205245998E0CC9C4f8840ee"      // Image address
       //IMAGE_ADDRESS   = "0x27a30F0B401cC5Cd7bb5477E4fA290CeDFfA8cc7"      // 2023/10/23: Image address
@@ -39,53 +44,45 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       //IMAGE_ADDRESS   = "0x99C26b45949073a73b98b568de399B1569fe008c"      // 2023/10/26: Add ART flag
       //IMAGE_ADDRESS  = "0x5b92c6E11A98F76CF20d878A79150A09bB24C24f"       // 2023/10/26: POWER -> ENERGY in image contract
       //IMAGE_ADDRESS  = "0xb5E55E38B3260f52884a8b74a86F9C9c3933717d"       // 2023/10/27: Change image contract, move  all svg logic to image contract
-      IMAGE_ADDRESS  = "0x0Cd8bc60c7bE8cC22D9365B7996b6E789B948f97"         // 2023/11/08: Add metadata to NFT image
-
-      MANAGER_ADDRESS   = "0xBAeF5d8EfA74d3cff297D88c433D7B5d90bf0e49"      // 2023/10/23: Image address
+      // IMAGE_ADDRESS  = "0x0Cd8bc60c7bE8cC22D9365B7996b6E789B948f97"      // 2023/11/08: Add metadata to NFT image
+      IMAGE_ADDRESS  = "0xD6Ad5AF35a22F8630d0C9049779f8B16218D6ce9"         // 2024/04/17(Amoy): Add metadata to NFT image
+      MANAGER_ADDRESS   = "0xBAeF5d8EfA74d3cff297D88c433D7B5d90bf0e49"      // 2023/10/23: Image address, 2024/04/17(Amoy)
 
       const [deployer] = await ethers.getSigners();
 
       const GreenBTCFactory = GreenBTC__factory.connect(GREENBTC_ADDRESS as string, deployer);
-      
-/*      
-      // 2023/10/20, 2023/10/23, 2023/10/24, 2023/10/27
+
+      // 2023/10/20, 2023/10/23, 2023/10/24, 2023/10/, 2024/04/17
       // Approve GreenBTCContract to Tranfer-From the specified tokens
       const approveRouterTx = await GreenBTCFactory.approveBuilder(
-                                        [USDC_ADDRESS, ART_ADDRESS] )
+                                        [USDC_ADDRESS, USDT_ADDRESS, ART_ADDRESS], {gasPrice: defaultGasPrice} )
       await approveRouterTx.wait()
       console.log("GreenBTCContract approveBuilder is executed: %s: ", hre.network.name, GREENBTC_ADDRESS, 
-                                        [USDC_ADDRESS, ART_ADDRESS] );
-*/
+                                        [USDC_ADDRESS, USDT_ADDRESS, ART_ADDRESS] );
 
-      // 2023/10/21, 2023/10/23, 2023/10/24, 2023/10/25, 2023/20/27, 2023/11/08
+      // 2023/10/21, 2023/10/23, 2023/10/24, 2023/10/25, 2023/20/27, 2023/11/08, 2024/04/17
       // Set Image Contract address
       const setImageContractTx = await GreenBTCFactory.setImageContract(IMAGE_ADDRESS, {gasPrice: defaultGasPrice})
       await setImageContractTx.wait()
       console.log("GreenBTCContract setImageContract is executed: %s: ", hre.network.name, IMAGE_ADDRESS);
 
-/*
-      //  2023/10/23, 2023/10/24
+      //  2023/10/23, 2023/10/, 2024/04/17
       // Set Manager address
       const setManagerTx = await GreenBTCFactory.setManager(MANAGER_ADDRESS, {gasPrice: defaultGasPrice})
       await setManagerTx.wait()
-      console.log("GreenBTCContract setImageContract is executed: %s: ", hre.network.name, MANAGER_ADDRESS);
-*/
+      console.log("GreenBTCContract setManager is executed: %s: ", hre.network.name, MANAGER_ADDRESS);
 
-/*
-      //  2023/10/23, 2023/10/24, 2023/20/27
+      //  2023/10/23, 2023/10/24, 2023/20/27, 2024/04/17
       // Set mangeARTTokens
       const mangeARTTokensTx = await GreenBTCFactory.mangeARTTokens([ART_ADDRESS], true, {gasPrice: defaultGasPrice})
       await mangeARTTokensTx.wait()
-      console.log("GreenBTCContract setImageContract is executed: %s: ", hre.network.name, ART_ADDRESS);
-*/
+      console.log("GreenBTCContract mangeARTTokens is executed: %s: ", hre.network.name, ART_ADDRESS);
 
-/*
-      // 2023/10/25
+      // 2023/10/25, 2024/04/17
       // Set setLuckyRate
       const setLuckyRateTx = await GreenBTCFactory.setLuckyRate(20, {gasPrice: defaultGasPrice})
       await setLuckyRateTx.wait()
-      console.log("GreenBTCContract setImageContract is executed: %s: ", hre.network.name, ART_ADDRESS);
-*/
+      console.log("GreenBTCContract setLuckyRate is executed: %s: ", hre.network.name);
 
     }
     else if(hre.network.name === 'matic')  {        // Matic Mainnet
@@ -277,6 +274,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // call setCARTContract: 0xDf51F3DCD849f116948A5B23760B1ca0B5425BdE
 // yarn deploy:matic:GreenBTCI
 
+// 2024/04/17: Executed on Amoy testnet: 
+// Call approveBuilder(USDC，USDT,ART),setImageContract, setManager, mangeARTTokens, setLuckyRate
+// Amoy testnet: 0x2Bb79dB8b6149F7499CA1bA7eeBE9E736be4dBA9
+// yarn deploy:matic_test:GreenBTCI
 
 func.tags = ["GreenBTCI"];
 

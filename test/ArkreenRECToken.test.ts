@@ -103,6 +103,8 @@ describe("ArkreenRECToken", () => {
       await arkreenRegistry.setRECIssuance(arkreenRECIssuance.address)
       await arkreenRegistry.setArkreenRetirement(arkreenBadge.address)
 
+      await arkreenRECToken.setOffsetMappingLimit(20)
+
       return {AKREToken, arkreenMiner, arkreenRegistry, arkreenRECIssuance, arkreenRECToken, arkreenBadge}
     }
 

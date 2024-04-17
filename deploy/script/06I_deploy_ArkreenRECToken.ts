@@ -147,7 +147,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/04/11: Call setBridgedAssetType to update bridge Type 3
 // yarn deploy:matic:RECTokenI
 
-// 2024/04/11: Call setBridgedAssetType to update bridge Type 2 (Amoy test)
+// 2024/04/16: Call setBridgedAssetType to update bridge Type 2 (Amoy test)
 // yarn deploy:matic_test:RECTokenI
 
 func.tags = ["RECTokenI"];

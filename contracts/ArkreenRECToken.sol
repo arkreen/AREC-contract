@@ -26,7 +26,6 @@ contract ArkreenRECToken is
     string public constant NAME = 'Arkreen REC Token';
     string public constant SYMBOL = 'ART';
 
-    uint256 public constant MAX_SKIP = 20;
     uint256 public constant FLAG_OFFSET = 1<<64;
 
     // Public variables
@@ -48,6 +47,7 @@ contract ArkreenRECToken is
 
     mapping(uint256 => uint256) public allBridgeARECLiquidized;    // Loop of all AREC ID: 1st-> 2nd-> ..-> last-> 1st
     uint256 public latestBridgeARECID;                             // NFT ID of the latest AREC added to the loop 
+    uint256 public offsetMappingLimit;                             // The max limit mapping to AREC NFT while offseting ART 
 
     // Events
     event OffsetFinished(address indexed offsetEntity, uint256 amount, uint256 offsetId);
@@ -82,7 +82,9 @@ contract ArkreenRECToken is
     }
 
     function postUpdate() external onlyProxy onlyOwner
-    {}
+    {
+      offsetMappingLimit = 6;
+    }
 
     function _authorizeUpgrade(address newImplementation) internal virtual override onlyOwner
     {}    
@@ -121,7 +123,6 @@ contract ArkreenRECToken is
         // Track total retirement amount in TCO2 factory
         uint256 steps = 0;
         uint256 amountFilled = 0; 
-        uint256 amountRegister;
 
         uint256 partialAvailableAmount;
         uint256 partialARECID;
@@ -140,6 +141,8 @@ contract ArkreenRECToken is
 
         bool bBridge;
         if(amount > partialAvailableAmount) {
+            uint256 mappingLimit = offsetMappingLimit;
+            uint256 amountRegister;
             while(true) {
                 if (bBridge) {
                     (partialAvailableAmount, partialARECID) = IArkreenBadge(badgeContract).getBridgeDetailStatus(address(this));
@@ -186,7 +189,7 @@ contract ArkreenRECToken is
 
                 if (!bBridge) {                
                     steps++;
-                    if (steps >= MAX_SKIP) {
+                    if (steps >= mappingLimit) {
                         if(allBridgeARECLiquidized[latestBridgeARECID] == 0) break;
                         bBridge = true;
                     }
@@ -258,8 +261,9 @@ contract ArkreenRECToken is
         uint256 skips = 0;
         uint256 curAREC = allARECLiquidized[latestARECID];
         uint256 preAREC = latestARECID;
+        uint256 mappingLimit = offsetMappingLimit;
 
-        while (skips <= MAX_SKIP) {
+        while (skips <= mappingLimit) {
             (, uint128 amountREC, , ) = IArkreenRECIssuance(issuanceAREC).getRECDataCore(curAREC);
             uint256 amountAREC = amountREC;
 
@@ -451,6 +455,13 @@ contract ArkreenRECToken is
         idAssetOfBridge = idAsset;
     }  
 
+    /**
+     * @dev set the offset mapping limit
+     */     
+    function setOffsetMappingLimit(uint256 limit) external onlyOwner {
+        offsetMappingLimit = limit;
+    }  
+    
     /**
      * @dev set the receiver of liquidization fee
      */     

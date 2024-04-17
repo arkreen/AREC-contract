@@ -82,10 +82,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // Proxy:         0xDf51F3DCD849f116948A5B23760B1ca0B5425BdE   (Manually)  
 // Implementaion: 0x85304b15f0762c0b2752C60e29D04843b17D79c7
 
-// 2023/04/16 （Amoy testnet）
+// 2023/04/16 （Amoy testnet）(ignore, the version is wrong)
 // yarn deploy:matic_test:GreenBTC   
 // Proxy:                  
-// Implementaion: 
+// Implementaion: 0xf2A4A61d7299815c9D1A5FDf39cbB1981CB78Ce3
+
+// 2023/04/17 （Amoy testnet Dev Env)
+// yarn deploy:matic_test:GreenBTC   
+// Proxy:         0x2Bb79dB8b6149F7499CA1bA7eeBE9E736be4dBA9         
+// Implementaion: 0x0a9E5889f0bd049583093a31E375Fd15427F8773
+
 
 func.tags = ["GreenBTC"];
 
