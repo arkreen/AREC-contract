@@ -565,7 +565,7 @@ describe("ArkreenRECToken", () => {
       const balance_1 = await arkreenRECToken.balanceOf(owner1.address)
       await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(1500))
 
-      await expect(arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(50000)))
+      await expect(arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(46900)))
               .to.emit(arkreenRECToken, "OffsetFinished")
               .withArgs(owner1.address, expandTo9Decimals(46900), 2) 
 
@@ -629,7 +629,7 @@ describe("ArkreenRECToken", () => {
       const balance_1_A = await arkreenRECToken.balanceOf(owner1.address)
       expect(balance_1_A).to.equal(balance_1.sub(expandTo9Decimals(1500)))
 
-      await expect(arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(66000)))
+      await expect(arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(60600)))
               .to.emit(arkreenRECToken, "OffsetFinished")
               .withArgs(owner1.address, expandTo9Decimals(60600), 2) 
 
@@ -918,7 +918,7 @@ describe("ArkreenRECToken", () => {
       console.log("commitOffset Gasfee of mapping 20 AREC NFT:", receipt_3.gasUsed.toString())
 //    expect(receipt_3.gasUsed).to.eq("204179")  // 204179 204263 207832 207824 204554 204554   206361
 
-      const tx = await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(66000))
+      const tx = await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(60600))
       const receipt = await tx.wait()
       console.log("commitOffset Gasfee of mapping 20 AREC NFT:", receipt.gasUsed.toString())
 //    expect(receipt.gasUsed).to.eq("2108460")  // 2107974 2108392 2108414 2190594 2190925 2753332 2756125  2110034

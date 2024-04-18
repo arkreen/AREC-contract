@@ -153,12 +153,11 @@ contract ArkreenRECToken is
                     uint256 curAREC;
                     if (bBridge) {
                         curAREC = allBridgeARECLiquidized[latestBridgeARECID];                      // Get the ID at AREC NFT loop head
-                        require( curAREC != 0, "ART: Too More Offset" );                            // No bridge REC available
+                         require( curAREC != 0, "ART: Too More Offset" );                           // No bridge REC available
                         _removeBridge(latestBridgeARECID, curAREC);                                 // Remove from the loop
                     } else {
                         curAREC = allARECLiquidized[latestARECID];                  // Get the ID at AREC NFT loop head
                         if (curAREC == 0) { 
-                            if(allBridgeARECLiquidized[latestBridgeARECID] == 0) break;
                             bBridge = true;                                         // If no AREC ART available, use bridge ART
                             continue;
                         }    
@@ -190,7 +189,6 @@ contract ArkreenRECToken is
                 if (!bBridge) {                
                     steps++;
                     if (steps >= mappingLimit) {
-                        if(allBridgeARECLiquidized[latestBridgeARECID] == 0) break;
                         bBridge = true;
                     }
                 }
