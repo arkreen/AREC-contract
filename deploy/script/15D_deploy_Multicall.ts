@@ -1,5 +1,6 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
+import { BigNumber } from "ethers";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { deployments, getNamedAccounts } = hre;
@@ -8,12 +9,15 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
   console.log("Deploying: ", 'Multicall', deployer);  
 
+  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(100_000_000_000)
+
   //const Multicall = await deploy('./contracts/test/Multicall.sol/Multicall', {
   const Multicall = await deploy('MulticallS', {
       from: deployer,
       args: [],
       log: true,
       skipIfAlreadyDeployed: false,
+      gasPrice: defaultGasPrice
   });
 
   console.log("Multicall deployed to %s: ", hre.network.name, Multicall.address);
@@ -51,8 +55,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/04/12
 // deploy:matic:MulticallD:  deployed on Polygon mainet to return ETH/MATIC value in aggregate
 // 0xB1C60361396Fb1136c015ac0Fc3823E5d3fa3067
-// 
 
+// 2024/04/16
+// deploy:matic_test:MulticallD:  deployed on Polygon Amoy testnet
+// 0xabaC2B8525D05A56B1D6d821c4eE2d9292bb61B4
 
 func.tags = ["MulticallD"];
 
