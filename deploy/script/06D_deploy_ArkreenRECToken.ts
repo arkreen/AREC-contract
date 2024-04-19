@@ -51,6 +51,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:RECTokenD
 // 0x20fa37EEBF8816Ea54976E16B0f1581f7Bbc4230
 
+// 2024/04/19: Upgrade on Amoy testnet to fix a bug in Bridge REC liquidization loop and Offset status tracking
+// yarn deploy:matic_test:RECTokenD
+// 0xB9a4Bf4F7a31ac163e86369E834eec1009746D25
+
 func.tags = ["RECTokenD"];
 
 export default func;
