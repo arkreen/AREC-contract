@@ -120,7 +120,6 @@ contract ArkreenRECToken is
         address issuanceAREC = IArkreenRegistry(arkreenRegistry).getRECIssuance();
         address badgeContract = IArkreenRegistry(arkreenRegistry).getArkreenRetirement();
 
-        // Track total retirement amount in TCO2 factory
         uint256 steps = 0;
         uint256 amountFilled = 0; 
 
@@ -186,8 +185,8 @@ contract ArkreenRECToken is
                 amountFilled += amountRegister;
                 amount -= amountRegister;
 
+                steps++;
                 if (!bBridge) {                
-                    steps++;
                     if (steps >= mappingLimit) {
                         bBridge = true;
                     }
@@ -200,7 +199,8 @@ contract ArkreenRECToken is
         amountOffset = (steps==0) ? amount: amountFilled;
         _burn(account, amountOffset);
 
-        offsetActionId = IArkreenBadge(badgeContract).registerOffset(owner, issuerREC, amountOffset, FLAG_OFFSET+detailsCounter);
+        offsetActionId = IArkreenBadge(badgeContract).registerOffset(owner, issuerREC, amountOffset, 
+                                                        (bBridge ? (1<<65) : 0) + FLAG_OFFSET + detailsCounter );
         totalOffset += amountOffset;
 
         // Charge Offset fee 

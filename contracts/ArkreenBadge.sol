@@ -146,10 +146,16 @@ contract ArkreenBadge is
         offsetCounter = offsetId;
 
         if(isOffsetTokenId) {
+            bool isNativeAREC = ((tokenId >> 65) == 0);
             tokenId = uint64(tokenId);
             if(tokenId == 0) {
-                tokenId = partialARECIDExt[msg.sender] + (1<<63);
-                partialAvailableAmountExt[msg.sender] -= amount;
+                if (isNativeAREC) {
+                    tokenId = partialARECIDExt[msg.sender] + (1<<63);
+                    partialAvailableAmountExt[msg.sender] -= amount;
+                } else {
+                    tokenId = partialARECIDBridge[msg.sender] + (1<<63);
+                    partialAvailableAmountBridge[msg.sender] -= amount;
+                }
             } else {
                 tokenId = uint64(detailsCounter) + (3<< 62);
             }
