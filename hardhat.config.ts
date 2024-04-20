@@ -45,7 +45,7 @@ function getAPIKey(network: string): string {
   if(network === 'matic') {
     apiKey = process.env.POLYGONSCAN_API_KEY as string
   } else if(network ==='matic_test') {
-    apiKey = process.env.OKLINK_API_KEY as string
+    apiKey = process.env.POLYGONSCAN_API_KEY as string
   } else if((network === 'celo')||(network ==='celo_test')) {
     apiKey = process.env.CELOSCAN_API_KEY as string
   } else {
@@ -263,7 +263,7 @@ const config: HardhatUserConfig = {
         network: "matic_test",
         chainId: 80002,
         urls: {
-          apiURL: getURL("matic_test"),
+          apiURL: "https://api-amoy.polygonscan.com",
           browserURL: "https://amoy.polygonscan.com/"
         }
       },

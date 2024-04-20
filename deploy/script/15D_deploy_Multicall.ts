@@ -59,6 +59,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/04/16
 // deploy:matic_test:MulticallD:  deployed on Polygon Amoy testnet
 // 0xabaC2B8525D05A56B1D6d821c4eE2d9292bb61B4
+// 0xf5d1d0aa8f827c0d975630e006e77690765fbf85
 
 func.tags = ["MulticallD"];
 
