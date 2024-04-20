@@ -8,7 +8,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const { deploy } = deployments;
     const { deployer } = await getNamedAccounts();
 
-    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(250_000_000_000)
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(150_000_000_000)
 
     console.log("Deploying: ", CONTRACTS.RECToken, deployer);  
 
@@ -55,9 +55,17 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:RECTokenD
 // 0xB9a4Bf4F7a31ac163e86369E834eec1009746D25
 
-// 2024/04/20: Deployed on Polygon Amoy testnet 
+// 2024/04/20A: Deployed on Polygon Amoy testnet 
 // yarn deploy:matic_test:RECTokenD
 // 0xCA308f3082729D5960f8726593F15686AA49FCbc
+
+// 2024/04/20B: Deployed on Polygon Amoy testnet to fix the bug regarding bridged REC offset
+// yarn deploy:matic_test:RECTokenD
+// 0x2f402E1863A106455d39CEa20874b9CC21eeFf80
+
+// 2024/04/20C: Deployed on Polygon Amoy testnet to fix the bug regarding bridged REC offset
+// yarn deploy:matic:RECTokenD
+// 0x87376Ae3940AC7790E4354242883349553D8973d
 
 func.tags = ["RECTokenD"];
 

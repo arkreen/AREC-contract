@@ -8,7 +8,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const { deploy } = deployments;
     const { deployer } = await getNamedAccounts();
 
-    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(120_000_000_000)
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(150_000_000_000)
 
     console.log("Deploying: ", CONTRACTS.RECBadge, deployer);  
 
@@ -67,9 +67,17 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:RECBadgeD
 // 0x6945bb796a83A2fEAbD7cd29AaaFD84626695B3d
 
-// 2024/04/20: Deployed on Polygon Amoy testnet 
+// 2024/04/20A: Deployed on Polygon Amoy testnet 
 // yarn deploy:matic_test:RECBadgeD
 // 0xC395EED5977a1AFD74ba6fDf0E8A62D2d11065D1
+
+// 2024/04/20B: Deployed on Polygon Amoy testnet to fix the bug regarding the bridged REC offsetting 
+// yarn deploy:matic_test:RECBadgeD
+// 0x74660Cb35AB65A2e4C5e6E4DE0d121b9c032D5e3
+
+// 2024/04/20C: Deployed on Polygon mainet to fix the bug regarding the bridged REC offsetting 
+// yarn deploy:matic:RECBadgeD
+// 0x0B6aA9EC6F9D3551a9eD8ce78D8c8a630544F161
 
 func.tags = ["RECBadgeD"];
 

@@ -8,13 +8,13 @@ import { BigNumber } from "ethers";
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const [deployer] = await ethers.getSigners();
 
-    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6_000_000_000) : BigNumber.from(150_000_000_000)
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(150_000_000_000)
 
     console.log("Update ArkreenBadge: ", CONTRACTS.RECBadge, deployer.address);  
   
     if(hre.network.name === 'matic_test') {
 //      Simulation test      
-        const PROXY_ADDRESS = "0x5C653b445BE2bdEB6f8f3CD099FC801865Cab835"       // Need to check: Simu mode
+//      const PROXY_ADDRESS = "0x5C653b445BE2bdEB6f8f3CD099FC801865Cab835"       // Need to check: Simu mode
 
 //      const NEW_IMPLEMENTATION = '0x6f4fff7faa238cd68f03de75b8906e23dbd95f30'   // Need to check
 //      const NEW_IMPLEMENTATION = '0xA82E33A80f8c6A0dC66678956F8dC3b27928F036'   // Update to support SBT
@@ -28,11 +28,13 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //      const PROXY_ADDRESS = "0xe07968E3b0D64B99EA3653Dd925a850eBb9a3Bb9"       // Need to check: Matic testnet
 //      const PROXY_ADDRESS = "0x626f470Ae1427d01f0Fab4D79BC0c9748b07325d"       // Need to check: Matic testnet, Dev environment
 //      const PROXY_ADDRESS = "0x70A7981b5c9ca1a4250A0C9BBDC2141752deBeeb"       // Need to check: Matic testnet, Pre-production
+        const PROXY_ADDRESS = "0x8a459D94F30dB4FC5b6e8F1950d67287AF0Bc77C"       // Need to check: Matic Amoy
 
 //      const NEW_IMPLEMENTATION = '0xA82E33A80f8c6A0dC66678956F8dC3b27928F036'   // Update to support SBT
 //      const NEW_IMPLEMENTATION = '0x2cc8fFc86eAbdAA486d5408C8813813eb60b507a'   // 2023/03/28: Upgrade based on simu implementation
 //      const NEW_IMPLEMENTATION = '0x8Cd3372C871A6D9F8777B54483d6c27377C128eF'   // 2023/06/14: Upgrade to add ABI getOffsetDetails
-        const NEW_IMPLEMENTATION = '0x978808Ee68CB73188f8b5b33625a72F0bb1E5b5F'   // 2024/01/01: Deploy Badge contract supporting image url and event OffsetAttached
+//      const NEW_IMPLEMENTATION = '0x978808Ee68CB73188f8b5b33625a72F0bb1E5b5F'   // 2024/01/01: Deploy Badge contract supporting image url and event OffsetAttached
+        const NEW_IMPLEMENTATION = '0x74660Cb35AB65A2e4C5e6E4DE0d121b9c032D5e3'   // 2024/04/20: Upgrade to fix the bug regarding the bridged REC offsetting 
 
         const  ArkreenBadgeFactory = ArkreenBadge__factory.connect(PROXY_ADDRESS, deployer);
 
@@ -40,7 +42,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 ////    const updateTx = ArkreenRECManagerFactory.interface.encodeFunctionData("upgradeToAndCall", [NEW_IMPLEMENTATION, callData])
 //      const updateTx = await  ArkreenBadgeFactory.upgradeToAndCall(NEW_IMPLEMENTATION, callData)
 
-        const updateTx = await  ArkreenBadgeFactory.upgradeTo(NEW_IMPLEMENTATION)
+        const updateTx = await  ArkreenBadgeFactory.upgradeTo(NEW_IMPLEMENTATION, {gasPrice: defaultGasPrice})
         await updateTx.wait()
 
         console.log("callData, update", updateTx)
@@ -60,8 +62,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //    const NEW_IMPLEMENTATION = '0xE6264Ed46380BBf28AEF18ECB2fD1F4C92aa59F5'       // 2023/04/18: Upgrade to remove the 3-day limitation of updateCertificate
 //    const NEW_IMPLEMENTATION = '0x0A4E902c05F2eb26D6796e1649879c1201436E11'       // 2023/07/11: Upgrade to add ABI getOffsetDetails and add the 3-day limitation of updateCertificate
 //    const NEW_IMPLEMENTATION = '0x2b12BBf2213Ccbb4685106D50E7D7dff760e7E1D'       // 2024/02/22: Upgrade to support image url and event OffsetAttached
-      const NEW_IMPLEMENTATION = '0x6945bb796a83A2fEAbD7cd29AaaFD84626695B3d'       // 2024/04/11: Upgrade to support Bridge REC liquidization loop and Offset status tracking
-    
+//    const NEW_IMPLEMENTATION = '0x6945bb796a83A2fEAbD7cd29AaaFD84626695B3d'       // 2024/04/11: Upgrade to support Bridge REC liquidization loop and Offset status tracking
+      const NEW_IMPLEMENTATION = '0x0B6aA9EC6F9D3551a9eD8ce78D8c8a630544F161'       // 2024/04/11: Upgrade on Polygon mainet to fix the bug regarding the bridged REC offsetting 
+      
       const [deployer] = await ethers.getSigners();
 
       const feeData = await deployer.getFeeData()
@@ -130,6 +133,13 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2024/04/11: yarn deploy:matic:RECBadgeU:  0x6945bb796a83A2fEAbD7cd29AaaFD84626695B3d
 // Upgrade to support Bridge REC liquidization loop and Offset status tracking
+
+// 2024/04/20: yarn deploy:matic_test:RECBadgeU:  0x74660Cb35AB65A2e4C5e6E4DE0d121b9c032D5e3
+// Upgrade to fix the bug regarding the bridged REC offsetting 
+
+// 2024/04/20: yarn deploy:matic:RECBadgeU:  0x0B6aA9EC6F9D3551a9eD8ce78D8c8a630544F161
+// Upgrade to fix the bug regarding the bridged REC offsetting 
+
 
 func.tags = ["RECBadgeU"];
 
