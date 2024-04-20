@@ -55,6 +55,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:RECIssueExtD
 // 0xC409b1c8809e7af02c01FcC0084a3fd89f703609
 
+// 2024/04/20: Deployed on Polygon Amoy testnet 
+// yarn deploy:matic_test:RECIssueExtD
+// 0xDCF44b641cA619b7070C9B8F9C80aF87D221060a
+
 func.tags = ["RECIssueExtD"];
 
 export default func;

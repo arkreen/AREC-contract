@@ -47,6 +47,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:ABuilderD
 // 0x3E458Ff2c39fe10636003e02C1DdA387b455Ee6F
 
+// 2024/04/20: Deployed on Polygon Amoy testnet 
+// yarn deploy:matic_test:ABuilderD
+// 0x54E1c534F59343C56549C76D1bDccC8717129832
+
 func.tags = ["ABuilderD"];
 
 export default func;

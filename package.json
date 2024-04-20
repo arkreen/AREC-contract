@@ -28,6 +28,7 @@
     "deploy:rinkeby:gMinerU": "hardhat --network rinkeby deploy --tags gMinerU",
     "verify:rinkeby": "npx hardhat verify --network rinkeby <ADDRESS> <PARAMS>",
     "deploy:matic_test:ARKE": "hardhat --network matic_test deploy --tags ARKE --reset",
+    "deploy:matic_test:ARKED": "hardhat --network matic_test deploy --tags ARKED --reset",
     "deploy:matic_test:gMiner": "hardhat --network matic_test deploy --tags gMiner",
     "deploy:matic_test:gMinerU": "hardhat --network matic_test deploy --tags gMinerU",
     "deploy:matic_test:AMiner": "hardhat --network matic_test deploy --tags AMiner --reset",

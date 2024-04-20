@@ -18,7 +18,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //    const RECTOKEN_ADDRESS    = "0xb0c9dd915f62d0a37792fd2ce497680e909d8c0f"      // Need to check: Simulation mode
 //    const RECTOKEN_ADDRESS    = "0x0999AFb673944a7B8E1Ef8eb0a7c6FFDc0b43E31"      // Need to check: Simulation: HashKey HART
 //    const RECTOKEN_ADDRESS    = "0xd1348bb43dbf51a2446db6e40de5f6c178cb2d47"      // Need to check: MATIC Testnet      
-      const RECTOKEN_ADDRESS    = "0x615835Cc22064a17df5A3E8AE22F58e67bCcB778"      // Need to check: MATIC Amoy Testnet 
+//    const RECTOKEN_ADDRESS    = "0x615835Cc22064a17df5A3E8AE22F58e67bCcB778"      // Need to check: MATIC Amoy Testnet 
+      const RECTOKEN_ADDRESS    = "0x78A2620C3fb96100Dc551Db657005eEeF270F0DF"      // Need to check: CART: MATIC Amoy Testnet 
 
 //    const NEW_IMPLEMENTATION  = "0x87f36c015a23a9e0f15fcb7f62d566a8f4a16209"      // 1.Old implemenation
 //    const NEW_IMPLEMENTATION  = "0x67b31C71c4E438a04dDA41dBCf5d2F174d43d69B"      // 2. Add Solidify 
@@ -112,6 +113,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 0x20fa37EEBF8816Ea54976E16B0f1581f7Bbc4230
 
 // 2024/04/19: Upgrade on Amoy testnet to fix a bug in Bridge REC liquidization loop and Offset status tracking
+// yarn deploy:matic_test:RECTokenU
+// 0xB9a4Bf4F7a31ac163e86369E834eec1009746D25
+
+// 2024/04/20: For CART: Upgrade on Amoy testnet to fix a bug in Bridge REC liquidization loop and Offset status tracking
 // yarn deploy:matic_test:RECTokenU
 // 0xB9a4Bf4F7a31ac163e86369E834eec1009746D25
 

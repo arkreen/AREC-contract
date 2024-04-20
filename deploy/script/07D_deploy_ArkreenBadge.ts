@@ -8,7 +8,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const { deploy } = deployments;
     const { deployer } = await getNamedAccounts();
 
-    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6_000_000_000) : BigNumber.from(120_000_000_000)
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(120_000_000_000)
 
     console.log("Deploying: ", CONTRACTS.RECBadge, deployer);  
 
@@ -66,6 +66,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/04/11: Deploy badge contract supporting Bridge REC liquidization loop and Offset status tracking
 // yarn deploy:matic:RECBadgeD
 // 0x6945bb796a83A2fEAbD7cd29AaaFD84626695B3d
+
+// 2024/04/20: Deployed on Polygon Amoy testnet 
+// yarn deploy:matic_test:RECBadgeD
+// 0xC395EED5977a1AFD74ba6fDf0E8A62D2d11065D1
 
 func.tags = ["RECBadgeD"];
 

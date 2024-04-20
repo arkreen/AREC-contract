@@ -10,7 +10,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   let MANAGER_ADDRESS
   let REGISTER_ADDRESS
 
-  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6_000_000_000) : BigNumber.from(300_000_000_000)
+  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(300_000_000_000)
 
   if(hre.network.name === 'localhost') {
     AKREToken_ADDRESS = "0xa0cE9DC3d93F4c84aAACd8DA3f66Cd6dA9D5b1F8"
@@ -86,8 +86,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       from: deployer,
       args: [],
       log: true,
-      skipIfAlreadyDeployed: false
-//    gasPrice: defaultGasPrice
+      skipIfAlreadyDeployed: false,
+      gasPrice: defaultGasPrice
   });
 
   console.log("ArkreenMiner deployed to %s: ", hre.network.name, ArkreenMiner.address);
@@ -149,6 +149,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/04/12: yarn deploy:matic:AMinerV10D 
 // Update to correct according audit result and prepare for upgrading on mainnet
 // 0x4bfE8d12b01756A04AB9762D28ebCF4210E9A59B
+
+// 2024/04/20: yarn deploy:matic_test:AMinerV10D 
+// Deployed on Polygon Amoy testnet for verification
+// 0x8a3e5FAC921E0B101778b29993eeF47b219C9e55
 
 export default func;
 func.tags = ["AMinerV10D"];

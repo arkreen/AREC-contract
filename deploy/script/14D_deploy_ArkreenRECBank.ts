@@ -1,6 +1,7 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { CONTRACTS } from "../constants";
+import { BigNumber } from "ethers";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { deployments, getNamedAccounts } = hre;
@@ -8,12 +9,15 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { deployer } = await getNamedAccounts();
 
   console.log("Deploying: ", CONTRACTS.ArtBank, deployer);  
+  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(100_000_000_000)
+
 
   const arkreenRECBank = await deploy(CONTRACTS.ArtBank, {
       from: deployer,
       args: [],
       log: true,
       skipIfAlreadyDeployed: false,
+      gasPrice: defaultGasPrice
   });
 
   console.log("arkreenRECBank deployed to %s: ", hre.network.name, arkreenRECBank.address);
@@ -30,6 +34,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/04/03: Fix the withdraw bug 
 // deploy:matic:ArtBankD 
 // 0xED673Af2CD4eAEb2687DcB34e013335437463A31
+
+// 2024/04/20: Deployed on Polygon Amoy testnet 
+// deploy:matic_test:ArtBankD 
+// 0xB182210EdF8dC4acbe1b92B304e2F1a6986FD093
 
 func.tags = ["ArtBankD"];
 

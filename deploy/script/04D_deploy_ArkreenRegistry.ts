@@ -10,7 +10,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
   console.log("Deploying: ", CONTRACTS.gRegistry, deployer);  
 
-  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6_000_000_000) : BigNumber.from(150_000_000_000)
+  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(150_000_000_000)
 
   // For Simulation mode, need to remove the checking if being miner
   const ArkreenRegistry = await deploy(CONTRACTS.gRegistry, {
@@ -43,6 +43,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/03/29: Upgrade to update REC issuer on Polygon Network (Bug Fixed)
 // yarn deploy:matic:gRegistryD
 // 0xB9a6E42721fE09db7e2d4AD178aD9A5A6c46C313
+
+// 2024/04/20: Deployed on Polygon Amoy testnet 
+// yarn deploy:matic_test:gRegistryD
+// 0x34e111A56fb573Fd93FA316c07E21B4D2AA02459
 
 func.tags = ["gRegistryD"];
 

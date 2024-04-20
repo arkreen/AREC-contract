@@ -9,7 +9,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { deployer } = await getNamedAccounts();
 
   const chainID = await getChainId()
-  const defaultGasPrice = (chainID === '80001') ? BigNumber.from(6_000_000_000) : BigNumber.from(120_000_000_000)
+  const defaultGasPrice = (chainID === '80001') ? BigNumber.from(3_000_000_000) : BigNumber.from(120_000_000_000)
 
   console.log("Deploying: ", CONTRACTS.GreenBTC, deployer, chainID, defaultGasPrice.toString());  
 
@@ -99,6 +99,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/03/10
 // yarn deploy:matic:GreenBTCD:  Upgrade to support revealcap: overtimeRevealCap, normalRevealCap, removeRevealCap
 // Implemenation: 0x81eaB74123513E30Da96aDf4B41b5Ba51d9E650E
+
+// 2024/04/16: Deploy on Amoy testnet
+// yarn deploy:matic_test:GreenBTCD
+// Implemenation: 0x40E0a167Be5C8427513394914a15E2Be3aCA573d
 
 func.tags = ["GreenBTCD"];
 
