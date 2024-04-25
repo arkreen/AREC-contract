@@ -34,8 +34,7 @@ import { boolean } from "hardhat/internal/core/params/argumentTypes";
 const constants_MaxDealine = BigNumber.from('0xFFFFFFFF')
 const constants_MaxDealineAndOpen = constants_MaxDealine.or(BigNumber.from(1).shl(63))
 
-
-describe("GreenBTC Test Campaign", () => {
+describe("GreenBitcoinReveal Test Campaign", () => {
     let deployer: SignerWithAddress;
     let manager: SignerWithAddress;
     let register_authority: SignerWithAddress;

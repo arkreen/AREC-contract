@@ -83,37 +83,6 @@ contract GreenBTCPro is
     function _authorizeUpgrade(address newImplementation) internal virtual override onlyOwner
     {}
 
-    /**
-     * @dev Greenize BTC with the native token
-     * @param gbtc Bitcoin block info to be greenized
-     * @param sig Signature of the authority to Bitcoin block info
-     * @param badgeInfo Information that will logged in Arkreen climate badge
-     * @param deadline LB0-LB3: The deadline to cancel the transaction, LB7: 0x80, Open box at same time,
-     * gbtc.miner must be the caller if opening box at the same time 
-     */
-    function authMintGreenBTCWithNative(
-        GreenBTCInfo    calldata gbtc,
-        Sig             calldata sig,
-        BadgeInfo       calldata badgeInfo,
-        uint256                  deadline
-    ) public payable ensure(deadline) {
-
-        require(dataGBTC[gbtc.height].ARTCount == 0, "GBTC: Already Minted");
-        
-        _authVerify(gbtc, sig);                         //verify signature
-
-        IWETH(tokenNative).deposit{value: msg.value}(); // Wrap MATIC to WMATIC 
-
-        // bit0 = 1: exact payment amount; bit1 = 1: ArkreenBank is used to get CART token; bit2 = 0: Repay to caller  
-        uint256 modeAction = 0x03;                      
-        
-        // actionBuilderBadge(address,address,uint256,uint256,uint256,uint256,(address,string,string,string)): 0x8D7FCEFD  
-        bytes memory builderCallData = abi.encodeWithSelector( 0x8D7FCEFD, tokenNative, tokenCART, msg.value,
-                                            _getFullARTValue(gbtc.ARTCount), modeAction, uint32(deadline), badgeInfo);
-
-        _callActionBuilderBadge(builderCallData, deadline, gbtc);                                 
-    }
-
     function _getFullARTValue( uint256 actionValue ) internal view returns (uint256) {
         uint256 ratioFeeOffset = IArkreenRECToken(tokenCART).getRatioFeeOffset();
         return (actionValue * 10000) / (10000 - ratioFeeOffset);    // Add Offset fee

@@ -88,7 +88,6 @@ contract ArkreenBuilder is
         _offsetART(tokenART, abi.encodePacked(callData, _msgSender()));
     }
    
-
     /** 
      * @dev Buy the ART token with specified token, then offset the bought ART to create a climate action.
      * @param tokenPay The address of the token to pay for the ART token.

@@ -32,7 +32,11 @@ import { boolean } from "hardhat/internal/core/params/argumentTypes";
 // import { Web3Provider } from "@ethersproject/providers";
 
 const constants_MaxDealine = BigNumber.from('0xFFFFFFFF')
+const constants_MaxDealine_with_Subsidy = BigNumber.from('0xFFFFFFFF').add(BigNumber.from(40).shl(48))
+
 const constants_MaxDealineAndOpen = constants_MaxDealine.or(BigNumber.from(1).shl(63))
+const constants_MaxDealineAndOpen_with_Subsidy = constants_MaxDealine.or(BigNumber.from(1).shl(63)).add(BigNumber.from(40).shl(48))
+
 const constants_MaxDealineAndOpenSkip = constants_MaxDealine.or(BigNumber.from(3).shl(62))
 
 
@@ -167,7 +171,11 @@ describe("GreenBTC Test Campaign", () => {
       await arkreenBuilder.deployed();
       await arkreenBuilder.approveRouter([AKREToken.address, WETH.address])       
       await arkreenBuilder.approveArtBank([tokenA.address, WETH.address, AKREToken.address])      
+
       
+      const GreenBTCProFactory = await ethers.getContractFactory("GreenBTCPro");
+      const greenBTCPro = await GreenBTCProFactory.deploy();
+
       const GreenBTCFactory = await ethers.getContractFactory("GreenBTC");
       greenBitcoin = await upgrades.deployProxy(GreenBTCFactory,
                               [ register_authority.address, arkreenBuilder.address, 
@@ -176,6 +184,8 @@ describe("GreenBTC Test Campaign", () => {
       await greenBitcoin.approveBuilder([AKREToken.address, WETH.address])
 
       await greenBitcoin.setNewCaps(200, 100, 500);
+
+      await greenBitcoin.setGreenBTCPro(greenBTCPro.address);
               
       const GreenBTCImageFactory = await ethers.getContractFactory("GreenBTCImage");
       greenBTCImage = await GreenBTCImageFactory.deploy()
@@ -249,13 +259,13 @@ describe("GreenBTC Test Campaign", () => {
           
           let recMintRequest: RECRequestStruct = { 
             issuer: manager.address, startTime, endTime,
-            amountREC: expandTo9Decimals(10000), 
+            amountREC: expandTo9Decimals(20000), 
             cID: "bafybeihepmxz4ytc4ht67j73nzurkvsiuxhsmxk27utnopzptpo7wuigte",
             region: 'Beijing',
             url:"", memo:""
           } 
 
-          const mintFee = expandTo18Decimals(10000* 1000)
+          const mintFee = expandTo18Decimals(20000* 1000)
           const nonce1 = await AKREToken.nonces(owner1.address)
           const digest1 = await getApprovalDigest(
                                   AKREToken,
@@ -278,11 +288,13 @@ describe("GreenBTC Test Campaign", () => {
 
           await arkreenRECToken.connect(owner1).transfer(maker1.address, expandTo9Decimals(9000))
           await arkreenRECToken.connect(maker1).approve(arkreenRECBank.address, expandTo9Decimals(9000))
+
+          const balanceRECToken = await arkreenRECToken.balanceOf(owner1.address) 
         }
 
         {
           let signature: SignatureStruct
-          const mintFee = expandTo18Decimals(10000 *1000)    
+          const mintFee = expandTo18Decimals(20000 *1000)    
           let tokenID: BigNumber          
 
           const nonce1 = await AKREToken.nonces(owner1.address)
@@ -297,7 +309,7 @@ describe("GreenBTC Test Campaign", () => {
 
           await arkreenRECIssuanceExt.manageMVPAddress(true,[owner1.address])      
 
-          await arkreenRECIssuanceExt.connect(owner1).mintESGBatch(1, expandTo9Decimals(10000), signature)
+          await arkreenRECIssuanceExt.connect(owner1).mintESGBatch(1, expandTo9Decimals(20000), signature)
           tokenID = await arkreenRECIssuanceExt.totalSupply()
 
           await arkreenRECIssuanceExt.connect(owner1).updateRECDataExt(tokenID, startTime, endTime, cID, region, url, memo)                     
@@ -309,6 +321,7 @@ describe("GreenBTC Test Campaign", () => {
           await arkreenRECTokenESG.connect(owner1).transfer(maker2.address, expandTo9Decimals(9000))
           await arkreenRECTokenESG.connect(maker2).approve(arkreenRECBank.address, expandTo9Decimals(9000))   
 
+          const balanceRECTokenESG = await arkreenRECTokenESG.balanceOf(owner1.address) 
         }
       });
 
@@ -442,7 +455,7 @@ describe("GreenBTC Test Campaign", () => {
         expect(await greenBitcoin.dataGBTC(12345)).to.deep.equal(_dataGBTC)
 
         // Check dataGBTC
-        const _dataNFT = [constants.AddressZero, 12345, false, false, false, 0]
+        const _dataNFT = [constants.AddressZero, 12345, false, false, false, 0, 0]
         expect(await greenBitcoin.dataNFT(12345)).to.deep.equal(_dataNFT)
 
         // Check NFT ID and owner
@@ -489,12 +502,12 @@ describe("GreenBTC Test Campaign", () => {
           expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(artTokenESGBefore.sub(expandTo9Decimals(13)))    
           
           // Check dataGBTC
-          const _dataNFT = [owner1.address, 23456, true, false, false, 0]
+          const _dataNFT = [owner1.address, 23456, true, false, false, 0, 0]
           expect(await greenBitcoin.dataNFT(23456)).to.deep.equal(_dataNFT)     
         }     
-      });      
-
-
+      }); 
+      
+      ///#############################################///
       it("GreenBTC Test: authMintGreenBTCWithARTBatch", async () => {
         await arkreenRECBank.addNewART( arkreenRECToken.address,  maker1.address)
         await arkreenRECBank.addNewART( arkreenRECTokenESG.address,  maker2.address)  
@@ -572,13 +585,13 @@ describe("GreenBTC Test Campaign", () => {
                                           badgeInfo, arkreenRECTokenESG.address, constants_MaxDealine ))
                     .to.be.revertedWith("GBTC: Invalid Singature")    
 
-//        // Error: Check ART Type
-//        greenBTCInfo1.greenType = 0x02
-//        await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithARTBatch( [greenBTCInfo1, greenBTCInfo2, greenBTCInfo3], {v,r,s},
-//                                          badgeInfo, arkreenRECTokenESG.address, constants_MaxDealine ))
-//                    .to.be.revertedWith("GBTC: Wrong ART Type")    
-//
-//        greenBTCInfo1.greenType = 0x12      
+        //        // Error: Check ART Type
+        //        greenBTCInfo1.greenType = 0x02
+        //        await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithARTBatch( [greenBTCInfo1, greenBTCInfo2, greenBTCInfo3], {v,r,s},
+        //                                          badgeInfo, arkreenRECTokenESG.address, constants_MaxDealine ))
+        //                    .to.be.revertedWith("GBTC: Wrong ART Type")    
+        //
+        //        greenBTCInfo1.greenType = 0x12      
 
         // Error: user need to approve greenBitcoin
         await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithARTBatch( [greenBTCInfo1, greenBTCInfo2, greenBTCInfo3], {v,r,s}, 
@@ -645,7 +658,7 @@ describe("GreenBTC Test Campaign", () => {
         expect(await greenBitcoin.dataGBTC(12345)).to.deep.equal(_dataGBTC1)
 
         // Check dataGBTC
-        const _dataNFT1 = [constants.AddressZero, 12345, false, false, false, 0]
+        const _dataNFT1 = [constants.AddressZero, 12345, false, false, false, 0, 0]
         expect(await greenBitcoin.dataNFT(12345)).to.deep.equal(_dataNFT1)
 
         // Check NFT ID and owner
@@ -658,7 +671,7 @@ describe("GreenBTC Test Campaign", () => {
         expect(await greenBitcoin.dataGBTC(34567)).to.deep.equal(_dataGBTC3)
 
         // Check dataGBTC
-        const _dataNFT3 = [constants.AddressZero, 34567, false, false, false, 0]
+        const _dataNFT3 = [constants.AddressZero, 34567, false, false, false, 0, 0]
         expect(await greenBitcoin.dataNFT(34567)).to.deep.equal(_dataNFT3)
 
         // Check NFT ID and owner
@@ -844,9 +857,9 @@ describe("GreenBTC Test Campaign", () => {
           console.log("Gas used of authMintGreenBTCWithARTBatch(Open) of 20 items", receipt.gasUsed)
           //        expect(receipt.gasUsed).to.eq("14169028")        // 20: 14193304  14193326    
 
-          const _dataNFT1 = [owner1.address, 67890, true, false, false, 0]
+          const _dataNFT1 = [owner1.address, 67890, true, false, false, 0, 0]
           expect(await greenBitcoin.dataNFT(67890)).to.deep.equal(_dataNFT1)
-          const _dataNFTX = [owner1.address, 67890+19, true, false, false, 0]
+          const _dataNFTX = [owner1.address, 67890+19, true, false, false, 0, 0]
           expect(await greenBitcoin.dataNFT(67890+19)).to.deep.equal(_dataNFTX)       
         } 
       });     
@@ -917,15 +930,15 @@ describe("GreenBTC Test Campaign", () => {
         await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithNative( greenBTCInfo, {v,r,s}, 
                                                     badgeInfo, constants_MaxDealine, {value: expandTo18Decimals(24).sub(1)}))
                   .to.be.revertedWith("ARBK: Get Less")         
-//                .to.be.revertedWith("ARBK: Pay Less")         
+        //                .to.be.revertedWith("ARBK: Pay Less")         
 
-        // Normal: authMintGreenBTCWithNative   
-        
-//        console.log('DDDDDDDDDDDDDDDDD', owner1.address, greenBitcoin.address, arkreenBuilder.address)
-//        const resp = await greenBitcoin.connect(owner1).authMintGreenBTCWithNative( greenBTCInfo, {v,r,s}, 
-//                                      badgeInfo, constants_MaxDealine, {value: expandTo18Decimals(24)})        
-//        const receipt = await resp.wait()
-//        console.log('DDDDDDDDDDDDDDDDD', resp, receipt)
+                // Normal: authMintGreenBTCWithNative   
+                
+        //        console.log('DDDDDDDDDDDDDDDDD', owner1.address, greenBitcoin.address, arkreenBuilder.address)
+        //        const resp = await greenBitcoin.connect(owner1).authMintGreenBTCWithNative( greenBTCInfo, {v,r,s}, 
+        //                                      badgeInfo, constants_MaxDealine, {value: expandTo18Decimals(24)})        
+        //        const receipt = await resp.wait()
+        //        console.log('DDDDDDDDDDDDDDDDD', resp, receipt)
         
         await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithNative( greenBTCInfo, {v,r,s}, 
                                                     badgeInfo, constants_MaxDealine, {value: expandTo18Decimals(24)}))
@@ -963,7 +976,7 @@ describe("GreenBTC Test Campaign", () => {
         expect(await greenBitcoin.dataGBTC(12345)).to.deep.equal(_dataGBTC)
 
         // Check dataGBTC
-        const _dataNFT = [constants.AddressZero, 12345, false, false, false, 0]
+        const _dataNFT = [constants.AddressZero, 12345, false, false, false, 0, 0]
         expect(await greenBitcoin.dataNFT(12345)).to.deep.equal(_dataNFT)
 
         // Check NFT ID and owner
@@ -1005,7 +1018,7 @@ describe("GreenBTC Test Campaign", () => {
                                                     badgeInfo, constants_MaxDealineAndOpen, {value: expandTo18Decimals(46)})
 
           // Check dataGBTC
-          const _dataNFT = [owner1.address, 23456, true, false, false, 0]
+          const _dataNFT = [owner1.address, 23456, true, false, false, 0, 0]
           expect(await greenBitcoin.dataNFT(23456)).to.deep.equal(_dataNFT)        
         }
 
@@ -1117,7 +1130,7 @@ describe("GreenBTC Test Campaign", () => {
         expect(await greenBitcoin.dataGBTC(12345)).to.deep.equal(_dataGBTC)
 
         // Check dataGBTC
-        const _dataNFT = [constants.AddressZero, 12345, false, false, false, 0]
+        const _dataNFT = [constants.AddressZero, 12345, false, false, false, 0, 0]
         expect(await greenBitcoin.dataNFT(12345)).to.deep.equal(_dataNFT)
 
         // Check NFT ID and owner
@@ -1162,7 +1175,7 @@ describe("GreenBTC Test Campaign", () => {
                                   {token: AKREToken.address, amount: amountPay}, constants_MaxDealineAndOpen)
 
           // Check dataGBTC
-          const _dataNFT = [owner1.address, 23456, true, false, false, 0]
+          const _dataNFT = [owner1.address, 23456, true, false, false, 0, 0]
           expect(await greenBitcoin.dataNFT(23456)).to.deep.equal(_dataNFT)    
         }                      
       });
@@ -1278,7 +1291,7 @@ describe("GreenBTC Test Campaign", () => {
         expect(await greenBitcoin.dataGBTC(12345)).to.deep.equal(_dataGBTC1)
 
         // Check dataGBTC
-        const _dataNFT1 = [constants.AddressZero, 12345, false, false, false, 0]
+        const _dataNFT1 = [constants.AddressZero, 12345, false, false, false, 0, 0]
         expect(await greenBitcoin.dataNFT(12345)).to.deep.equal(_dataNFT1)
 
         // Check NFT ID and owner
@@ -1291,7 +1304,7 @@ describe("GreenBTC Test Campaign", () => {
         expect(await greenBitcoin.dataGBTC(34567)).to.deep.equal(_dataGBTC3)
 
         // Check dataGBTC
-        const _dataNFT3 = [constants.AddressZero, 34567, false, false, false, 0]
+        const _dataNFT3 = [constants.AddressZero, 34567, false, false, false, 0, 0]
         expect(await greenBitcoin.dataNFT(34567)).to.deep.equal(_dataNFT3)
 
         // Check NFT ID and owner
@@ -1390,7 +1403,7 @@ describe("GreenBTC Test Campaign", () => {
 
           const receipt = await tx.wait()
           console.log("Gas used of authMintGreenBTCWithApproveBatch of 20 items", receipt.gasUsed)
-//        expect(receipt.gasUsed).to.eq("14774178")        // 20: 14193304  14193326       
+          //        expect(receipt.gasUsed).to.eq("14774178")        // 20: 14193304  14193326       
           
           const arkreAfter = await AKREToken.balanceOf(owner1.address) 
           const arkreGreenBTCAfter = await AKREToken.balanceOf(greenBitcoin.address) 
@@ -1433,7 +1446,7 @@ describe("GreenBTC Test Campaign", () => {
 
           const receipt = await tx.wait()
           console.log("Gas used of authMintGreenBTCWithApproveBatch of 20 items", receipt.gasUsed)
-//        expect(receipt.gasUsed).to.eq("14774178")        // 20: 14193304  14193326       
+          //        expect(receipt.gasUsed).to.eq("14774178")        // 20: 14193304  14193326       
         }       
         
         // Normal: authMintGreenBTCWithApproveBatch: arkreenRECToken: Gasfee
@@ -1468,7 +1481,7 @@ describe("GreenBTC Test Campaign", () => {
 
           const receipt = await tx.wait()
           console.log("Gas used of authMintGreenBTCWithApproveBatch(Open) of 20 items", receipt.gasUsed)
-//        expect(receipt.gasUsed).to.eq("15290477")        // 20: 15290477       
+          //        expect(receipt.gasUsed).to.eq("15290477")        // 20: 15290477       
         }    
 
 
@@ -1572,7 +1585,7 @@ describe("GreenBTC Test Campaign", () => {
         await expect(greenBitcoin.connect(owner1).openBox(12345)).to.be.revertedWith("GBTC: Not Owner")   
 
         // Check dataGBTC, not opened
-        const _dataNFT0 = [constants.AddressZero, 12345, false, false, false, 0]
+        const _dataNFT0 = [constants.AddressZero, 12345, false, false, false, 0, 0]
         expect(await greenBitcoin.dataNFT(12345)).to.deep.equal(_dataNFT0)      
         
         const lastBlock0 = await ethers.provider.getBlock('latest')
@@ -1584,7 +1597,7 @@ describe("GreenBTC Test Campaign", () => {
         const lastBlock = await ethers.provider.getBlock('latest')
 
         // Check dataGBTC
-        const _dataNFT = [owner2.address, 12345, true, false, false, 0]
+        const _dataNFT = [owner2.address, 12345, true, false, false, 0, 0]
         expect(await greenBitcoin.dataNFT(12345)).to.deep.equal(_dataNFT)    
         
         // Check dataGBTC
@@ -1629,7 +1642,7 @@ describe("GreenBTC Test Campaign", () => {
         const lastBlock1 = await ethers.provider.getBlock('latest')
 
         // Check dataGBTC
-        const _dataNFT1 = [owner2.address, 23456, true, false, false, 0]
+        const _dataNFT1 = [owner2.address, 23456, true, false, false, 0, 0]
         expect(await greenBitcoin.dataNFT(23456)).to.deep.equal(_dataNFT1)    
           
           // Check dataGBTC
@@ -1697,7 +1710,7 @@ describe("GreenBTC Test Campaign", () => {
         const lastBlock = await ethers.provider.getBlock('latest')
 
         // Check dataGBTC
-        const _dataNFT = [owner1.address, 12345, true, false, false, 0]
+        const _dataNFT = [owner1.address, 12345, true, false, false, 0, 0]
         expect(await greenBitcoin.dataNFT(12345)).to.deep.equal(_dataNFT)    
         
         // Check dataGBTC
@@ -1741,7 +1754,7 @@ describe("GreenBTC Test Campaign", () => {
         const lastBlock1 = await ethers.provider.getBlock('latest')
 
         // Check dataGBTC
-        const _dataNFT1 = [owner1.address, 23456, true, false, false, 0]
+        const _dataNFT1 = [owner1.address, 23456, true, false, false, 0, 0]
         expect(await greenBitcoin.dataNFT(23456)).to.deep.equal(_dataNFT1)    
           
           // Check dataGBTC
@@ -1813,7 +1826,7 @@ describe("GreenBTC Test Campaign", () => {
         const lastBlock = await ethers.provider.getBlock('latest')
 
         // Check dataGBTC
-        const _dataNFT = [owner1.address, 12345, true, false, false, 0]
+        const _dataNFT = [owner1.address, 12345, true, false, false, 0, 0]
         expect(await greenBitcoin.dataNFT(12345)).to.deep.equal(_dataNFT)    
         
         // Check dataGBTC
@@ -1857,7 +1870,7 @@ describe("GreenBTC Test Campaign", () => {
         const lastBlock1 = await ethers.provider.getBlock('latest')
 
         // Check dataGBTC
-        const _dataNFT1 = [owner1.address, 23456, true, false, false, 0]
+        const _dataNFT1 = [owner1.address, 23456, true, false, false, 0, 0]
         expect(await greenBitcoin.dataNFT(23456)).to.deep.equal(_dataNFT1)    
           
           // Check dataGBTC
@@ -2427,5 +2440,6 @@ describe("GreenBTC Test Campaign", () => {
         console.log(uri3, '\r\n')
 
       });
+
     })  
 });

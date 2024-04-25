@@ -16,6 +16,7 @@ struct NFTStatus {
     bool        open;
     bool        reveal;
     bool        won;
+    uint8       ratioSubsidy;       // ratio of the subsidy from GreenBTC, 0-90 in percentage 
     uint256     seed;
 }
 
