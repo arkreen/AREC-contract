@@ -285,6 +285,7 @@ contract GreenBTC is
      *                 LB7: 0x80, Open box at same time, gbtc.miner must be the caller if opening box at the same time 
      *                 LB6: ratio of subsidy
      */
+/*     
     function authMintGreenBTCWithART(
         GreenBTCInfo    calldata gbtc, 
         Sig             calldata sig, 
@@ -296,6 +297,31 @@ contract GreenBTC is
         _checkGBTCData(gbtc, 0x10);
         require(whiteARTList[tokenART], "GBTC: ART Not Accepted"); 
 
+        _authVerify(gbtc, sig);                                                     // verify signature
+
+        uint256 ratioFeeOffset = IArkreenRECToken(tokenART).getRatioFeeOffset();
+        uint256 amountART = (gbtc.ARTCount * 10000) / (10000 - ratioFeeOffset);     // Add Offset fee
+        uint256 ratio = _getSubsidyRatio(deadline);
+
+        TransferHelper.safeTransferFrom(tokenART, msg.sender, address(this), amountART * (100 - ratio) / 100);
+
+        // actionBuilderBadgeWithART(address,uint256,uint256,(address,string,string,string)): 0x6E556DF8
+        bytes memory builderCallData = abi.encodeWithSelector(0x6E556DF8, tokenART, amountART, uint32(deadline), badgeInfo);
+
+        _callActionBuilderBadge(builderCallData, deadline, gbtc);     
+    }
+*/
+    function authMintGreenBTCWithART(
+        GreenBTCInfo    calldata gbtc, 
+        Sig             calldata sig, 
+        BadgeInfo       calldata badgeInfo,
+        address                  tokenART, 
+        uint256                  deadline
+    ) public ensure(deadline) {
+
+        require(whiteARTList[tokenART], "GBTC: ART Not Accepted"); 
+
+        _checkGBTCData(gbtc, 0x10);
         _authVerify(gbtc, sig);                                                     // verify signature
 
         uint256 ratioFeeOffset = IArkreenRECToken(tokenART).getRatioFeeOffset();
