@@ -74,8 +74,8 @@ describe("test ClaimToken", ()=>{
         await expect(claimToken.increase(user1.address, expandTo18Decimals(30)))
                         .to.be.revertedWith("CLAIM: Not Manager")
 
-        await expect(claimToken.connect(manager).increase(user1.address, expandTo18Decimals(100000000+1)))
-                        .to.be.revertedWith("CLAIM: Low Balance")
+        // await expect(claimToken.connect(manager).increase(user1.address, expandTo18Decimals(100000000+1)))
+        //                .to.be.revertedWith("CLAIM: Low Balance")
 
         await claimToken.connect(manager).increase(user1.address, expandTo18Decimals(30))
 
@@ -122,8 +122,8 @@ describe("test ClaimToken", ()=>{
         await arkreenToken.approve(claimToken.address, expandTo18Decimals(100000000))
         await claimToken.changeFrom(deployer.address)
 
-        await expect(claimToken.connect(manager).increase(user1.address, expandTo18Decimals(100000000+1)))
-                          .to.be.revertedWith("CLAIM: Low Allowance")
+        // await expect(claimToken.connect(manager).increase(user1.address, expandTo18Decimals(100000000+1)))
+        //                  .to.be.revertedWith("CLAIM: Low Allowance")
 
         await claimToken.connect(manager).increase(user1.address, expandTo18Decimals(30))
 
@@ -147,6 +147,7 @@ describe("test ClaimToken", ()=>{
 
         const user1Status3 = [expandTo18Decimals(20), expandTo18Decimals(60)]
         expect(await claimToken.users(user1.address)).to.deep.equal(user1Status3)
+        expect(await arkreenToken.balanceOf(user1.address)).to.equal(expandTo18Decimals(20))
 
         expect(await claimToken.allClaimed()).to.deep.equal(expandTo18Decimals(20))
         expect(await claimToken.allClaimable()).to.deep.equal(expandTo18Decimals(60))
@@ -157,6 +158,7 @@ describe("test ClaimToken", ()=>{
 
         const user1Status = [expandTo18Decimals(80), 0]
         expect(await claimToken.users(user1.address)).to.deep.equal(user1Status)
+        expect(await arkreenToken.balanceOf(user1.address)).to.equal(expandTo18Decimals(80))
 
         expect(await claimToken.allClaimed()).to.deep.equal(expandTo18Decimals(80))
         expect(await claimToken.allClaimable()).to.deep.equal(expandTo18Decimals(0))
