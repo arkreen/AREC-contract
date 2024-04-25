@@ -55,7 +55,7 @@ contract ClaimToken is Ownable {
     function increase(address recipient, uint128 value) external onlyManager {
         users[recipient].totalClaimable += value;
         allClaimable += value;
-        checkIncrease();
+        // checkIncrease();
     }
 
     function decrease(address recipient, uint128 value) external onlyManager {
@@ -74,7 +74,7 @@ contract ClaimToken is Ownable {
             allIncrease += values[index];
         }
         allClaimable += allIncrease;
-        checkIncrease();
+        // checkIncrease();
     }
 
     function checkIncrease() internal view {
