@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
-import "@openzeppelin/contracts/access/Ownable.sol";
+import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
+import '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
 
 interface IERC20 {
     function transfer(address to, uint256 value) external returns (bool);
@@ -9,9 +10,9 @@ interface IERC20 {
     function allowance(address owner, address spender) external view returns (uint256);
 }
 
-contract ClaimToken is Ownable {
+contract ClaimToken is OwnableUpgradeable, UUPSUpgradeable {
 
-    address public immutable token;
+    address public token;
     address public manager;
     address public from;
     uint128 public allClaimed;
@@ -26,17 +27,30 @@ contract ClaimToken is Ownable {
 
     event Claimed(address indexed user, uint128 value);
 
-    constructor (address _token, address _manager, address _form) {
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(address _token, address _manager, address _from) external virtual initializer {
+        __Ownable_init_unchained();
+        __UUPSUpgradeable_init();        
         token = _token;
         if (_manager == address(0)) {
             manager = msg.sender;
         } else {
             manager = _manager;
         }
-        if (_form != address(0)) {
-            from = _form;
+        if (_from != address(0)) {
+            from = _from;
         }
-    }
+    }   
+
+    function postUpdate() external onlyProxy onlyOwner 
+    {}
+
+    function _authorizeUpgrade(address newImplementation) internal virtual override onlyOwner
+    {}
 
     modifier onlyManager(){
         require(msg.sender == manager, "CLAIM: Not Manager");

@@ -29,8 +29,10 @@ describe("test ClaimToken", ()=>{
         await arkreenToken.deployed()
 
         const ClaimTokenFactory = await ethers.getContractFactory("ClaimToken")
-        const claimToken: ClaimToken = await ClaimTokenFactory.deploy(arkreenToken.address, manager.address, constants.AddressZero)
+//      const claimToken: ClaimToken = await ClaimTokenFactory.deploy(arkreenToken.address, manager.address, constants.AddressZero)
 
+        const claimToken: ClaimToken = await upgrades.deployProxy(
+                                          ClaimTokenFactory, [arkreenToken.address, manager.address, constants.AddressZero])
         await claimToken.deployed()
 
         return {arkreenToken, claimToken, deployer, manager, user1, user2}
