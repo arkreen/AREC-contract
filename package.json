@@ -162,6 +162,7 @@
     "deploy:matic:ArkreenRECIssuanceImageLogoD": "hardhat --network matic deploy --tags ArkreenRECIssuanceImageLogoD",
     "deploy:matic:ArkreenRECIssuanceImageD": "hardhat --network matic deploy --tags ArkreenRECIssuanceImageD",
     "deploy:matic:AirdropD": "hardhat --network matic deploy --tags AirdropD",
+    "deploy:matic:ClaimToken": "hardhat --network matic deploy --tags ClaimToken",
 
     "storageExplorerGreenBTC:matic": "hardhat run --network matic ./deploy/storageExplorerGreenBTC.ts",
     "GreenBTCTest:matic": "hardhat run --network matic ./deploy/GreenBTCTest.ts",
