@@ -20,6 +20,9 @@ import "./GreenBTCType.sol";
 import "./interfaces/IERC20.sol";
 import "./GreenBTCStorage.sol";
 
+// Import this file to use console.log
+import "hardhat/console.sol";
+
 contract GreenBTC is 
     ContextUpgradeable,
     UUPSUpgradeable,
@@ -154,7 +157,7 @@ contract GreenBTC is
      *                 LB7: 0x80, Open box at same time, gbtc.miner must be the caller if opening box at the same time 
      *                 LB6: ratio of subsidy
      */
-    function authMintGreenBTCWithNative(
+    function authMintGreenBTCWithNative(      
         GreenBTCInfo    calldata gbtc,
         Sig             calldata sig,
         BadgeInfo       calldata badgeInfo,
@@ -214,20 +217,45 @@ contract GreenBTC is
     ) public ensure(deadline) {
 
         _checkGBTCData(gbtc, 0x00);
-       
         _authVerify(gbtc, sig);                         // verify signature
+
+         uint8 ratio = _getSubsidyRatio(deadline);
+        _mintNFT(gbtc, ratio);
+        if((deadline >> 63) !=0) openBox(gbtc.height);
 
         TransferHelper.safeTransferFrom(payInfo.token, msg.sender, address(this), payInfo.amount);
 
-        // bit0 = 1: exact payment amount; bit1 = 1: ArkreenBank is used to get CART token; bit2 = 0: Repay to caller  
-        uint256 modeAction = 0x03;            
-        //uint8 ratio = uint8(deadline >> 48);
+        uint256 amountARTwithFee = _getFullARTValue(gbtc.ARTCount);
 
-        // actionBuilderBadge(address,address,uint256,uint256,uint256,uint256,(address,string,string,string)): 0x8D7FCEFD  
-        bytes memory builderCallData = abi.encodeWithSelector( 0x8D7FCEFD, payInfo.token, tokenCART, payInfo.amount,
-                                                        _getFullARTValue(gbtc.ARTCount), modeAction, uint32(deadline), badgeInfo);
 
-        _callActionBuilderBadge(builderCallData, deadline, gbtc);
+        if (ratio != 0) {
+            uint256 amountART = (amountARTwithFee * (100 - ratio) + 99) / 100;                 // ART mount to pay by caller
+
+            // buyARTBank(address,address,uint256,uint256,bool): 0x478A55B6
+            bytes memory builderCallData = abi.encodeWithSelector( 0x478A55B6, payInfo.token, tokenCART, payInfo.amount,
+                                                          amountART, false);
+
+            _actionBuilderBadge(abi.encodePacked(builderCallData, _msgSender()));
+
+            // actionBuilderBadgeWithART(address,uint256,uint256,(address,string,string,string)): 0x6E556DF8
+            builderCallData = abi.encodeWithSelector(0x6E556DF8, tokenCART, amountARTwithFee, uint32(deadline), badgeInfo);
+
+            // _callActionBuilderBadge(builderCallData, deadline, gbtc);     
+            _actionBuilderBadge(abi.encodePacked(builderCallData, _msgSender()));
+        }
+
+        else {
+          // bit0 = 0: exact ART amount; bit1 = 1: ArkreenBank is used to get CART token; bit2 = 0: Repay to caller  
+          uint256 modeAction = 0x02;            
+
+          // actionBuilderBadge(address,address,uint256,uint256,uint256,uint256,(address,string,string,string)): 0x8D7FCEFD  
+          bytes memory builderCallData = abi.encodeWithSelector( 0x8D7FCEFD, payInfo.token, tokenCART, payInfo.amount,
+                                                          amountARTwithFee, modeAction, uint32(deadline), badgeInfo);
+
+          // _callActionBuilderBadge(builderCallData, deadline, gbtc);
+          _actionBuilderBadge(abi.encodePacked(builderCallData, _msgSender()));
+        }
+
     }
 
     function _checkGBTCData(GreenBTCInfo calldata gbtc, uint8 typeTarget) view internal {
@@ -254,23 +282,41 @@ contract GreenBTC is
       
         uint256 amountARTSum = _mintGreenBTCBatch(deadline, 0x00, gbtcList, sig);
 
+        uint8 ratio = _getSubsidyRatio(deadline);
+
         TransferHelper.safeTransferFrom(payInfo.token, msg.sender, address(this), payInfo.amount);
-        uint256 ratioFeeOffset = IArkreenRECToken(tokenCART).getRatioFeeOffset();
 
-        // modeAction = 0x02/0x06, bit0 = 0: exact ART amount; bit1 = 1: ArkreenBank is used to get CART token; bit2 = 0: Repay to caller
-        uint256 modeAction = 0x02;
+        uint256 amountARTwithFee = _getFullARTValue(amountARTSum);
+        
+        if (ratio != 0) {
+            uint256 amountART = (amountARTwithFee * (100 - ratio) + 99) / 100;                 // ART mount to pay by caller
 
-        // actionBuilderBadge(address,address,uint256,uint256,uint256,uint256,(address,string,string,string)): 0x8D7FCEFD
-        bytes memory builderCallData = abi.encodeWithSelector( 0x8D7FCEFD, payInfo.token, tokenCART, payInfo.amount,
-                                                  (amountARTSum * 10000) / (10000 - ratioFeeOffset),     // save memory buffer
+            // buyARTBank(address,address,uint256,uint256,bool): 0x478A55B6
+            bytes memory builderCallData = abi.encodeWithSelector( 0x478A55B6, payInfo.token, tokenCART, payInfo.amount,
+                                                          amountART, false);
+
+            _actionBuilderBadge(abi.encodePacked(builderCallData, _msgSender()));
+
+            // actionBuilderBadgeWithART(address,uint256,uint256,(address,string,string,string)): 0x6E556DF8
+            builderCallData = abi.encodeWithSelector(0x6E556DF8, tokenCART, amountARTwithFee, uint32(deadline), badgeInfo);
+
+            // _callActionBuilderBadge(builderCallData, deadline, gbtc);     
+            _actionBuilderBadge(abi.encodePacked(builderCallData, _msgSender()));
+        } else {
+            // modeAction = 0x02/0x06, bit0 = 0: exact ART amount; bit1 = 1: ArkreenBank is used to get CART token; bit2 = 0: Repay to caller
+            uint256 modeAction = 0x02;
+
+            // actionBuilderBadge(address,address,uint256,uint256,uint256,uint256,(address,string,string,string)): 0x8D7FCEFD
+            bytes memory builderCallData = abi.encodeWithSelector( 0x8D7FCEFD, payInfo.token, tokenCART, payInfo.amount,
+                                                  amountARTwithFee,           // save memory buffer
                                                   modeAction, uint32(deadline), badgeInfo);
 
-        _actionBuilderBadge(abi.encodePacked(builderCallData, _msgSender()));      // Pay back to msg.sender already
-
+            _actionBuilderBadge(abi.encodePacked(builderCallData, _msgSender()));      // Pay back to msg.sender already
+        }
     }
 
-    function _getSubsidyRatio( uint256 option ) internal pure returns (uint256) {
-        uint256 ratio = (option >> 48) & 0xFF; 
+    function _getSubsidyRatio( uint256 option ) internal pure returns (uint8) {
+        uint8 ratio = uint8(option >> 48); 
         require (ratio <= 90, "GBTC: Wrong Ratio!");
         return ratio;
     }
@@ -285,32 +331,6 @@ contract GreenBTC is
      *                 LB7: 0x80, Open box at same time, gbtc.miner must be the caller if opening box at the same time 
      *                 LB6: ratio of subsidy
      */
-/*     
-    function authMintGreenBTCWithART(
-        GreenBTCInfo    calldata gbtc, 
-        Sig             calldata sig, 
-        BadgeInfo       calldata badgeInfo,
-        address                  tokenART, 
-        uint256                  deadline
-    ) public ensure(deadline) {
-
-        _checkGBTCData(gbtc, 0x10);
-        require(whiteARTList[tokenART], "GBTC: ART Not Accepted"); 
-
-        _authVerify(gbtc, sig);                                                     // verify signature
-
-        uint256 ratioFeeOffset = IArkreenRECToken(tokenART).getRatioFeeOffset();
-        uint256 amountART = (gbtc.ARTCount * 10000) / (10000 - ratioFeeOffset);     // Add Offset fee
-        uint256 ratio = _getSubsidyRatio(deadline);
-
-        TransferHelper.safeTransferFrom(tokenART, msg.sender, address(this), amountART * (100 - ratio) / 100);
-
-        // actionBuilderBadgeWithART(address,uint256,uint256,(address,string,string,string)): 0x6E556DF8
-        bytes memory builderCallData = abi.encodeWithSelector(0x6E556DF8, tokenART, amountART, uint32(deadline), badgeInfo);
-
-        _callActionBuilderBadge(builderCallData, deadline, gbtc);     
-    }
-*/
     function authMintGreenBTCWithART(
         GreenBTCInfo    calldata gbtc, 
         Sig             calldata sig, 
@@ -323,17 +343,21 @@ contract GreenBTC is
 
         _checkGBTCData(gbtc, 0x10);
         _authVerify(gbtc, sig);                                                     // verify signature
+        
+        uint8 ratio = _getSubsidyRatio(deadline);
+        _mintNFT(gbtc, ratio);
+        if((deadline >> 63) !=0) openBox(gbtc.height);
 
         uint256 ratioFeeOffset = IArkreenRECToken(tokenART).getRatioFeeOffset();
         uint256 amountART = (gbtc.ARTCount * 10000) / (10000 - ratioFeeOffset);     // Add Offset fee
-        uint256 ratio = _getSubsidyRatio(deadline);
 
         TransferHelper.safeTransferFrom(tokenART, msg.sender, address(this), amountART * (100 - ratio) / 100);
 
         // actionBuilderBadgeWithART(address,uint256,uint256,(address,string,string,string)): 0x6E556DF8
         bytes memory builderCallData = abi.encodeWithSelector(0x6E556DF8, tokenART, amountART, uint32(deadline), badgeInfo);
 
-        _callActionBuilderBadge(builderCallData, deadline, gbtc);     
+        // _callActionBuilderBadge(builderCallData, deadline, gbtc);     
+        _actionBuilderBadge(abi.encodePacked(builderCallData, _msgSender()));
     }
 
     /** 
@@ -361,7 +385,7 @@ contract GreenBTC is
         uint256 ratioFeeOffset = IArkreenRECToken(tokenART).getRatioFeeOffset();
         uint256 amountART = ( amountARTSum *10000 ) / ( 10000 - ratioFeeOffset);
 
-        uint256 ratio = _getSubsidyRatio(deadline);
+        uint8 ratio = _getSubsidyRatio(deadline);
         TransferHelper.safeTransferFrom(tokenART, msg.sender, address(this), amountART * (100 - ratio) / 100);
 
         // actionBuilderBadgeWithART(address,uint256,uint256,(address,string,string,string)): 0x6E556DF8
@@ -563,7 +587,7 @@ contract GreenBTC is
                     revert(add(32, returndata), returndata_size)
                 }
             } else {
-                revert("GBTC: Error Call to actionBuilderBadge");
+                revert("GBTC: Error Call to actionBuilder");
             }
         }        
     }

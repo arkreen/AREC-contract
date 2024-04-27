@@ -186,6 +186,25 @@ contract ArkreenBuilder is
         _actionBuilder(permitToPay.token, tokenART, permitToPay.value, amountART, modeAction, permitToPay.deadline);
     }
 
+    function buyARTBank(
+        address             tokenPay,
+        address             tokenART,
+        uint256             amountPay,
+        uint256             amountART,
+        bool                isExactPay
+    ) external {
+        // buyART(address,address,uint256,uint256,bool): 0x64201AD4
+        TransferHelper.safeTransferFrom(tokenPay, msg.sender, address(this), amountPay);
+        bytes memory bankCallData = abi.encodeWithSelector( 0x64201AD4, tokenPay, tokenART, 
+                                                      amountPay, amountART, isExactPay);
+
+        _genericCall(artBank, bankCallData, "BLD: Error Call to buyART");
+
+        // Repay more payment back  
+        _payBackOverPayment(tokenPay, _msgSender(), 0);
+
+    }
+
     /** 
      * @dev Offset the specified amount of ART tokens to create a climate action.
      * @param tokenART Address of the ART token. There may be serveral different ART tokens in AREC ecosystem.
@@ -211,6 +230,7 @@ contract ArkreenBuilder is
                                             badgeInfo.beneficiaryID, badgeInfo.offsetMessage, amountART);
 
         _offsetART(tokenART, abi.encodePacked(callData, _msgSender()));
+
     }    
 
     /** 
@@ -379,7 +399,6 @@ contract ArkreenBuilder is
         uint256             modeAction,
         uint256             deadline
     ) internal {
-
         uint256 amountOffset = _swapARTToken(tokenPay, tokenART, amountPay, amountART, modeAction, deadline);  
  
         // commitOffset(uint256 amount): 0xe8fef571
@@ -387,7 +406,7 @@ contract ArkreenBuilder is
 
         address payer = _msgSender();
         _offsetART(tokenART, abi.encodePacked(callData, payer));
- 
+
         // Repay more payment back  
         _payBackOverPayment(tokenPay, payer, modeAction);
     }
@@ -460,6 +479,28 @@ contract ArkreenBuilder is
             }
         }
     }
+
+    function _genericCall(
+        address         target,
+        bytes   memory  callData,
+        string  memory  revertString
+    ) internal {
+
+        (bool success, bytes memory returndata) = target.call(abi.encodePacked(callData, _msgSender()));
+
+        if (!success) {
+            if (returndata.length > 0) {
+                // solhint-disable-next-line no-inline-assembly
+                assembly {
+                    let returndata_size := mload(returndata)
+                    revert(add(32, returndata), returndata_size)
+                }
+            } else {
+                revert(revertString);
+            }
+        }
+    }
+
 
     function _msgSender() internal override view returns (address signer) {
         signer = msg.sender;

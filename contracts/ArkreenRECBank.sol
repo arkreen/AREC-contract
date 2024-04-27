@@ -10,7 +10,7 @@ import "./interfaces/IERC20Permit.sol";
 import "./interfaces/IWETH.sol";
 
 // Import this file to use console.log
-//import "hardhat/console.sol";
+import "hardhat/console.sol";
 
 struct IncomeInfo {
     uint128     priceForSale;           // 1 ART -> X Payment token
@@ -170,7 +170,8 @@ contract ArkreenRECBank is
             emit ARTSold(tokenART, tokenPay, amountARTReal, amountPay);
         } else {
             // The minimum payment is 1 (Payment Token) to avoid attack buying very small amount of ART tokens
-            uint256 amountPayReal = (amountART * priceSale + (10**9) -1 ) / (10**9);    // ART decimal is always 9, so hardcoded here            
+            uint256 amountPayReal = (amountART * priceSale + (10**9) -1 ) / (10**9);    // ART decimal is always 9, so hardcoded here 
+
             require (amountPayReal <= amountPay, 'ARBK: Pay Less');                     // amountPay is the maximum payment 
 
             TransferHelper.safeTransferFrom(tokenPay, payer, address(this), amountPayReal);

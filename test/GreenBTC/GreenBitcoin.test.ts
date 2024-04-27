@@ -1056,7 +1056,7 @@ describe("GreenBTC Test Campaign", () => {
         await arkreenRECBank.connect(maker2).changeSalePrice( arkreenRECTokenESG.address, AKREToken.address, expandTo18Decimals(10))
 
         const amountPay = expandTo18Decimals(200)
-        const amountART = expandTo9Decimals(20)
+        const amountART = expandTo9Decimals(12)
 
         const ARECBefore = await arkreenRECTokenESG.balanceOf(owner1.address)                    
 
@@ -1096,18 +1096,22 @@ describe("GreenBTC Test Campaign", () => {
                     .to.be.revertedWith("TransferHelper: TRANSFER_FROM_FAILED")    
 
         await AKREToken.connect(owner1).approve(greenBitcoin.address, constants.MaxUint256)     
+        await greenBitcoin.approveBuilder([arkreenRECToken.address, arkreenRECTokenESG.address])
 
         // Error: More ART required, so pay less
         await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithApprove( greenBTCInfo, {v,r,s}, badgeInfo, 
                                             {token: AKREToken.address, amount: expandTo18Decimals(120).sub(1)}, constants_MaxDealine))
-                    .to.be.revertedWith("ARBK: Get Less")                        
+                    .to.be.revertedWith("ARBK: Pay Less")                        
 
-        // Normal: authMintGreenBTCWithApprove                     
+        // Normal: authMintGreenBTCWithApprove    
+        const balanceBefore = await AKREToken.balanceOf(owner1.address)              
         await greenBitcoin.connect(owner1).authMintGreenBTCWithApprove( greenBTCInfo, {v,r,s}, badgeInfo, 
                                             {token: AKREToken.address, amount: amountPay}, constants_MaxDealine)   
 
         const actionID =1     
         const lastBlock = await ethers.provider.getBlock('latest')
+
+        expect(await AKREToken.balanceOf(owner1.address)).to.equal(balanceBefore.sub(expandTo18Decimals(12*10)))          
         
         const tokenID = await arkreenRECIssuance.totalSupply()
         const action = [  owner1.address, maker1.address, amountART,                // Manger is the issuer address

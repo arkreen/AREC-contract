@@ -966,7 +966,7 @@ describe("GreenBitcoinFee Test Campaign", () => {
         // Error: More ART required, so pay less
         await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithNative( greenBTCInfo, {v,r,s}, 
                                                     badgeInfo, constants_MaxDealine, {value: expandTo18Decimals(24).sub(1)}))
-                  .to.be.revertedWith("ARBK: Get Less")         
+                  .to.be.revertedWith("ARBK: Get Less")         //    ARBK: Get Less   
         //        .to.be.revertedWith("ARBK: Pay Less")         
 
         // Normal: authMintGreenBTCWithNative   
@@ -1151,7 +1151,7 @@ describe("GreenBitcoinFee Test Campaign", () => {
                                               amount: amountRealPay.sub(1).sub(amountRealPay.mod(expandTo9Decimals(10)))
                                             }, 
                                               constants_MaxDealine))
-                    .to.be.revertedWith("ARBK: Get Less")                        
+                    .to.be.revertedWith("ARBK: Pay Less")           // ARBK: Get Less            
 
         // Normal: authMintGreenBTCWithApprove                     
         await greenBitcoin.connect(owner1).authMintGreenBTCWithApprove( greenBTCInfo, {v,r,s}, badgeInfo, 
@@ -1161,12 +1161,12 @@ describe("GreenBitcoinFee Test Campaign", () => {
         const lastBlock = await ethers.provider.getBlock('latest')
         
         const tokenID = await arkreenRECIssuance.totalSupply()
-        const action = [  owner1.address, maker1.address, amountART,                // Manger is the issuer address
+        const action = [  owner1.address, maker1.address, expandTo9Decimals(12),                // Manger is the issuer address
                           tokenID.add(MASK_OFFSET), lastBlock.timestamp, true ]     // Offset action is claimed
         expect(await arkreenRetirement.getOffsetActions(actionID)).to.deep.equal(action)
 
         const offsetRecord = [owner1.address, owner1.address, "Owner1", "Tester", "Just Testing", 
-                              BigNumber.from(lastBlock.timestamp), amountART, [actionID]]
+                              BigNumber.from(lastBlock.timestamp), expandTo9Decimals(12), [actionID]]
         const badgeID = 1                            
         expect(await arkreenRetirement.getCertificate(badgeID)).to.deep.equal(offsetRecord)
         expect(await arkreenRECTokenESG.balanceOf(owner1.address)).to.equal(ARECBefore)
