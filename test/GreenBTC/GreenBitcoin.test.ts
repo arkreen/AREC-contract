@@ -1052,6 +1052,7 @@ describe("GreenBTC Test Campaign", () => {
         }
 
         await AKREToken.approve(arkreenBuilder.address, constants.MaxUint256)    
+        await greenBitcoin.approveBuilder([arkreenRECToken.address, arkreenRECTokenESG.address])
           
         await arkreenRECBank.connect(maker2).changeSalePrice( arkreenRECTokenESG.address, AKREToken.address, expandTo18Decimals(10))
 
@@ -1229,7 +1230,8 @@ describe("GreenBTC Test Campaign", () => {
           energyStr:  '34.234 MWh'
         }
 
-        await AKREToken.approve(arkreenBuilder.address, constants.MaxUint256)    
+        await AKREToken.approve(arkreenBuilder.address, constants.MaxUint256)  
+        await greenBitcoin.approveBuilder([arkreenRECToken.address, arkreenRECTokenESG.address])  
           
         await arkreenRECBank.connect(maker2).changeSalePrice( arkreenRECTokenESG.address, AKREToken.address, expandTo18Decimals(10))
 
@@ -1257,7 +1259,8 @@ describe("GreenBTC Test Campaign", () => {
                                       {v,r,s}, badgeInfo, {token: AKREToken.address, amount: amountPay}, dealineBlock.timestamp-1))
                     .to.be.revertedWith("GBTC: EXPIRED")    
 
-        await AKREToken.connect(owner1).approve(greenBitcoin.address, constants.MaxUint256)                         
+        await AKREToken.connect(owner1).approve(greenBitcoin.address, constants.MaxUint256)    
+        await greenBitcoin.approveBuilder([arkreenRECToken.address, arkreenRECTokenESG.address])                     
 
         // Error: Check signature of Green Bitcoin info                    
         await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithApproveBatch( [greenBTCInfo1, greenBTCInfo2, greenBTCInfo3], 
@@ -1338,6 +1341,8 @@ describe("GreenBTC Test Campaign", () => {
                                                 Buffer.from(privateKeyRegister.slice(2), 'hex'))  
 
           await arkreenRECToken.connect(owner1).approve(greenBitcoin.address, constants.MaxUint256)  
+          await greenBitcoin.approveBuilder([arkreenRECToken.address, arkreenRECTokenESG.address])
+
           await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithApproveBatch( [greenBTCInfo], {v,r,s}, 
                                                     badgeInfo, {token: AKREToken.address, amount: amountPay}, constants_MaxDealine))
                       .to.be.revertedWith("GBTC: Already Minted")       
@@ -1366,6 +1371,8 @@ describe("GreenBTC Test Campaign", () => {
                                                 Buffer.from(privateKeyRegister.slice(2), 'hex'))  
         
           await arkreenRECToken.connect(owner1).approve(greenBitcoin.address, constants.MaxUint256)  
+          await greenBitcoin.approveBuilder([arkreenRECToken.address, arkreenRECTokenESG.address])
+
           await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithApproveBatch( [greenBTCInfo], {v,r,s}, 
                                                     badgeInfo, {token: AKREToken.address, amount: amountPay}, constants_MaxDealine))
                       .to.be.revertedWith("GBTC: Wrong ART Type")       
@@ -1396,6 +1403,7 @@ describe("GreenBTC Test Campaign", () => {
                                                 Buffer.from(privateKeyRegister.slice(2), 'hex'))  
 
           await arkreenRECToken.connect(owner1).approve(greenBitcoin.address, constants.MaxUint256)  
+          await greenBitcoin.approveBuilder([arkreenRECToken.address, arkreenRECTokenESG.address])
 
           const amountPay = expandTo18Decimals(12*20*10 + 5)
 
@@ -1443,6 +1451,7 @@ describe("GreenBTC Test Campaign", () => {
                                                 Buffer.from(privateKeyRegister.slice(2), 'hex'))  
 
           await arkreenRECToken.connect(owner1).approve(greenBitcoin.address, constants.MaxUint256)  
+          await greenBitcoin.approveBuilder([arkreenRECToken.address, arkreenRECTokenESG.address])
 
           const amountPay = expandTo18Decimals(12*20*10)
           const tx = await greenBitcoin.connect(owner1).authMintGreenBTCWithApproveBatch( 
@@ -1478,6 +1487,7 @@ describe("GreenBTC Test Campaign", () => {
                                                 Buffer.from(privateKeyRegister.slice(2), 'hex'))  
 
           await arkreenRECToken.connect(owner1).approve(greenBitcoin.address, constants.MaxUint256)  
+          await greenBitcoin.approveBuilder([arkreenRECToken.address, arkreenRECTokenESG.address])
 
           const amountPay = expandTo18Decimals(12*20*10)
           const tx = await greenBitcoin.connect(owner1).authMintGreenBTCWithApproveBatch( 
@@ -1514,6 +1524,7 @@ describe("GreenBTC Test Campaign", () => {
                                                 Buffer.from(privateKeyRegister.slice(2), 'hex'))  
 
           await arkreenRECToken.connect(owner1).approve(greenBitcoin.address, constants.MaxUint256)  
+          await greenBitcoin.approveBuilder([arkreenRECToken.address, arkreenRECTokenESG.address])
 
           const amountPay = expandTo18Decimals(12*20*10)
           await greenBitcoin.connect(owner1).authMintGreenBTCWithApproveBatch( 
@@ -1557,6 +1568,7 @@ describe("GreenBTC Test Campaign", () => {
         }
 
         await AKREToken.approve(arkreenBuilder.address, constants.MaxUint256)    
+        await greenBitcoin.approveBuilder([arkreenRECToken.address, arkreenRECTokenESG.address])
           
         await arkreenRECBank.connect(maker2).changeSalePrice( arkreenRECTokenESG.address, AKREToken.address, expandTo18Decimals(10))
 
@@ -1579,7 +1591,8 @@ describe("GreenBTC Test Campaign", () => {
                                               Buffer.from(privateKeyRegister.slice(2), 'hex'))           
 
         await arkreenBuilder.mangeTrustedForwarder(greenBitcoin.address, true)
-        await AKREToken.connect(owner1).approve(greenBitcoin.address, constants.MaxUint256)            
+        await AKREToken.connect(owner1).approve(greenBitcoin.address, constants.MaxUint256)     
+        await greenBitcoin.approveBuilder([arkreenRECToken.address, arkreenRECTokenESG.address])       
 
         // Normal: authMintGreenBTCWithApprove                     
         await greenBitcoin.connect(owner1).authMintGreenBTCWithApprove( greenBTCInfo, {v,r,s}, badgeInfo, 
@@ -1683,6 +1696,7 @@ describe("GreenBTC Test Campaign", () => {
         }
 
         await AKREToken.approve(arkreenBuilder.address, constants.MaxUint256)    
+        await greenBitcoin.approveBuilder([arkreenRECToken.address, arkreenRECTokenESG.address])
           
         await arkreenRECBank.connect(maker2).changeSalePrice( arkreenRECTokenESG.address, AKREToken.address, expandTo18Decimals(10))
 
@@ -1706,6 +1720,7 @@ describe("GreenBTC Test Campaign", () => {
 
         await arkreenBuilder.mangeTrustedForwarder(greenBitcoin.address, true)
         await AKREToken.connect(owner1).approve(greenBitcoin.address, constants.MaxUint256)            
+        await greenBitcoin.approveBuilder([arkreenRECToken.address, arkreenRECTokenESG.address])
 
         // Normal: authMintGreenBTCWithApproveOpen                     
         await greenBitcoin.connect(owner1).authMintGreenBTCWithApprove( greenBTCInfo, {v,r,s}, badgeInfo, 
@@ -1795,7 +1810,7 @@ describe("GreenBTC Test Campaign", () => {
         }
 
         await AKREToken.approve(arkreenBuilder.address, constants.MaxUint256)    
-          
+        await greenBitcoin.approveBuilder([arkreenRECToken.address, arkreenRECTokenESG.address])
         await arkreenRECBank.connect(maker2).changeSalePrice( arkreenRECTokenESG.address, AKREToken.address, expandTo18Decimals(10))
 
         // const receiver = owner1.address
@@ -1911,9 +1926,9 @@ describe("GreenBTC Test Campaign", () => {
         }
 
         await AKREToken.approve(arkreenBuilder.address, constants.MaxUint256)    
-          
-        await arkreenRECBank.connect(maker2).changeSalePrice( arkreenRECTokenESG.address, AKREToken.address, expandTo18Decimals(10))
+        await greenBitcoin.approveBuilder([arkreenRECToken.address, arkreenRECTokenESG.address])
 
+        await arkreenRECBank.connect(maker2).changeSalePrice( arkreenRECTokenESG.address, AKREToken.address, expandTo18Decimals(10))
         const amountPay = expandTo18Decimals(200)
 
         // const receiver = owner1.address
@@ -1933,7 +1948,8 @@ describe("GreenBTC Test Campaign", () => {
                                               Buffer.from(privateKeyRegister.slice(2), 'hex'))           
 
         await arkreenBuilder.mangeTrustedForwarder(greenBitcoin.address, true)
-        await AKREToken.connect(owner1).approve(greenBitcoin.address, constants.MaxUint256)      
+        await AKREToken.connect(owner1).approve(greenBitcoin.address, constants.MaxUint256)    
+        await greenBitcoin.approveBuilder([arkreenRECToken.address, arkreenRECTokenESG.address])  
         
         // Mining 256 blocks to increase block height to to avoid internal panic !!!!!!!!!!!!!!!!
         await mine(256)
@@ -2084,7 +2100,8 @@ describe("GreenBTC Test Campaign", () => {
         }
 
         await AKREToken.approve(arkreenBuilder.address, constants.MaxUint256)    
-          
+        await greenBitcoin.approveBuilder([arkreenRECToken.address, arkreenRECTokenESG.address])
+
         await arkreenRECBank.connect(maker2).changeSalePrice( arkreenRECTokenESG.address, AKREToken.address, expandTo18Decimals(10))
 
         const amountPay = expandTo18Decimals(200)
@@ -2395,7 +2412,8 @@ describe("GreenBTC Test Campaign", () => {
         }
 
         await AKREToken.approve(arkreenBuilder.address, constants.MaxUint256)    
-          
+        await greenBitcoin.approveBuilder([arkreenRECToken.address, arkreenRECTokenESG.address])
+
         await arkreenRECBank.connect(maker2).changeSalePrice( arkreenRECTokenESG.address, AKREToken.address, expandTo18Decimals(10))
 
         const amountPay = expandTo18Decimals(200)
