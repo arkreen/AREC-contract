@@ -92,6 +92,7 @@
     "deploy:matic_test:RECTokenI": "hardhat --network matic_test deploy --tags RECTokenI",
     "deploy:matic_test:GreenBTC": "hardhat --network matic_test deploy --tags GreenBTC",
     "deploy:matic_test:GreenBTCD": "hardhat --network matic_test deploy --tags GreenBTCD",
+    "deploy:matic_test:GreenBTCProD": "hardhat --network matic_test deploy --tags GreenBTCProD",
     "deploy:matic_test:GreenBTCI": "hardhat --network matic_test deploy --tags GreenBTCI",
     "deploy:matic_test:GreenBTCU": "hardhat --network matic_test deploy --tags GreenBTCU",
     "deploy:matic_test:GreenBTCImageD": "hardhat --network matic_test deploy --tags GreenBTCImageD",

@@ -18,7 +18,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     let WMATIC_ADDRESS
     let AKRE_ADDRESS
 
-    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6_000_000_000) : BigNumber.from(250_000_000_000)
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(250_000_000_000)
 
     if(hre.network.name === 'matic_test')  {    
       // 2023/10/20, Test Net Simulation 
@@ -52,6 +52,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
       const GreenBTCFactory = GreenBTC__factory.connect(GREENBTC_ADDRESS as string, deployer);
 
+/*      
       // 2023/10/20, 2023/10/23, 2023/10/24, 2023/10/, 2024/04/17
       // Approve GreenBTCContract to Tranfer-From the specified tokens
       const approveRouterTx = await GreenBTCFactory.approveBuilder(
@@ -83,6 +84,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       const setLuckyRateTx = await GreenBTCFactory.setLuckyRate(20, {gasPrice: defaultGasPrice})
       await setLuckyRateTx.wait()
       console.log("GreenBTCContract setLuckyRate is executed: %s: ", hre.network.name);
+*/
+      // 2024/04/28
+      // setNewCaps
+      const setNewCapsTx = await GreenBTCFactory.setNewCaps(200, 100, 500, {gasPrice: defaultGasPrice})
+      await setNewCapsTx.wait()
+      console.log("GreenBTCContract setNewCaps is executed: %s: ", hre.network.name);
 
     }
     else if(hre.network.name === 'matic')  {        // Matic Mainnet
@@ -276,6 +283,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2024/04/17: Executed on Amoy testnet: 
 // Call approveBuilder(USDC，USDT,ART),setImageContract, setManager, mangeARTTokens, setLuckyRate
+// Amoy testnet: 0x2Bb79dB8b6149F7499CA1bA7eeBE9E736be4dBA9
+// yarn deploy:matic_test:GreenBTCI
+
+// 2024/04/28: Executed on Amoy testnet: 
+// Call setNewCap
 // Amoy testnet: 0x2Bb79dB8b6149F7499CA1bA7eeBE9E736be4dBA9
 // yarn deploy:matic_test:GreenBTCI
 

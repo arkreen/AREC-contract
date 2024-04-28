@@ -104,6 +104,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:GreenBTCD
 // Implemenation: 0x40E0a167Be5C8427513394914a15E2Be3aCA573d
 
+// 2024/04/18: Deploy on Amoy testnet to change the control of setNewCaps from manager to owner
+// yarn deploy:matic_test:GreenBTCD
+// Implemenation: 
+
 func.tags = ["GreenBTCD"];
 
 export default func;

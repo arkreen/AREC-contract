@@ -12,7 +12,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const defaultGasPrice = (chainID === '80001') ? BigNumber.from(6000000000) : BigNumber.from(150_000_000_000)
 
   if(hre.network.name === 'matic_test') {
-    const GREENBTC_PROXY_ADDRESS  = "0x770cB90378Cb59665BbF623a72b90f427701C825"     // 2023/10/24: Green BTC proxy
+    // const GREENBTC_PROXY_ADDRESS  = "0x770cB90378Cb59665BbF623a72b90f427701C825"     // 2023/10/24: Green BTC proxy
     // const NEW_IMPLEMENTATION = "0x17533f8C83eaFbacE7443647Ec9C2326190955Fb"       // 2023/10/24: Upgrade URI logic with open/reveal
     // const NEW_IMPLEMENTATION = "0x7dbCb85512a9889287b3fD61EDab1fA615D654b8"       // 2023/10/24: Upgrade for luckyRate updateable
     // const NEW_IMPLEMENTATION = "0x1DBB6623A6cF8b12bd1FB4A138D7FE11b1ec5f2e"       // 2023/10/25: Upgrade for luckyRate
@@ -24,8 +24,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     // const NEW_IMPLEMENTATION = "0x5Ae000aee2BFA8CB76f655FdBCdFe3Cb0e727941"       // 2023/12/05: Upgrade for enable pay back config
     // const NEW_IMPLEMENTATION = "0x331DA2A2E7a92247AFe4A7f96F1bbc7099933527"       // 2024/01/27: Upgrade to support: Charge offset ART, one badge for batch buying
     // const NEW_IMPLEMENTATION = "0xcFb70419C26A66dBBF5496987b6a207Bfa4a31A9"       // 2024/01/30: Upgrade to skip occupied blocks in batch mode
-    const NEW_IMPLEMENTATION    = "0xa806AC934936562a21f568D94610E54E47bb237a"       // 2024/02/02: Upgrade to swap the event position of OpenBox and GreenBitCoin
+    // const NEW_IMPLEMENTATION    = "0xa806AC934936562a21f568D94610E54E47bb237a"    // 2024/02/02: Upgrade to swap the event position of OpenBox and GreenBitCoin
 
+    const GREENBTC_PROXY_ADDRESS  = "0x2Bb79dB8b6149F7499CA1bA7eeBE9E736be4dBA9"     // 2024/04/28: Green BTC on Amoy testnet
+    const NEW_IMPLEMENTATION      = "0x0a9E5889f0bd049583093a31E375Fd15427F8773"     // 2024/04/28: Original
+    // const NEW_IMPLEMENTATION    = "0x160c413f125550c89C7D21FA1C8567986411504E"    // 2024/04/28: Upgrade to change the control of setNewCaps from manager to owner
+    
     console.log("Updating GreenBTC: ", GREENBTC_PROXY_ADDRESS, chainID, defaultGasPrice.toString());  
 
     const [deployer] = await ethers.getSigners();
@@ -114,6 +118,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2024/03/10: Polygon Mainnet: Upgrade to support revealcap: overtimeRevealCap, normalRevealCap, removeRevealCap
 // yarn deploy:matic:GreenBTCU : 0x81eaB74123513E30Da96aDf4B41b5Ba51d9E650E
+
+// 2024/04/28: Upgrade to change the control of setNewCaps from manager to owner
+// yarn deploy:matic_test:GreenBTCU : 0x160c413f125550c89C7D21FA1C8567986411504E
+
+// 2024/04/28A: Restore back 
+// yarn deploy:matic_test:GreenBTCU : 0x0a9E5889f0bd049583093a31E375Fd15427F8773
 
 export default func;
 func.tags = ["GreenBTCU"];
