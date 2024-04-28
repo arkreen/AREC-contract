@@ -228,7 +228,7 @@ contract GreenBTC is
         }
     }
 
-    function _checkGBTCData(GreenBTCInfo calldata gbtc, uint8 typeTarget) view internal {
+    function _checkGBTCData(GreenBTCInfo memory gbtc, uint8 typeTarget) view internal {
         require(dataGBTC[gbtc.height].ARTCount == 0, "GBTC: Already Minted");
         require((gbtc.greenType & 0xF0) == typeTarget, "GBTC: Wrong ART Type");
     }
@@ -282,10 +282,11 @@ contract GreenBTC is
         }
     }
 
-    function _getSubsidyRatio( uint256 option ) internal pure returns (uint8) {
-        uint8 ratio = uint8(option >> 48); 
-        require (ratio <= 90, "GBTC: Wrong Ratio!");
-        return ratio;
+    function _getSubsidyRatio( uint128 height ) internal view returns (uint8, uint128) {
+        uint8 ratio = uint8(height >> 120); 
+        require (ratio <= ratioSubsidyLimit, "GBTC: Wrong Ratio!");
+        height &= (1<<120 - 1);
+        return (ratio, height);
     }
 
     /** 
@@ -446,7 +447,7 @@ contract GreenBTC is
      * @dev Mint the GreenBTC NFT based on the GreenBTC info
      * @param gbtc Green BTC information
      */
-    function _mintNFT(GreenBTCInfo calldata gbtc, uint8 ratioSubsidy) internal {
+    function _mintNFT(GreenBTCInfo memory gbtc, uint8 ratioSubsidy) internal {
 
         require(gbtc.minter != address(0), "GBTC: Zero Minter");
 
@@ -466,7 +467,7 @@ contract GreenBTC is
      * @param gbtc Green BTC information
      * @param sig Signature of the authority
      */
-    function _authVerify(GreenBTCInfo calldata gbtc, Sig calldata sig) internal view {
+    function _authVerify(GreenBTCInfo memory gbtc, Sig calldata sig) internal view {
 
         bytes32 greenBTCHash = keccak256(abi.encode(GREEN_BTC_TYPEHASH, gbtc.height, gbtc.energyStr, gbtc.ARTCount, gbtc.blockTime, gbtc.minter, gbtc.greenType));
         bytes32 digest = keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR, greenBTCHash));
@@ -485,16 +486,18 @@ contract GreenBTC is
     function _mintGreenBTC(
         uint256 option,
         uint8 typeTarget,
-        GreenBTCInfo calldata gbtc,
+        GreenBTCInfo memory gbtc,
         Sig calldata sig
-    ) internal returns(uint8 ratio) {
+    ) internal returns(uint8) {
         _checkGBTCData(gbtc, typeTarget);
         _authVerify(gbtc, sig);
         
-        ratio = _getSubsidyRatio(option);
+        (uint8 ratio, uint128 height) = _getSubsidyRatio(gbtc.height);
+        if( ratio != 0) gbtc.height = height;
         
         _mintNFT(gbtc, ratio);
         if((option >> 63) !=0) openBox(gbtc.height);
+        return ratio;
     }
 
     /**
@@ -507,7 +510,7 @@ contract GreenBTC is
     function _mintGreenBTCBatch(
         uint256 option,
         uint8 typeTarget,
-        GreenBTCInfo[] calldata gbtcList,
+        GreenBTCInfo[] memory gbtcList,
         Sig calldata sig
     ) internal returns(uint256 amountARTSum, uint8 ratio) {
 
@@ -520,10 +523,13 @@ contract GreenBTC is
 
         bool ifOpen = (option & (1<<63)) != 0;
         bool ifSkip = (option & (1<<62)) != 0;
-        ratio = _getSubsidyRatio(option);
+
+        uint128 height;
+        (ratio, height) = _getSubsidyRatio(gbtcList[0].height);
+        if( ratio != 0) gbtcList[0].height = height;
 
         for(uint256 index = 0; index < gbtcList.length; index++) {
-            GreenBTCInfo calldata gbtc = gbtcList[index];
+            GreenBTCInfo memory gbtc = gbtcList[index];
 
             // skip if occupied in skipping option 
             if(ifSkip && (dataGBTC[gbtc.height].ARTCount != 0)) continue;

@@ -41,6 +41,5 @@ abstract contract GreenBTCStorage
     uint256 public removeRevealCap;
 
     address public greenBTCPro;                   // Pro function of Green
-    uint8   public ratioSubsidyLowLimit;
-    uint8   public ratioSubsidyHighLimit;
+    uint8   public ratioSubsidyLimit;
 }
