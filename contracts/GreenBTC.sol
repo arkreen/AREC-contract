@@ -20,9 +20,6 @@ import "./GreenBTCType.sol";
 import "./interfaces/IERC20.sol";
 import "./GreenBTCStorage.sol";
 
-// Import this file to use console.log
-import "hardhat/console.sol";
-
 contract GreenBTC is 
     ContextUpgradeable,
     UUPSUpgradeable,
@@ -146,7 +143,7 @@ contract GreenBTC is
             case 0 { revert(0, returndatasize()) }
             default { return(0, returndatasize()) }
         }
-    }    
+    }
 
     /**
      * @dev Greenize BTC with the native token
@@ -355,7 +352,7 @@ contract GreenBTC is
      * @dev Open the Green Bitcoin box, only thw owner of the box acceptable.
      * @param tokenID ID of the NFT token to be opened
      */
-    function openBox(uint256 tokenID) public {
+    function openBox(uint256 tokenID) public {            // Can not put into Pro as called locally 
         require(msg.sender == ownerOf(tokenID), "GBTC: Not Owner");
         require(dataNFT[tokenID].open == false, "GBTC: Already Opened");
 
@@ -383,20 +380,24 @@ contract GreenBTC is
      */
     // Warning is kept just for explorer decoding 
     function revealBoxesWithHash(
-        uint256[] calldata,   //tokenList, 
-        uint256[] calldata    // hashList
+        uint256[] calldata tokenList,
+        uint256[] calldata  hashList
     ) public {  // onlyManager is checked in Pro
+        _revealBoxesWithHashMute(tokenList, hashList);                    // To mute compilation warning
         callGreenBTCPro(greenBTCPro);
     }
+
+    function _revealBoxesWithHashMute(uint256[] calldata tokenList, uint256[] calldata hashList) internal {}  
 
     /**
      * @dev Set new caps
      */
-    function setNewCaps(uint256 newNormalCap, uint256 newOvertimeCap, uint256 newRemoveCap) public onlyOwner {
-        if( newNormalCap != 0) normalRevealCap = newNormalCap;
-        if( newOvertimeCap != 0) overtimeRevealCap = newOvertimeCap;
-        if( newRemoveCap != 0) removeRevealCap = newRemoveCap;
+    function setNewCaps(uint256 newNormalCap, uint256 newOvertimeCap, uint256 newRemoveCap) public {    // onlyOwner
+      _setNewCapsMute(newNormalCap, newOvertimeCap, newRemoveCap);        // To mute compilation warning
+      callGreenBTCPro(greenBTCPro);
     }
+    
+    function _setNewCapsMute(uint256 newNormalCap, uint256 newOvertimeCap, uint256 newRemoveCap) internal {}
 
     /**
      * @dev Return all the boxes waiting for revealing.
@@ -423,8 +424,8 @@ contract GreenBTC is
     /**
      * @dev See {IERC721Metadata-tokenURI}.
      */
-    function tokenURI(uint256 tokenID) public view override returns (string memory){
-
+    function tokenURI(uint256 tokenID) public view override returns (string memory) {
+      
         require(dataGBTC[tokenID].minter != address(0), "GBTC: Not Minted");
         return IGreenBTCImage(greenBtcImage).getCertificateSVG(ownerOf(tokenID), dataGBTC[tokenID], dataNFT[tokenID]);
     }
@@ -491,6 +492,7 @@ contract GreenBTC is
         _authVerify(gbtc, sig);
         
         ratio = _getSubsidyRatio(option);
+        
         _mintNFT(gbtc, ratio);
         if((option >> 63) !=0) openBox(gbtc.height);
     }
@@ -518,7 +520,7 @@ contract GreenBTC is
 
         bool ifOpen = (option & (1<<63)) != 0;
         bool ifSkip = (option & (1<<62)) != 0;
-        ratio = uint8(option >> 48); 
+        ratio = _getSubsidyRatio(option);
 
         for(uint256 index = 0; index < gbtcList.length; index++) {
             GreenBTCInfo calldata gbtc = gbtcList[index];
@@ -537,20 +539,19 @@ contract GreenBTC is
 
     }
 
+
     /**
      * @dev Add or remove the acceptable ART tokens
      * @param tokenARTList ART list to add or rmeove
      * @param addOrRemove = 0, to remove; = 1, to add
      */
-    function mangeARTTokens(address[] calldata tokenARTList, bool addOrRemove) external onlyOwner {
-        for(uint256 i = 0; i < tokenARTList.length; i++) {
-            address tokenART = tokenARTList[i];
+    function mangeARTTokens(address[] calldata tokenARTList, bool addOrRemove) external {       // onlyOwner
+      _mangeARTTokensMute(tokenARTList, addOrRemove);                     // no code size because optimization
+      callGreenBTCPro(greenBTCPro);
+    }
 
-            require(tokenART != address(0) && whiteARTList[tokenART] != addOrRemove, "GBTC: Wrong ART Status");
-            whiteARTList[tokenART] = addOrRemove;
-        }
-    }   
-
+    function _mangeARTTokensMute(address[] calldata tokenARTList, bool addOrRemove) internal {}
+    
     /**
      * @dev Call arkreenBuilder with the specified calldata
      * @param builderCallData Call data passed to arkreenBuilder
@@ -570,7 +571,7 @@ contract GreenBTC is
             }
         }        
     }
-
+    
     /**
      * @dev Get the price and sold amount of the specified ART versus the payment token 
      * @param tokenART ART token

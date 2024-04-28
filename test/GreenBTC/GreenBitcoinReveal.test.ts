@@ -164,7 +164,10 @@ describe("GreenBitcoinReveal Test Campaign", () => {
       arkreenBuilder = await upgrades.deployProxy(ArkreenBuilderFactory,[AKREToken.address, arkreenRECBank.address, WETH.address]) as ArkreenBuilder
       await arkreenBuilder.deployed();
       await arkreenBuilder.approveRouter([AKREToken.address, WETH.address])       
-      await arkreenBuilder.approveArtBank([tokenA.address, WETH.address, AKREToken.address])      
+      await arkreenBuilder.approveArtBank([tokenA.address, WETH.address, AKREToken.address])   
+      
+      const GreenBTCProFactory = await ethers.getContractFactory("GreenBTCPro");
+      const greenBTCPro = await GreenBTCProFactory.deploy();
       
       const GreenBTCFactory = await ethers.getContractFactory("GreenBTC");
       greenBitcoin = await upgrades.deployProxy(GreenBTCFactory,
@@ -172,6 +175,8 @@ describe("GreenBitcoinReveal Test Campaign", () => {
                                 arkreenRECTokenESG.address, WETH.address ]) as GreenBTC
       await greenBitcoin.deployed();
       await greenBitcoin.approveBuilder([AKREToken.address, WETH.address])
+
+      await greenBitcoin.setGreenBTCPro(greenBTCPro.address);
 
       await greenBitcoin.setNewCaps(200, 100, 800);
               

@@ -183,9 +183,8 @@ describe("GreenBTC Test Campaign", () => {
       await greenBitcoin.deployed();
       await greenBitcoin.approveBuilder([AKREToken.address, WETH.address])
 
-      await greenBitcoin.setNewCaps(200, 100, 500);
-
       await greenBitcoin.setGreenBTCPro(greenBTCPro.address);
+      await greenBitcoin.setNewCaps(200, 100, 500);
               
       const GreenBTCImageFactory = await ethers.getContractFactory("GreenBTCImage");
       greenBTCImage = await GreenBTCImageFactory.deploy()
