@@ -93,6 +93,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // Implementation:  0x8565570a7cb2b2508f9180ad83e8f58f25e41596  (Ignored)
 // Implementation:  0x424701812ab73e148c0eca9cc25479fb593920d5
 
+// 2024/04/28: deploy AKRE on Amoy testnet for Pre-Env
+// yarn deploy:matic_test:ARKE
+// Proxy:           0x322F4D0816707616Fe71BC3cd99f2b4eCdf6e199  (deployed by proxy)
+// Implementation:  0xd83C9743B17426C28Cf3FD12966cc9873D009ABF
+
 func.tags = ["ARKE"];
 
 export default func;
