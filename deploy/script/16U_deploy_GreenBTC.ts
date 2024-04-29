@@ -27,8 +27,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     // const NEW_IMPLEMENTATION    = "0xa806AC934936562a21f568D94610E54E47bb237a"    // 2024/02/02: Upgrade to swap the event position of OpenBox and GreenBitCoin
 
     const GREENBTC_PROXY_ADDRESS  = "0x2Bb79dB8b6149F7499CA1bA7eeBE9E736be4dBA9"     // 2024/04/28: Green BTC on Amoy testnet
-    const NEW_IMPLEMENTATION      = "0x0a9E5889f0bd049583093a31E375Fd15427F8773"     // 2024/04/28: Original
-    // const NEW_IMPLEMENTATION    = "0x160c413f125550c89C7D21FA1C8567986411504E"    // 2024/04/28: Upgrade to change the control of setNewCaps from manager to owner
+    // const NEW_IMPLEMENTATION   = "0x0a9E5889f0bd049583093a31E375Fd15427F8773"     // 2024/04/28: Original
+    // const NEW_IMPLEMENTATION   = "0x160c413f125550c89C7D21FA1C8567986411504E"     // 2024/04/28: Upgrade to change the control of setNewCaps from manager to owner
+    const NEW_IMPLEMENTATION      = "0x0635aE3d966FaA129cd0eafc5996bE9a4aB16eD2"     // 2024/04/28: Upgrade on Amoy testnet to support ART subsidy
     
     console.log("Updating GreenBTC: ", GREENBTC_PROXY_ADDRESS, chainID, defaultGasPrice.toString());  
 
@@ -124,6 +125,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2024/04/28A: Restore back 
 // yarn deploy:matic_test:GreenBTCU : 0x0a9E5889f0bd049583093a31E375Fd15427F8773
+
+// 2024/04/28B: Upgrade on Amoy testnet to support ART subsidy
+// yarn deploy:matic_test:GreenBTCU : 0x0635aE3d966FaA129cd0eafc5996bE9a4aB16eD2
 
 export default func;
 func.tags = ["GreenBTCU"];
