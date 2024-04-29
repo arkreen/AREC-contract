@@ -26,7 +26,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2024/04/28: Deploy on Amoy testnet
 // yarn deploy:matic_test:GreenBTCProD
-// Implemenation: 
+// Implemenation: 0x4201963061ee4FB285c19D84F1b39170142e533a
 
 func.tags = ["GreenBTCProD"];
 

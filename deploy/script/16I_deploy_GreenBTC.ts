@@ -85,11 +85,26 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       await setLuckyRateTx.wait()
       console.log("GreenBTCContract setLuckyRate is executed: %s: ", hre.network.name);
 */
+  
+/*        
       // 2024/04/28
       // setNewCaps
       const setNewCapsTx = await GreenBTCFactory.setNewCaps(200, 100, 500, {gasPrice: defaultGasPrice})
       await setNewCapsTx.wait()
       console.log("GreenBTCContract setNewCaps is executed: %s: ", hre.network.name);
+*/
+      // 2024/04/28
+      // setGreenBTCPro
+      const  GreenBTCPro_Address = "0x4201963061ee4FB285c19D84F1b39170142e533a"
+      const setGreenBTCProTx = await GreenBTCFactory.setGreenBTCPro(GreenBTCPro_Address, {gasPrice: defaultGasPrice})
+      await setGreenBTCProTx.wait()
+      console.log("GreenBTCContract setNewCaps is executed: %s: ", hre.network.name);
+
+      // 2024/04/28
+      // setRatioSubsidyCap
+      const setRatioSubsidyCapTx = await GreenBTCFactory.setRatioSubsidyCap(90, {gasPrice: defaultGasPrice})
+      await setRatioSubsidyCapTx.wait()
+      console.log("GreenBTCContract setRatioSubsidyCap is executed: %s: ", hre.network.name);
 
     }
     else if(hre.network.name === 'matic')  {        // Matic Mainnet
@@ -290,6 +305,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // Call setNewCap
 // Amoy testnet: 0x2Bb79dB8b6149F7499CA1bA7eeBE9E736be4dBA9
 // yarn deploy:matic_test:GreenBTCI
+
+// 2024/04/28A: Executed on Amoy testnet: 
+// Call setGreenBTCPro, setRatioSubsidyCap
+// Amoy testnet: 0x2Bb79dB8b6149F7499CA1bA7eeBE9E736be4dBA9
+// yarn deploy:matic_test:GreenBTCI
+
 
 func.tags = ["GreenBTCI"];
 

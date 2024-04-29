@@ -5,13 +5,14 @@ import { CONTRACTS } from "../constants";
 //import { ArkreenRegistry__factory } from "../../typechain";
 //import { HashKeyESGBTC__factory } from "../../typechain";
 //import { ArkreenRECIssuance__factory } from "../../typechain";
-//import { ArkreenMiner__factory } from "../../typechain";
+import { ArkreenMiner__factory } from "../../typechain";
 //import { ArkreenBadge__factory } from "../../typechain";
 //import { ArkreenBuilder__factory } from "../../typechain";
 //import { GreenBTC__factory } from "../../typechain";
 
-//import { ArkreenReward__factory } from "../../typechain";
+import { ArkreenReward__factory } from "../../typechain";
 import { ArkreenToken__factory } from "../../typechain";
+import { ArkreenNotary__factory } from "../../typechain";
 
 import { BigNumber } from "ethers";
 
@@ -79,13 +80,13 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
                                       [AKREToken_ADDRESS, REGISTRY_ADDRESS])                        // 2023/05/09 //2023/06/08
 */
 
-/*
+
   // Proxy of ArkreenMiner for Open testnet
   // 2023/05/10
   //  const IMPLEMENTATION_ADDRESS  = "0x7a0Df5eFfdbb91DF24cb7F7dB2500ce9721a7A78"    // 2023/05/10: ArkreenIssuance Implementation 
 
   // 2023/06/08
-  const IMPLEMENTATION_ADDRESS  = "0xc7A014f4b823788812A9Cd08D1c819e882b13b89"    // 2023/06/08: Reuse ArkreenMiner Implementation 
+  // const IMPLEMENTATION_ADDRESS  = "0xc7A014f4b823788812A9Cd08D1c819e882b13b89"    // 2023/06/08: Reuse ArkreenMiner Implementation 
 
   // Open test version
   // 2023/05/10
@@ -94,16 +95,27 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   // const REGISTER_ADDRESS  = "0x78993487b21b8cb8f0442f3ffcb0fc880da34905" 
   // const WMATIC_ADDRESS    = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"          // WMATIC address    
 
+  /*
+  // 2023/06/08
   const AKREToken_ADDRESS = "0xc83DEd2B70F25C0EB0ef1cDE993DEaA3fAE91314"
   const MANAGER_ADDRESS   = "0x42654e7e54b849f4508e158ac6fb416064dc7310"
   const REGISTER_ADDRESS  = "0x42654e7e54b849f4508e158ac6fb416064dc7310" 
   const WMATIC_ADDRESS    = "0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889"          // WMATIC address  
+  */
+
+  // 2024/04/28, Amoy Pre-Env
+  const IMPLEMENTATION_ADDRESS  = "0x723f5C282F1e0a131bA80b220C5895f9066f7642"    // 2024/04/28
+
+  const AKREToken_ADDRESS = "0x322F4D0816707616Fe71BC3cd99f2b4eCdf6e199"
+  const MANAGER_ADDRESS   = "0x42654e7e54b849f4508e158ac6fb416064dc7310"
+  const REGISTER_ADDRESS  = "0x42654e7e54b849f4508e158ac6fb416064dc7310" 
+  const WMATIC_ADDRESS    = "0x0ae690aad8663aab12a671a6a0d74242332de85f"          // WMATIC address  
   
   // 2023/05/10:  0xbf8eF5D950F78eF8edBB8674a48cDACa675831Ae
   // 2023/06/08:  0x1F742C5f32C071A9925431cABb324352C6e99953
+  // 2024/04/28:  
   const callData = ArkreenMiner__factory.createInterface().encodeFunctionData("initialize",     // Create new ArkreenIssuance
-                      [AKREToken_ADDRESS, WMATIC_ADDRESS, MANAGER_ADDRESS, REGISTER_ADDRESS])   // 2023/05/10 // 2023/06/08
-*/
+                      [AKREToken_ADDRESS, WMATIC_ADDRESS, MANAGER_ADDRESS, REGISTER_ADDRESS])   // 2023/05/10 // 2023/06/08 // 2024/04/28
 
 /*
   // Proxy of ArkreenRegistry for pre-production
@@ -178,19 +190,29 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   });
 */
 
-/*
+
   // Proxy of ArkreenReward
+/*  
   // 2024/02/22: Polygon Mainnet ArkreenReward
   const IMPLEMENTATION_ADDRESS  = "0xF8b41C01622Ad43148a0DdF844F60dE334d8a119"    // 2024/02/22: ArkreenReward Implementation 
   const AKRE_TOKEN_ADDRESS    = "0xE9c21De62C5C5d0cEAcCe2762bF655AfDcEB7ab3"
   const VALIDATOR_ADDRESS     = "0x1E1A152D1C77A16863e97DAf18E99f85a5F0a605"
-  
-  // 2024/02/24:  
+*/  
+
+/*
+  // 2024/04/28: Polygon Amoy Pre-Env ArkreenReward
+  const IMPLEMENTATION_ADDRESS  = "0xeb0a8d25cc479825e6Ca942D516a1534C32dFBe4"    // 2024/04/28: ArkreenReward Implementation 
+  const AKRE_TOKEN_ADDRESS      = "0x322F4D0816707616Fe71BC3cd99f2b4eCdf6e199"
+  const VALIDATOR_ADDRESS       = "0xD0Eb2b74f4EEbFC1B3e93f300b152624020124A3"
+
+  // 2024/02/24,  2024/04/28
   const callData = ArkreenReward__factory.createInterface().encodeFunctionData("initialize",[AKRE_TOKEN_ADDRESS, VALIDATOR_ADDRESS])     // Create new ArkreenReward
 */
 
+/*
   // Proxy of ArkreenToken on Amoy testnet
   // 2024/04/15: Amoy testnet ArkreenToken
+  // 2024/04/28: Amoy testnet ArkreenToken Pre-Env
   const IMPLEMENTATION_ADDRESS  = "0xd83C9743B17426C28Cf3FD12966cc9873D009ABF"    // 2024/04/15: ArkreenToken Implementation 
   const amount = 10_000_000_000
   const foundationAddr = '0xB53B96e1eF29cB14313c18Fa6374AB87df59BcD9'
@@ -201,6 +223,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const callData = ArkreenToken__factory.createInterface().encodeFunctionData("initialize",[amount, foundationAddr, name, symbol])
 
   console.log("IMPLEMENTATION_ADDRESS, deployer, callData", IMPLEMENTATION_ADDRESS, deployer, callData)
+*/
+
+/*
+  // 2024/04/28: Polygon Amoy Pre-Env ArkreenNotary
+  const IMPLEMENTATION_ADDRESS  = "0x7d9EADB063BE8561c7724ae1b196e5B372d3f08D"    // 2024/04/28: ArkreenNotary Implementation 
+  const notaryManager = "0xb76928c2494a909e4e3a8e7d8337c5392fa08ce2"              // For Amoy testnet Pre-Env 
+
+  // 2024/04/28A, 2024/04/28B 
+  const callData = ArkreenNotary__factory.createInterface().encodeFunctionData("initialize", [notaryManager])     // Create  ArkreenNotary
+*/
 
   const UUPSProxyContract = await deploy(CONTRACTS.UUPSProxy, {
       from: deployer,
@@ -250,9 +282,24 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:UUPSProxy
 // Proxy:   0xDcF10d429c0422Af80790bC810A33189771D643d
 
-// 2024/02/22:  ArkreenToken
+// 2024/04/15:  ArkreenToken
 // yarn deploy:matic_test:UUPSProxy
 // Proxy: 0xd092e1f47d4e5d1C1A3958D7010005e8e9B48206 
+
+// 2024/04/15:  ArkreenToken for Pre-Env
+// yarn deploy:matic_test:UUPSProxy
+// Proxy:  0x322F4D0816707616Fe71BC3cd99f2b4eCdf6e199
+
+// 2024/04/28A:  ArkreenReward Pre-Env
+// yarn deploy:matic_test:UUPSProxy
+// Proxy:   0xB2f4534BdbD1F4D5f138157A48BE0C8175C536b2
+
+// 2024/04/28B:  ArkreenNotary Pre-Env
+// yarn deploy:matic_test:UUPSProxy
+// Proxy:   0xf282966Af366c349DBb41C54670c536EFA534691
+
+// 2023/06/08:  yarn deploy:matic_test:UUPSProxy:   ArkreenMiner for Amoy Pre-Env
+// Proxy:   
 
 export default func;
 func.tags = ["UUPSProxy"];
