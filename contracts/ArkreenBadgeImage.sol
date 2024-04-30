@@ -97,11 +97,11 @@ contract ArkreenBadgeImage {
         {
             string memory typeAction;
             if (actionType == 1) { 
-                typeAction ='Redeem';
+                typeAction ="Redeem";
             } else if (actionType == 2) {
-                typeAction = 'Offset';
+                typeAction = "Offset";
             } else {
-                typeAction = 'Redeem,Offset';
+                typeAction = "Redeem,Offset";
             }
 
             dataURI = abi.encodePacked(dataURI,
@@ -142,7 +142,7 @@ contract ArkreenBadgeImage {
         }
 
         {
-            bytes memory bytesBadgeFile = 'https://arec.arkreen.com/badges/AREC_Badge_000000.pdf';
+            bytes memory bytesBadgeFile = "https://arec.arkreen.com/badges/AREC_Badge_000000.pdf";
             bytes memory tokenInBytes = bytes(tokenString);
             bytes memory BadgeFile = bytesBadgeFile.slice(0, bytesBadgeFile.length - 4 - tokenInBytes.length)
                                         .concat(tokenInBytes.concat('.pdf'));

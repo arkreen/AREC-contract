@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import '@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol';
-import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
-import '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol';
-import '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
+import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 import "./interfaces/IMinerRegister.sol";
 import "./interfaces/IArkreenRegistry.sol";
@@ -17,20 +18,21 @@ import "./interfaces/IERC20Permit.sol";
 import "./ArkreenRECIssuanceStorage.sol";
 import "./interfaces/IPausable.sol";
 
-import '@openzeppelin/contracts/utils/StorageSlot.sol';
+import "@openzeppelin/contracts/utils/StorageSlot.sol";
 
 contract ArkreenRECIssuance is
     OwnableUpgradeable,
     UUPSUpgradeable,
     ERC721EnumerableUpgradeable,
-    ArkreenRECIssuanceStorage
+    ArkreenRECIssuanceStorage,
+    ReentrancyGuardUpgradeable
 {
     // using SafeMath for uint256;    // seems not necessary
     using AddressUpgradeable for address;
 
     // Public variables
-    string public constant NAME = 'Arkreen RE Certificate';
-    string public constant SYMBOL = 'AREC';
+    string public constant NAME = "Arkreen RE Certificate";
+    string public constant SYMBOL = "AREC";
 
     // Events
     event RECRequested(address owner, uint256 tokenId);
@@ -43,12 +45,12 @@ contract ArkreenRECIssuance is
 
     // Modifiers
     modifier ensure(uint deadline) {
-        require(deadline >= block.timestamp, 'RECIssuance: EXPIRED');
+        require(deadline >= block.timestamp, "RECIssuance: EXPIRED");
         _;
     }
 
     modifier whenNotPaused() {
-        require(!IPausable(arkreenRegistry).paused(), 'AREC: Paused');
+        require(!IPausable(arkreenRegistry).paused(), "AREC: Paused");
         _;
     }    
   
@@ -63,7 +65,7 @@ contract ArkreenRECIssuance is
         __ERC721_init_unchained(NAME, SYMBOL);
         tokenAKRE = _tokenAKRE;
         arkreenRegistry = arkRegistry;
-        baseURI = 'https://www.arkreen.com/AREC/' ;
+        baseURI = "https://www.arkreen.com/AREC/" ;
     }
 
     function postUpdate() external onlyProxy onlyOwner 
@@ -114,13 +116,13 @@ contract ArkreenRECIssuance is
     function mintRECRequest(
         RECRequest calldata recRequest,
         Signature calldata permitToPay
-    ) external ensure(permitToPay.deadline) whenNotPaused returns (uint256 tokenId) {
+    ) external ensure(permitToPay.deadline) whenNotPaused nonReentrant returns (uint256 tokenId) {
 
         // Check issuer address
-        require(IArkreenRegistry(arkreenRegistry).isRECIssuer(recRequest.issuer), 'AREC: Wrong Issuer');
+        require(IArkreenRegistry(arkreenRegistry).isRECIssuer(recRequest.issuer), "AREC: Wrong Issuer");
 
         // Check REC time period
-        require(recRequest.startTime < recRequest.endTime && recRequest.endTime < block.timestamp, 'AREC: Wrong Period');
+        require(recRequest.startTime < recRequest.endTime && recRequest.endTime < block.timestamp, "AREC: Wrong Period");
 
         // Check the caller be acceptable miner
         address sender = _msgSender();
@@ -145,7 +147,7 @@ contract ArkreenRECIssuance is
         // Prepare REC data
         RECData memory recData;
         recData.issuer =  recRequest.issuer;
-        recData.serialNumber = '';
+        recData.serialNumber = "";
         recData.minter = sender;
         recData.startTime =  recRequest.startTime;
         recData.endTime =  recRequest.endTime;
@@ -180,15 +182,15 @@ contract ArkreenRECIssuance is
 
         uint16 idAssetType = recData.idAsset;
         if(idAssetType == 0) {
-            require(IArkreenRegistry(arkreenRegistry).isRECIssuer(issuer), 'AREC: Not Issuer');
-            require(issuer == recData.issuer, 'AREC: Wrong Issuer');
+            require(IArkreenRegistry(arkreenRegistry).isRECIssuer(issuer), "AREC: Not Issuer");
+            require(issuer == recData.issuer, "AREC: Wrong Issuer");
         } else {
             (address issuerAsset, , , , ) = IArkreenRegistry(arkreenRegistry).getAssetInfo(idAssetType);
-            require(issuer == issuerAsset, 'AREC: Wrong Issuer');
+            require(issuer == issuerAsset, "AREC: Wrong Issuer");
         }
 
         // Only pending REC can be cancelled
-        require(recData.status == uint8(RECStatus.Pending), 'AREC: Wrong Status');  
+        require(recData.status == uint8(RECStatus.Pending), "AREC: Wrong Status");  
 
         // Set status to Rejected
         recData.status = uint8(RECStatus.Rejected);
@@ -207,14 +209,14 @@ contract ArkreenRECIssuance is
         string memory   memo) external whenNotPaused
     {
         // Only REC owner allowed to change the REC data
-        require(ownerOf(tokenID) == _msgSender(), 'AREC: Not Owner');     // owner should be the minter also
+        require(ownerOf(tokenID) == _msgSender(), "AREC: Not Owner");     // owner should be the minter also
 
         // Only rejected REC can be cancelled
         RECData storage recData = allRECData[tokenID];
-        require(recData.status <= uint8(RECStatus.Rejected), 'AREC: Wrong Status');  
+        require(recData.status <= uint8(RECStatus.Rejected), "AREC: Wrong Status");  
 
         // Check issuer address
-        require(IArkreenRegistry(arkreenRegistry).isRECIssuer(issuer), 'AREC: Wrong Issuer');
+        require(IArkreenRegistry(arkreenRegistry).isRECIssuer(issuer), "AREC: Wrong Issuer");
 
         recData.issuer = issuer;                              
         recData.region = region;                    // Null string is not checked, as it could be set to null
@@ -238,16 +240,16 @@ contract ArkreenRECIssuance is
 
         uint16 idAssetType = recData.idAsset;
         if(idAssetType == 0) {
-            require(IArkreenRegistry(arkreenRegistry).isRECIssuer(issuer), 'AREC: Not Issuer');
-            require(issuer == recData.issuer, 'AREC: Wrong Issuer');
+            require(IArkreenRegistry(arkreenRegistry).isRECIssuer(issuer), "AREC: Not Issuer");
+            require(issuer == recData.issuer, "AREC: Wrong Issuer");
         } else {
             (address issuerAsset, , , , ) = IArkreenRegistry(arkreenRegistry).getAssetInfo(idAssetType);
-            require(issuer == issuerAsset, 'AREC: Wrong Issuer');
+            require(issuer == issuerAsset, "AREC: Wrong Issuer");
         }
 
         // Only pending REC can be Certified
-        require(recData.status == uint8(RECStatus.Pending), 'AREC: Wrong Status');  
-        require(bytes(recData.cID).length > 20, 'AREC: Wrong CID');  
+        require(recData.status == uint8(RECStatus.Pending), "AREC: Wrong Status");  
+        require(bytes(recData.cID).length > 20, "AREC: Wrong CID");  
 
         // Uniqueness is not checked here assuming the issuer has checked this point
         recData.serialNumber = serialNumber;            
@@ -282,7 +284,7 @@ contract ArkreenRECIssuance is
     function redeemFrom(address account, uint256 tokenId)
         external virtual whenNotPaused returns (uint256 offsetActionId) 
     {
-        require(_isApprovedOrOwner(msg.sender, tokenId), 'AREC: Not Approved');
+        require(_isApprovedOrOwner(msg.sender, tokenId), "AREC: Not Approved");
         offsetActionId = _redeem(account, tokenId);
     }
    
@@ -292,10 +294,10 @@ contract ArkreenRECIssuance is
     function _redeem(address owner, uint256 tokenId) internal virtual returns (uint256 offsetActionId) {
 
         // Check if the REC owner
-        require( ownerOf(tokenId) == owner, 'AREC: Not Owner');
+        require( ownerOf(tokenId) == owner, "AREC: Not Owner");
 
         // Check if the REC NFT is in certified stataus
-        require( allRECData[tokenId].status == uint8(RECStatus.Certified), 'AREC: Not Certified');
+        require( allRECData[tokenId].status == uint8(RECStatus.Certified), "AREC: Not Certified");
 
         // Register the offset event
         address badgeContract = IArkreenRegistry(arkreenRegistry).getArkreenRetirement();
@@ -328,7 +330,7 @@ contract ArkreenRECIssuance is
     ) external whenNotPaused virtual {
 
         // Check if approved
-        require(_isApprovedOrOwner(msg.sender, tokenId), 'AREC: Not Approved');
+        require(_isApprovedOrOwner(msg.sender, tokenId), "AREC: Not Approved");
 
         // Redeem the specified REC NFT
         address owner = ownerOf(tokenId);
@@ -350,11 +352,11 @@ contract ArkreenRECIssuance is
      */
     function liquidizeREC( uint256 tokenId ) external whenNotPaused {
 
-        require(_isApprovedOrOwner(msg.sender, tokenId), 'AREC: Not Approved');
+        require(_isApprovedOrOwner(msg.sender, tokenId), "AREC: Not Approved");
 
         // Check if the REC status
         RECData storage recData = allRECData[tokenId];
-        require( recData.status == uint8(RECStatus.Certified), 'AREC: Not Certified');
+        require( recData.status == uint8(RECStatus.Certified), "AREC: Not Certified");
 
         uint256 amountREC = recData.amountREC;
 
@@ -401,7 +403,7 @@ contract ArkreenRECIssuance is
      * @param price the price to pay AREC issuance, or, =0, remove the token/price.
      */
     function updateARECMintPrice(address token, uint256 price) external virtual onlyOwner {
-      require(token.isContract(), 'AREC: Wrong token');
+      require(token.isContract(), "AREC: Wrong token");
 
       for(uint256 index; index < paymentTokens.length; index++) {
         if(paymentTokens[index] == token) {
@@ -419,7 +421,7 @@ contract ArkreenRECIssuance is
           return; 
         }
       }
-      require(price != 0, 'AREC: Zero Price');
+      require(price != 0, "AREC: Zero Price");
       paymentTokens.push(token);
       paymentTokenPrice[token] = price;
     }
@@ -454,7 +456,7 @@ contract ArkreenRECIssuance is
                 address arkreenBadge = IArkreenRegistry(arkreenRegistry).getArkreenRetirement();
 
                 // Only the ART contract can restore the AREC
-                require(msg.sender == tokenREC, 'AREC: Not Allowed');
+                require(msg.sender == tokenREC, "AREC: Not Allowed");
 
                 if(to == arkreenBadge) {
                     recData.status = uint8(RECStatus.Retired);
@@ -469,7 +471,7 @@ contract ArkreenRECIssuance is
                 }
             }
             else {
-                require(recData.status == uint8(RECStatus.Certified), 'AREC: Wrong Status');
+                require(recData.status == uint8(RECStatus.Certified), "AREC: Wrong Status");
             }
         }
         super._beforeTokenTransfer(from, to, tokenId);
@@ -507,7 +509,7 @@ contract ArkreenRECIssuance is
     }
 
     function setARECImage(address newImage) external virtual onlyOwner {
-        require(newImage != address(0), 'ARB: Zero Address');
+        require(newImage != address(0), "ARB: Zero Address");
         arkreenRECImage = IArkreenRECIssuanceImage(newImage);
     }       
 }

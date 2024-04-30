@@ -26,9 +26,9 @@ library BytesUtils {
 
     function _toHexChar(uint8 value) private pure returns (bytes1) {
         if (value < 10) {
-            return bytes1(uint8(bytes1('0')) + value);
+            return bytes1(uint8(bytes1("0")) + value);
         } else {
-            return bytes1(uint8(bytes1('a')) + (value - 10));
+            return bytes1(uint8(bytes1("a")) + (value - 10));
         }
     }
 }

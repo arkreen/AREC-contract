@@ -3,7 +3,7 @@ pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/utils/Base64.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
-import '@openzeppelin/contracts/access/Ownable.sol';
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "./libraries/FormattedStrings.sol";
 import "./libraries/TransferHelper.sol";
@@ -84,10 +84,10 @@ contract ArkreenRECIssuanceImage is Ownable{
         buffer[2] = bytes1(uint8(48 + uint256(year % 10)));  year /= 10;
         buffer[1] = bytes1(uint8(48 + uint256(year % 10)));  year /= 10;
         buffer[0] = bytes1(uint8(48 + uint256(year)));
-        buffer[4] = '-';
+        buffer[4] = "-";
         buffer[6] = bytes1(uint8(48 + uint256(month % 10)));  month /= 10;
         buffer[5] = bytes1(uint8(48 + uint256(month))); 
-        buffer[7] = '-';
+        buffer[7] = "-";
         buffer[9] = bytes1(uint8(48 + uint256(day % 10)));  day /= 10;
         buffer[8] = bytes1(uint8(48 + uint256(day)));  
         return string(buffer);
@@ -250,7 +250,7 @@ contract ArkreenRECIssuanceImage is Ownable{
         }
 
         {
-            string memory linkHead = 'https://polygonscan.com/nft/';
+            string memory linkHead = "https://polygonscan.com/nft/";
             string memory arkreenRECIssuanceString = arkreenRECIssuance.toHexString();
             string memory tokenString = tokenId.toString();
 

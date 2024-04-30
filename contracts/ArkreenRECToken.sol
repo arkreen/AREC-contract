@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
-import '@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol';
-import '@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol';
-import '@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol';
-import '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 import "./ArkreenRECIssuanceType.sol";
 import "./interfaces/IArkreenRECIssuance.sol";
@@ -23,8 +23,8 @@ contract ArkreenRECToken is
     using AddressUpgradeable for address;
 
     // Public constant variables
-    string public constant NAME = 'Arkreen REC Token';
-    string public constant SYMBOL = 'ART';
+    string public constant NAME = "Arkreen REC Token";
+    string public constant SYMBOL = "ART";
 
     uint256 public constant FLAG_OFFSET = 1<<64;
 
@@ -55,12 +55,12 @@ contract ArkreenRECToken is
 
     // Modifiers
     modifier ensure(uint deadline) {
-        require(deadline >= block.timestamp, 'ART: EXPIRED');
+        require(deadline >= block.timestamp, "ART: EXPIRED");
         _;
     }
 
     modifier whenNotPaused() {
-        require(!IPausable(arkreenRegistry).paused(), 'ART: Paused');
+        require(!IPausable(arkreenRegistry).paused(), "ART: Paused");
         _;
     }
   
@@ -115,7 +115,7 @@ contract ArkreenRECToken is
      */
     function _offset(address account, address owner, uint256 amount) internal virtual returns (uint256 offsetActionId) {
 
-        require(amount != 0, 'ART: Zero Offset');
+        require(amount != 0, "ART: Zero Offset");
 
         address issuanceAREC = IArkreenRegistry(arkreenRegistry).getRECIssuance();
         address badgeContract = IArkreenRegistry(arkreenRegistry).getArkreenRetirement();
@@ -249,7 +249,7 @@ contract ArkreenRECToken is
     function solidify(uint256 amount) external virtual whenNotPaused 
                 returns (uint256 solidifiedAmount, uint256 numberAREC, uint256 feeSolidify) {
 
-        require(latestARECID != 0, 'ART: No Liquidized AREC');
+        require(latestARECID != 0, "ART: No Liquidized AREC");
         bool chargeOn = (receiverFee != address(0)) && (ratioFeeToSolidify != 0);           // To save gas
         if(chargeOn) amount = (amount * 10000) / (10000 + ratioFeeToSolidify);             // Substract the solidify fee 
         
@@ -266,7 +266,7 @@ contract ArkreenRECToken is
             uint256 amountAREC = amountREC;
 
             if(amount < amountAREC) {
-                require(solidifiedAmount != 0, 'ART: Amount Too Less');                // Must solidify the oldest AREC first
+                require(solidifiedAmount != 0, "ART: Amount Too Less");                // Must solidify the oldest AREC first
                 if(curAREC == latestARECID) break;
                 skips++;
                 preAREC = curAREC;
@@ -337,10 +337,10 @@ contract ArkreenRECToken is
     ) external virtual override whenNotPaused returns (bytes4) {
 
         // Check calling from REC Manager
-        require( IArkreenRegistry(arkreenRegistry).getRECIssuance() == msg.sender, 'ART: Not From REC Issuance');
+        require( IArkreenRegistry(arkreenRegistry).getRECIssuance() == msg.sender, "ART: Not From REC Issuance");
 
         (, uint128 amountREC, uint8 status, uint16 idAsset) = IArkreenRECIssuance(msg.sender).getRECDataCore(tokenId);
-        require(status == uint256(RECStatus.Certified), 'ART: Wrong Status');
+        require(status == uint256(RECStatus.Certified), "ART: Wrong Status");
 
         if ((idAssetOfBridge != 0 ) && (idAsset == idAssetOfBridge)) {
             if(latestBridgeARECID == 0) {                                              // handle the bridge liquidized loop
@@ -409,7 +409,7 @@ contract ArkreenRECToken is
      * @dev set the ratio of liquidization fee
      */     
     function setRatioFee(uint256 ratio) external onlyOwner {
-        require(ratio <10000, 'ART: Wrong Data');
+        require(ratio <10000, "ART: Wrong Data");
         ratioLiquidizedFee = ratio;
     }  
 
@@ -417,7 +417,7 @@ contract ArkreenRECToken is
      * @dev Change the REC issuance address
      */     
     function setIssuerREC(address issuer) external onlyOwner {
-        require(issuer != address(0), 'ART: Wrong Address');
+        require(issuer != address(0), "ART: Wrong Address");
         issuerREC = issuer;
     }
 
@@ -425,7 +425,7 @@ contract ArkreenRECToken is
      * @dev set the ratio of solidify fee to Solidify from ART to AREC
      */     
     function setRatioFeeToSolidify(uint256 ratio) external onlyOwner {
-        require(ratio <10000, 'ART: Wrong Data');
+        require(ratio <10000, "ART: Wrong Data");
         ratioFeeToSolidify = ratio;
     }  
 
@@ -442,7 +442,7 @@ contract ArkreenRECToken is
      * @dev set the ratio of fee to offset ART as a climate action
      */     
     function setRatioFeeOffset(uint256 ratio) external onlyOwner {
-        require(ratio <10000, 'ART: Wrong Data');
+        require(ratio <10000, "ART: Wrong Data");
         ratioFeeOffset = ratio;
     }  
 
@@ -464,7 +464,7 @@ contract ArkreenRECToken is
      * @dev set the receiver of liquidization fee
      */     
     function setReceiverFee(address receiver) external onlyOwner {
-        require(receiver != address(0), 'ART: Wrong Address');
+        require(receiver != address(0), "ART: Wrong Address");
         receiverFee = receiver;
     }
 

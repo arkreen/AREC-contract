@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import '@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol';
-import '@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol';
-import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
-import '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol';
-import '@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol';
-import '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
+import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-import './ArkreenBadgeStorage.sol';
+import "./ArkreenBadgeStorage.sol";
 import "./interfaces/IPausable.sol";
 import "./interfaces/IArkreenRegistry.sol";
 import "./interfaces/IArkreenRECIssuance.sol";
@@ -29,8 +29,8 @@ contract ArkreenBadge is
     using MemArrays for uint256[];
 
     // Public variables
-    string public constant NAME = 'Arkreen REC Badge';
-    string public constant SYMBOL = 'ARB';
+    string public constant NAME = "Arkreen REC Badge";
+    string public constant SYMBOL = "ARB";
 
      // Events
     event ArkreenRegistryUpdated(address newArkreenRegistry);
@@ -39,7 +39,7 @@ contract ArkreenBadge is
     event OffsetAttached(uint256 tokenId, uint256[] offsetIds);
   
     modifier whenNotPaused() {
-        require(!IPausable(arkreenRegistry).paused(), 'ARB: Paused');
+        require(!IPausable(arkreenRegistry).paused(), "ARB: Paused");
         _;
     }
 
@@ -53,7 +53,7 @@ contract ArkreenBadge is
         __UUPSUpgradeable_init();        
         __ERC721_init_unchained(NAME, SYMBOL);
         arkreenRegistry = arkRegistry;
-        baseURI = 'https://www.arkreen.com/badge/' ;
+        baseURI = "https://www.arkreen.com/badge/" ;
     }   
 
     function postUpdate() external onlyProxy onlyOwner 
@@ -83,16 +83,16 @@ contract ArkreenBadge is
         bool bBridge = ((tokenId >> 255) != 0);
         tokenId = uint64(tokenId);
 
-        require( IArkreenRegistry(arkreenRegistry).tokenRECs(msg.sender) != address(0), 'ARB: Caller Not Allowed');
-        require(tokenId == (bBridge ? partialARECIDBridge[msg.sender] : partialARECIDExt[msg.sender]), 'ARB: Error TokenId');
+        require( IArkreenRegistry(arkreenRegistry).tokenRECs(msg.sender) != address(0), "ARB: Caller Not Allowed");
+        require(tokenId == (bBridge ? partialARECIDBridge[msg.sender] : partialARECIDExt[msg.sender]), "ARB: Error TokenId");
 
         uint256 curAmount = bBridge ? partialAvailableAmountBridge[msg.sender] : partialAvailableAmountExt[msg.sender];
         if(bNew) {
             // Only register new details while offsetting more than current paratial amount
-            require(amount == curAmount, 'ARB: Wrong New');    
+            require(amount == curAmount, "ARB: Wrong New");    
             detailsCounter += 1;
         } else {
-            require(amount <= curAmount, 'ARB: Wrong Amount');
+            require(amount <= curAmount, "ARB: Wrong Amount");
         }
 
         OffsetDetail memory offsetDetail;
@@ -134,13 +134,13 @@ contract ArkreenBadge is
         bool isOffsetTokenId = ((tokenId >> 64) != 0);        // FLAG_OFFSET = 1<<64, to compliant with old design 
 
         // Check called from the REC token contract, or from the REC issuance contrarct
-        require( isRECIssuance || issuerREC == IArkreenRegistry(arkreenRegistry).tokenRECs(msg.sender), 'ARB: Wrong Issuer');
+        require( isRECIssuance || issuerREC == IArkreenRegistry(arkreenRegistry).tokenRECs(msg.sender), "ARB: Wrong Issuer");
 
         // TokenId should not be zero for RECIssuance, and should be offset type for RECToken
-        require(isRECIssuance != isOffsetTokenId, 'ARB: Wrong TokenId');
+        require(isRECIssuance != isOffsetTokenId, "ARB: Wrong TokenId");
 
         // Check the minimum offset amount
-        require( amount >= minOffsetAmount, 'ARB: Less Amount');
+        require( amount >= minOffsetAmount, "ARB: Less Amount");
 
         uint256 offsetId = offsetCounter + 1;
         offsetCounter = offsetId;
@@ -182,8 +182,8 @@ contract ArkreenBadge is
         uint256[] calldata offsetIds
     ) external {
         address tokenOwner = ownerOf(tokenId);
-        require(msg.sender == tokenOwner, 'ARB: Not Owner');
-        require(block.timestamp < (certificates[tokenId].creationTime + 3 days), 'ARB: Time Elapsed');        
+        require(msg.sender == tokenOwner, "ARB: Not Owner");
+        require(block.timestamp < (certificates[tokenId].creationTime + 3 days), "ARB: Time Elapsed");        
 
         uint256 offsetAmount =_attachOffsetEvents(tokenId, tokenOwner, offsetIds);
         certificates[tokenId].offsetTotalAmount += offsetAmount;
@@ -205,7 +205,7 @@ contract ArkreenBadge is
         uint256[] calldata offsetIds
     ) internal returns(uint256) {
         // List should not be empty
-        require(offsetIds.length != 0, 'ARB Empty List');
+        require(offsetIds.length != 0, "ARB Empty List");
 
         //slither-disable-next-line uninitialized-local
         uint256 offsetAmount;
@@ -215,10 +215,10 @@ contract ArkreenBadge is
             uint256 offsetId = offsetIds[i];
 
             // Check entity is identical
-            require(offsetActions[offsetId].offsetEntity == offsetEntity, 'ARB: Wrong Enity');
+            require(offsetActions[offsetId].offsetEntity == offsetEntity, "ARB: Wrong Enity");
 
             // Should not be attached
-            require(!offsetActions[offsetId].bClaimed, 'ARB: Already Claimed');
+            require(!offsetActions[offsetId].bClaimed, "ARB: Already Claimed");
             offsetActions[offsetId].bClaimed = true;
 
             certificates[tokenId].offsetIds.push(offsetId);
@@ -249,13 +249,14 @@ contract ArkreenBadge is
         require(_msgSender() == offsetEntity ||
                 IArkreenRegistry(arkreenRegistry).getRECIssuance() == msg.sender ||
                 IArkreenRegistry(arkreenRegistry).tokenRECs(msg.sender) != address(0),
-                'ARB: Caller Not Allowed');
+                "ARB: Caller Not Allowed");
 
         uint256 tokenId = totalSupply() + 1;
-        _safeMint(offsetEntity, tokenId);
 
         // Attach offset events to the newly minted NFT
         uint256 offsetAmount = _attachOffsetEvents(tokenId, offsetEntity, offsetIds);
+
+        _safeMint(offsetEntity, tokenId);
 
         certificates[tokenId].offsetEntity = offsetEntity;
         certificates[tokenId].beneficiary = beneficiary;
@@ -288,8 +289,8 @@ contract ArkreenBadge is
         string calldata beneficiaryID,
         string calldata offsetMessage
     ) external virtual {
-        require(msg.sender == ownerOf(tokenId), 'ARB: Not Owner');
-        require(block.timestamp < (certificates[tokenId].creationTime + 3 days), 'ARB: Time Elapsed');
+        require(msg.sender == ownerOf(tokenId), "ARB: Not Owner");
+        require(block.timestamp < (certificates[tokenId].creationTime + 3 days), "ARB: Time Elapsed");
 
         if (beneficiary != address(0)) {
             certificates[tokenId].beneficiary = beneficiary;
@@ -318,27 +319,27 @@ contract ArkreenBadge is
 
         // Check calling from REC Manager
         address issuerREC = IArkreenRegistry(arkreenRegistry).getRECIssuance();
-        require( issuerREC == msg.sender, 'ARB: Not From REC Issuance');
+        require( issuerREC == msg.sender, "ARB: Not From REC Issuance");
 
         (address issuer, uint128 amountREC, uint8 status, uint16 idAsset) = IArkreenRECIssuance(msg.sender).getRECDataCore(tokenId);
 
         if(from == IArkreenRegistry(arkreenRegistry).getRECToken(issuer, idAsset)) {
-            require(status == uint256(RECStatus.Retired), 'ARB: Wrong Status'); 
+            require(status == uint256(RECStatus.Retired), "ARB: Wrong Status"); 
             if ( keccak256(data) == keccak256("Bridge")) {
-              require(partialAvailableAmountBridge[from] == 0, 'ARB: Partial Left');
+              require(partialAvailableAmountBridge[from] == 0, "ARB: Partial Left");
               partialARECIDBridge[from] = tokenId;
               partialAvailableAmountBridge[from] = amountREC;
             }
             else {
-              require(partialAvailableAmountExt[from] == 0, 'ARB: Partial Left');
+              require(partialAvailableAmountExt[from] == 0, "ARB: Partial Left");
               partialARECIDExt[from] = tokenId;
               partialAvailableAmountExt[from] = amountREC;
             }
             return this.onERC721Received.selector;
         }
 
-        require( keccak256(data) == keccak256("Redeem"), 'ARB: Refused');
-        require( status == uint256(RECStatus.Certified), 'ARB: Wrong Status');  // Checking may be removed
+        require( keccak256(data) == keccak256("Redeem"), "ARB: Refused");
+        require( status == uint256(RECStatus.Certified), "ARB: Wrong Status");  // Checking may be removed
 
         totalRedeemed = totalRedeemed + amountREC;
         return this.onERC721Received.selector;
@@ -433,7 +434,7 @@ contract ArkreenBadge is
     }
 
     function updateCID(uint256[] calldata tokenId, string[] calldata cid) external virtual onlyOwner {
-        require(tokenId.length == cid.length, "'ARB: Wrong Data");
+        require(tokenId.length == cid.length, "ARB: Wrong Data");
 
         for(uint256 index; index < tokenId.length; index++ ) {
           cidBadge[tokenId[index]] = cid[index];
@@ -441,7 +442,7 @@ contract ArkreenBadge is
     }    
 
     function setBadgeImage(address newImage) external virtual onlyOwner {
-        require(newImage != address(0), 'ARB: Zero Address');
+        require(newImage != address(0), "ARB: Zero Address");
         arkreenBadgeImage = IArkreenBadgeImage(newImage);
     }       
 
@@ -455,12 +456,12 @@ contract ArkreenBadge is
         address to,
         uint256 tokenId
     ) internal virtual override (ERC721EnumerableUpgradeable) {
-        require(from == address(0), 'ARB: Transfer Not Allowed');
+        require(from == address(0), "ARB: Transfer Not Allowed");
         super._beforeTokenTransfer(from, to, tokenId);
     }
 
     function locked(uint256 tokenId) external view returns (bool){
-        require((tokenId > 0) && (tokenId <= totalSupply()), 'ARB: Wrong tokenId');
+        require((tokenId > 0) && (tokenId <= totalSupply()), "ARB: Wrong tokenId");
         return true;  
     }
 

@@ -17,7 +17,7 @@ contract ArkreenMinerU is ArkreenMiner
 
     /// @dev Returns the current version of the smart contract
     function version() external pure returns (string memory) {
-        return '1.0.1';
+        return "1.0.1";
     }
 
     function _baseURI() internal pure override returns (string memory) {
