@@ -242,10 +242,11 @@ contract ArkreenBadge is
                 'ARB: Caller Not Allowed');
 
         uint256 tokenId = totalSupply() + 1;
-        _safeMint(offsetEntity, tokenId);
 
         // Attach offset events to the newly minted NFT
         uint256 offsetAmount = _attachOffsetEvents(tokenId, offsetEntity, offsetIds);
+
+        _safeMint(offsetEntity, tokenId);
 
         certificates[tokenId].offsetEntity = offsetEntity;
         certificates[tokenId].beneficiary = beneficiary;

@@ -5,6 +5,7 @@ import '@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 import "./interfaces/IMinerRegister.sol";
 import "./interfaces/IArkreenRegistry.sol";
@@ -24,7 +25,8 @@ contract ArkreenRECIssuanceExt is
     OwnableUpgradeable,
     UUPSUpgradeable,
     ERC721EnumerableUpgradeable,
-    ArkreenRECIssuanceStorage
+    ArkreenRECIssuanceStorage,
+    ReentrancyGuardUpgradeable
 {
     // using SafeMath for uint256;    // seems not necessary
     using AddressUpgradeable for address;
@@ -85,7 +87,7 @@ contract ArkreenRECIssuanceExt is
         uint256   idAssetType,
         uint256   amountREC,
         Signature calldata permitToPay
-    ) external ensure(permitToPay.deadline) whenNotPaused returns (uint256 tokenId) {
+    ) external ensure(permitToPay.deadline) whenNotPaused nonReentrant returns (uint256 tokenId) {
 
         // Check the caller be the MVP enity
         address sender = _msgSender();

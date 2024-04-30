@@ -39,4 +39,6 @@ contract ArkreenRECIssuanceStorage {
 
     // This is the keccak-256 hash of "AREC.proxy.ESG" subtracted by 1
     bytes32 internal constant _ESG_EXT_SLOT = 0x6C14EAC8C066761328A8B25C5852066ED51A1332CB48C81DA799E3C09C620C9D;
+
+    uint256[36] private __gap;
 }

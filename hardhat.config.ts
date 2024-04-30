@@ -150,6 +150,11 @@ const config: HardhatUserConfig = {
             enabled: true,
             runs: 0,
           },
+          outputSelection: {
+            "*": {
+                "*": ["storageLayout"],
+            },
+          },
         },
       },
       "contracts/ArkreenRECIssuance.sol": {
@@ -162,6 +167,11 @@ const config: HardhatUserConfig = {
           optimizer: {
             enabled: true,
             runs: 100,
+          },
+          outputSelection: {
+            "*": {
+                "*": ["storageLayout"],
+            },
           },
         },
       },

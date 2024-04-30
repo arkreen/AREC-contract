@@ -3,6 +3,7 @@ node_modules
 .openzeppelin
 .cspell
 .temp
+.vscode
 coverage
 coverage.json
 typechain

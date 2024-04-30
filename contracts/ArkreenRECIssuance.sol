@@ -5,6 +5,7 @@ import '@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 import "./interfaces/IMinerRegister.sol";
 import "./interfaces/IArkreenRegistry.sol";
@@ -23,7 +24,8 @@ contract ArkreenRECIssuance is
     OwnableUpgradeable,
     UUPSUpgradeable,
     ERC721EnumerableUpgradeable,
-    ArkreenRECIssuanceStorage
+    ArkreenRECIssuanceStorage,
+    ReentrancyGuardUpgradeable
 {
     // using SafeMath for uint256;    // seems not necessary
     using AddressUpgradeable for address;
@@ -114,7 +116,7 @@ contract ArkreenRECIssuance is
     function mintRECRequest(
         RECRequest calldata recRequest,
         Signature calldata permitToPay
-    ) external ensure(permitToPay.deadline) whenNotPaused returns (uint256 tokenId) {
+    ) external ensure(permitToPay.deadline) whenNotPaused nonReentrant returns (uint256 tokenId) {
 
         // Check issuer address
         require(IArkreenRegistry(arkreenRegistry).isRECIssuer(recRequest.issuer), 'AREC: Wrong Issuer');
