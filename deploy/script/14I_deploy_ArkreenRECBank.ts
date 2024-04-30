@@ -36,7 +36,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     let AKRE_PRICE
     let CELO_PRICE
 
-    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(8_000_000_000)
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(350_000_000_000)
 
     if(hre.network.name === 'matic_test') {    
       // 2023/03/14, simulation 
@@ -221,11 +221,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     else if(hre.network.name === 'matic')  {        // Matic Mainnet
       RECBANK_ADDRESS   = "0xab65900A52f1DcB722CaB2e5342bB6b128630A28"          // HashKey ESG BTC address
 
-      ART_CONTROLLER    = "0x8bCe3621901909851ba5579060D9058Ef489a9EF"
+      //HART_CONTROLLER    = "0x8bCe3621901909851ba5579060D9058Ef489a9EF"
       HART_AREC          = "0x93b3bb6C51A247a27253c33F0d0C2FF1d4343214"
 
       CART_AREC         = "0x0D7899F2D36344ed21829D4EBC49CC0d335B4A06"
       CART_CONTROLLER   = "0x1249B1eABcAE642CF3Cb1e512a0075CEe92769BE"
+
+      ART_AREC          = "0x58E4D14ccddD1E993e6368A8c5EAa290C95caFDF"
+      ART_CONTROLLER    = "0x1249B1eABcAE642CF3Cb1e512a0075CEe92769BE"
 
       BUILDER_ADDRESS   = "0x7073Ea8C9B0612F3C3FE604425E2af7954c4c92e"          // ArkreenBuilder
 
@@ -253,7 +256,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       await setForwarderTrx.wait()
   */
       // 2023/04/05
-  //    const addNewARTTRx = await ArkreenRECBankFactory.addNewART(HART_AREC as string , ART_CONTROLLER as string);
+  //    const addNewARTTRx = await ArkreenRECBankFactory.addNewART(HART_AREC as string , HART_CONTROLLER as string);
   //    await addNewARTTRx.wait()
 
 /*  
@@ -261,6 +264,31 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       const addNewARTTRx = await ArkreenRECBankFactory.addNewART(CART_AREC, CART_CONTROLLER, {gasPrice: defaultGasPrice});
       await addNewARTTRx.wait()
 */
+
+      // 2024/04/30, addNewART ART
+      const addNewARTTRx = await ArkreenRECBankFactory.addNewART(ART_AREC, ART_CONTROLLER, {gasPrice: defaultGasPrice});
+      await addNewARTTRx.wait()
+
+      // Must be Called by controller
+      // 2024/04/30
+      const changeSalePriceUSDSC = await ArkreenRECBankFactory.connect(controller).changeSalePrice(ART_AREC as string, 
+                                          USDC_ADDRESS as string, USDC_PRICE as BigNumber, {gasPrice: defaultGasPrice})
+      await changeSalePriceUSDSC.wait()
+
+      // Must be Called by controller
+      // 2024/04/30
+      const changeSalePriceUSDST = await ArkreenRECBankFactory.connect(controller).changeSalePrice(ART_AREC as string, 
+                                          USDT_ADDRESS as string, USDT_PRICE as BigNumber, {gasPrice: defaultGasPrice} )
+      await changeSalePriceUSDST.wait()
+
+      // Must be Called by controller
+      // 2024/04/30
+      const ArkreenRECTokenFactory = ArkreenRECToken__factory.connect(ART_AREC as string, controller);
+      const approveTrx = await ArkreenRECTokenFactory.connect(controller).approve(RECBANK_ADDRESS as string, 
+                                          constants.MaxUint256, {gasPrice: defaultGasPrice} )
+      await approveTrx.wait()
+
+/*      
       // Called by controller, Account 2
       // 2023/04/06,  2023/04/10, 2024/03/11
       const changeSalePriceUSDSC = await ArkreenRECBankFactory.connect(controller).changeSalePrice(HART_AREC as string, 
@@ -271,6 +299,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       const changeSalePriceUSDST = await ArkreenRECBankFactory.connect(controller).changeSalePrice(HART_AREC as string, 
                                       USDT_ADDRESS as string, USDT_PRICE as BigNumber, {gasPrice: defaultGasPrice} )
       await changeSalePriceUSDST.wait()
+*/
 
 /*
       // 2023/04/10
@@ -515,6 +544,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // Action 1 (ART+ CART): addNewART 
 // Action 2 (ART+ CART): changeSalePrice(USDC), changeSalePrice(USDT), changeSalePrice(WMATIC), changeSalePrice(AKRE)   
 // Action 3 (ART+ CART): approve(RECBANK_ADDRESS)
+
+// 2024/04/30
+// yarn deploy:matic:ArtBankI
+// Action 1 (ART): addNewART 
+// Action 2 (ART): changeSalePrice(USDC), changeSalePrice(USDT)
+// Action 3 (ART): approve(RECBANK_ADDRESS)
 
 func.tags = ["ArtBankI"];
 

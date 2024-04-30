@@ -18,7 +18,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       args: [],
       log: true,
       skipIfAlreadyDeployed: false,
-      gasPrice: defaultGasPrice
+//      gasPrice: defaultGasPrice
   });
 
   console.log("greenBTC deployed to %s: ", hre.network.name, greenBTC.address);
@@ -27,6 +27,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/04/28: Deploy on Amoy testnet
 // yarn deploy:matic_test:GreenBTCProD
 // Implemenation: 0x4201963061ee4FB285c19D84F1b39170142e533a
+
+// 2024/04/30: Deployed on Polygon mainnet
+// yarn deploy:matic:GreenBTCProD
+// Implemenation: 0x0Ab06c2f66A4982EdC0D9112C4F896d87E3b99A1
 
 func.tags = ["GreenBTCProD"];
 
