@@ -81,6 +81,9 @@ describe("test ClaimToken", ()=>{
 
         await claimToken.connect(manager).increase(user1.address, expandTo18Decimals(30))
 
+        await expect(claimToken.connect(user1).claim(expandTo18Decimals(30).add(1)))
+                      .to.be.reverted
+
         const user1Status1 = [0, expandTo18Decimals(30)]
         expect(await claimToken.users(user1.address)).to.deep.equal(user1Status1)
 

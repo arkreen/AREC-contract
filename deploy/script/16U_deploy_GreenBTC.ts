@@ -9,7 +9,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { getChainId } = hre;
 
   const chainID = await getChainId()
-  const defaultGasPrice = (chainID === '80001') ? BigNumber.from(6000000000) : BigNumber.from(400_000_000_000)
+  const defaultGasPrice = (chainID === '80001') ? BigNumber.from(6000000000) : BigNumber.from(50_000_000_000)
 
   if(hre.network.name === 'matic_test') {
     // const GREENBTC_PROXY_ADDRESS  = "0x770cB90378Cb59665BbF623a72b90f427701C825"     // 2023/10/24: Green BTC proxy
@@ -51,8 +51,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     // const NEW_IMPLEMENTATION   = "0xBC66D05918F79ea139254E662441eCf528360348"    // 2024/03/06B: Upgrade to optimize the gas usage of deleting big array in storage
     // const NEW_IMPLEMENTATION   = "0xa4F20c70668ACee2648908c94884d7A8A2A726c6"    // 2024/03/07: Upgrade to restore the restore OvertimeBox list
     // const NEW_IMPLEMENTATION   = "0xbe02b9b4Eb01d81493f4fb211E0D1F90D0CE37b4"    // 2024/03/08: Upgrade to restore the restore OvertimeBox list by updating
-    // const NEW_IMPLEMENTATION   = "0x81eaB74123513E30Da96aDf4B41b5Ba51d9E650E"    // 2024/03/10: Upgrade to support revealcap: overtimeRevealCap, normalRevealCap, removeRevealCap
-    const NEW_IMPLEMENTATION      = "0x29819D75AeEe53402AB069DEB3B13AF9F8Db9FAf"    // 2024/04/30: Upgrade to support ART subsidy
+    const NEW_IMPLEMENTATION   = "0x81eaB74123513E30Da96aDf4B41b5Ba51d9E650E"    // 2024/03/10: Upgrade to support revealcap: overtimeRevealCap, normalRevealCap, removeRevealCap
+    // const NEW_IMPLEMENTATION      = "0x29819D75AeEe53402AB069DEB3B13AF9F8Db9FAf"    // 2024/04/30: Upgrade to support ART subsidy
 
     console.log("Updating GreenBTC: ", GREENBTC_PROXY_ADDRESS, chainID, defaultGasPrice.toString());  
 
@@ -64,6 +64,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     console.log("Update Trx:", updateTx)
     console.log("GreenBTC: ", hre.network.name, GreenBTCFactory.address, NEW_IMPLEMENTATION);
 
+/*    
     // 2024/04/30
     // setGreenBTCPro
     const  GreenBTCPro_Address = "0x0Ab06c2f66A4982EdC0D9112C4F896d87E3b99A1"
@@ -76,6 +77,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const setRatioSubsidyCapTx = await GreenBTCFactory.setRatioSubsidyCap(90, {gasPrice: defaultGasPrice})
     await setRatioSubsidyCapTx.wait()
     console.log("GreenBTCContract setRatioSubsidyCap is executed: %s: ", hre.network.name);
+*/
 
   } 
 
@@ -146,6 +148,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2024/04/30: Upgrade on Polygon mainnet to support ART subsidy
 // yarn deploy:matic:GreenBTCU : 0x29819D75AeEe53402AB069DEB3B13AF9F8Db9FAf
+
+// 2024/04/30: Tevert on Polygon mainnet to previous version: Token URI error
+// yarn deploy:matic:GreenBTCU : 0x81eaB74123513E30Da96aDf4B41b5Ba51d9E650E
 
 export default func;
 func.tags = ["GreenBTCU"];

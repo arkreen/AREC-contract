@@ -6,16 +6,19 @@ import { BigNumber } from "ethers";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
-  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6000000000) : BigNumber.from(80_000_000_000)
+  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(80_000_000_000)
  
   if(hre.network.name === 'matic_test') {
     
-    const ESG_BUILDER_ADDRESS = "0xA05A9677a9216401CF6800d28005b227F7A3cFae"          // ArkreenBuilder
+    // const ESG_BUILDER_ADDRESS = "0xA05A9677a9216401CF6800d28005b227F7A3cFae"       // ArkreenBuilder
+    const ESG_BUILDER_ADDRESS   = "0x12De6c1FB46B64e3DA5bFDD274E98B9103353dF7"        // ArkreenBuilder on Polygon Amoy
+
     // const NEW_IMPLEMENTATION = "0x2D597ba4358638fFED7918994AaC12c535A93F89"        // 2023/02/25: Initial version
     // const NEW_IMPLEMENTATION = "0x16dB479F500aeE6C1683955e0E34394fe81Be12d"        // 2023/03/14: Upgrade to support sales bank
     // const NEW_IMPLEMENTATION = "0xd320E323293d092d3dcC3533AF477cD14976C31B"        // 2023/10/11: Upgrade to support directly using ART in AREC Builder
     // const NEW_IMPLEMENTATION = "0x4aF1eADF9f2f51395Fc2329ac0ab554DBb7EBF57"        // 2023/12/05: Overpayemnt payback target address is configed with modeAction
-    const NEW_IMPLEMENTATION = "0x5054ce5432f3597dAFa90b246253F6433b56e3a9"           // 2024/01/27: Upgrade to support UniV3 and Charging offset fee
+    // const NEW_IMPLEMENTATION = "0x5054ce5432f3597dAFa90b246253F6433b56e3a9"        // 2024/01/27: Upgrade to support UniV3 and Charging offset fee
+    const NEW_IMPLEMENTATION = "0x93eFC409Ff44788E8b1DAF395F46965046cAe84B"           // 2024/05/06: Upgrade to support GreenBTC discount
 
     console.log("Updating HashKey ESG Builder: ", ESG_BUILDER_ADDRESS);  
 
@@ -74,6 +77,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/02/03: Upgrade on Matic Mainnet
 // yarn deploy:matic:ABuilderU
 // Upgrade to implementation: 0x3E458Ff2c39fe10636003e02C1DdA387b455Ee6F
+
+// 2024/05/06: Upgrade on Polygon Amoy
+// yarn deploy:matic_test:ABuilderU
+// Upgrade to implementation: 0x93eFC409Ff44788E8b1DAF395F46965046cAe84B
 
 export default func;
 func.tags = ["ABuilderU"];

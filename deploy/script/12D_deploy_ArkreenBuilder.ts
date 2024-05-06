@@ -10,7 +10,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
   console.log("Deploying: ", CONTRACTS.ABuilder, deployer);  
 
-  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6000000000) : BigNumber.from(120000000000)
+  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(120_000_000_000)
 
   const ArkreenBuilder = await deploy(CONTRACTS.ABuilder, {
       from: deployer,
@@ -50,6 +50,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/04/20: Deployed on Polygon Amoy testnet 
 // yarn deploy:matic_test:ABuilderD
 // 0x54E1c534F59343C56549C76D1bDccC8717129832
+
+// 2024/05/06: Deployed to support GreenBTC ART discount
+// yarn deploy:matic_test:ABuilderD
+// 0x93eFC409Ff44788E8b1DAF395F46965046cAe84B
 
 func.tags = ["ABuilderD"];
 
