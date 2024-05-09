@@ -24,7 +24,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       // 2023/10/20, Test Net Simulation 
       //GREENBTC_ADDRESS  = "0x26fa0cc54eC938DB5919b0ABc8353016f3BD81b1"    // 2023/10/20 GreenBTC address
       //GREENBTC_ADDRESS  = "0x8Cc0B065318ACf3Ac761FE5A19Caf68074034006"    // 2023/10/23 GreenBTC address re-deployed
-      GREENBTC_ADDRESS  = "0x2Bb79dB8b6149F7499CA1bA7eeBE9E736be4dBA9"      // 2023/10/24 GreenBTC address re-deployed as ERC721EnumerableUpgradeable
+      //GREENBTC_ADDRESS  = "0x2Bb79dB8b6149F7499CA1bA7eeBE9E736be4dBA9"    // 2023/10/24 GreenBTC address re-deployed as ERC721EnumerableUpgradeable
+      GREENBTC_ADDRESS  = "0x2Bb79dB8b6149F7499CA1bA7eeBE9E736be4dBA9"      // 2024/05/06 GreenBTC address Amoy testnet
 
       // WMATIC_ADDRESS  = "0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889"     // WMATIC address
       // AKRE_ADDRESS    = "0x54e1c534f59343c56549c76d1bdccc8717129832"     // AKRE address
@@ -45,7 +46,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       //IMAGE_ADDRESS  = "0x5b92c6E11A98F76CF20d878A79150A09bB24C24f"       // 2023/10/26: POWER -> ENERGY in image contract
       //IMAGE_ADDRESS  = "0xb5E55E38B3260f52884a8b74a86F9C9c3933717d"       // 2023/10/27: Change image contract, move  all svg logic to image contract
       // IMAGE_ADDRESS  = "0x0Cd8bc60c7bE8cC22D9365B7996b6E789B948f97"      // 2023/11/08: Add metadata to NFT image
-      IMAGE_ADDRESS  = "0xD6Ad5AF35a22F8630d0C9049779f8B16218D6ce9"         // 2024/04/17(Amoy): Add metadata to NFT image
+      // IMAGE_ADDRESS  = "0xD6Ad5AF35a22F8630d0C9049779f8B16218D6ce9"      // 2024/04/17(Amoy): Add metadata to NFT image
+      IMAGE_ADDRESS  = "0xb50663a9848A8CDa219756488406cCA19F8b2F28"         // 2024/05/06(Amoy): Upgrade to support ART disaccount
       MANAGER_ADDRESS   = "0xBAeF5d8EfA74d3cff297D88c433D7B5d90bf0e49"      // 2023/10/23: Image address, 2024/04/17(Amoy)
 
       const [deployer] = await ethers.getSigners();
@@ -60,13 +62,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       await approveRouterTx.wait()
       console.log("GreenBTCContract approveBuilder is executed: %s: ", hre.network.name, GREENBTC_ADDRESS, 
                                         [USDC_ADDRESS, USDT_ADDRESS, ART_ADDRESS] );
-
-      // 2023/10/21, 2023/10/23, 2023/10/24, 2023/10/25, 2023/20/27, 2023/11/08, 2024/04/17
+*/
+      // 2023/10/21, 2023/10/23, 2023/10/24, 2023/10/25, 2023/20/27, 2023/11/08, 2024/04/17, 2024/05/06
       // Set Image Contract address
+      
       const setImageContractTx = await GreenBTCFactory.setImageContract(IMAGE_ADDRESS, {gasPrice: defaultGasPrice})
       await setImageContractTx.wait()
       console.log("GreenBTCContract setImageContract is executed: %s: ", hre.network.name, IMAGE_ADDRESS);
-
+/*
       //  2023/10/23, 2023/10/, 2024/04/17
       // Set Manager address
       const setManagerTx = await GreenBTCFactory.setManager(MANAGER_ADDRESS, {gasPrice: defaultGasPrice})
@@ -93,6 +96,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       await setNewCapsTx.wait()
       console.log("GreenBTCContract setNewCaps is executed: %s: ", hre.network.name);
 */
+
+/*
       // 2024/04/28
       // setGreenBTCPro
       const  GreenBTCPro_Address = "0x4201963061ee4FB285c19D84F1b39170142e533a"
@@ -105,7 +110,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       const setRatioSubsidyCapTx = await GreenBTCFactory.setRatioSubsidyCap(90, {gasPrice: defaultGasPrice})
       await setRatioSubsidyCapTx.wait()
       console.log("GreenBTCContract setRatioSubsidyCap is executed: %s: ", hre.network.name);
-
+*/
     }
     else if(hre.network.name === 'matic')  {        // Matic Mainnet
       
@@ -311,6 +316,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // Amoy testnet: 0x2Bb79dB8b6149F7499CA1bA7eeBE9E736be4dBA9
 // yarn deploy:matic_test:GreenBTCI
 
+// 2024/05/06: Executed on Amoy testnet: 
+// Call setImageContract
+// Amoy testnet: 0x2Bb79dB8b6149F7499CA1bA7eeBE9E736be4dBA9
+// yarn deploy:matic_test:GreenBTCI
 
 func.tags = ["GreenBTCI"];
 

@@ -103,6 +103,11 @@ contract GreenBTC is
         tokenCART = newCARTToken;
     }
 
+    function setARTContract(address newSubsidyART) public onlyOwner {
+        require(newSubsidyART != address(0), "GBTC: Zero Address");
+        tokenARTSubsidy = newSubsidyART;
+    }
+
     function setGreenBTCPro(address newGreenBTCPro) public onlyOwner {
         require(newGreenBTCPro != address(0), "GBTC: Zero Address");
         greenBTCPro = newGreenBTCPro;
@@ -181,7 +186,7 @@ contract GreenBTC is
     }
 
     function _getFullARTValue( uint256 actionValue ) internal view returns (uint256) {
-        uint256 ratioFeeOffset = IArkreenRECToken(tokenCART).getRatioFeeOffset();
+        uint256 ratioFeeOffset = IArkreenRECToken(tokenCART).getRatioFeeOffset();     // Assum ART, cART have the save rate
         return (actionValue * 10000) / (10000 - ratioFeeOffset);    // Add Offset fee
     }
 
@@ -212,13 +217,13 @@ contract GreenBTC is
             uint256 amountART = (amountARTwithFee * (100 - ratio) + 99) / 100;                 // ART mount to pay by caller
 
             // buyARTBank(address,address,uint256,uint256,bool): 0x478A55B6
-            bytes memory builderCallData = abi.encodeWithSelector( 0x478A55B6, payInfo.token, tokenCART, payInfo.amount,
+            bytes memory builderCallData = abi.encodeWithSelector( 0x478A55B6, payInfo.token, tokenARTSubsidy, payInfo.amount,
                                                           amountART, false);
 
             _actionBuilderBadge(abi.encodePacked(builderCallData, _msgSender()));
 
             // actionBuilderBadgeWithART(address,uint256,uint256,(address,string,string,string)): 0x6E556DF8
-            builderCallData = abi.encodeWithSelector(0x6E556DF8, tokenCART, amountARTwithFee, uint32(deadline), badgeInfo);
+            builderCallData = abi.encodeWithSelector(0x6E556DF8, tokenARTSubsidy, amountARTwithFee, uint32(deadline), badgeInfo);
 
             _actionBuilderBadge(abi.encodePacked(builderCallData, _msgSender()));
         } else {
@@ -266,13 +271,13 @@ contract GreenBTC is
             uint256 amountART = (amountARTwithFee * (100 - ratio) + 99) / 100;                 // ART mount to pay by caller
 
             // buyARTBank(address,address,uint256,uint256,bool): 0x478A55B6
-            bytes memory builderCallData = abi.encodeWithSelector( 0x478A55B6, payInfo.token, tokenCART, payInfo.amount,
+            bytes memory builderCallData = abi.encodeWithSelector( 0x478A55B6, payInfo.token, tokenARTSubsidy, payInfo.amount,
                                                           amountART, false);
 
             _actionBuilderBadge(abi.encodePacked(builderCallData, _msgSender()));
 
             // actionBuilderBadgeWithART(address,uint256,uint256,(address,string,string,string)): 0x6E556DF8
-            builderCallData = abi.encodeWithSelector(0x6E556DF8, tokenCART, amountARTwithFee, uint32(deadline), badgeInfo);
+            builderCallData = abi.encodeWithSelector(0x6E556DF8, tokenARTSubsidy, amountARTwithFee, uint32(deadline), badgeInfo);
 
             _actionBuilderBadge(abi.encodePacked(builderCallData, _msgSender()));
         } else {

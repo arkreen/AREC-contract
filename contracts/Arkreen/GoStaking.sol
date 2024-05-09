@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 // Import this file to use console.log
 import "hardhat/console.sol";
 
-contract StakingRewards is ReentrancyGuard {
+contract GoStaking is ReentrancyGuard {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -28,6 +28,7 @@ contract StakingRewards is ReentrancyGuard {
 
     mapping(address => uint256) public myRewardsPerStakePaid;
     mapping(address => uint256) public myRewards;
+
     mapping(address => uint256) public myStakes;
 
     event RewardAdded(uint256 reward);
@@ -56,15 +57,15 @@ contract StakingRewards is ReentrancyGuard {
     }
 
     function rewardPerToken() public view returns (uint256) {
-        //console.log("PPPPPPPPPPPPPP", block.timestamp, periodStart, periodEnd);
-        //console.log("QQQQQQQQQQQQQQQQQ", lastTimeRewardApplicable(), lastUpdateTime, rewardRate);
+        console.log("PPPPPPPPPPPPPP", block.timestamp, periodStart, periodEnd);
+        console.log("QQQQQQQQQQQQQQQQQ", lastTimeRewardApplicable(), lastUpdateTime, rewardRate);
         if ((block.timestamp <= periodStart) || (totalStakes == 0)) return rewardPerStakeLast;
         return uint256(rewardPerStakeLast).add(lastTimeRewardApplicable().sub(lastUpdateTime).mul(rewardRate).div(totalStakes));
     }
 
     function earned(address account) public view returns (uint256) {
-        //console.log("XXXXXXXXXXXXXX", rewardPerToken(), rewardPerStakeLast, totalStakes);
-        //console.log("YYYYYYYYYYYYYY", myStakes[account], myRewardsPerStakePaid[account], myRewards[account]);
+        console.log("XXXXXXXXXXXXXX", rewardPerToken(), rewardPerStakeLast, totalStakes);
+        console.log("YYYYYYYYYYYYYY", myStakes[account], myRewardsPerStakePaid[account], myRewards[account]);
 
         return myStakes[account].mul(rewardPerToken().sub(myRewardsPerStakePaid[account])).div(1e36).add(myRewards[account]);
     }

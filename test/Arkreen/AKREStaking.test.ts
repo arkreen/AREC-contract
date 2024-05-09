@@ -87,109 +87,119 @@ describe("StakingRewards test", ()=> {
         return {arkreenToken, artToken, stakingRewards, deployer, user1, user2, user3}
     }
 
+    function getLastRewardsPerStake() {
+      const lastTimeRewardApplicable = lastBlockN.timestamp < endTimestamp ? lastBlockN.timestamp : endTimestamp
+      const lastUpdateTimeForReward = lastUpdateTime < startTimestamp ? startTimestamp : lastUpdateTime
+
+//      const rewardRatePerStake = allStakeAmount.eq(0) ? BigNumber.from(0) :rewardRate.div(allStakeAmount)
+//      console.log("\r\nWWWWWWWWWWWWWWWWWWWW", lastBlockN.timestamp, lastTimeRewardApplicable, 
+//                                              startTimestamp, endTimestamp, rewardRatePerStake.toString())
+
+      const rewardsPerStakeIncrease = startTimestamp == 0  || lastBlockN.timestamp <= startTimestamp || allStakeAmount.eq(0) 
+                                      ? BigNumber.from(0)
+                                      : rewardRate.mul(lastTimeRewardApplicable-lastUpdateTimeForReward).div(allStakeAmount)
+
+//      console.log("\r\nVVVVVVVVVVVVVVVVVVVVV", lastRewardsPerStakePaid, rewardsPerStakeIncrease)
+
+      return lastRewardsPerStakePaid.add(rewardsPerStakeIncrease)
+    }                                    
+
     async function user1Stake(amount: BigNumber) {
       await stakingRewards.connect(user1).stake(amount)
       lastBlockN = await ethers.provider.getBlock('latest')
 
-      const lastTimeRewardApplicable = lastBlockN.timestamp < endTimestamp ? lastBlockN.timestamp : endTimestamp
-      const rewardsPerStakeIncrease = lastBlockN.timestamp < startTimestamp 
-                                      ? BigNumber.from(0)
-                                      : rewardRate.mul(lastTimeRewardApplicable-lastUpdateTime).div(allStakeAmount)
-      
-      lastRewardsPerStakePaid = lastRewardsPerStakePaid.add(rewardsPerStakeIncrease)
-
-      const newRewards = user1StakeStatus.stakeAmount.mul(lastRewardsPerStakePaid.sub())
-      user1StakeStatus.earnStored = await stakingRewards.earned(user1.address)
-
-      lastUpdateTime = lastBlockN.timestamp
+      lastRewardsPerStakePaid = getLastRewardsPerStake()
+      const newRewards = user1StakeStatus.stakeAmount.mul(lastRewardsPerStakePaid.sub(user1StakeStatus.rewardsPerStakePaid))
 
       allStakeAmount = allStakeAmount.add(amount)
       user1StakeStatus.stakeAmount = user1StakeStatus.stakeAmount.add(amount)
-      
-      user1StakeStatus.earnStored = await stakingRewards.earned(user1.address)
-
-       myStakes[account].mul(rewardPerToken().sub(myRewardsPerStakePaid[account])).div(1e36).add(myRewards[account]);
-
-
       user1StakeStatus.lastTimeStamp = lastBlockN.timestamp
-      user1StakeStatus.rewardsPerStakePaid = rewardRate.div(allStakeAmount)
-      lastRewardsPerStakePaid = user1StakeStatus.rewardsPerStakePaid
+      user1StakeStatus.rewardsPerStakePaid = lastRewardsPerStakePaid
+      user1StakeStatus.earnStored = user1StakeStatus.earnStored.add(newRewards).div(expandTo18Decimals(1)).div(expandTo18Decimals(1))
 
-      console.log("User 1", lastBlockN.timestamp, user1StakeStatus.stakeAmount.toString(), 
-          user2StakeStatus.stakeAmount.toString(), user3StakeStatus.stakeAmount.toString(), allStakeAmount.toString())
+      lastUpdateTime = lastBlockN.timestamp
+
+//      console.log("User 1", lastBlockN.timestamp, user1StakeStatus.stakeAmount.toString(), 
+//          user2StakeStatus.stakeAmount.toString(), user3StakeStatus.stakeAmount.toString(), allStakeAmount.toString())
     }
 
     async function user2Stake(amount: BigNumber) {
       await stakingRewards.connect(user2).stake(amount)
       lastBlockN = await ethers.provider.getBlock('latest')
+
+      lastRewardsPerStakePaid = getLastRewardsPerStake()
+      const newRewards = user2StakeStatus.stakeAmount.mul(lastRewardsPerStakePaid.sub(user2StakeStatus.rewardsPerStakePaid))
+
       allStakeAmount = allStakeAmount.add(amount)
       user2StakeStatus.stakeAmount = user2StakeStatus.stakeAmount.add(amount)
-      user2StakeStatus.earnStored = await stakingRewards.earned(user2.address)
       user2StakeStatus.lastTimeStamp = lastBlockN.timestamp
-      user2StakeStatus.rewardsPerStakePaid = rewardRate.div(allStakeAmount)
-      lastRewardsPerStakePaid = user2StakeStatus.rewardsPerStakePaid
+      user2StakeStatus.rewardsPerStakePaid = lastRewardsPerStakePaid
+      user2StakeStatus.earnStored = user2StakeStatus.earnStored.add(newRewards).div(expandTo18Decimals(1)).div(expandTo18Decimals(1))
 
-      console.log("User 2", lastBlockN.timestamp, user2StakeStatus.stakeAmount.toString(), 
-          user2StakeStatus.stakeAmount.toString(), user3StakeStatus.stakeAmount.toString(), allStakeAmount.toString())
+      lastUpdateTime = lastBlockN.timestamp
+
+//      console.log("User 2", lastBlockN.timestamp, user2StakeStatus.stakeAmount.toString(), 
+//          user2StakeStatus.stakeAmount.toString(), user3StakeStatus.stakeAmount.toString(), allStakeAmount.toString())
     }
 
     async function user3Stake(amount: BigNumber) {
       await stakingRewards.connect(user3).stake(amount)
       lastBlockN = await ethers.provider.getBlock('latest')
+
+      lastRewardsPerStakePaid = getLastRewardsPerStake()
+      const newRewards = user3StakeStatus.stakeAmount.mul(lastRewardsPerStakePaid.sub(user3StakeStatus.rewardsPerStakePaid))
+
       allStakeAmount = allStakeAmount.add(amount)
       user3StakeStatus.stakeAmount = user3StakeStatus.stakeAmount.add(amount)
-      user3StakeStatus.earnStored = await stakingRewards.earned(user3.address)
       user3StakeStatus.lastTimeStamp = lastBlockN.timestamp
-      user3StakeStatus.rewardsPerStakePaid = rewardRate.div(allStakeAmount)
-      lastRewardsPerStakePaid = user3StakeStatus.rewardsPerStakePaid
+      user3StakeStatus.rewardsPerStakePaid = lastRewardsPerStakePaid
+      user3StakeStatus.earnStored = user3StakeStatus.earnStored.add(newRewards).div(expandTo18Decimals(1)).div(expandTo18Decimals(1))
 
-      console.log("User 3", lastBlockN.timestamp, user3StakeStatus.stakeAmount.toString(), 
-            user2StakeStatus.stakeAmount.toString(), user3StakeStatus.stakeAmount.toString(), allStakeAmount.toString())
+      lastUpdateTime = lastBlockN.timestamp
+
+//      console.log("User 3", lastBlockN.timestamp, user3StakeStatus.stakeAmount.toString(), 
+//            user2StakeStatus.stakeAmount.toString(), user3StakeStatus.stakeAmount.toString(), allStakeAmount.toString())
     }
 
-    function getEarnedUser1() {
-      const startTime = user1StakeStatus.lastTimeStamp < startTimestamp ? startTimestamp : user1StakeStatus.lastTimeStamp
-      const endTime = lastBlockN.timestamp > endTimestamp ? endTimestamp : lastBlockN.timestamp
+    async function checkEarnedUser1() {
+      lastBlockN = await ethers.provider.getBlock('latest')
+      const lastRewardsPerStakePaidTemp = getLastRewardsPerStake()
+      const newRewards = user1StakeStatus.stakeAmount
+                            .mul(lastRewardsPerStakePaidTemp.sub(user1StakeStatus.rewardsPerStakePaid))
+                            .div(expandTo18Decimals(1)).div(expandTo18Decimals(1))
 
-      console.log("User1 earned: SSSSSSSSSSS", rewardRate.toString(), lastBlockN.timestamp, startTimestamp, endTimestamp, endTime, startTime)
-      console.log("User1 earned: DDDDDDDDDD", lastRewardsPerStakePaid, user1StakeStatus)
-      
-      const earnedUser1 = user1StakeStatus.stakeAmount.mul(lastRewardsPerStakePaid.sub(user1StakeStatus.rewardsPerStakePaid))
-              .mul(endTime-startTime).add(user1StakeStatus.earnStored).div(expandTo18Decimals(1)).div(expandTo18Decimals(1))
+//      console.log("11111111111111111", user1StakeStatus.stakeAmount.toString(), lastRewardsPerStakePaidTemp.toString(),
+//            user2StakeStatus.earnStored.toString(), newRewards.toString())
 
-      console.log("User1 earned:", user1StakeStatus.stakeAmount.toString(), lastBlockN.timestamp, user1StakeStatus.lastTimeStamp,
-                          allStakeAmount.toString(), earnedUser1.toString(), user1StakeStatus.earnStored.toString())
-      return earnedUser1               
+      expect(await stakingRewards.earned(user1.address)).to.eq(
+            user1StakeStatus.earnStored.add(newRewards))
     }
 
-    function getEarnedUser2() {
-      const startTime = user2StakeStatus.lastTimeStamp < startTimestamp ? startTimestamp : user2StakeStatus.lastTimeStamp
-      const endTime = lastBlockN.timestamp > endTimestamp ? startTimestamp : lastBlockN.timestamp
+    async function checkEarnedUser2() {
+      lastBlockN = await ethers.provider.getBlock('latest')
+      const lastRewardsPerStakePaidTemp = getLastRewardsPerStake()
 
-//      const earnedUser2 = rewardRate.mul(user2StakeStatus.stakeAmount).mul(endTime-startTime)
-//            .div(allStakeAmount).div(expandTo18Decimals(1)).add(user2StakeStatus.earnStored)
+      const newRewards = user2StakeStatus.stakeAmount
+                        .mul(lastRewardsPerStakePaidTemp.sub(user2StakeStatus.rewardsPerStakePaid))
+                        .div(expandTo18Decimals(1)).div(expandTo18Decimals(1))
 
-      const earnedUser2 = user2StakeStatus.stakeAmount.mul(lastRewardsPerStakePaid.sub(user2StakeStatus.rewardsPerStakePaid))
-              .mul(endTime-startTime).add(user2StakeStatus.earnStored).div(expandTo18Decimals(1)).div(expandTo18Decimals(1))
+//      console.log("222222222222222", user2StakeStatus.stakeAmount.toString(), lastRewardsPerStakePaidTemp.toString(),
+//            user2StakeStatus.earnStored.toString(), newRewards.toString())
 
-      console.log("User2 earned:", user2StakeStatus.stakeAmount.toString(), lastBlockN.timestamp, startTimestamp,
-      allStakeAmount.toString(), earnedUser2.toString())                  
-      return earnedUser2             
+      expect(await stakingRewards.earned(user2.address)).to.eq(user2StakeStatus.earnStored.add(newRewards))
     }
 
-    function getEarnedUser3() {
-      const startTime = user3StakeStatus.lastTimeStamp < startTimestamp ? startTimestamp : user3StakeStatus.lastTimeStamp
-      const endTime = lastBlockN.timestamp > endTimestamp ? startTimestamp : lastBlockN.timestamp
+    async function checkEarnedUser3() {
+      lastBlockN = await ethers.provider.getBlock('latest')
+      const lastRewardsPerStakePaidTemp = getLastRewardsPerStake()
+      const newRewards = user3StakeStatus.stakeAmount
+                          .mul(lastRewardsPerStakePaidTemp.sub(user3StakeStatus.rewardsPerStakePaid))
+                          .div(expandTo18Decimals(1)).div(expandTo18Decimals(1))
 
-//      const earnedUser3 = rewardRate.mul(user3StakeStatus.stakeAmount).mul(endTime-startTime)
-//              .div(allStakeAmount).div(expandTo18Decimals(1)).add(user3StakeStatus.earnStored)
+//      console.log("3333333333333333", user2StakeStatus.stakeAmount.toString(), lastRewardsPerStakePaidTemp.toString(),
+//            user2StakeStatus.earnStored.toString(), newRewards.toString())
 
-      const earnedUser3 = user3StakeStatus.stakeAmount.mul(lastRewardsPerStakePaid.sub(user3StakeStatus.rewardsPerStakePaid))
-              .mul(endTime-startTime).add(user3StakeStatus.earnStored).div(expandTo18Decimals(1)).div(expandTo18Decimals(1))
-
-      console.log("User3 earned:", user3StakeStatus.stakeAmount.toString(), lastBlockN.timestamp, startTimestamp,
-              allStakeAmount.toString(), earnedUser3.toString())                                    
-      return earnedUser3           
+      expect(await stakingRewards.earned(user3.address)).to.eq(user3StakeStatus.earnStored.add(newRewards))
     }
 
     describe('StakingRewards test', () => {
@@ -226,6 +236,7 @@ describe("StakingRewards test", ()=> {
 
         startTimestamp = lastBlock.timestamp + startTime
         endTimestamp = lastBlock.timestamp + endTime
+
         await stakingRewards.depolyRewards(startTimestamp, endTimestamp, amountReward )
 
         await user1Stake(stake1)
@@ -244,47 +255,52 @@ describe("StakingRewards test", ()=> {
 
         lastBlockN = await ethers.provider.getBlock('latest')       // Must keep to update the lastBlockN
 
-        expect(await stakingRewards.earned(user1.address)).to.equal(getEarnedUser1())                              
-        expect(await stakingRewards.earned(user2.address)).to.equal(getEarnedUser2())  
-        expect(await stakingRewards.earned(user3.address)).to.equal(getEarnedUser3())     
+        await checkEarnedUser1()
+        await checkEarnedUser2()
+        await checkEarnedUser3()
 
         await ethers.provider.send("evm_increaseTime", [60*60*24*10]);
         await mine(1)
 
         await user1Stake(stake1)
-        expect(await stakingRewards.earned(user1.address)).to.equal(getEarnedUser1())                              
+        await checkEarnedUser1()
 
         await user2Stake(stake2)
-        expect(await stakingRewards.earned(user2.address)).to.equal(getEarnedUser2())                              
+        await checkEarnedUser2()
 
         await user3Stake(stake3)
-        expect(await stakingRewards.earned(user3.address)).to.equal(getEarnedUser3())                              
+        await checkEarnedUser3()
+
+        await ethers.provider.send("evm_increaseTime", [60*60*24*2]);
+        await mine(1)
+        await user1Stake(stake1)
+        await checkEarnedUser1()
+        await checkEarnedUser2()
+        await checkEarnedUser3()
+
+        await ethers.provider.send("evm_increaseTime", [60*60*24*4]);
+        await mine(1)
+        await user2Stake(stake2)
+        await checkEarnedUser1()
+        await checkEarnedUser2()
+        await checkEarnedUser3()
+        
+        await ethers.provider.send("evm_increaseTime", [60*60*24*4]);
+        await mine(1)
+        await user3Stake(stake3)
+        await checkEarnedUser1()
+        await checkEarnedUser2()
+        await checkEarnedUser3()
 
         // Period ended
-        await ethers.provider.send("evm_increaseTime", [60*60*24*50]);
+        await ethers.provider.send("evm_increaseTime", [60*60*24*40]);
         await mine(1)
 
         lastBlockN = await ethers.provider.getBlock('latest')       // Must keep to update the lastBlockN
 
-        console.log("SSSSSSSSSSSS", lastBlock.timestamp, lastBlockN.timestamp, startTimestamp, endTimestamp)
-
-//        const earnedUser1 = await stakingRewards.earned(user1.address)
-//        const earnedUser2 = await stakingRewards.earned(user2.address)
-//        const earnedUser3 = await stakingRewards.earned(user3.address)
-
-
-        expect(await stakingRewards.earned(user1.address)).to.equal(getEarnedUser1())                              
-        expect(await stakingRewards.earned(user2.address)).to.equal(getEarnedUser2())                              
-        expect(await stakingRewards.earned(user3.address)).to.equal(getEarnedUser3())                              
-
-        const lastBlockB = await ethers.provider.getBlock('latest')
-
-        console.log("SSSSSSSSSSSS", lastBlock.timestamp, lastBlock.timestamp + startTime + 1, lastBlockN.timestamp, lastBlockB.timestamp)
-        console.log("AAAAAAAAAAA", rewardRate.toString(), arkreenToken.address, artToken.address, stakingRewards.address)
-        console.log("BBBBBBBBBBB",  getEarnedUser1().toString(), getEarnedUser2().toString(),
-                                    getEarnedUser3().toString())
-
-        console.log("CCCCCCCCCCCCCC", lastBlockB)
+        await checkEarnedUser1()
+        await checkEarnedUser2()
+        await checkEarnedUser3()
         
       });
 

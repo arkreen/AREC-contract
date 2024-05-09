@@ -42,4 +42,5 @@ abstract contract GreenBTCStorage
 
     address public greenBTCPro;                   // Pro function of Green
     uint8   public ratioSubsidyCap;
+    address public tokenARTSubsidy;               // ART token for subsidy
 }
