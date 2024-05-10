@@ -56,16 +56,21 @@ contract StakingRewards is ReentrancyGuard {
     }
 
     function rewardPerToken() public view returns (uint256) {
-        //console.log("PPPPPPPPPPPPPP", block.timestamp, periodStart, periodEnd);
-        //console.log("QQQQQQQQQQQQQQQQQ", lastTimeRewardApplicable(), lastUpdateTime, rewardRate);
+//        console.log("PPPPPPPPPPPPPP", block.timestamp, periodStart, periodEnd);
+//        console.log("QQQQQQQQQQQQQQQQQ", lastTimeRewardApplicable(), lastUpdateTime, rewardRate);
         if ((block.timestamp <= periodStart) || (totalStakes == 0)) return rewardPerStakeLast;
         return uint256(rewardPerStakeLast).add(lastTimeRewardApplicable().sub(lastUpdateTime).mul(rewardRate).div(totalStakes));
     }
 
     function earned(address account) public view returns (uint256) {
-        //console.log("XXXXXXXXXXXXXX", rewardPerToken(), rewardPerStakeLast, totalStakes);
-        //console.log("YYYYYYYYYYYYYY", myStakes[account], myRewardsPerStakePaid[account], myRewards[account]);
+/*      
+        uint256 rewardPerTokenValue = rewardPerToken();
+        console.log("XXXXXXXXXXXXXX", rewardPerTokenValue, rewardPerStakeLast, totalStakes);
+        console.log("YYYYYYYYYYYYYY", myStakes[account], myRewardsPerStakePaid[account], myRewards[account]);
 
+        uint256 newRewards = myStakes[account].mul(rewardPerTokenValue.sub(myRewardsPerStakePaid[account])).div(1e36);
+        console.log("ZZZZZZZZZZZZZZ", newRewards, newRewards.add(myRewards[account]));
+*/
         return myStakes[account].mul(rewardPerToken().sub(myRewardsPerStakePaid[account])).div(1e36).add(myRewards[account]);
     }
 
@@ -120,21 +125,19 @@ contract StakingRewards is ReentrancyGuard {
         periodStart = uint32(start);
         periodEnd = uint32(end);
 
-//        console.log('WWWWWWWWWWWWWWWWWWW', msg.sender, address(this), rewardTotal);
-
         rewardsToken.safeTransferFrom(msg.sender, address(this), rewardTotal);
-        rewardRate = rewardTotal.mul(1e36).div(end - start);                        // Accuracy of 1e18
+        rewardRate = rewardTotal.mul(1e36).div(end - start);                          // For accuracy
         lastUpdateTime = uint32(start);
 
         emit RewardAdded(rewardTotal);
     }
 
-    // if staking reward period is started, but no one stake, the reward unpaid will be kept.
+    // If staking reward period is started, but no one stake, the reward unpaid will be kept.
     // This situation could be easily avoided by staking before the reward period !!!   
     modifier updateReward(address account) {
         rewardPerStakeLast = uint160(rewardPerToken());
         lastUpdateTime = uint32(lastTimeRewardApplicable());
-//        console.log("RRRRRRRRRRRRRRRRRRR", rewardPerStakeLast, lastUpdateTime);
+
         if (account != address(0)) {
             myRewards[account] = earned(account);
             myRewardsPerStakePaid[account] = rewardPerStakeLast;

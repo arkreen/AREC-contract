@@ -122,7 +122,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2024/05/09A: Deploy on Polygon mainnet: use cART while no subidy, use ART while with subsidy
 // yarn deploy:matic:GreenBTCD
-// Implemenation: 
+// Implemenation: 0xf9e8B934db91A80009e24d3CA0Bf3273CDfA079c
 
 
 func.tags = ["GreenBTCD"];
