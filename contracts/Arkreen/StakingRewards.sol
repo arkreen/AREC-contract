@@ -14,6 +14,8 @@ contract StakingRewards is ReentrancyGuard {
 
     IERC20 public stakingToken;
     IERC20 public rewardsToken;
+    IERC20 public ArkreenMiner;
+
     address public rewardsDistributor;
 
     uint256 public totalStakes;

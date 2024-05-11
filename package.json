@@ -79,6 +79,7 @@
     "verify:matic_test": "npx hardhat verify --network matic_test <ADDRESS> <PARAMS>",
     "confirmAuto:matic_test": "hardhat run --network matic_test ./deploy/confirmIssuance.ts",
     "storageExplorer:matic_test": "hardhat run --network matic_test ./deploy/storageExplorer.ts",
+    "storageMiner:matic_test": "hardhat run --network matic_test ./deploy/storageMiner.ts",
 
     "claim:matic_test": "hardhat run --network matic_test ./deploy/matic-gatherer-v2.ts",
     "deploy:matic_test:all": "hardhat --network matic_test deploy",

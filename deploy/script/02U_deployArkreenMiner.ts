@@ -51,8 +51,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   if(hre.network.name === 'matic_test') {
 //  const MINER_PROXY_ADDRESS = "0xC4f795514586275c799729aF5AE7113Bdb7ccc86"       // game miner in matic test net
 //  const MINER_PROXY_ADDRESS = "0x682e01f8ecc0524085F51CC7dFB54fDB8729ac22"       // 2023/08/29: Miner in dev env, 2023/08/30, 2023/09/05
-    const MINER_PROXY_ADDRESS = "0x1F742C5f32C071A9925431cABb324352C6e99953"       // 2023/08/29: Miner in preduction env, 2023/08/30, 2023/09/05
-    
+//  const MINER_PROXY_ADDRESS = "0x1F742C5f32C071A9925431cABb324352C6e99953"       // 2023/08/29: Miner in preduction env, 2023/08/30, 2023/09/05
+    const MINER_PROXY_ADDRESS = "0xF390caaF4FF0d297e0b4C3c1527D707C75541736"       // 2024/05/11: Miner in Amoy testenet
+
 //  const NEW_IMPLEMENTATION =  "0x4EDe87d416e872376583E793ac26526c535267C5"        // Wrong
 //  const NEW_IMPLEMENTATION =  "0x7693ad7e3a69b241322094b14fcaec233afb3e56"        // original 
 //  const NEW_IMPLEMENTATION =  "0x16a427a1a2012fdde0ccad2664d5f2981d52a2d2"        // restored
@@ -64,7 +65,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //  const NEW_IMPLEMENTATION =  "0x7D4718A6430334556c27503A04B3CAf072BA4e29"        // 2024/01/14: Dev Env,  2024/01/15: Pre Env:: Upgrade to add pretection in RemoteMinerOnboardBatchClaim againt replaying signature
 //  const NEW_IMPLEMENTATION =  "0x516846704C4e163bF37d97A6870e4b88d5598e46"        // 2024/02/01: Upgrade to support PlantMiner, and block transferring
 //  const NEW_IMPLEMENTATION =  "0x8844E2EE618C66383627016EDde27F5A4095B7d2"        // 2024/02/02: Upgrade to correct overlapped parameters
-    const NEW_IMPLEMENTATION =  "0x926B113e8fb52EfCeDe65981Fa9ef2731Ab66324"        // 2024/02/02A: Upgrade to correct overlapped parameters
+//  const NEW_IMPLEMENTATION =  "0x926B113e8fb52EfCeDe65981Fa9ef2731Ab66324"        // 2024/02/02A: Upgrade to correct overlapped parameters
+    const NEW_IMPLEMENTATION =  "0x0463729B34a867B3fD155943E0AAe9790cb7bfeF"        // 2024/05/11: Upgrade to support removing miner from white list
 
     const [deployer] = await ethers.getSigners();
     const ArkreenMinerFactory = ArkreenMiner__factory.connect(MINER_PROXY_ADDRESS, deployer);
@@ -75,15 +77,18 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     //const callData = ArkreenMinerFactory.interface.encodeFunctionData("postUpdate")
     //const updateTx = await ArkreenMinerFactory.upgradeToAndCall(NEW_IMPLEMENTATION, callData)
 
+/*    
     const key1 = await ArkreenMinerFactory.AllManagers(0)
     const key2 = await ArkreenMinerFactory.AllManagers(2)
+    console.log("Update Trx:", key1, key2)
+*/
 
     // 2024/01/12A: Dev Env, Revert to 0x8aFFe644eD9ae6D9DEC5672cDd927dd8eF29d9EF
     // 2024/01/14: Dev Env: Upgrade to add pretection in RemoteMinerOnboardBatchClaim againt replaying signature
-//    const updateTx = await ArkreenMinerFactory.upgradeTo(NEW_IMPLEMENTATION)
-//    await updateTx.wait()
+    // 2024/05/11: Amoy Dev Env, 0x0463729B34a867B3fD155943E0AAe9790cb7bfeF
+    const updateTx = await ArkreenMinerFactory.upgradeTo(NEW_IMPLEMENTATION)
+    await updateTx.wait()
 
-    console.log("Update Trx:", key1, key2)
     console.log("ArkreenMiner Updated to: ", hre.network.name, ArkreenMinerFactory.address, NEW_IMPLEMENTATION);
  } 
 
@@ -205,6 +210,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2024/04/12: yarn deploy:matic:AMinerUV10: For production Env. (Need to upgrade with foundation wallet)
 // Update to correct according audit result and prepare for upgrading on mainnet
+// immplementaion: 0x4bfE8d12b01756A04AB9762D28ebCF4210E9A59B
+
+// 2024/05/11: yarn deploy:matic_test:AMinerUV10: For Amoy production Env.
+// Upgrade to remove miner from whitelist 
 // immplementaion: 0x4bfE8d12b01756A04AB9762D28ebCF4210E9A59B
 
 export default func;
