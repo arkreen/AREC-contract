@@ -6,11 +6,10 @@ import { expect } from "chai";
 import { ethers, network, upgrades } from "hardhat";
 import { Block } from "@ethersproject/abstract-provider";
 
-//import hre from 'hardhat'
-//import { ecsign, fromRpcSig, ecrecover } from 'ethereumjs-util'
-//import { getPermitDigest, getDomainSeparator, expandTo18Decimals, randomAddresses } from '../utils/utilities'
 import { constants, BigNumber, } from 'ethers'
-import { expandTo18Decimals, expandTo9Decimals } from "../utils/utilities"
+import { getPermitDigest, expandTo18Decimals, expandTo9Decimals } from "../utils/utilities"
+
+import { ecsign } from 'ethereumjs-util'
 
 import {
     ArkreenToken,
@@ -80,10 +79,6 @@ describe("StakingRewards test", ()=> {
         await arkreenToken.transfer(user2.address, expandTo18Decimals(200000000))
         await arkreenToken.transfer(user3.address, expandTo18Decimals(500000000))
 
-        const lastBlock = await ethers.provider.getBlock('latest')
-   
-        //await stakingRewards.depolyRewards()
-
         return {arkreenToken, artToken, stakingRewards, deployer, user1, user2, user3}
     }
 
@@ -138,6 +133,33 @@ describe("StakingRewards test", ()=> {
 
 //      console.log("\r\nUser 1", lastBlockN.timestamp, user1StakeStatus.stakeAmount.toString(), 
 //          user2StakeStatus.stakeAmount.toString(), user3StakeStatus.stakeAmount.toString(), allStakeAmount.toString())
+    }
+
+    async function user1StakeWithPermit(amount: BigNumber) {
+
+      const nonces = await arkreenToken.nonces(user1.address)
+      const domainName = await arkreenToken.name()
+      const user1_key = "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d"
+
+      const digest = getPermitDigest(user1.address, stakingRewards.address, amount, nonces,
+                                      constants.MaxUint256, arkreenToken.address, domainName)
+
+      const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(user1_key.slice(2), 'hex'))
+
+      await stakingRewards.connect(user1).stakeWithPermit(amount, constants.MaxUint256, v, r, s)
+      lastBlockN = await ethers.provider.getBlock('latest')
+
+      lastRewardsPerStakePaid = getLastRewardsPerStake()
+      const newRewards = user1StakeStatus.stakeAmount.mul(lastRewardsPerStakePaid.sub(user1StakeStatus.rewardsPerStakePaid))
+
+      allStakeAmount = allStakeAmount.add(amount)
+      user1StakeStatus.stakeAmount = user1StakeStatus.stakeAmount.add(amount)
+      user1StakeStatus.lastTimeStamp = lastBlockN.timestamp
+      user1StakeStatus.rewardsPerStakePaid = lastRewardsPerStakePaid
+      user1StakeStatus.earnStored = user1StakeStatus.earnStored.add(newRewards.div(expandTo18Decimals(1)).div(expandTo18Decimals(1)))
+
+      lastUpdateTime = lastBlockN.timestamp
+
     }
 
     async function user2Stake(amount: BigNumber) {
@@ -248,6 +270,93 @@ describe("StakingRewards test", ()=> {
    
       })
 
+      it("StakingRewards basics", async function () {
+   
+        const lastBlock = await ethers.provider.getBlock('latest')
+
+        startTimestamp = lastBlock.timestamp + startTime
+        endTimestamp = lastBlock.timestamp + endTime
+
+        amountReward = expandTo9Decimals(20000)                      // 9408471
+        rewardRate = amountReward.mul(expandTo18Decimals(1)).mul(expandTo18Decimals(1)).div(endTime-startTime)
+
+        const stake1 = expandTo18Decimals(100000)
+        const stake2 = expandTo18Decimals(400000)
+        const stake3 = expandTo18Decimals(500000)
+
+        await user1Stake(stake1)
+        await user2Stake(stake2)
+        await user3Stake(stake3)
+
+        await stakingRewards.depolyRewards(startTimestamp, endTimestamp, amountReward )
+
+        await ethers.provider.send("evm_increaseTime", [startTime + 100]);
+        await mine(1)
+
+        // Reward started
+        await user1Stake(stake1)
+        await user2Stake(stake2)
+        await user3Stake(stake3)
+        await checkEarnedUser1()
+        await checkEarnedUser2()
+        await checkEarnedUser3()
+
+        await ethers.provider.send("evm_increaseTime", [60*60*24*40]);
+        await mine(1)
+
+        // stake basics
+        await expect(stakingRewards.connect(user1).stake(0)).to.be.revertedWith("Cannot stake 0")
+
+        const stakeBefore = await stakingRewards.totalStakes()
+        const myStakesBefore = await stakingRewards.myStakes(user1.address)
+        const mybalance = await arkreenToken.balanceOf(user1.address)
+
+        await expect(stakingRewards.connect(user1).stake(stake1))
+                .to.emit(stakingRewards, "Staked")
+                .withArgs(user1.address, stake1);
+
+        expect(await stakingRewards.totalStakes()).to.eq(stakeBefore.add(stake1))  
+        expect(await stakingRewards.myStakes(user1.address)).to.eq(myStakesBefore.add(stake1))  
+        expect(await arkreenToken.balanceOf(user1.address)).to.eq(mybalance.sub(stake1))  
+
+        let mybalanceReward1 = await artToken.balanceOf(user1.address)
+        let earned1 = await stakingRewards.earned(user1.address)
+
+        let mybalanceReward2 = await artToken.balanceOf(user2.address)
+        let earned2 = await stakingRewards.earned(user2.address)
+
+        let mybalanceReward3 = await artToken.balanceOf(user3.address)
+        let earned3 = await stakingRewards.earned(user3.address)
+
+        console.log("\r\n AAAAAAAAAAAA", mybalanceReward1.toString(), earned1.toString())
+
+        await stakingRewards.connect(user1).collectReward()
+        expect(await artToken.balanceOf(user1.address)).to.gte(mybalanceReward1.add(earned1))
+        expect(await artToken.balanceOf(user2.address)).to.gte(mybalanceReward2)
+        expect(await artToken.balanceOf(user3.address)).to.gte(mybalanceReward3)
+        expect(await stakingRewards.earned(user1.address)).to.eq(0)
+
+        mybalanceReward1 = await artToken.balanceOf(user1.address)
+        earned1 = await stakingRewards.earned(user1.address)
+
+        await stakingRewards.connect(user2).collectReward()
+
+        expect(await artToken.balanceOf(user1.address)).to.gte(mybalanceReward1)
+        expect(await artToken.balanceOf(user2.address)).to.gte(mybalanceReward2.add(earned2))
+        expect(await artToken.balanceOf(user3.address)).to.gte(mybalanceReward3)
+        expect(await stakingRewards.earned(user2.address)).to.eq(0)
+
+        mybalanceReward2 = await artToken.balanceOf(user2.address)
+        earned2 = await stakingRewards.earned(user2.address)
+        await stakingRewards.connect(user3).collectReward()
+
+        expect(await artToken.balanceOf(user1.address)).to.gte(mybalanceReward1)
+        expect(await artToken.balanceOf(user2.address)).to.gte(mybalanceReward2)
+        expect(await artToken.balanceOf(user3.address)).to.gte(mybalanceReward3.add(earned3))
+        expect(await stakingRewards.earned(user3.address)).to.eq(0)
+
+      });
+
       it("StakingRewards before stake deposit", async function () {
    
         const lastBlock = await ethers.provider.getBlock('latest')
@@ -270,8 +379,6 @@ describe("StakingRewards test", ()=> {
         expect(await stakingRewards.earned(user1.address)).to.equal(BigNumber.from(0))
         expect(await stakingRewards.earned(user2.address)).to.equal(BigNumber.from(0))
         expect(await stakingRewards.earned(user3.address)).to.equal(BigNumber.from(0))
-
-
 
         await stakingRewards.depolyRewards(startTimestamp, endTimestamp, amountReward )
 
@@ -368,7 +475,126 @@ describe("StakingRewards test", ()=> {
         expect(reward3F).to.eq(reward3E)
       });
 
-      it("StakingRewards after stake deposit", async function () {
+      it("StakingRewards deposit with permit", async function () {
+   
+        const lastBlock = await ethers.provider.getBlock('latest')
+
+        startTimestamp = lastBlock.timestamp + startTime
+        endTimestamp = lastBlock.timestamp + endTime
+
+        amountReward = expandTo9Decimals(20000)                      // 9408471
+        rewardRate = amountReward.mul(expandTo18Decimals(1)).mul(expandTo18Decimals(1)).div(endTime-startTime)
+
+        const stake1 = expandTo18Decimals(100000)
+        const stake2 = expandTo18Decimals(400000)
+        const stake3 = expandTo18Decimals(500000)
+
+        await user1StakeWithPermit(stake1)
+        await user2Stake(stake2)
+        await user3Stake(stake3)
+
+        // Staking reward not started
+        expect(await stakingRewards.earned(user1.address)).to.equal(BigNumber.from(0))
+        expect(await stakingRewards.earned(user2.address)).to.equal(BigNumber.from(0))
+        expect(await stakingRewards.earned(user3.address)).to.equal(BigNumber.from(0))
+
+        await stakingRewards.depolyRewards(startTimestamp, endTimestamp, amountReward )
+
+        // Reward deployed, but not started
+        await user1StakeWithPermit(stake1)
+        await user2Stake(stake2)
+        await user3Stake(stake3)
+
+        await ethers.provider.send("evm_increaseTime", [startTime -100]);
+        await mine(1)
+
+        // Reward not started
+        expect(await stakingRewards.earned(user1.address)).to.equal(BigNumber.from(0))
+        expect(await stakingRewards.earned(user2.address)).to.equal(BigNumber.from(0))
+        expect(await stakingRewards.earned(user3.address)).to.equal(BigNumber.from(0))
+
+        await ethers.provider.send("evm_increaseTime", [100]);
+        await mine(1)
+
+        // Reward started
+        await checkEarnedUser1()
+        await checkEarnedUser2()
+        await checkEarnedUser3()
+
+        await ethers.provider.send("evm_increaseTime", [60*60*24*10]);
+        await mine(1)
+
+        // Stake again
+        await user1StakeWithPermit(stake1)
+        const reward1A = await checkEarnedUser1()
+        const reward2A = await checkEarnedUser2()
+        const reward3A = await checkEarnedUser3()
+
+        await user2Stake(stake2)
+        await checkEarnedUser1()
+        await checkEarnedUser2()
+        await checkEarnedUser3()
+
+        await user3Stake(stake3)
+        const reward1B = await checkEarnedUser1()
+        const reward2B = await checkEarnedUser2()
+        const reward3B = await checkEarnedUser3()
+
+        expect(reward1B).to.gt(reward1A)
+        expect(reward2B).to.gt(reward2A)
+        expect(reward3B).to.gt(reward3A)
+
+        await ethers.provider.send("evm_increaseTime", [60*60*24*2]);
+        await mine(1)
+
+        await user1StakeWithPermit(stake1)
+        const reward1C = await checkEarnedUser1()
+        const reward2C = await checkEarnedUser2()
+        const reward3C = await checkEarnedUser3()
+
+        await ethers.provider.send("evm_increaseTime", [60*60*24*4]);
+        await mine(1)
+        await user2Stake(stake2)
+        await checkEarnedUser1()
+        await checkEarnedUser2()
+        await checkEarnedUser3()
+
+        
+        await ethers.provider.send("evm_increaseTime", [60*60*24*4]);
+        await mine(1)
+        await user3Stake(stake3)
+        const reward1D = await checkEarnedUser1()
+        const reward2D = await checkEarnedUser2()
+        const reward3D = await checkEarnedUser3()
+
+        expect(reward1D).to.gt(reward1C)
+        expect(reward2D).to.gt(reward2C)
+        expect(reward3D).to.gt(reward3C)
+
+        // Period ended
+        await ethers.provider.send("evm_increaseTime", [60*60*24*40]);
+        await mine(1)
+
+        const reward1E = await checkEarnedUser1()
+        const reward2E = await checkEarnedUser2()
+        const reward3E = await checkEarnedUser3()
+
+        // Period ended, Reward stopped
+        await ethers.provider.send("evm_increaseTime", [60*60*24*5]);
+        await mine(1)
+
+        const reward1F = await checkEarnedUser1()
+        const reward2F = await checkEarnedUser2()
+        const reward3F = await checkEarnedUser3()
+
+        // Check reward stopped
+        expect(reward1F).to.eq(reward1E)
+        expect(reward2F).to.eq(reward2E)
+        expect(reward3F).to.eq(reward3E)
+      });
+
+
+      it("StakingRewards stake 3 rounds", async function () {
    
         let lastBlock = await ethers.provider.getBlock('latest')
 
@@ -580,7 +806,14 @@ describe("StakingRewards test", ()=> {
         expect(reward2J).to.eq(reward2K)
         expect(reward3J).to.eq(reward3K)
 
+        await stakingRewards.connect(user1).collectReward()
+        await stakingRewards.connect(user2).collectReward()
+        await stakingRewards.connect(user3).collectReward()
+        const reward1 = await artToken.balanceOf(user1.address)
+        const reward2 = await artToken.balanceOf(user2.address)
+        const reward3 = await artToken.balanceOf(user3.address)
 
+        expect(reward1.add(reward2).add(reward3)).to.gte(reward1K.add(reward2K).add(reward3K))
       });
 
     })

@@ -6,12 +6,11 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-// Import this file to use console.log
-import "hardhat/console.sol";
-
 contract StakingRewards is ReentrancyGuard {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
+
+    uint256 public constant MAX_SUPPLY_STAKES = 1e28;                 // AKRE max supply: 10 Billion
 
     IERC20 public stakingToken;
     IERC20 public rewardsToken;
@@ -56,26 +55,16 @@ contract StakingRewards is ReentrancyGuard {
     }
 
     function rewardPerToken() public view returns (uint256) {
-//        console.log("PPPPPPPPPPPPPP", block.timestamp, periodStart, periodEnd);
-//        console.log("QQQQQQQQQQQQQQQQQ", lastTimeRewardApplicable(), lastUpdateTime, rewardRate);
         if ((block.timestamp <= periodStart) || (totalStakes == 0)) return rewardPerStakeLast;
         return uint256(rewardPerStakeLast).add(lastTimeRewardApplicable().sub(lastUpdateTime).mul(rewardRate).div(totalStakes));
     }
 
     function earned(address account) public view returns (uint256) {
-/*      
-        uint256 rewardPerTokenValue = rewardPerToken();
-        console.log("XXXXXXXXXXXXXX", rewardPerTokenValue, rewardPerStakeLast, totalStakes);
-        console.log("YYYYYYYYYYYYYY", myStakes[account], myRewardsPerStakePaid[account], myRewards[account]);
-
-        uint256 newRewards = myStakes[account].mul(rewardPerTokenValue.sub(myRewardsPerStakePaid[account])).div(1e36);
-        console.log("ZZZZZZZZZZZZZZ", newRewards, newRewards.add(myRewards[account]));
-*/
-        return myStakes[account].mul(rewardPerToken().sub(myRewardsPerStakePaid[account])).div(1e36).add(myRewards[account]);
+        return myStakes[account].mul(rewardPerToken().sub(myRewardsPerStakePaid[account])).div(MAX_SUPPLY_STAKES).add(myRewards[account]);
     }
 
     function getRewardForDuration() external view returns (uint256) {
-        return rewardRate.mul(periodEnd - periodStart).div(1e36);
+        return rewardRate.mul(periodEnd - periodStart).div(MAX_SUPPLY_STAKES);
     }
 
     function stakeWithPermit(uint256 amount, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external nonReentrant updateReward(msg.sender) {
@@ -126,7 +115,7 @@ contract StakingRewards is ReentrancyGuard {
         periodEnd = uint32(end);
 
         rewardsToken.safeTransferFrom(msg.sender, address(this), rewardTotal);
-        rewardRate = rewardTotal.mul(1e36).div(end - start);                          // For accuracy
+        rewardRate = rewardTotal.mul(MAX_SUPPLY_STAKES).div(end - start);                          // For accuracy
         lastUpdateTime = uint32(start);
 
         emit RewardAdded(rewardTotal);
