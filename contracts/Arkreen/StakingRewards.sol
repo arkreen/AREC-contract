@@ -5,20 +5,29 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract StakingRewards is ReentrancyGuard {
+
+import "../interfaces/IArkreenMiner.sol";
+
+contract StakingRewards is ReentrancyGuard, Ownable {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
     uint256 public constant MAX_SUPPLY_STAKES = 1e28;                 // AKRE max supply: 10 Billion
+    uint256 public constant PREMIUM_CAP_PER_MINER = 10000 * 1e18;     // Premium cap for each remote miner
+    uint256 public constant PREMIUM_RATE = 200;                       // Premium rate
 
     IERC20 public stakingToken;
     IERC20 public rewardsToken;
-    IERC20 public ArkreenMiner;
+    IArkreenMiner public ArkreenMiner;
 
     address public rewardsDistributor;
+    uint128 public capMinerPremium;
+    uint32  public ratePremium;
 
     uint256 public totalStakes;
+    uint256 public totalRewardStakes;
     uint256 public rewardRate;
 
     uint160 public rewardPerStakeLast;
@@ -30,6 +39,7 @@ contract StakingRewards is ReentrancyGuard {
     mapping(address => uint256) public myRewardsPerStakePaid;
     mapping(address => uint256) public myRewards;
     mapping(address => uint256) public myStakes;
+    mapping(address => uint256) public myRewardStakes;
 
     event RewardAdded(uint256 reward);
     event Staked(address indexed user, uint256 amount);
@@ -51,14 +61,23 @@ contract StakingRewards is ReentrancyGuard {
         _;
     }
 
+    function setStakeParameter(uint256 newPremiumCap, uint256 newPremiumRate) public onlyOwner{
+        if (newPremiumCap != 0) {
+            capMinerPremium = uint128(newPremiumCap);
+        }
+        if (newPremiumRate != 0) {
+            ratePremium = uint32(newPremiumRate);
+        }
+    }
+
     function lastTimeRewardApplicable() public view returns (uint256) {
         if (block.timestamp <= periodStart) return periodStart;
         return (block.timestamp < periodEnd) ? block.timestamp : periodEnd;
     }
 
     function rewardPerToken() public view returns (uint256) {
-        if ((block.timestamp <= periodStart) || (totalStakes == 0)) return rewardPerStakeLast;
-        return uint256(rewardPerStakeLast).add(lastTimeRewardApplicable().sub(lastUpdateTime).mul(rewardRate).div(totalStakes));
+        if ((block.timestamp <= periodStart) || (totalRewardStakes == 0)) return rewardPerStakeLast;
+        return uint256(rewardPerStakeLast).add(lastTimeRewardApplicable().sub(lastUpdateTime).mul(rewardRate).div(totalRewardStakes));
     }
 
     function earned(address account) public view returns (uint256) {
@@ -70,22 +89,40 @@ contract StakingRewards is ReentrancyGuard {
     }
 
     function stakeWithPermit(uint256 amount, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external nonReentrant updateReward(msg.sender) {
-        require(amount > 0, "Cannot stake 0");
-        totalStakes = totalStakes.add(amount);
-        myStakes[msg.sender] = myStakes[msg.sender].add(amount);
-
         IERC20Permit(address(stakingToken)).permit(msg.sender, address(this), amount, deadline, v, r, s);
-
-        stakingToken.safeTransferFrom(msg.sender, address(this), amount);
-        emit Staked(msg.sender, amount);
+        _stake(amount);
     }
 
     function stake(uint256 amount) external nonReentrant updateReward(msg.sender) {
+        _stake(amount);
+    }
+
+    function _stake(uint256 amount) internal {
         require(amount > 0, "Cannot stake 0");
         totalStakes = totalStakes.add(amount);
         myStakes[msg.sender] = myStakes[msg.sender].add(amount);
         stakingToken.safeTransferFrom(msg.sender, address(this), amount);
+
+        _updateRewardStake();
         emit Staked(msg.sender, amount);
+    }
+
+    function _updateRewardStake() internal returns (uint256) {
+        uint256 totalMiners = ArkreenMiner.balanceOf(msg.sender);
+        uint256 premium = totalMiners * PREMIUM_CAP_PER_MINER;
+        uint256 othersTotalRewardStakes = totalRewardStakes - myRewardStakes[msg.sender];
+
+        uint256 rewardStakes;
+        if (myStakes[msg.sender] <= premium) {
+            rewardStakes = myStakes[msg.sender] * PREMIUM_RATE / 100 ;                     // All stakes are premium stake
+        } else {
+            rewardStakes = myStakes[msg.sender] +  premium * (PREMIUM_RATE - 100) / 100;   // Cap is premium 
+        }
+                
+        myRewardStakes[msg.sender] = rewardStakes;
+        totalRewardStakes = othersTotalRewardStakes + rewardStakes;
+
+        return rewardStakes;
     }
 
     function unstake(uint256 amount) public nonReentrant updateReward(msg.sender) {
@@ -93,6 +130,8 @@ contract StakingRewards is ReentrancyGuard {
         totalStakes = totalStakes.sub(amount);
         myStakes[msg.sender] = myStakes[msg.sender].sub(amount);
         stakingToken.safeTransfer(msg.sender, amount);
+
+        _updateRewardStake();
         emit Withdrawn(msg.sender, amount);
     }
 
