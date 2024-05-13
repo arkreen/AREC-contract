@@ -9,4 +9,5 @@ interface IArkreenRECIssuance {
     function getRECDataCore(uint256 tokenId) external view 
                             returns(address issuer, uint128 amountREC, uint8 status, uint16 idAsset); 
     function safeTransferFrom(address from, address to, uint256 tokenId) external;
+    function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory data) external;
 }

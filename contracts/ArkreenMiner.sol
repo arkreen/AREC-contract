@@ -118,10 +118,7 @@ contract ArkreenMiner is
     }
 
     function postUpdate() external onlyProxy onlyOwner 
-    {
-        whiteListBatchPoolIndexHead[0] = whiteListBatchIndexHead;
-        whiteListBatchPoolIndexTail[0] = whiteListBatchIndexTail;
-    }
+    {}
 
     function _authorizeUpgrade(address newImplementation)
         internal
@@ -699,7 +696,7 @@ contract ArkreenMiner is
         address to,
         uint256 tokenId
     ) internal virtual override (ERC721EnumerableUpgradeable) {
-        require(bTransferAllowed || (from == address(0)), 'ARB: Transfer Not Allowed');
+        require(bTransferAllowed || (from == address(0)), 'Arkreen Miner: Transfer Not Allowed');
         super._beforeTokenTransfer(from, to, tokenId);
     }
 

@@ -133,7 +133,7 @@ contract ArkreenRECIssuance is
 
         // Check payment appoval
         uint256 rateToIssue = paymentTokenPrice[permitToPay.token];
-        require( (permitToPay.token == tokenAKRE) || (rateToIssue != 0), "AREC: Wrong Payment Token");
+        require( (permitToPay.token == tokenAKRE) && (rateToIssue != 0), "AREC: Wrong Payment Token");
 
         uint256 valuePayment = recRequest.amountREC * rateToIssue;   // Rate is caluated based 10**9
         require( permitToPay.value >= valuePayment, "AREC: Low Payment Value");
@@ -213,7 +213,7 @@ contract ArkreenRECIssuance is
 
         // Only rejected REC can be cancelled
         RECData storage recData = allRECData[tokenID];
-        require(recData.status == uint8(RECStatus.Rejected), 'AREC: Wrong Status');  
+        require(recData.status <= uint8(RECStatus.Rejected), 'AREC: Wrong Status');  
 
         // Check issuer address
         require(IArkreenRegistry(arkreenRegistry).isRECIssuer(issuer), 'AREC: Wrong Issuer');

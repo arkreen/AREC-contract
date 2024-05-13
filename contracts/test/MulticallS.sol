@@ -40,6 +40,11 @@ contract MulticallS {
         address target;
         bytes callData;
     }
+    function aggregate(address addr, Call[] memory calls) public returns (uint256 blockNumber, uint256 balance, bytes[] memory returnData) {
+        if (addr != address(0)) balance = addr.balance;
+        (blockNumber, returnData) = aggregate(calls);
+    }
+    
     function aggregate(Call[] memory calls) public returns (uint256 blockNumber, bytes[] memory returnData) {
         blockNumber = block.number;
         returnData = new bytes[](calls.length);
@@ -49,6 +54,7 @@ contract MulticallS {
             returnData[i] = ret;
         }
     }
+
     // Helper functions
     function getEthBalance(address addr) public view returns (uint256 balance) {
         balance = addr.balance;
