@@ -434,7 +434,7 @@ contract ArkreenBadge is
     }
 
     function updateCID(uint256[] calldata tokenId, string[] calldata cid) external virtual onlyOwner {
-        require(tokenId.length == cid.length, "'ARB: Wrong Data");
+        require(tokenId.length == cid.length, "ARB: Wrong Data");
 
         for(uint256 index; index < tokenId.length; index++ ) {
           cidBadge[tokenId[index]] = cid[index];
