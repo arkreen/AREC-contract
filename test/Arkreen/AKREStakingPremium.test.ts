@@ -21,15 +21,19 @@ const startTime = 60 * 60 * 24                        // start 1 days later
 const endTime =  startTime + 60 * 60 * 24 * 60        // 2 month
 let amountReward: BigNumber
 let rewardRate: BigNumber
+const PREMIUN_PER_MINER =  expandTo18Decimals(10000)
 
 interface stakeStatus {
-  stakeAmount:          BigNumber,
-  lastTimeStamp:        number,
+  stakeAmount:          BigNumber
+  rewardStakesAmount:   BigNumber
+  lastTimeStamp:        number
   rewardsPerStakePaid:  BigNumber
   earnStored:           BigNumber
+  miners:               number
 }
 
-const initStatus: stakeStatus = { stakeAmount: BigNumber.from(0), lastTimeStamp: 0, 
+const initStatus: stakeStatus = { stakeAmount: BigNumber.from(0), rewardStakesAmount: BigNumber.from(0),
+                                  lastTimeStamp: 0, miners: 0,
                                   rewardsPerStakePaid:BigNumber.from(0), earnStored: BigNumber.from(0) } 
 
 describe("StakingRewards test", ()=> {
@@ -50,11 +54,13 @@ describe("StakingRewards test", ()=> {
     let arkreenMiner:             ArkreenMiner
 
     let allStakeAmount    = BigNumber.from(0)
+    let allReswardStakeAmount    = BigNumber.from(0)
+    
     let lastRewardsPerStakePaid = BigNumber.from(0)
 
-    let user1StakeStatus: stakeStatus = {...initStatus}
-    let user2StakeStatus: stakeStatus = {...initStatus}
-    let user3StakeStatus: stakeStatus = {...initStatus}
+    let user1StakeStatus: stakeStatus 
+    let user2StakeStatus: stakeStatus
+    let user3StakeStatus: stakeStatus
 
     async function deployFixture() {
         const [deployer, user1, user2, user3] = await ethers.getSigners();
@@ -75,21 +81,26 @@ describe("StakingRewards test", ()=> {
                                 [arkreenToken.address, user3.address, user1.address, user2.address]) as ArkreenMiner
         await arkreenMiner.deployed()
 
-        const miners = randomAddresses(3)
-        await arkreenMiner.connect(user1).RemoteMinerOnboardInBatch([user1.address, user2.address, user3.address] , miners)
+        const miners3 = randomAddresses(3)
+        await arkreenMiner.connect(user1).RemoteMinerOnboardInBatch([user1.address, user2.address, user3.address] , miners3)
+
+        const miners2 = randomAddresses(2)
+        await arkreenMiner.connect(user1).RemoteMinerOnboardInBatch([user1.address, user2.address] , miners2)
+
+        const miners1 = randomAddresses(1)
+        await arkreenMiner.connect(user1).RemoteMinerOnboardInBatch([user1.address] , miners1)
 
         const stakingRewardsFactory = await ethers.getContractFactory("StakingRewards")
         const stakingRewards: StakingRewards = await stakingRewardsFactory.deploy(
                                             arkreenToken.address, artToken.address, arkreenMiner.address, deployer.address)
         await stakingRewards.deployed()
-        await stakingRewards.setStakeParameter(expandTo18Decimals(10000) , 100)
+        await stakingRewards.setStakeParameter(expandTo18Decimals(10000) , 200)
 
         await artToken.approve(stakingRewards.address, constants.MaxUint256)
 
         await arkreenToken.transfer(user1.address, expandTo18Decimals(100000000))
         await arkreenToken.transfer(user2.address, expandTo18Decimals(200000000))
         await arkreenToken.transfer(user3.address, expandTo18Decimals(500000000))
-   
   
         return {arkreenToken, artToken, stakingRewards, arkreenMiner, deployer, user1, user2, user3}
     }
@@ -98,16 +109,16 @@ describe("StakingRewards test", ()=> {
       const lastTimeRewardApplicable = lastBlockN.timestamp < endTimestamp ? lastBlockN.timestamp : endTimestamp
       const lastUpdateTimeForReward = lastUpdateTime < startTimestamp ? startTimestamp : lastUpdateTime
 
-//      const rewardRatePerStake = allStakeAmount.eq(0) ? BigNumber.from(0) :rewardRate.div(allStakeAmount)
+//      const rewardRatePerStake = allReswardStakeAmount.eq(0) ? BigNumber.from(0) :rewardRate.div(allReswardStakeAmount)
 //      console.log("\r\nWWWWWWWWWWWWWWWWWWWW", lastBlockN.timestamp, lastTimeRewardApplicable, rewardRate.toString(),
 //                                              startTimestamp, endTimestamp, rewardRatePerStake.toString())
 
       const rewardsPerStakeIncrease = startTimestamp == 0  || 
                                       lastBlockN.timestamp <= startTimestamp || 
-                                      allStakeAmount.eq(0) ||
+                                      allReswardStakeAmount.eq(0) ||
                                       lastTimeRewardApplicable <= lastUpdateTimeForReward
                                       ? BigNumber.from(0)
-                                      : rewardRate.mul(lastTimeRewardApplicable-lastUpdateTimeForReward).div(allStakeAmount)
+                                      : rewardRate.mul(lastTimeRewardApplicable-lastUpdateTimeForReward).div(allReswardStakeAmount)
 
 //      console.log("\r\nVVVVVVVVVVVVVVVVVVVVV", lastRewardsPerStakePaid.toString(), rewardsPerStakeIncrease.toString())
 
@@ -132,16 +143,28 @@ describe("StakingRewards test", ()=> {
 //                      user1StakeStatus.rewardsPerStakePaid.toString(), newRewards.toString())
 
       allStakeAmount = allStakeAmount.add(amount)
+      allReswardStakeAmount = allReswardStakeAmount.sub(user1StakeStatus.rewardStakesAmount)
+
       user1StakeStatus.stakeAmount = user1StakeStatus.stakeAmount.add(amount)
+      user1StakeStatus.rewardStakesAmount = user1StakeStatus.stakeAmount.lte(PREMIUN_PER_MINER.mul(user1StakeStatus.miners))
+                                      ? user1StakeStatus.stakeAmount.mul(2)
+                                      : user1StakeStatus.stakeAmount.sub(PREMIUN_PER_MINER.mul(user1StakeStatus.miners))
+                                        .add(PREMIUN_PER_MINER.mul(user1StakeStatus.miners).mul(2)) 
+
+      allReswardStakeAmount = allReswardStakeAmount.add(user1StakeStatus.rewardStakesAmount)                                        
+                                      
       user1StakeStatus.lastTimeStamp = lastBlockN.timestamp
       user1StakeStatus.rewardsPerStakePaid = lastRewardsPerStakePaid
       user1StakeStatus.earnStored = user1StakeStatus.earnStored.add(newRewards.div(expandTo18Decimals(1)).div(expandTo18Decimals(1)))
 
       lastUpdateTime = lastBlockN.timestamp
 
-//      console.log("\r\nQQQQQQQQQQ111111111111111111", lastRewardsPerStakePaid.toString(), 
-//                      user1StakeStatus.earnStored.toString(),
-//                      user1StakeStatus.rewardsPerStakePaid.toString(), newRewards.toString())
+      console.log("\r\nQQQQQQQQQQ111111111111111111", lastRewardsPerStakePaid.toString(), user1StakeStatus.miners, 
+                      PREMIUN_PER_MINER.toString(),
+                      user1StakeStatus.stakeAmount.toString(),
+                      user1StakeStatus.rewardStakesAmount.toString(),
+                      user1StakeStatus.earnStored.toString(),
+                      user1StakeStatus.rewardsPerStakePaid.toString(), newRewards.toString())
 
 //      console.log("\r\nUser 1", lastBlockN.timestamp, user1StakeStatus.stakeAmount.toString(), 
 //          user2StakeStatus.stakeAmount.toString(), user3StakeStatus.stakeAmount.toString(), allStakeAmount.toString())
@@ -166,6 +189,16 @@ describe("StakingRewards test", ()=> {
 
       allStakeAmount = allStakeAmount.add(amount)
       user1StakeStatus.stakeAmount = user1StakeStatus.stakeAmount.add(amount)
+      allReswardStakeAmount = allReswardStakeAmount.sub(user1StakeStatus.rewardStakesAmount)
+
+      user1StakeStatus.rewardStakesAmount = user1StakeStatus.stakeAmount.lte(PREMIUN_PER_MINER.mul(user1StakeStatus.miners))
+                                      ? user1StakeStatus.stakeAmount.mul(2)
+                                      : user1StakeStatus.stakeAmount.sub(PREMIUN_PER_MINER.mul(user1StakeStatus.miners))
+                                        .add(PREMIUN_PER_MINER.mul(user1StakeStatus.miners).mul(2)) 
+
+      allReswardStakeAmount = allReswardStakeAmount.add(user1StakeStatus.rewardStakesAmount)                                        
+
+      user1StakeStatus.stakeAmount = user1StakeStatus.stakeAmount.add(amount)
       user1StakeStatus.lastTimeStamp = lastBlockN.timestamp
       user1StakeStatus.rewardsPerStakePaid = lastRewardsPerStakePaid
       user1StakeStatus.earnStored = user1StakeStatus.earnStored.add(newRewards.div(expandTo18Decimals(1)).div(expandTo18Decimals(1)))
@@ -183,6 +216,15 @@ describe("StakingRewards test", ()=> {
 
       allStakeAmount = allStakeAmount.add(amount)
       user2StakeStatus.stakeAmount = user2StakeStatus.stakeAmount.add(amount)
+
+      allReswardStakeAmount = allReswardStakeAmount.sub(user2StakeStatus.rewardStakesAmount)
+      user2StakeStatus.rewardStakesAmount = user2StakeStatus.stakeAmount.lte(PREMIUN_PER_MINER.mul(user2StakeStatus.miners))
+                                      ? user2StakeStatus.stakeAmount.mul(2)
+                                      : user2StakeStatus.stakeAmount.sub(PREMIUN_PER_MINER.mul(user2StakeStatus.miners))
+                                        .add(PREMIUN_PER_MINER.mul(user2StakeStatus.miners).mul(2)) 
+
+      allReswardStakeAmount = allReswardStakeAmount.add(user2StakeStatus.rewardStakesAmount)
+
       user2StakeStatus.lastTimeStamp = lastBlockN.timestamp
       user2StakeStatus.rewardsPerStakePaid = lastRewardsPerStakePaid
       user2StakeStatus.earnStored = user2StakeStatus.earnStored.add(newRewards.div(expandTo18Decimals(1)).div(expandTo18Decimals(1)))
@@ -201,7 +243,17 @@ describe("StakingRewards test", ()=> {
       const newRewards = user3StakeStatus.stakeAmount.mul(lastRewardsPerStakePaid.sub(user3StakeStatus.rewardsPerStakePaid))
 
       allStakeAmount = allStakeAmount.add(amount)
+      
       user3StakeStatus.stakeAmount = user3StakeStatus.stakeAmount.add(amount)
+      allReswardStakeAmount = allReswardStakeAmount.sub(user3StakeStatus.rewardStakesAmount)
+
+      user3StakeStatus.rewardStakesAmount = user3StakeStatus.stakeAmount.lte(PREMIUN_PER_MINER.mul(user3StakeStatus.miners))
+                                      ? user3StakeStatus.stakeAmount.mul(2)
+                                      : user3StakeStatus.stakeAmount.sub(PREMIUN_PER_MINER.mul(user3StakeStatus.miners))
+                                        .add(PREMIUN_PER_MINER.mul(user3StakeStatus.miners).mul(2)) 
+
+      allReswardStakeAmount = allReswardStakeAmount.add(user3StakeStatus.rewardStakesAmount)
+
       user3StakeStatus.lastTimeStamp = lastBlockN.timestamp
       user3StakeStatus.rewardsPerStakePaid = lastRewardsPerStakePaid
       user3StakeStatus.earnStored = user3StakeStatus.earnStored.add(newRewards.div(expandTo18Decimals(1)).div(expandTo18Decimals(1)))
@@ -215,16 +267,18 @@ describe("StakingRewards test", ()=> {
     async function checkEarnedUser1() {
       lastBlockN = await ethers.provider.getBlock('latest')
       const lastRewardsPerStakePaidTemp = getLastRewardsPerStake()
-      const newRewards = user1StakeStatus.stakeAmount
+      const newRewards = user1StakeStatus.rewardStakesAmount
                             .mul(lastRewardsPerStakePaidTemp.sub(user1StakeStatus.rewardsPerStakePaid))
                             .div(expandTo18Decimals(1)).div(expandTo18Decimals(1))
 
-/*                            
-      console.log("\r\n11111111111111111", user1StakeStatus.stakeAmount.toString(), lastRewardsPerStakePaidTemp.toString(),
+                            
+      console.log("\r\n11111111111111111", user1StakeStatus.stakeAmount.toString(), 
+            user1StakeStatus.rewardStakesAmount.toString(), 
+            lastRewardsPerStakePaidTemp.toString(),
             user1StakeStatus.earnStored.toString(), newRewards.toString(),
             user1StakeStatus.earnStored.add(newRewards).toString(),
             user1StakeStatus.rewardsPerStakePaid.toString())
-*/
+
       expect(await stakingRewards.earned(user1.address)).to.eq(user1StakeStatus.earnStored.add(newRewards))
       return user1StakeStatus.earnStored.add(newRewards)
     }
@@ -233,11 +287,11 @@ describe("StakingRewards test", ()=> {
       lastBlockN = await ethers.provider.getBlock('latest')
       const lastRewardsPerStakePaidTemp = getLastRewardsPerStake()
 
-      const newRewards = user2StakeStatus.stakeAmount
+      const newRewards = user2StakeStatus.rewardStakesAmount
                         .mul(lastRewardsPerStakePaidTemp.sub(user2StakeStatus.rewardsPerStakePaid))
                         .div(expandTo18Decimals(1)).div(expandTo18Decimals(1))
 
-//      console.log("222222222222222", user2StakeStatus.stakeAmount.toString(), lastRewardsPerStakePaidTemp.toString(),
+//      console.log("222222222222222", user2StakeStatus.rewardStakesAmount.toString(), lastRewardsPerStakePaidTemp.toString(),
 //            user2StakeStatus.earnStored.toString(), newRewards.toString())
 
       expect(await stakingRewards.earned(user2.address)).to.eq(user2StakeStatus.earnStored.add(newRewards))
@@ -247,11 +301,11 @@ describe("StakingRewards test", ()=> {
     async function checkEarnedUser3() {
       lastBlockN = await ethers.provider.getBlock('latest')
       const lastRewardsPerStakePaidTemp = getLastRewardsPerStake()
-      const newRewards = user3StakeStatus.stakeAmount
+      const newRewards = user3StakeStatus.rewardStakesAmount
                           .mul(lastRewardsPerStakePaidTemp.sub(user3StakeStatus.rewardsPerStakePaid))
                           .div(expandTo18Decimals(1)).div(expandTo18Decimals(1))
 
-//      console.log("3333333333333333", user3StakeStatus.stakeAmount.toString(), lastRewardsPerStakePaidTemp.toString(),
+//      console.log("3333333333333333", user3StakeStatus.rewardStakesAmount.toString(), lastRewardsPerStakePaidTemp.toString(),
 //            user3StakeStatus.earnStored.toString(), newRewards.toString())
 
       expect(await stakingRewards.earned(user3.address)).to.eq(user3StakeStatus.earnStored.add(newRewards))
@@ -275,9 +329,9 @@ describe("StakingRewards test", ()=> {
         await arkreenToken.connect(user2).approve(stakingRewards.address, constants.MaxUint256)
         await arkreenToken.connect(user3).approve(stakingRewards.address, constants.MaxUint256)
 
-        user1StakeStatus = {...initStatus}
-        user2StakeStatus = {...initStatus}
-        user3StakeStatus  = {...initStatus}
+        user1StakeStatus = {...initStatus, miners: 3}
+        user2StakeStatus = {...initStatus, miners: 2}
+        user3StakeStatus  = {...initStatus, miners: 1}
 
         allStakeAmount    = BigNumber.from(0)
         lastRewardsPerStakePaid = BigNumber.from(0)

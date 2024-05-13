@@ -133,7 +133,7 @@ contract ArkreenRECIssuance is
 
         // Check payment appoval
         uint256 rateToIssue = paymentTokenPrice[permitToPay.token];
-        require( (permitToPay.token == tokenAKRE) || (rateToIssue != 0), "AREC: Wrong Payment Token");
+        require( (permitToPay.token == tokenAKRE) && (rateToIssue != 0), "AREC: Wrong Payment Token");
 
         uint256 valuePayment = recRequest.amountREC * rateToIssue;   // Rate is caluated based 10**9
         require( permitToPay.value >= valuePayment, "AREC: Low Payment Value");

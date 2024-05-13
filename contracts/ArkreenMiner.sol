@@ -510,7 +510,6 @@ contract ArkreenMiner is
      * @param owners addresses receiving the remote miners
      * @param miners addresses of the remote miners onboarding
      */
-/*     
     function RemoteMinerOnboardInBatch(
         address[]  calldata   owners,
         address[]  calldata   miners
@@ -532,7 +531,6 @@ contract ArkreenMiner is
         // Need to emit? If yes, data may be big 
         emit RemoteMinersInBatch(owners, miners);
     }
-*/
 
     /**
      * @dev Get all the miner info of the specified miner
@@ -612,6 +610,7 @@ contract ArkreenMiner is
      * @dev Remove the miner from the miner white list for batch sales.
      * @param addressMiner The miner to remove
      */
+/*     
     function RemoveMinerFromWhiteList(uint256 remoteType, address addressMiner) external onlyMinerManager {
         // pool id is located at the MSB of index 
         uint256 indexHead = whiteListBatchPoolIndexHead[remoteType];
@@ -628,7 +627,7 @@ contract ArkreenMiner is
             }
         }
     }
-
+*/
     /**
      * @dev Update the miner white list for the specified pool. Only miners in the white list are allowed to onboard as an NFT.
      * @param remoteType type of the remote miner to claim, which could be used to differentiate the various type of remote miners

@@ -15,14 +15,15 @@ contract StakingRewards is ReentrancyGuard, Ownable {
     using SafeERC20 for IERC20;
 
     uint256 public constant MAX_SUPPLY_STAKES = 1e28;                 // AKRE max supply: 10 Billion
-    uint256 public constant PREMIUM_CAP_PER_MINER = 10000 * 1e18;     // Premium cap for each remote miner
-    uint256 public constant PREMIUM_RATE = 200;                       // Premium rate
+    //uint256 public constant PREMIUM_CAP_PER_MINER = 10000 * 1e18;     // Premium cap for each remote miner
+    //uint256 public constant PREMIUM_RATE = 200;                       // Premium rate
 
     IERC20 public stakingToken;
     IERC20 public rewardsToken;
-    IArkreenMiner public ArkreenMiner;
+    IArkreenMiner public arkreenMiner;
 
     address public rewardsDistributor;
+
     uint128 public capMinerPremium;
     uint32  public ratePremium;
 
@@ -49,10 +50,12 @@ contract StakingRewards is ReentrancyGuard, Ownable {
     constructor(
         address _stakingToken,
         address _rewardsToken,
+        address _arkreenMiner,
         address _rewardsDistributor
     ) {
         stakingToken = IERC20(_stakingToken);
         rewardsToken = IERC20(_rewardsToken);
+        arkreenMiner = IArkreenMiner(_arkreenMiner);
         rewardsDistributor = _rewardsDistributor;
     }
 
@@ -108,15 +111,15 @@ contract StakingRewards is ReentrancyGuard, Ownable {
     }
 
     function _updateRewardStake() internal returns (uint256) {
-        uint256 totalMiners = ArkreenMiner.balanceOf(msg.sender);
-        uint256 premium = totalMiners * PREMIUM_CAP_PER_MINER;
+        uint256 totalMiners = arkreenMiner.balanceOf(msg.sender);
+        uint256 premium = totalMiners * capMinerPremium;
         uint256 othersTotalRewardStakes = totalRewardStakes - myRewardStakes[msg.sender];
 
         uint256 rewardStakes;
         if (myStakes[msg.sender] <= premium) {
-            rewardStakes = myStakes[msg.sender] * PREMIUM_RATE / 100 ;                     // All stakes are premium stake
+            rewardStakes = myStakes[msg.sender] * ratePremium / 100 ;                     // All stakes are premium stake
         } else {
-            rewardStakes = myStakes[msg.sender] +  premium * (PREMIUM_RATE - 100) / 100;   // Cap is premium 
+            rewardStakes = myStakes[msg.sender] +  premium * (ratePremium - 100) / 100;   // Cap is premium 
         }
                 
         myRewardStakes[msg.sender] = rewardStakes;

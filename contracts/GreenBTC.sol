@@ -404,7 +404,7 @@ contract GreenBTC is
     /**
      * @dev Set new caps
      */
-    function setNewCaps(uint256 newNormalCap, uint256 newOvertimeCap, uint256 newRemoveCap) public {    // onlyOwner
+    function setNewCaps(uint256 newNormalCap, uint256 newOvertimeCap, uint256 newRemoveCap) public onlyOwner {    // onlyOwner
       _setNewCapsMute(newNormalCap, newOvertimeCap, newRemoveCap);        // To mute compilation warning
       callGreenBTCPro(greenBTCPro);
     }
