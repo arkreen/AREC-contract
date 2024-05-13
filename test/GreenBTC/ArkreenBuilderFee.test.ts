@@ -241,7 +241,8 @@ describe("ArkreenBuilder", () => {
       await arkreenBuilder.approveRouter([WETHPartner.address, WETH.address])
 
       await arkreenRECToken.setReceiverFee(fund_receiver.address)
-      await arkreenRECToken.setRatioFeeOffset(500)    
+      await arkreenRECToken.setRatioFeeOffset(500)  
+      await arkreenRECToken.setOffsetMappingLimit(20)  
 
       return { WETH, WETHPartner, factoryFeswa,
         routerFeswa, Feswa, FeswaNFT,

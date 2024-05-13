@@ -157,6 +157,7 @@ contract ArkreenRECIssuance is
         recData.region =  recRequest.region;        
         recData.url =  recRequest.url;
         recData.memo =  recRequest.memo;
+        recData.idAsset = 0; 
 
         allRECData[tokenId] = recData;
 

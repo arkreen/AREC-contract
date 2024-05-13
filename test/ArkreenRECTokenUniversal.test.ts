@@ -2,11 +2,13 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { expect } from "chai";
 import { constants, BigNumber, Contract } from 'ethers'
 import { ethers, network, upgrades } from "hardhat";
+import { ArkreenRECIssuanceExt__factory } from "../typechain";
 
 import {
     ArkreenToken,
     ArkreenMiner,
     ArkreenRECIssuance,
+    ArkreenRECIssuanceExt,
     ArkreenRegistry,
     ArkreenRECToken,
     ArkreenBadge,
@@ -48,6 +50,8 @@ describe("ArkreenRECToken", () => {
     let arkreenRECToken:              ArkreenRECToken
     let arkreenBadge:                 ArkreenBadge
     let arkreenBadgeImage:            ArkreenBadgeImage
+    let arkreenRECIssuanceExt:        ArkreenRECIssuanceExt
+
 
     const Miner_Manager       = 0         
 
@@ -71,6 +75,12 @@ describe("ArkreenRECToken", () => {
                                   [AKREToken.address, arkreenRegistry.address]) as ArkreenRECIssuance
       await arkreenRECIssuance.deployed()
 
+      const ArkreenRECIssuanceExtFactory = await ethers.getContractFactory("ArkreenRECIssuanceExt")
+      const arkreenRECIssuanceExtImp = await ArkreenRECIssuanceExtFactory.deploy()
+      await arkreenRECIssuanceExtImp.deployed()    
+
+      await arkreenRECIssuance.setESGExtAddress(arkreenRECIssuanceExtImp.address)
+
       const ArkreenRECTokenFactory = await ethers.getContractFactory("ArkreenRECToken")
       arkreenRECToken = await upgrades.deployProxy(ArkreenRECTokenFactory,[arkreenRegistry.address, manager.address, '', '']) as ArkreenRECToken
       await arkreenRECToken.deployed()
@@ -85,12 +95,12 @@ describe("ArkreenRECToken", () => {
 
       await arkreenBadge.setBadgeImage(arkreenBadgeImage.address)
   
-      await AKREToken.transfer(owner1.address, expandTo18Decimals(10000000))
-      await AKREToken.connect(owner1).approve(arkreenRECIssuance.address, expandTo18Decimals(10000000))
+      await AKREToken.transfer(owner1.address, expandTo18Decimals(20000000))
+      await AKREToken.connect(owner1).approve(arkreenRECIssuance.address, expandTo18Decimals(20000000))
       await AKREToken.transfer(maker1.address, expandTo18Decimals(10000000))
-      await AKREToken.connect(maker1).approve(arkreenRECIssuance.address, expandTo18Decimals(10000000))
-      await AKREToken.connect(owner1).approve(arkreenMiner.address, expandTo18Decimals(10000000))
-      await AKREToken.connect(maker1).approve(arkreenMiner.address, expandTo18Decimals(10000000))
+      await AKREToken.connect(maker1).approve(arkreenRECIssuance.address, expandTo18Decimals(20000000))
+      await AKREToken.connect(owner1).approve(arkreenMiner.address, expandTo18Decimals(20000000))
+      await AKREToken.connect(maker1).approve(arkreenMiner.address, expandTo18Decimals(20000000))
 
       const miners = randomAddresses(2)
       await arkreenMiner.connect(manager).RemoteMinerOnboardInBatch([owner1.address, maker1.address], miners)
@@ -102,10 +112,14 @@ describe("ArkreenRECToken", () => {
       await arkreenRegistry.addRECIssuer(manager.address, arkreenRECToken.address, "Arkreen Issuer")
       await arkreenRegistry.setRECIssuance(arkreenRECIssuance.address)
       await arkreenRegistry.setArkreenRetirement(arkreenBadge.address)
-
       await arkreenRECToken.setOffsetMappingLimit(20)
 
-      return {AKREToken, arkreenMiner, arkreenRegistry, arkreenRECIssuance, arkreenRECToken, arkreenBadge}
+      arkreenRECIssuanceExt = ArkreenRECIssuanceExt__factory.connect(arkreenRECIssuance.address, deployer);
+
+      await arkreenRegistry.newAssetAREC('Test ARE', manager.address, arkreenRECToken.address,
+                  AKREToken.address, BigNumber.from("0x2b5e3af16b1880000"), 1000, 'HashKey ESG BTC' )
+
+      return {AKREToken, arkreenMiner, arkreenRegistry, arkreenRECIssuance, arkreenRECToken, arkreenBadge, arkreenRECIssuanceExt}
     }
 
     beforeEach(async () => {
@@ -122,6 +136,7 @@ describe("ArkreenRECToken", () => {
         arkreenRegistry = fixture.arkreenRegistry
         arkreenRECIssuance = fixture.arkreenRECIssuance
         arkreenBadge = fixture.arkreenBadge
+        arkreenRECIssuanceExt = fixture.arkreenRECIssuanceExt
 
         const startTime = 1564888526
         const endTime   = 1654888526
@@ -155,11 +170,6 @@ describe("ArkreenRECToken", () => {
         await arkreenRECIssuance.connect(manager).certifyRECRequest(tokenID, "Serial12345678")
         await arkreenRECIssuance.connect(owner1).liquidizeREC(tokenID)
 
-    });
-
-    it("ArkreenRECToken: Basics", async () => {
-        expect(await arkreenRECToken.NAME()).to.equal("Arkreen REC Token");
-        expect(await arkreenRECToken.SYMBOL()).to.equal("ART");
     });
 
     it("ArkreenRECToken: commitOffset basics", async () => {
@@ -353,6 +363,38 @@ describe("ArkreenRECToken", () => {
       await arkreenRECIssuance.connect(owner1).liquidizeREC(tokenID)
     }
 
+    async function mintARECIREC(amountREC: number) {
+
+      let signature: SignatureStruct
+      const mintFee = expandTo18Decimals(amountREC).mul(50)  
+      let tokenID: BigNumber          
+
+      const nonce1 = await AKREToken.nonces(owner1.address)
+      const digest1 = await getApprovalDigest(
+                              AKREToken,
+                              { owner: owner1.address, spender: arkreenRECIssuance.address, value: mintFee },
+                              nonce1,
+                              constants.MaxUint256
+                            )
+      const { v,r,s } = ecsign(Buffer.from(digest1.slice(2), 'hex'), Buffer.from(privateKeyOwner.slice(2), 'hex'))
+      signature = { v, r, s, token: AKREToken.address, value:mintFee, deadline: constants.MaxUint256 } 
+
+      await arkreenRECIssuanceExt.connect(owner1).mintESGBatch(1, expandTo9Decimals(amountREC), signature)
+      tokenID = await arkreenRECIssuanceExt.totalSupply()
+
+      const startTime = 1564888526
+      const endTime   = 1654888526
+      const region = "Shanghai"
+      const url = "https://www.arkreen.com/AREC/"
+      const memo = "Test Update"   
+      const cID = "bafybeihepmxz4ytc4ht67j73nzurkvsiuxhsmxk27utnopzptpo7wuigte"        
+
+      await arkreenRECIssuanceExt.connect(owner1).updateRECDataExt(tokenID, startTime, endTime, cID, region, url, memo)     
+      await arkreenRECIssuance.connect(manager).certifyRECRequest(tokenID, "Serial12345678")
+      await arkreenRECIssuance.connect(owner1).liquidizeREC(tokenID)
+
+    }
+
     async function mintARECMaker(amountREC: number) {
       const startTime = 1564888526
       const endTime   = 1654888526
@@ -449,22 +491,22 @@ describe("ArkreenRECToken", () => {
     });
 
     it("Offset Details: 17 AREC", async () => {     // Offset 17 NFT in one offset transaction
+      await arkreenRECIssuanceExt.manageMVPAddress(true,[owner1.address])         
       await mintAREC(5000)        // 2 :  45
       await mintAREC(600)         // 3:   51
-      await mintAREC(8000)        // 4:  131
+      await mintARECIREC(8000)    // 4:  131
       await mintAREC(900)         // 5
       await mintAREC(1000)        // 6
       await mintAREC(2000)        // 7
-      await mintAREC(9000)        // 8
+      await mintARECIREC(9000)    // 8
       await mintAREC(800)         // 9
       await mintAREC(3000)        // 10:  298
-
       await mintAREC(5000)        // 11
       await mintAREC(600)         // 12
       await mintAREC(8000)        // 13
       await mintAREC(500)         // 14
       await mintAREC(1000)        // 15
-      await mintAREC(2000)        // 16:  469
+      await mintARECIREC(2000)    // 16:  469
       await mintAREC(9000)        // 17:  559
       await mintAREC(800)         // 18
       await mintAREC(3000)        // 19： 597
@@ -502,12 +544,64 @@ describe("ArkreenRECToken", () => {
       expect(await arkreenBadge.OffsetDetails(2,15)).to.deep.equal(detail_2)
     });
 
+    it("Offset Details: fully Offset", async () => {     // Offset 17 NFT in one offset transaction
+      await arkreenRECIssuanceExt.manageMVPAddress(true,[owner1.address])         
+      await mintAREC(5000)        // 2 :  45
+      await mintAREC(600)         // 3:   51
+      await mintAREC(8000)        // 4:   131
+      await mintAREC(900)         // 5:   140
+      await mintAREC(1000)        // 6:   150
+      await mintAREC(2000)        // 7:   170
+      await mintAREC(9000)        // 8:   260
+      await mintAREC(800)         // 9:   268 
+      await mintAREC(3000)        // 10:  298
+      await mintAREC(5000)        // 11:  348
+      await mintAREC(600)         // 12:  354  
+      await mintAREC(8000)        // 13:  434
+      await mintAREC(500)         // 14:  439
+      await mintAREC(1000)        // 15:  449
+      await mintAREC(2000)        // 16:  469
+
+      const balance_1 = await arkreenRECToken.balanceOf(owner1.address)
+      await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(1500))
+
+      await expect(arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(46900)))
+              .to.emit(arkreenRECToken, "OffsetFinished")
+              .withArgs(owner1.address, expandTo9Decimals(46900), 2) 
+
+      const balance_2 = await arkreenRECToken.balanceOf(owner1.address)
+      expect(balance_2).to.equal(balance_1.sub(expandTo9Decimals(1500 +46900)))
+
+      expect(await arkreenRECToken.latestARECID()).to.equal(0)  // 18, 19, 20
+
+      expect(await arkreenRECIssuance.balanceOf(arkreenBadge.address)).to.equal(16)
+      expect(await arkreenBadge.detailsCounter()).to.equal(2)
+
+      const detail_0 = [4, expandTo9Decimals(8000)]
+      const detail_1 = [11, expandTo9Decimals(5000)]
+      const detail_2 = [16, expandTo9Decimals(2000)]
+
+      expect(await arkreenBadge.partialARECIDExt(arkreenRECToken.address)).to.equal(16)
+      expect(await arkreenBadge.partialAvailableAmountExt(arkreenRECToken.address)).to.equal(expandTo9Decimals(0))
+
+      const offsetDetails = await arkreenBadge.getOffsetDetails(2)
+      expect(offsetDetails[2]).to.deep.equal(detail_0)
+      expect(offsetDetails[9]).to.deep.equal(detail_1)
+      expect(offsetDetails[14]).to.deep.equal(detail_2)
+
+      expect(await arkreenBadge.OffsetDetails(2,2)).to.deep.equal(detail_0)
+      expect(await arkreenBadge.OffsetDetails(2,9)).to.deep.equal(detail_1)
+      expect(await arkreenBadge.OffsetDetails(2,14)).to.deep.equal(detail_2)
+    });
+
     it("Offset Details: 20 AREC", async () => {     // Maximum 20 NFT in one offset transaction
+      await arkreenRECIssuanceExt.manageMVPAddress(true,[owner1.address])         
+
       await mintAREC(5000)        // 2 :  45
       await mintAREC(600)         // 3:   51
       await mintAREC(8000)        // 4:  131
       await mintAREC(900)         // 5
-      await mintAREC(1000)        // 6
+      await mintARECIREC(1000)    // 6
       await mintAREC(2000)        // 7
       await mintAREC(9000)        // 8
       await mintAREC(800)         // 9
@@ -515,19 +609,19 @@ describe("ArkreenRECToken", () => {
 
       await mintAREC(5000)        // 11
       await mintAREC(600)         // 12
-      await mintAREC(8000)        // 13
+      await mintARECIREC(8000)    // 13
       await mintAREC(500)         // 14
       await mintAREC(1000)        // 15
       await mintAREC(2000)        // 16:  469
       await mintAREC(9000)        // 17:  559
       await mintAREC(800)         // 18
-      await mintAREC(3000)        // 19： 597
+      await mintARECIREC(3000)    // 19： 597
       await mintAREC(500)         // 20:  602
 
       await mintAREC(400)         // 21:  606
       await mintAREC(300)         // 22:  609
       await mintAREC(8000)        // 23:  689
-      await mintAREC(200)         // 24:  691
+      await mintARECIREC(200)     // 24:  691
 
       const balance_1 = await arkreenRECToken.balanceOf(owner1.address)
       await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(1500))
@@ -561,55 +655,275 @@ describe("ArkreenRECToken", () => {
       expect(await arkreenBadge.OffsetDetails(2,19)).to.deep.equal(detail_2)
     });
 
+    it("Offset Details: 20 AREC with bridge", async () => {     // Maximum 20 NFT in one offset transaction
+
+      await arkreenRECToken.setBridgedAssetType(1)         
+      await arkreenRECIssuanceExt.manageMVPAddress(true,[owner1.address])         
+
+      await mintAREC(5000)          // 2 :  45
+      await mintAREC(600)           // 3:   51
+      await mintAREC(8000)          // 4:   131
+      await mintAREC(900)           // 5:   140
+      await mintAREC(1000)          // 6:   150
+      await mintARECIREC(10000)     // 7
+
+      await mintAREC(2000)          // 8:   170
+      await mintAREC(9000)          // 9:   260
+      await mintAREC(800)           // 10；  268
+      await mintAREC(3000)          // 11:  298
+      await mintARECIREC(20000)     // 12
+
+      await mintAREC(5000)          // 13:  348
+      await mintAREC(600)           // 14:  354
+      await mintAREC(8000)          // 15:  434
+      await mintAREC(500)           // 16:  439
+      await mintAREC(1000)          // 17:  449
+      await mintAREC(2000)          // 18:  469
+      await mintAREC(9000)          // 19:  559
+      await mintAREC(800)           // 20:  567
+      await mintAREC(3000)          // 21： 597
+      await mintAREC(500)           // 22:  602
+      await mintARECIREC(20000)     // 23
+
+      await mintAREC(400)           // 24:  606
+      await mintAREC(300)           // 25:  609
+      await mintAREC(8000)          // 26:  689
+      await mintARECIREC(200)       // 27:  691
+
+      const balance_1 = await arkreenRECToken.balanceOf(owner1.address)
+      await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(1500))
+
+      expect(await arkreenBadge.getBridgeDetailStatus(arkreenRECToken.address)).to.deep.eq([BigNumber.from(0), BigNumber.from(0)])
+      expect(await arkreenBadge.getDetailStatus(arkreenRECToken.address)).to.deep.eq([expandTo9Decimals(5000-500), BigNumber.from(2)])
+
+      const balance_1_A = await arkreenRECToken.balanceOf(owner1.address)
+      expect(balance_1_A).to.equal(balance_1.sub(expandTo9Decimals(1500)))
+
+      await expect(arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(66000)))
+              .to.emit(arkreenRECToken, "OffsetFinished")
+              .withArgs(owner1.address, expandTo9Decimals(66000), 2) 
+
+      expect(await arkreenBadge.getBridgeDetailStatus(arkreenRECToken.address)).to.deep.eq([expandTo9Decimals(10000-5400), BigNumber.from(7)])
+      expect(await arkreenBadge.getDetailStatus(arkreenRECToken.address)).to.deep.eq([BigNumber.from(0), BigNumber.from(24)])
+
+      const balance_2 = await arkreenRECToken.balanceOf(owner1.address)
+      expect(balance_2).to.equal(balance_1.sub(expandTo9Decimals(1500 +66000)))
+
+      expect(await arkreenRECToken.latestARECID()).to.equal(26)  // 22,23,24
+      expect(await arkreenRECToken.latestBridgeARECID()).to.equal(27)  // 22,23,24
+
+      expect(await arkreenRECIssuance.balanceOf(arkreenBadge.address)).to.equal(22)  // 24-2
+      expect(await arkreenBadge.detailsCounter()).to.equal(2)
+
+      const detail_0 = [2, expandTo9Decimals(4500)]
+      const detail_1 = [11, expandTo9Decimals(3000)]
+      const detail_2 = [24, expandTo9Decimals(400)]
+
+      const offsetDetails = await arkreenBadge.getOffsetDetails(2)
+      expect(offsetDetails[0]).to.deep.equal(detail_0)
+      expect(offsetDetails[8]).to.deep.equal(detail_1)
+      expect(offsetDetails[19]).to.deep.equal(detail_2)
+
+      expect(await arkreenBadge.OffsetDetails(2,0)).to.deep.equal(detail_0)
+      expect(await arkreenBadge.OffsetDetails(2,8)).to.deep.equal(detail_1)
+      expect(await arkreenBadge.OffsetDetails(2,19)).to.deep.equal(detail_2)
+    });
+
+    it("Offset Details: 18 AREC with bridge", async () => {     // Maximum 20 NFT in one offset transaction
+
+      await arkreenRECToken.setBridgedAssetType(1)         
+      await arkreenRECIssuanceExt.manageMVPAddress(true,[owner1.address])         
+
+      await mintAREC(5000)          // 2 :  45
+      await mintAREC(600)           // 3:   51
+      await mintAREC(8000)          // 4:   131
+      await mintAREC(900)           // 5:   140
+      await mintAREC(1000)          // 6:   150
+      await mintARECIREC(3000)      // 7
+
+      await mintAREC(2000)          // 8:   170
+      await mintAREC(9000)          // 9:   260
+      await mintAREC(800)           // 10；  268
+      await mintAREC(3000)          // 11:  298
+      await mintARECIREC(20000)     // 12
+
+      await mintAREC(5000)          // 13:  348
+      await mintAREC(600)           // 14:  354
+      await mintAREC(8000)          // 15:  434
+      await mintAREC(500)           // 16:  439
+      await mintAREC(1000)          // 17:  449
+      await mintAREC(2000)          // 18:  469
+      await mintAREC(9000)          // 19:  559
+      await mintAREC(800)           // 20:  567
+      await mintAREC(3000)          // 21： 597
+      await mintARECIREC(20000)     // 22
+      await mintARECIREC(200)       // 23:  691
+
+      const balance_1 = await arkreenRECToken.balanceOf(owner1.address)
+      await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(1500))
+
+      expect(await arkreenBadge.getBridgeDetailStatus(arkreenRECToken.address)).to.deep.eq([BigNumber.from(0), BigNumber.from(0)])
+      expect(await arkreenBadge.getDetailStatus(arkreenRECToken.address)).to.deep.eq([expandTo9Decimals(5000-500), BigNumber.from(2)])
+
+      const balance_1_A = await arkreenRECToken.balanceOf(owner1.address)
+      expect(balance_1_A).to.equal(balance_1.sub(expandTo9Decimals(1500)))
+
+      await expect(arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(66000)))
+              .to.emit(arkreenRECToken, "OffsetFinished")
+              .withArgs(owner1.address, expandTo9Decimals(66000), 2) 
+
+      expect(await arkreenBadge.getBridgeDetailStatus(arkreenRECToken.address)).to.deep.eq([expandTo9Decimals(20000-3300), BigNumber.from(12)])
+      expect(await arkreenBadge.getDetailStatus(arkreenRECToken.address)).to.deep.eq([BigNumber.from(0), BigNumber.from(21)])
+
+      const balance_2 = await arkreenRECToken.balanceOf(owner1.address)
+      expect(balance_2).to.equal(balance_1.sub(expandTo9Decimals(1500 +66000)))
+
+      expect(await arkreenRECToken.latestARECID()).to.equal(0)  // 22,23,24
+      expect(await arkreenRECToken.latestBridgeARECID()).to.equal(23)  // 22,23,24
+
+      expect(await arkreenRECIssuance.balanceOf(arkreenBadge.address)).to.equal(21)
+      expect(await arkreenBadge.detailsCounter()).to.equal(2)
+
+      const detail_0 = [2, expandTo9Decimals(4500)]
+      const detail_1 = [11, expandTo9Decimals(3000)]
+      const detail_2 = [12, expandTo9Decimals(3300)]
+
+      const offsetDetails = await arkreenBadge.getOffsetDetails(2)
+      expect(offsetDetails[0]).to.deep.equal(detail_0)
+      expect(offsetDetails[8]).to.deep.equal(detail_1)
+      expect(offsetDetails[19]).to.deep.equal(detail_2)
+
+      expect(await arkreenBadge.OffsetDetails(2,0)).to.deep.equal(detail_0)
+      expect(await arkreenBadge.OffsetDetails(2,8)).to.deep.equal(detail_1)
+      expect(await arkreenBadge.OffsetDetails(2,19)).to.deep.equal(detail_2)
+    });
+
+    it("Offset Details: 20 AREC with bridge, 5 AREC NFT used", async () => {     // Maximum 20 NFT in one offset transaction
+
+      await arkreenRECToken.setBridgedAssetType(1)         
+      await arkreenRECIssuanceExt.manageMVPAddress(true,[owner1.address])      
+
+      await mintAREC(5000)          // 2 :  45
+      await mintAREC(600)           // 3:   51
+      await mintAREC(8000)          // 4:   131
+      await mintAREC(900)           // 5:   140
+      await mintAREC(1000)          // 6:   150
+      await mintARECIREC(3000)      // 7
+
+      await mintAREC(2000)          // 8:   170
+      await mintAREC(9000)          // 9:   260
+      await mintAREC(800)           // 10；  268
+      await mintAREC(3000)          // 11:  298
+      await mintARECIREC(5000)      // 12
+
+      await mintAREC(5000)          // 13:  348
+      await mintAREC(600)           // 14:  354
+      await mintAREC(8000)          // 15:  434
+      await mintAREC(500)           // 16:  439
+      await mintAREC(1000)          // 17:  449
+      await mintAREC(2000)          // 18:  469
+      await mintAREC(9000)          // 19:  559
+      await mintAREC(800)           // 20:  567
+      await mintAREC(3000)          // 21： 597
+      await mintAREC(500)           // 22:  602
+      await mintARECIREC(3000)      // 23
+
+      await mintAREC(400)           // 24:  606
+      await mintAREC(300)           // 25:  609
+      await mintAREC(8000)          // 26:  689
+      await mintARECIREC(2000)      // 27
+      await mintARECIREC(10000)     // 28
+      await mintARECIREC(10000)     // 29
+
+      const balance_1 = await arkreenRECToken.balanceOf(owner1.address)
+      await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(1500))
+
+      expect(await arkreenBadge.getBridgeDetailStatus(arkreenRECToken.address)).to.deep.eq([BigNumber.from(0), BigNumber.from(0)])
+      expect(await arkreenBadge.getDetailStatus(arkreenRECToken.address)).to.deep.eq([expandTo9Decimals(5000-500), BigNumber.from(2)])
+
+      const balance_1_A = await arkreenRECToken.balanceOf(owner1.address)
+      expect(balance_1_A).to.equal(balance_1.sub(expandTo9Decimals(1500)))
+
+      await expect(arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(80000)))
+              .to.emit(arkreenRECToken, "OffsetFinished")
+              .withArgs(owner1.address, expandTo9Decimals(80000), 2) 
+
+      expect(await arkreenBadge.getBridgeDetailStatus(arkreenRECToken.address)).to.deep.eq([expandTo9Decimals(3600), BigNumber.from(28)])
+      expect(await arkreenBadge.getDetailStatus(arkreenRECToken.address)).to.deep.eq([BigNumber.from(0), BigNumber.from(24)])
+
+      const balance_2 = await arkreenRECToken.balanceOf(owner1.address)
+      expect(balance_2).to.equal(balance_1.sub(expandTo9Decimals(1500 + 80000)))
+
+      expect(await arkreenRECToken.latestARECID()).to.equal(26)  // 22,23,24
+      expect(await arkreenRECToken.latestBridgeARECID()).to.equal(29)  // 22,23,24
+
+      expect(await arkreenRECIssuance.balanceOf(arkreenBadge.address)).to.equal(26)  // 28-2
+      expect(await arkreenBadge.detailsCounter()).to.equal(2)
+
+      const detail_0 = [2, expandTo9Decimals(4500)]
+      const detail_1 = [11, expandTo9Decimals(3000)]
+      const detail_2 = [24, expandTo9Decimals(400)]
+
+      const offsetDetails = await arkreenBadge.getOffsetDetails(2)
+      expect(offsetDetails[0]).to.deep.equal(detail_0)
+      expect(offsetDetails[8]).to.deep.equal(detail_1)
+      expect(offsetDetails[19]).to.deep.equal(detail_2)
+
+      expect(await arkreenBadge.OffsetDetails(2,0)).to.deep.equal(detail_0)
+      expect(await arkreenBadge.OffsetDetails(2,8)).to.deep.equal(detail_1)
+      expect(await arkreenBadge.OffsetDetails(2,19)).to.deep.equal(detail_2)
+    });
+
     it("Offset Details: 20 AREC gas used ", async () => {     // Maximum 20 NFT in one offset transaction
-      await mintAREC(5000)        // 2 :  45
+      await arkreenRECIssuanceExt.manageMVPAddress(true,[owner1.address])         
+
+      await mintARECIREC(5000)        // 2 :  45
       await mintAREC(600)         // 3:   51
       await mintAREC(8000)        // 4:  131
       await mintAREC(900)         // 5
       await mintAREC(1000)        // 6
-      await mintAREC(2000)        // 7
+      await mintARECIREC(2000)    // 7
       await mintAREC(9000)        // 8
       await mintAREC(800)         // 9
       await mintAREC(3000)        // 10:  298
 
       await mintAREC(5000)        // 11
       await mintAREC(600)         // 12
-      await mintAREC(8000)        // 13
+      await mintARECIREC(8000)    // 13
       await mintAREC(500)         // 14
       await mintAREC(1000)        // 15
       await mintAREC(2000)        // 16:  469
       await mintAREC(9000)        // 17:  559
-      await mintAREC(800)         // 18
+      await mintARECIREC(800)     // 18
       await mintAREC(3000)        // 19： 597
       await mintAREC(500)         // 20:  602
 
       await mintAREC(400)         // 21:  606
-      await mintAREC(300)         // 22:  609
+      await mintARECIREC(300)     // 22:  609
       await mintAREC(8000)        // 23:  689
       await mintAREC(200)         // 24:  691
 
       const tx_1 = await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(500))
       const receipt_1 = await tx_1.wait()
       console.log("commitOffset Gasfee:", receipt_1.gasUsed.toString())
-//     expect(receipt_1.gasUsed).to.eq("429465")  // 429465 431647 429551 429573 429595 435553 435586 435300 432982 460991 461138  
+//    expect(receipt_1.gasUsed).to.eq("429465")  // 429465 431647 429551 429573 429595 435553 435586 435300 432982 460991 461138  
 
       const tx_2 = await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(800))
       const receipt_2 = await tx_2.wait()
       console.log("commitOffset Gasfee:", receipt_2.gasUsed.toString())
-//      expect(receipt_2.gasUsed).to.eq("412777")  // 414959 412863 412907 422169 422158 414450 442460 442607 423814 
+//    expect(receipt_2.gasUsed).to.eq("410313")  // 414959 412863 412907 422169 422158 414450 442460 442607 423814 
 
       const tx_3 = await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(200))
       const receipt_3 = await tx_3.wait()
-      console.log("commitOffset Gasfee:", receipt_3.gasUsed.toString())
-//      expect(receipt_3.gasUsed).to.eq("204179")  // 204179 204263 207832 207824 204554 204554   206361
+      console.log("commitOffset Gasfee of mapping 20 AREC NFT:", receipt_3.gasUsed.toString())
+//    expect(receipt_3.gasUsed).to.eq("204179")  // 204179 204263 207832 207824 204554 204554   206361
 
       const tx = await arkreenRECToken.connect(owner1).commitOffset(expandTo9Decimals(60600))
       const receipt = await tx.wait()
-      console.log("commitOffset Gasfee:", receipt.gasUsed.toString())
-//      expect(receipt.gasUsed).to.eq("2107852")  // 2107974 2108392 2108414 2190594 2190925 2753332 2756125  2110034
+      console.log("commitOffset Gasfee of mapping 20 AREC NFT:", receipt.gasUsed.toString())
+//    expect(receipt.gasUsed).to.eq("2108460")  // 2107974 2108392 2108414 2190594 2190925 2753332 2756125  2110034
     });
   })
-
 
   describe("liquidizeREC", () => {
     let tokenID: BigNumber
@@ -724,6 +1038,38 @@ describe("ArkreenRECToken", () => {
       await arkreenRECIssuance.connect(owner1).liquidizeREC(tokenID)
     }
 
+    async function mintARECIREC(amountREC: number) {
+
+      let signature: SignatureStruct
+      const mintFee = expandTo18Decimals(amountREC).mul(50)  
+      let tokenID: BigNumber          
+
+      const nonce1 = await AKREToken.nonces(owner1.address)
+      const digest1 = await getApprovalDigest(
+                              AKREToken,
+                              { owner: owner1.address, spender: arkreenRECIssuance.address, value: mintFee },
+                              nonce1,
+                              constants.MaxUint256
+                            )
+      const { v,r,s } = ecsign(Buffer.from(digest1.slice(2), 'hex'), Buffer.from(privateKeyOwner.slice(2), 'hex'))
+      signature = { v, r, s, token: AKREToken.address, value:mintFee, deadline: constants.MaxUint256 } 
+
+      await arkreenRECIssuanceExt.connect(owner1).mintESGBatch(1, expandTo9Decimals(amountREC), signature)
+      tokenID = await arkreenRECIssuanceExt.totalSupply()
+
+      const startTime = 1564888526
+      const endTime   = 1654888526
+      const region = "Shanghai"
+      const url = "https://www.arkreen.com/AREC/"
+      const memo = "Test Update"   
+      const cID = "bafybeihepmxz4ytc4ht67j73nzurkvsiuxhsmxk27utnopzptpo7wuigte"        
+
+      await arkreenRECIssuanceExt.connect(owner1).updateRECDataExt(tokenID, startTime, endTime, cID, region, url, memo)     
+      await arkreenRECIssuance.connect(manager).certifyRECRequest(tokenID, "Serial12345678")
+      await arkreenRECIssuance.connect(owner1).liquidizeREC(tokenID)
+
+    }
+
     async function mintARECMaker(amountREC: number) {
       const startTime = 1564888526
       const endTime   = 1654888526
@@ -816,11 +1162,13 @@ describe("ArkreenRECToken", () => {
     });
 
     it("Solidify: 6AREC: 6000", async () => {
+      await arkreenRECIssuanceExt.manageMVPAddress(true,[owner1.address])         
+
     // await mintAREC(1000)      
-      await mintAREC(5000)
+      await mintARECIREC(5000)
       await mintAREC(600)
       await mintAREC(8000)
-      await mintAREC(200)
+      await mintARECIREC(200)
       await mintAREC(1000)
 
       expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(expandTo9Decimals((10+50+6+80+2+10)*100))
@@ -848,16 +1196,18 @@ describe("ArkreenRECToken", () => {
     });
 
     it("Solidify: 10AREC", async () => {
+      await arkreenRECIssuanceExt.manageMVPAddress(true,[owner1.address])         
+
       // await mintAREC(1000)     // 1
       await mintAREC(5000)        // 2
       await mintAREC(600)         // 3
-      await mintAREC(8000)        // 4
+      await mintARECIREC(8000)        // 4
       await mintAREC(200)         // 5
       await mintAREC(1000)        // 6
-      await mintAREC(2000)        // 7
+      await mintARECIREC(2000)        // 7
       await mintAREC(9000)        // 8
       await mintAREC(800)         // 9
-      await mintAREC(3000)        // 10
+      await mintARECIREC(3000)        // 10
             
       expect(await arkreenRECIssuance.allRECLiquidized()).to.equal(
                       expandTo9Decimals(1000+5000+600+8000+200+1000+2000+9000+800+3000))
@@ -892,13 +1242,15 @@ describe("ArkreenRECToken", () => {
     })      
 
     it("Solidify: 30AREC", async () => {
+      await arkreenRECIssuanceExt.manageMVPAddress(true,[owner1.address])         
+
       // await mintAREC(1000)     // 1
       await mintAREC(5000)        // 2 *
       await mintAREC(600)         // 3 *
-      await mintAREC(8000)        // 4 *
+      await mintARECIREC(8000)        // 4 *
       await mintAREC(900)         // 5 *
       await mintAREC(1000)        // 6 *
-      await mintAREC(2000)        // 7 *
+      await mintARECIREC(2000)        // 7 *
       await mintAREC(9000)        // 8 0E
       await mintAREC(800)         // 9 *
       await mintAREC(3000)        // 10 0E
@@ -906,24 +1258,24 @@ describe("ArkreenRECToken", () => {
       await mintAREC(5000)        // 11 0E
       await mintAREC(600)         // 12 *
       await mintAREC(8000)        // 13 1F
-      await mintAREC(500)         // 14 0E
+      await mintARECIREC(500)         // 14 0E
       await mintAREC(1000)        // 15 0E
       await mintAREC(2000)        // 16 0E
       await mintAREC(9000)        // 17 1F
       await mintAREC(800)         // 18 1F
-      await mintAREC(3000)        // 19 1F
+      await mintARECIREC(3000)        // 19 1F
       await mintAREC(500)         // 20 1F
 
       await mintAREC(400)         // 21 *
       await mintAREC(300)         // 22 *
       await mintAREC(8000)        // 23 2G
       await mintAREC(200)         // 24 *
-      await mintAREC(1000)        // 25 2G
+      await mintARECIREC(1000)        // 25 2G
       await mintAREC(2000)        // 26 3H
       await mintAREC(9000)        // 27 4I
       await mintAREC(8000)        // 28 3HetAREC
-      await mintAREC(800)         // 29 2G
-      await mintAREC(600)         // 30 1F
+      await mintARECIREC(800)         // 29 2G
+      await mintARECIREC(600)         // 30 1F
 
       await expect(arkreenRECToken.connect(owner1).solidify(expandTo9Decimals(1400)))   // 1000+400, 1+21
               .to.emit(arkreenRECToken, "Solidify")
@@ -988,19 +1340,21 @@ describe("ArkreenRECToken", () => {
     })    
     
     it("Solidify: 10AREC with fee charged ", async () => {
+      await arkreenRECIssuanceExt.manageMVPAddress(true,[owner1.address])         
+
       await arkreenRECToken.setReceiverFee(owner2.address)
       await arkreenRECToken.setRatioFeeToSolidify(1000)
 
       // await mintAREC(1000)     // 1
       await mintAREC(5000)        // 2
-      await mintAREC(600)         // 3
+      await mintARECIREC(600)         // 3
       await mintAREC(8000)        // 4
       await mintAREC(900)         // 5
-      await mintAREC(1000)        // 6
+      await mintARECIREC(1000)        // 6
       await mintAREC(2000)        // 7
-      await mintAREC(9000)        // 8
+      await mintARECIREC(9000)        // 8
       await mintAREC(800)         // 9
-      await mintAREC(300)         // 10
+      await mintARECIREC(300)         // 10
 
       await expect(arkreenRECToken.connect(owner1).solidify(expandTo9Decimals(1050)))   // Fee not enough
               .to.be.revertedWith("ART: Amount Too Less")

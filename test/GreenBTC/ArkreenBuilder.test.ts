@@ -240,6 +240,8 @@ describe("ArkreenBuilder", () => {
       await arkreenBuilder.deployed();
       await arkreenBuilder.approveRouter([WETHPartner.address, WETH.address])
 
+      await arkreenRECToken.setOffsetMappingLimit(20)
+
       return { WETH, WETHPartner, factoryFeswa,
         routerFeswa, Feswa, FeswaNFT,
         tokenIDMatch, 
@@ -616,7 +618,7 @@ describe("ArkreenBuilder", () => {
         const tokenArtAmount = expandTo9Decimals(1000000)
         await addLiquidityEEA(tokenETHAmount, tokenArtAmount, 0)      // should be 0 here
 
-        const amountPay = expandTo18Decimals(10)
+        const amountPay = expandTo18Decimals(2)
         const amountART = expandTo9Decimals(0)
 
         // Normal transaction
@@ -822,7 +824,7 @@ describe("ArkreenBuilder", () => {
         const tokenArtAmount = expandTo9Decimals(1000000)
         await addLiquidityEEA(tokenETHAmount, tokenArtAmount, 0)      // should be 0 here
 
-        const amountPay = expandTo18Decimals(10)
+        const amountPay = expandTo18Decimals(2)
         const amountART = expandTo9Decimals(0)
         const badgeInfo =  {
                   beneficiary:    owner1.address,
@@ -834,6 +836,7 @@ describe("ArkreenBuilder", () => {
         // Normal transaction
         const ARECBefore = await arkreenRECToken.balanceOf(owner1.address)                                      
         const expectedOutputAmount  = amountPay.mul(tokenArtAmount).div(tokenETHAmount.add(amountPay))   
+
         await expect(arkreenBuilder.connect(owner1).actionBuilderBadgeNative(arkreenRECToken.address,
                             amountART, 1, constants.MaxUint256 , badgeInfo, {value: amountPay}))
                             .to.emit(WETH, 'Deposit')

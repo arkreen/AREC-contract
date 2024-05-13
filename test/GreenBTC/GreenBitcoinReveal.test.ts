@@ -135,12 +135,12 @@ describe("GreenBTC Test Campaign", () => {
       const arkreenRECBank = await upgrades.deployProxy(ArkreenRECBankFactory,[WETH.address]) as ArkreenRECBank
       await arkreenRECBank.deployed()   
   
-      await AKREToken.transfer(owner1.address, expandTo18Decimals(30_000_000))
-      await AKREToken.connect(owner1).approve(arkreenRECIssuance.address, expandTo18Decimals(30_000_000))
-      await AKREToken.transfer(maker1.address, expandTo18Decimals(30_000_000))
-      await AKREToken.connect(maker1).approve(arkreenRECIssuance.address, expandTo18Decimals(30_000_000))
-      await AKREToken.connect(owner1).approve(arkreenMiner.address, expandTo18Decimals(30_000_000))
-      await AKREToken.connect(maker1).approve(arkreenMiner.address, expandTo18Decimals(30_000_000))
+      await AKREToken.transfer(owner1.address, expandTo18Decimals(300_000_000))
+      await AKREToken.connect(owner1).approve(arkreenRECIssuance.address, expandTo18Decimals(300_000_000))
+      await AKREToken.transfer(maker1.address, expandTo18Decimals(300_000_000))
+      await AKREToken.connect(maker1).approve(arkreenRECIssuance.address, expandTo18Decimals(300_000_000))
+      await AKREToken.connect(owner1).approve(arkreenMiner.address, expandTo18Decimals(300_000_000))
+      await AKREToken.connect(maker1).approve(arkreenMiner.address, expandTo18Decimals(300_000_000))
 
       const miners = randomAddresses(2)
       await arkreenMiner.connect(manager).RemoteMinerOnboardInBatch([owner1.address, maker1.address], miners)
@@ -265,6 +265,9 @@ describe("GreenBTC Test Campaign", () => {
           const { v,r,s } = ecsign(Buffer.from(digest1.slice(2), 'hex'), Buffer.from(privateKeyOwner.slice(2), 'hex'))
           const signature: SignatureStruct = { v, r, s, token: AKREToken.address, value:mintFee, deadline: constants_MaxDealine } 
           
+          const price0:BigNumber = expandTo18Decimals(1000).div(expandTo9Decimals(1))
+          await arkreenRECIssuance.updateARECMintPrice(AKREToken.address, price0)
+
           // Mint
           await arkreenRegistry.setArkreenMiner(arkreenMiner.address)
           await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
@@ -295,7 +298,7 @@ describe("GreenBTC Test Campaign", () => {
           signature = { v, r, s, token: AKREToken.address, value:mintFee, deadline: constants_MaxDealine } 
 
           await arkreenRECIssuanceExt.manageMVPAddress(true,[owner1.address])      
-
+          
           await arkreenRECIssuanceExt.connect(owner1).mintESGBatch(1, expandTo9Decimals(20000), signature)
           tokenID = await arkreenRECIssuanceExt.totalSupply()
 
