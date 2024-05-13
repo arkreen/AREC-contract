@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import "./libraries/FormattedStrings.sol";
 import "./libraries/TransferHelper.sol";
 
-import './GreenBTCType.sol';
+import "./GreenBTCType.sol";
 
 contract GreenBTCImage {
  
@@ -49,14 +49,14 @@ contract GreenBTCImage {
         string memory turncateEnergy = _decimalTruncate(gbtc.energyStr, 3);
         if(dataNFT.open == false || dataNFT.reveal == false) { 
             svgData = getBlindBoxSVGBytes(tokenID);
-            typeNFT = 'Mystery Box';
+            typeNFT = "Mystery Box";
         } else {
             if(dataNFT.won) {
                 svgData = getGreenTreeSVGBytes(gbtc.greenType);
-                typeNFT = 'Genesis Seed';
+                typeNFT = "Genesis Seed";
             } else {
                 svgData = getCertificateSVGBytes(owner, gbtc);    
-                typeNFT = 'Certificate';
+                typeNFT = "Certificate";
             }      
         }
 

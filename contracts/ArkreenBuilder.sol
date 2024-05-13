@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import '@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol';
-import '@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol';
-import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
-import '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
+import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-import './ArkreenBuilderStorage.sol';
+import "./ArkreenBuilderStorage.sol";
 import "./interfaces/IPausable.sol";
 
 import "./libraries/TransferHelper.sol";
@@ -31,13 +31,13 @@ contract ArkreenBuilder is
     using AddressUpgradeable for address;
 
     // Public variables
-    string public constant NAME = 'Arkreen Climate Actor';
+    string public constant NAME = "Arkreen Climate Actor";
 
     // Events
 
     // Modifiers
     modifier ensure(uint deadline) {
-        require(deadline >= block.timestamp, 'ARB: EXPIRED');
+        require(deadline >= block.timestamp, "ARB: EXPIRED");
         _;
     }
   
@@ -77,10 +77,10 @@ contract ArkreenBuilder is
         uint256             deadline
     ) external ensure(deadline) {
 
-        // Transfer payement: bytes4(keccak256(bytes('transferFrom(address from ,address to ,uint256 amount)')));
+        // Transfer payement: bytes4(keccak256(bytes("transferFrom(address from ,address to ,uint256 amount)")));
         bytes memory data1 = abi.encodeWithSelector(0x23b872dd, msg.sender, address(this), amountART);
         (bool success, bytes memory data) = tokenART.call(abi.encodePacked(data1, address(this)));
-        require(success && (data.length == 0 || abi.decode(data, (bool))), 'TransferHelper: TRANSFER_FROM_FAILED');
+        require(success && (data.length == 0 || abi.decode(data, (bool))), "TransferHelper: TRANSFER_FROM_FAILED");
 
         // commitOffset(uint256 amount): 0xe8fef571
         bytes memory callData = abi.encodeWithSelector(0xe8fef571, amountART);
@@ -88,7 +88,6 @@ contract ArkreenBuilder is
         _offsetART(tokenART, abi.encodePacked(callData, _msgSender()));
     }
    
-
     /** 
      * @dev Buy the ART token with specified token, then offset the bought ART to create a climate action.
      * @param tokenPay The address of the token to pay for the ART token.
@@ -201,10 +200,10 @@ contract ArkreenBuilder is
         BadgeInfo calldata  badgeInfo
     ) external ensure(deadline) {
 
-        // Transfer payement: bytes4(keccak256(bytes('transferFrom(address,address,uint256)')));
+        // Transfer payement: bytes4(keccak256(bytes("transferFrom(address,address,uint256)")));
         bytes memory data1 = abi.encodeWithSelector(0x23b872dd, msg.sender, address(this), amountART);
         (bool success, bytes memory data) = tokenART.call(abi.encodePacked(data1, address(this)));
-        require(success && (data.length == 0 || abi.decode(data, (bool))), 'TransferHelper: TRANSFER_FROM_FAILED');
+        require(success && (data.length == 0 || abi.decode(data, (bool))), "TransferHelper: TRANSFER_FROM_FAILED");
 
         // offsetAndMintCertificate(address beneficiary,string offsetEntityID,string beneficiaryID,string offsetMessage,uint256 amount)
         // offsetAndMintCertificate(address,string,string,string,uint256): signature = 0x0fba6a8d

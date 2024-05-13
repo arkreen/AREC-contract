@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import '@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol';
-import '@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol';
-import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
-import '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol';
-import '@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol';
-import '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
+import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 import "./interfaces/IPausable.sol";
 import "./interfaces/IERC5192.sol";
@@ -27,8 +27,8 @@ contract HashKeyESGBTC is
     using AddressUpgradeable for address;
 
     // Public variables
-    string  public    constant NAME             = 'Eco Coiner';
-    string  public    constant SYMBOL           = 'EC';
+    string  public    constant NAME             = "Eco Coiner";
+    string  public    constant SYMBOL           = "EC";
     uint256 public    constant ART_DECIMAL      = 9;
     uint256 private   constant MAX_BRICK_ID     = 4096;
     uint256 private   constant MASK_ID          = 0xFFF;
@@ -55,7 +55,7 @@ contract HashKeyESGBTC is
 
     // Modifiers
     modifier ensure(uint deadline) {
-        require(deadline >= block.timestamp, 'HSKESG: EXPIRED');
+        require(deadline >= block.timestamp, "HSKESG: EXPIRED");
         _;
     }
 
@@ -74,7 +74,7 @@ contract HashKeyESGBTC is
         tokenNative         = native;
         maxRECToGreenBTC    = numBlock;
 
-        baseURI = 'https://www.arkreen.com/ESGBTC/' ;
+        baseURI = "https://www.arkreen.com/ESGBTC/" ;
     }   
 
     function postUpdate(uint256[] calldata order) external onlyProxy onlyOwner {
@@ -508,7 +508,7 @@ contract HashKeyESGBTC is
         address to,
         uint256 tokenId
     ) internal virtual override (ERC721EnumerableUpgradeable) {
-        require(from == address(0), 'ARB: Transfer Not Allowed');
+        require(from == address(0), "ARB: Transfer Not Allowed");
         super._beforeTokenTransfer(from, to, tokenId);
     }
 */
@@ -523,7 +523,7 @@ contract HashKeyESGBTC is
 
         totalTokens = totalSupply();
         if(tokeIDEnd == 0) tokeIDEnd = totalTokens;
-        require( (tokeIDStart >= 1) && (tokeIDStart <= tokeIDEnd) && (tokeIDEnd <= totalTokens), 'ARB: Wrong tokeID');
+        require( (tokeIDStart >= 1) && (tokeIDStart <= tokeIDEnd) && (tokeIDEnd <= totalTokens), "ARB: Wrong tokeID");
 
         owners =  new address[](tokeIDEnd - tokeIDStart + 1);
         allBricks = new uint256[](tokeIDEnd - tokeIDStart + 1);
@@ -536,7 +536,7 @@ contract HashKeyESGBTC is
     }
 
     function locked(uint256 tokenId) external view returns (bool) {
-        require((tokenId > 0) && (tokenId <= totalSupply()), 'ARB: Wrong tokenId');
+        require((tokenId > 0) && (tokenId <= totalSupply()), "ARB: Wrong tokenId");
         return true;  
     }
 }

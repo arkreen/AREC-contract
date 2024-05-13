@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
-import '@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol';
-import '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol';
-import '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 import "./libraries/TransferHelper.sol";
 import "./interfaces/IERC20.sol";
@@ -19,8 +19,8 @@ contract ArkreenMiner is
     using AddressUpgradeable for address;
 
     // Constants
-    string public constant NAME = 'Arkreen Miner';
-    string public constant SYMBOL = 'AKREM';
+    string public constant NAME = "Arkreen Miner";
+    string public constant SYMBOL = "AKREM";
 
     // keccak256("RemoteMinerOnboard(address owner,address miners,address token,uint256 price,uint256 deadline)");
     bytes32 public constant REMOTE_MINER_TYPEHASH = 0xE397EAA556C649D10F65393AC1D09D5AA50D72547C850822C207516865E89E32;  
@@ -78,12 +78,12 @@ contract ArkreenMiner is
     event PlantMinerOnboarded(address indexed owner, address indexed miner);
 
     modifier ensure(uint256 deadline) {
-        require(block.timestamp <= deadline, 'Arkreen Miner: EXPIRED');
+        require(block.timestamp <= deadline, "Arkreen Miner: EXPIRED");
         _;
     }
 
     modifier onlyMinerManager() {
-        require(_msgSender() == AllManagers[uint256(MinerManagerType.Miner_Manager)], 'Arkreen Miner: Not Miner Manager');
+        require(_msgSender() == AllManagers[uint256(MinerManagerType.Miner_Manager)], "Arkreen Miner: Not Miner Manager");
         _;
     }    
 
@@ -104,13 +104,13 @@ contract ArkreenMiner is
         tokenNative = _tokenNative;
         AllManagers[uint256(MinerManagerType.Miner_Manager)] = _minerManager;
         AllManagers[uint256(MinerManagerType.Register_Authority)] = _minerAuthority;
-        baseURI = 'https://www.arkreen.com/miners/';
+        baseURI = "https://www.arkreen.com/miners/";
 
         DOMAIN_SEPARATOR = keccak256(
             abi.encode(
-                keccak256('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)'),
+                keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
                 keccak256(bytes("Arkreen Miner")),
-                keccak256(bytes('1')),
+                keccak256(bytes("1")),
                 block.chainid,
                 address(this)
             )
@@ -275,18 +275,18 @@ contract ArkreenMiner is
     ) view internal {
 
         // Check miner is white listed  
-        require(whiteListMiner[miner] == uint8(MinerType.RemoteMiner), 'Arkreen Miner: Wrong Miner');
+        require(whiteListMiner[miner] == uint8(MinerType.RemoteMiner), "Arkreen Miner: Wrong Miner");
         require(AllMinersToken[miner] == 0, "Arkreen Miner: Miner Repeated");
 
         // Check signature
         // keccak256("RemoteMinerOnboard(address owner,address miners,address token,uint256 price,uint256 deadline)");
         bytes32 hashRegister = keccak256(abi.encode(REMOTE_MINER_TYPEHASH, owner, miner, 
                                           permitMiner.token, permitMiner.value, permitMiner.deadline));
-        bytes32 digest = keccak256(abi.encodePacked('\x19\x01', DOMAIN_SEPARATOR, hashRegister));
+        bytes32 digest = keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR, hashRegister));
         address recoveredAddress = ecrecover(digest, permitMiner.v, permitMiner.r, permitMiner.s);
   
         require(recoveredAddress != address(0) && 
-                recoveredAddress == AllManagers[uint256(MinerManagerType.Register_Authority)], 'Arkreen Miner: INVALID_SIGNATURE');
+                recoveredAddress == AllManagers[uint256(MinerManagerType.Register_Authority)], "Arkreen Miner: INVALID_SIGNATURE");
     }
 
     /**
@@ -304,7 +304,7 @@ contract ArkreenMiner is
     ) view internal {
 
         require((quantity != 0) && (quantity <= numberOfWhiteListBatch(remoteType)), "Arkreen Miner: Wrong Miner Number");
-        // require( quantity <= MAX_BATCH_SALE, 'Arkreen Miner: Quantity Too More');
+        // require( quantity <= MAX_BATCH_SALE, "Arkreen Miner: Quantity Too More");
 
         // Check signature
         // keccak256("RemoteMinerOnboardBatch(address owner,uint256 quantity,address token,uint256 value,uint256 deadline)");
@@ -312,11 +312,11 @@ contract ArkreenMiner is
 
         bytes32 hashRegister = keccak256(abi.encode(REMOTE_MINER_BATCH_TYPEHASH, owner, typeAndQuantity,
                                           permitMiner.token, permitMiner.value, permitMiner.deadline));
-        bytes32 digest = keccak256(abi.encodePacked('\x19\x01', DOMAIN_SEPARATOR, hashRegister));
+        bytes32 digest = keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR, hashRegister));
         address recoveredAddress = ecrecover(digest, permitMiner.v, permitMiner.r, permitMiner.s);
   
         require(recoveredAddress != address(0) && 
-                recoveredAddress == AllManagers[uint256(MinerManagerType.Register_Authority)], 'Arkreen Miner: INVALID_SIGNATURE');
+                recoveredAddress == AllManagers[uint256(MinerManagerType.Register_Authority)], "Arkreen Miner: INVALID_SIGNATURE");
     }
 
     /**
@@ -466,20 +466,20 @@ contract ArkreenMiner is
     ) external ensure(deadline) {
 
         // Check the starndard address
-        require(!miner.isContract(), 'Arkreen Miner: Not EOA Address');
+        require(!miner.isContract(), "Arkreen Miner: Not EOA Address");
         require(AllMinersToken[miner] == 0, "Arkreen Miner: Miner Repeated");
         MinerType minerType = MinerType(whiteListMiner[miner]);
         require((minerType == MinerType.StandardMiner) || 
                 (minerType == MinerType.SocketMiner) ||
-                (minerType == MinerType.PlantMiner), 'Arkreen Miner: Wrong Miner');        
+                (minerType == MinerType.PlantMiner), "Arkreen Miner: Wrong Miner");        
 
         // Check signature
         bytes32 hashRegister = keccak256(abi.encode(STANDARD_MINER_TYPEHASH, owner, miner, deadline));
-        bytes32 digest = keccak256(abi.encodePacked('\x19\x01', DOMAIN_SEPARATOR, hashRegister));
+        bytes32 digest = keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR, hashRegister));
         address recoveredAddress = ecrecover(digest, permitMiner.v, permitMiner.r, permitMiner.s);
   
         require(recoveredAddress != address(0) && 
-                recoveredAddress == AllManagers[uint256(MinerManagerType.Register_Authority)], 'Arkreen Miner: INVALID_SIGNATURE');
+                recoveredAddress == AllManagers[uint256(MinerManagerType.Register_Authority)], "Arkreen Miner: INVALID_SIGNATURE");
 
         Miner memory newMiner;
         newMiner.mAddress = miner;
@@ -510,13 +510,12 @@ contract ArkreenMiner is
      * @param owners addresses receiving the remote miners
      * @param miners addresses of the remote miners onboarding
      */
-     
     function RemoteMinerOnboardInBatch(
         address[]  calldata   owners,
         address[]  calldata   miners
     ) external onlyMinerManager {
 
-        require(owners.length == miners.length, 'Arkreen Miner: Wrong Address List');
+        require(owners.length == miners.length, "Arkreen Miner: Wrong Address List");
 
         // Prepare to mint new remote miners, only remote miners
         Miner memory newMiner;
@@ -532,7 +531,6 @@ contract ArkreenMiner is
         // Need to emit? If yes, data may be big 
         emit RemoteMinersInBatch(owners, miners);
     }
-
 
     /**
      * @dev Get all the miner info of the specified miner
@@ -574,7 +572,7 @@ contract ArkreenMiner is
      * @param minerStatus new status
      */
     function SetMinersStatus(uint256 minerID, MinerStatus minerStatus) external onlyOwner {
-        require(minerStatus != MinerStatus.Pending, 'Arkreen Miner: Wrong Input');      
+        require(minerStatus != MinerStatus.Pending, "Arkreen Miner: Wrong Input");      
         AllMinerInfo[minerID].mStatus = minerStatus;
     }
 
@@ -593,8 +591,8 @@ contract ArkreenMiner is
                 continue;
             }
             // Checked for non-existence
-            require( tempAddress != address(0) && !tempAddress.isContract(), 'Arkreen Miner: Wrong Address');     
-            require( whiteListMiner[tempAddress] == 0, 'Arkreen Miner: Miners Repeated');      
+            require( tempAddress != address(0) && !tempAddress.isContract(), "Arkreen Miner: Wrong Address");     
+            require( whiteListMiner[tempAddress] == 0, "Arkreen Miner: Miners Repeated");      
             whiteListMiner[tempAddress] = uint8(typeMiner);
         }
     }
@@ -696,7 +694,7 @@ contract ArkreenMiner is
         address to,
         uint256 tokenId
     ) internal virtual override (ERC721EnumerableUpgradeable) {
-        require(bTransferAllowed || (from == address(0)), 'Arkreen Miner: Transfer Not Allowed');
+        require(bTransferAllowed || (from == address(0)), "Arkreen Miner: Transfer Not Allowed");
         super._beforeTokenTransfer(from, to, tokenId);
     }
 

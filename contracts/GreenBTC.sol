@@ -3,20 +3,20 @@ pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/utils/Base64.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
-import '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
-import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
-import '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol';
-import '@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol';
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 
 import "./libraries/FormattedStrings.sol";
 import "./libraries/TransferHelper.sol";
 
 import "./interfaces/IWETH.sol";
-import './interfaces/IGreenBTCImage.sol';
-import './interfaces/IArkreenBuilder.sol';
-import './interfaces/IArkreenRECBank.sol';
+import "./interfaces/IGreenBTCImage.sol";
+import "./interfaces/IArkreenBuilder.sol";
+import "./interfaces/IArkreenRECBank.sol";
 import "./interfaces/IArkreenRECToken.sol";
-import './GreenBTCType.sol';
+import "./GreenBTCType.sol";
 import "./interfaces/IERC20.sol";
 
 contract GreenBTC is 
@@ -71,12 +71,12 @@ contract GreenBTC is
     event RevealBoxes(uint256[] revealList, bool[] wonList);
 
     modifier ensure(uint256 deadline) {
-        require(uint32(deadline) >= block.timestamp, 'GBTC: EXPIRED');
+        require(uint32(deadline) >= block.timestamp, "GBTC: EXPIRED");
         _;
     }
 
     modifier onlyManager(){
-        require(msg.sender == manager, 'GBTC: Not Manager');
+        require(msg.sender == manager, "GBTC: Not Manager");
         _;
     }
 
@@ -97,7 +97,7 @@ contract GreenBTC is
 
         DOMAIN_SEPARATOR = keccak256(
             abi.encode(
-                keccak256('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)'),
+                keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
                 keccak256(bytes(NAME)),
                 keccak256(bytes(VERSION)),
                 block.chainid,
@@ -127,17 +127,17 @@ contract GreenBTC is
     }
 
     function setImageContract(address newImageContract) public onlyOwner {
-        require(newImageContract != address(0), 'GBTC: Zero Address');
+        require(newImageContract != address(0), "GBTC: Zero Address");
         greenBtcImage = newImageContract;
     }
 
     function setCARTContract(address newCARTToken) public onlyOwner {
-        require(newCARTToken != address(0), 'GBTC: Zero Address');
+        require(newCARTToken != address(0), "GBTC: Zero Address");
         tokenCART = newCARTToken;
     }
 
     function setLuckyRate(uint256 newRate) public onlyOwner {
-        require(newRate <= 20, 'GBTC: Too More');
+        require(newRate <= 20, "GBTC: Too More");
         luckyRate = newRate;
     }
 
@@ -359,7 +359,7 @@ contract GreenBTC is
     function revealBoxes() public {
 
         uint256 openingListLength = openingBoxList.length;
-        require (openingListLength != 0, 'GBTC: Empty List');
+        require (openingListLength != 0, "GBTC: Empty List");
 
         uint256 revealcap = normalRevealCap;
         uint256 overtimeCap = overtimeRevealCap;
@@ -445,7 +445,7 @@ contract GreenBTC is
         require( tokenList.length == lengthReveal,  "GBTC: Wrong Length" );
 
         uint256 overtimeListLength = overtimeBoxList.length;
-        require (overtimeListLength != 0, 'GBTC: Empty Overtime List');
+        require (overtimeListLength != 0, "GBTC: Empty Overtime List");
 
         uint256[] memory revealList = new uint256[](lengthReveal);
         bool[] memory wonList = new bool[](lengthReveal);
@@ -456,7 +456,7 @@ contract GreenBTC is
             uint256 tokenID = tokenList[index];
 
             // Can not repeat revealing, and can not reveal while not opened
-            require(dataNFT[tokenID].open != dataNFT[tokenID].reveal, 'GBTC: Wrong Overtime Status' );  
+            require(dataNFT[tokenID].open != dataNFT[tokenID].reveal, "GBTC: Wrong Overtime Status" );  
 
             uint256 indexOvertime = dataNFT[tokenID].seed;          // seed is re-used to store the index in overtime list
 
@@ -544,7 +544,7 @@ contract GreenBTC is
      */
     function _mintNFT(GreenBTCInfo calldata gbtc) internal {
 
-        require(gbtc.minter != address(0), 'GBTC: Zero Minter');
+        require(gbtc.minter != address(0), "GBTC: Zero Minter");
 
         dataGBTC[gbtc.height] = gbtc;
 
@@ -564,7 +564,7 @@ contract GreenBTC is
     function _authVerify(GreenBTCInfo calldata gbtc, Sig calldata sig) internal view {
 
         bytes32 greenBTCHash = keccak256(abi.encode(GREEN_BTC_TYPEHASH, gbtc.height, gbtc.energyStr, gbtc.ARTCount, gbtc.blockTime, gbtc.minter, gbtc.greenType));
-        bytes32 digest = keccak256(abi.encodePacked('\x19\x01', DOMAIN_SEPARATOR, greenBTCHash));
+        bytes32 digest = keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR, greenBTCHash));
         address recoveredAddress = ecrecover(digest, sig.v, sig.r, sig.s);
 
         require(recoveredAddress == authorizer, "GBTC: Invalid Singature");
@@ -586,7 +586,7 @@ contract GreenBTC is
 
         bytes memory greenBTCData = abi.encode(GREENBTC_BATCH_TYPEHASH, gbtcList);
         bytes32 greenBTCHash = keccak256(greenBTCData);
-        bytes32 digest = keccak256(abi.encodePacked('\x19\x01', DOMAIN_SEPARATOR, greenBTCHash));
+        bytes32 digest = keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR, greenBTCHash));
         address recoveredAddress = ecrecover(digest, sig.v, sig.r, sig.s);
 
         require(recoveredAddress == authorizer, "GBTC: Invalid Singature");

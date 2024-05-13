@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
-import '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
-import '@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol';
-import '@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol';
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
-import '@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol';
+import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
 
 import "./ArkreenToken.sol";
 
@@ -18,8 +18,8 @@ contract ArkreenReward is
 {
     using AddressUpgradeable for address;
 
-    string  private constant _NAME = 'Arkreen Reward';
-    string  private constant _VERSION = '1';
+    string  private constant _NAME = "Arkreen Reward";
+    string  private constant _VERSION = "1";
     bytes32 private constant _REWARD_TYPEHASH = keccak256("Reward(address receiver,uint256 value,uint256 nonce)");
     
     bytes32                     private _DOMAIN_SEPARATOR;

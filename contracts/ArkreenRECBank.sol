@@ -1,16 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
-import '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 import "./libraries/TransferHelper.sol";
 import "./interfaces/IERC20.sol";
 import "./interfaces/IERC20Permit.sol";
 import "./interfaces/IWETH.sol";
-
-// Import this file to use console.log
-//import "hardhat/console.sol";
 
 struct IncomeInfo {
     uint128     priceForSale;           // 1 ART -> X Payment token
@@ -97,13 +94,13 @@ contract ArkreenRECBank is
     ) external payable {
 
         uint256 priceSale = saleIncome[tokenART][tokenNative].priceForSale;
-        require (priceSale !=0, 'ARBK: Payment token not allowed');
+        require (priceSale !=0, "ARBK: Payment token not allowed");
         
         uint256 amountPay =  msg.value;
         address receiver = _msgSender();
         if(isExactPay) {
             uint256 amountARTReal = amountPay * (10**9) / priceSale;                    // ART decimal is always 9, so hardcoded here
-            require (amountARTReal >= amountART, 'ARBK: Get Less');
+            require (amountARTReal >= amountART, "ARBK: Get Less");
 
             saleIncome[tokenART][tokenNative].amountReceived += uint128(amountPay);     // Native Token already received
 
@@ -113,7 +110,7 @@ contract ArkreenRECBank is
             emit ARTSold(tokenART, tokenNative, amountARTReal, amountPay);
         } else {
             uint256 amountPayReal = (amountART * priceSale + (10**9) -1) / (10**9);       // ART decimal is always 9, so hardcoded here
-            require (amountPay >= amountPayReal, 'ARBK: Pay Less');                       // amountPay plays as the maximum to pay
+            require (amountPay >= amountPayReal, "ARBK: Pay Less");                       // amountPay plays as the maximum to pay
 
             saleIncome[tokenART][tokenNative].amountReceived += uint128(amountPayReal);
 
@@ -155,11 +152,11 @@ contract ArkreenRECBank is
         // 1 ART = 5 USDC, priceSale = 5 000 000
         // 1 ART = 8 MATIC, priceSale = 8 * (10**18), as decial of MATIC is 18 
         uint256 priceSale = saleIncome[tokenART][tokenPay].priceForSale;
-        require (priceSale != 0, 'ARBK: Payment token not allowed');
+        require (priceSale != 0, "ARBK: Payment token not allowed");
         
         if(isExactPay) {
             uint256 amountARTReal = amountPay * (10**9) / priceSale;          // ART decimal is always 9, so hardcoded here
-            require (amountARTReal >= amountART, 'ARBK: Get Less');           // amountART is the minimum ART desired to receive
+            require (amountARTReal >= amountART, "ARBK: Get Less");           // amountART is the minimum ART desired to receive
 
             TransferHelper.safeTransferFrom(tokenPay, payer, address(this), amountPay);
             saleIncome[tokenART][tokenPay].amountReceived += uint128(amountPay);    // Assmume never overflow, as it is big as (3.4 *10**20)
@@ -170,8 +167,9 @@ contract ArkreenRECBank is
             emit ARTSold(tokenART, tokenPay, amountARTReal, amountPay);
         } else {
             // The minimum payment is 1 (Payment Token) to avoid attack buying very small amount of ART tokens
-            uint256 amountPayReal = (amountART * priceSale + (10**9) -1 ) / (10**9);    // ART decimal is always 9, so hardcoded here            
-            require (amountPayReal <= amountPay, 'ARBK: Pay Less');                     // amountPay is the maximum payment 
+            uint256 amountPayReal = (amountART * priceSale + (10**9) -1 ) / (10**9);    // ART decimal is always 9, so hardcoded here 
+
+            require (amountPayReal <= amountPay, "ARBK: Pay Less");                     // amountPay is the maximum payment 
 
             TransferHelper.safeTransferFrom(tokenPay, payer, address(this), amountPayReal);
             saleIncome[tokenART][tokenPay].amountReceived += uint128(amountPayReal);    // Assmume never overflow

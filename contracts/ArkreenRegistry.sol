@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import '@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol';
-import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
-import '@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol';
-import '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
-import '@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol';
+import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 
 import "./interfaces/IMinerRegister.sol";
 import "./interfaces/IArkreenRegistry.sol";
@@ -23,10 +23,10 @@ contract ArkreenRegistry is
     using AddressUpgradeable for address;
 
     // Constants
-    bytes32 public constant PAUSER_ROLE = keccak256('PAUSER_ROLE');
+    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
     modifier checkAddress(address addressToCheck) {
-        require(addressToCheck != address(0), 'Arkreen: Zero Address');
+        require(addressToCheck != address(0), "Arkreen: Zero Address");
         require(addressToCheck.isContract(), "Arkreen: Wrong Contract Address");
         _;
     }
@@ -35,7 +35,7 @@ contract ArkreenRegistry is
     modifier onlyPausers() {
         require(
             hasRole(PAUSER_ROLE, msg.sender) || owner() == msg.sender,
-            'Arkreen: Caller Not Allowed'
+            "Arkreen: Caller Not Allowed"
         );
         _;
     }
@@ -70,10 +70,10 @@ contract ArkreenRegistry is
     }
 
     function addRECIssuer(address issuer, address tokenREC, string memory issuerId) external virtual onlyOwner {
-        require(issuer != address(0), 'Arkreen: Zero Address');
-        require(tokenREC.isContract(), 'Arkreen: Wrong Token Address');
+        require(issuer != address(0), "Arkreen: Zero Address");
+        require(tokenREC.isContract(), "Arkreen: Wrong Token Address");
 
-        require(recIssuers[issuer].addTime == uint64(0), 'Arkreen: Issuer Already Added');
+        require(recIssuers[issuer].addTime == uint64(0), "Arkreen: Issuer Already Added");
 
         unchecked { ++numIssuers; }
         IssuerStatus memory issuerStatus = IssuerStatus(true, uint64(block.timestamp), uint64(0), tokenREC, issuerId);
@@ -83,8 +83,8 @@ contract ArkreenRegistry is
     }
 
     function removeRECIssuer(address issuer) external virtual onlyOwner {
-        require(issuer != address(0), 'Arkreen: Zero Address');
-        require(recIssuers[issuer].added, 'Arkreen: Issuer Not Added');
+        require(issuer != address(0), "Arkreen: Zero Address");
+        require(recIssuers[issuer].added, "Arkreen: Issuer Not Added");
         recIssuers[issuer].added = false;
         recIssuers[issuer].removeTime = uint64(block.timestamp);
         // the mapping from tokenREC to recIssuers are kept
@@ -104,7 +104,7 @@ contract ArkreenRegistry is
     function manageAssetAREC( uint256 idxAsset, uint256 flag, uint128 rateToIssue, uint16 rateToLiquidize, bool bActive,
                                 string calldata description) external {
 
-        require( (msg.sender == allAssets[idxAsset].issuer) || (owner() == msg.sender), 'Arkreen: Not Allowed');                                 
+        require( (msg.sender == allAssets[idxAsset].issuer) || (owner() == msg.sender), "Arkreen: Not Allowed");                                 
         if((flag & 0x01) != 0) {
             allAssets[idxAsset].rateToIssue = rateToIssue;
         }
@@ -151,7 +151,7 @@ contract ArkreenRegistry is
 
     function getRECToken(address issuer, uint256 idAsset) external view virtual returns(address tokenREC) {
         if( idAsset == 0) {
-            require(recIssuers[issuer].added, 'Arkreen: Issuer Not Added');
+            require(recIssuers[issuer].added, "Arkreen: Issuer Not Added");
             tokenREC = recIssuers[issuer].tokenREC;
         } else {
             tokenREC = allAssets[idAsset].tokenREC;
@@ -163,7 +163,7 @@ contract ArkreenRegistry is
     }
 
     function getArkreenRetirement() external view virtual returns (address) {
-        require(arkreenRECRetirement != address(0), 'Arkreen: Zero Retirement Address');
+        require(arkreenRECRetirement != address(0), "Arkreen: Zero Retirement Address");
         return arkreenRECRetirement;
     }  
 
@@ -172,7 +172,7 @@ contract ArkreenRegistry is
     }
 
     function getArkreenMiner() external view virtual returns (address) {
-        require(arkreenMiner != address(0), 'Arkreen: Zero Miner Address');
+        require(arkreenMiner != address(0), "Arkreen: Zero Miner Address");
         return arkreenMiner;
     }  
 
@@ -181,7 +181,7 @@ contract ArkreenRegistry is
     }
 
     function getRECIssuance() external view virtual returns (address) {
-        require(arkreenRECIssuance != address(0), 'Arkreen: Zero Issuance Address');
+        require(arkreenRECIssuance != address(0), "Arkreen: Zero Issuance Address");
         return arkreenRECIssuance;
     }    
 }
