@@ -342,7 +342,7 @@ describe("StakingRewards test", ()=> {
         let mybalanceReward3 = await artToken.balanceOf(user3.address)
         let earned3 = await stakingRewards.earned(user3.address)
 
-        console.log("\r\n AAAAAAAAAAAA", mybalanceReward1.toString(), earned1.toString())
+        // console.log("\r\n AAAAAAAAAAAA", mybalanceReward1.toString(), earned1.toString())
 
         await stakingRewards.connect(user1).collectReward()
         expect(await artToken.balanceOf(user1.address)).to.gte(mybalanceReward1.add(earned1))

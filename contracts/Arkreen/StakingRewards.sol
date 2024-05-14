@@ -7,16 +7,13 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-
 import "../interfaces/IArkreenMiner.sol";
 
 contract StakingRewards is ReentrancyGuard, Ownable {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
-    uint256 public constant MAX_SUPPLY_STAKES = 1e28;                 // AKRE max supply: 10 Billion
-    //uint256 public constant PREMIUM_CAP_PER_MINER = 10000 * 1e18;     // Premium cap for each remote miner
-    //uint256 public constant PREMIUM_RATE = 200;                       // Premium rate
+    uint256 public constant MAX_SUPPLY_STAKES = 1e28;                 // AKRE max supply: 10 Billion, decide calculation accuracy
 
     IERC20 public stakingToken;
     IERC20 public rewardsToken;
@@ -84,7 +81,7 @@ contract StakingRewards is ReentrancyGuard, Ownable {
     }
 
     function earned(address account) public view returns (uint256) {
-        return myStakes[account].mul(rewardPerToken().sub(myRewardsPerStakePaid[account])).div(MAX_SUPPLY_STAKES).add(myRewards[account]);
+        return myRewardStakes[account].mul(rewardPerToken().sub(myRewardsPerStakePaid[account])).div(MAX_SUPPLY_STAKES).add(myRewards[account]);
     }
 
     function getRewardForDuration() external view returns (uint256) {
@@ -110,7 +107,7 @@ contract StakingRewards is ReentrancyGuard, Ownable {
         emit Staked(msg.sender, amount);
     }
 
-    function _updateRewardStake() internal returns (uint256) {
+    function _updateRewardStake() internal {
         uint256 totalMiners = arkreenMiner.balanceOf(msg.sender);
         uint256 premium = totalMiners * capMinerPremium;
         uint256 othersTotalRewardStakes = totalRewardStakes - myRewardStakes[msg.sender];
@@ -124,8 +121,6 @@ contract StakingRewards is ReentrancyGuard, Ownable {
                 
         myRewardStakes[msg.sender] = rewardStakes;
         totalRewardStakes = othersTotalRewardStakes + rewardStakes;
-
-        return rewardStakes;
     }
 
     function unstake(uint256 amount) public nonReentrant updateReward(msg.sender) {
