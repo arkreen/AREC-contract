@@ -10,7 +10,6 @@ contract PlantStaking is OwnableUpgradeable, ReentrancyGuardUpgradeable, UUPSUpg
 
     bytes32 public _DOMAIN_SEPARATOR;
     IERC20Upgradeable public stakingToken;
-    IERC20Upgradeable public rewardsToken;
     address public rewarder;
     address public manager;
 
@@ -21,9 +20,9 @@ contract PlantStaking is OwnableUpgradeable, ReentrancyGuardUpgradeable, UUPSUpg
     bytes32 public constant UNSTAKE_TYPEHASH = 0x2174EF2DF701BB3EAA5CDE6DCDC70511CB9F1C387439FE1B7ACF2D7A943FEFC1;  
 
     struct StakeInfo {
-        uint32  nonce;
-        uint128 amountStake;
-        uint128 rewardStake;
+        uint64  nonce;
+        uint96 amountStake;   							// Enough for AKRE: 10**28 
+        uint96 rewardStake;							    // Enough for AKRE or ART
     }  
 
     struct Sig {
@@ -34,8 +33,8 @@ contract PlantStaking is OwnableUpgradeable, ReentrancyGuardUpgradeable, UUPSUpg
 
     mapping(address => StakeInfo) public stakeInfo;
 
-    uint128 public totalStake;
-    uint128 public totalReward;
+    uint96 public totalStake;
+    uint96 public totalReward;
 
     modifier ensure(uint256 deadline) {
         require(block.timestamp <= deadline, "Deadline Expired!");
@@ -50,11 +49,11 @@ contract PlantStaking is OwnableUpgradeable, ReentrancyGuardUpgradeable, UUPSUpg
         _disableInitializers();
     }
 
-    function initialize(address _stakingToken, address _rewardsToken, address _rewarder, address _manager) external virtual initializer {
+    function initialize(address _stakingToken, address _rewarder, address _manager) external virtual initializer {
         __Ownable_init_unchained();
-        __UUPSUpgradeable_init();        
+        __UUPSUpgradeable_init();     
+        __ReentrancyGuard_init();   
         stakingToken = IERC20Upgradeable(_stakingToken);
-        rewardsToken = IERC20Upgradeable(_rewardsToken);
         manager = _manager;
         rewarder = _rewarder;
 
@@ -85,38 +84,45 @@ contract PlantStaking is OwnableUpgradeable, ReentrancyGuardUpgradeable, UUPSUpg
         if (newRewarder != address(0)) rewarder = newRewarder;
     }
 
-    function stake(uint256 amount, uint256 deadline, Sig calldata signature) external nonReentrant ensure(deadline){
-        bytes32 stakeHash = keccak256(abi.encode(STAKE_TYPEHASH, msg.sender, amount, stakeInfo[msg.sender].nonce, deadline));
+    function stake(uint256 amount, uint256 nonce, uint256 deadline, Sig calldata signature) external nonReentrant ensure(deadline) {
+        require (amount > 0, "Zero Stake"); 
+        require (nonce == stakeInfo[msg.sender].nonce, "Nonce Not Match"); 
+
+        bytes32 stakeHash = keccak256(abi.encode(STAKE_TYPEHASH, msg.sender, amount, nonce, deadline));
         bytes32 digest = keccak256(abi.encodePacked('\x19\x01', _DOMAIN_SEPARATOR, stakeHash));
         address managerAddress = ECDSAUpgradeable.recover(digest, signature.v, signature.r, signature.s);
 
-        require(managerAddress == manager, "Stake Not Allowed");
+        require(managerAddress == manager, "Wrong Signature");
 
-        stakeInfo[msg.sender].nonce =  stakeInfo[msg.sender].nonce + 1;
-        stakeInfo[msg.sender].amountStake =  stakeInfo[msg.sender].amountStake + uint128(amount);   // imposssible overflow for AKRE
-        totalStake = totalStake + uint128(amount);
+        stakeInfo[msg.sender].nonce =  uint64(nonce + 1);
+        stakeInfo[msg.sender].amountStake = stakeInfo[msg.sender].amountStake + uint96(amount);   // imposssible overflow for AKRE
+        totalStake = totalStake + uint96(amount);
 
         require(IERC20Upgradeable(stakingToken).transferFrom(msg.sender, address(this), amount));
 
         emit Stake(msg.sender, amount);
     }
 
-    function unstake(uint256 amount, uint256 reward, uint256 deadline, Sig calldata signature) external nonReentrant ensure(deadline){
-        bytes32 unstakeHash = keccak256(abi.encode(UNSTAKE_TYPEHASH, msg.sender, amount, reward, stakeInfo[msg.sender].nonce, deadline));
+    function unstakeWithReward(uint256 amount, uint256 reward, uint256 nonce, uint256 deadline, Sig calldata signature) external nonReentrant ensure(deadline){
+        require ((amount + reward) > 0, "Zero Stake");                                 // Zero amount is allowed to just withdraw rewards
+        require (nonce == stakeInfo[msg.sender].nonce, "Nonce Not Match"); 
+        require(stakeInfo[msg.sender].amountStake >= uint96(amount), "Unstake Overflowed");
+
+        bytes32 unstakeHash = keccak256(abi.encode(UNSTAKE_TYPEHASH, msg.sender, amount, reward, nonce, deadline));
         bytes32 digest = keccak256(abi.encodePacked('\x19\x01', _DOMAIN_SEPARATOR, unstakeHash));
         address managerAddress = ECDSAUpgradeable.recover(digest, signature.v, signature.r, signature.s);
 
-        require(managerAddress == manager, "Unstake Not Allowed");
-        require(stakeInfo[msg.sender].amountStake >= uint128(amount), "Unstake Overflowed");
+        require(managerAddress == manager, "Wrong Signature");
 
         stakeInfo[msg.sender].nonce =  stakeInfo[msg.sender].nonce + 1;
 
-        stakeInfo[msg.sender].amountStake = stakeInfo[msg.sender].amountStake - uint128(amount);   // imposssible overflow for AKRE
-        stakeInfo[msg.sender].rewardStake = stakeInfo[msg.sender].rewardStake + uint128(reward);
-        totalReward = totalReward + uint128(reward);
+        stakeInfo[msg.sender].amountStake = stakeInfo[msg.sender].amountStake - uint96(amount);
+        stakeInfo[msg.sender].rewardStake = stakeInfo[msg.sender].rewardStake + uint96(reward);
+        totalStake = totalStake - uint96(amount);
+        totalReward = totalReward + uint96(reward);
 
         require(IERC20Upgradeable(stakingToken).transferFrom(rewarder, address(this), reward));
-        require(IERC20Upgradeable(stakingToken).transferFrom(address(this), msg.sender, amount + reward));
+        require(IERC20Upgradeable(stakingToken).transfer(msg.sender, amount + reward));
         emit Unstake(msg.sender, amount, reward);
     }
 }

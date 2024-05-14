@@ -298,6 +298,78 @@ export function getOnboardingStandardMinerDigest(
   )
 }
 
+export function getPlantStakingDigest(
+  contractName: string,
+  contractAddress: string,
+  approve: {
+    staker:   string
+    amount:   BigNumber
+    nonce:    BigNumber
+  },
+  deadline:   BigNumber
+): string {
+  const DOMAIN_SEPARATOR = getDomainSeparator(contractName, contractAddress)
+
+  // keccak256("stake(address staker,uint256 amount,uint256 nonce,uint256 deadline)");
+  // 0x1373FE6EB1B91DF1E25D62EF7B059F58B23CFC3A653EFD61E2F2D5D9EA33EEDB
+  const STAKE_TYPEHASH = utils.keccak256(
+    utils.toUtf8Bytes('stake(address staker,uint256 amount,uint256 nonce,uint256 deadline)')
+  )
+
+  return utils.keccak256(
+    utils.solidityPack(
+      ['bytes1', 'bytes1', 'bytes32', 'bytes32'],
+      [
+        '0x19',
+        '0x01',
+        DOMAIN_SEPARATOR,
+        utils.keccak256(
+          utils.defaultAbiCoder.encode(
+            ['bytes32', 'address', 'uint256', 'uint256', 'uint256'],
+            [STAKE_TYPEHASH, approve.staker, approve.amount, approve.nonce, deadline]
+          )
+        )
+      ]
+    )
+  )
+}
+
+export function getPlantUnstakingDigest(
+  contractName: string,
+  contractAddress: string,
+  approve: {
+    staker:   string
+    amount:   BigNumber
+    reward:   BigNumber
+    nonce:    BigNumber
+  },
+  deadline:   BigNumber
+): string {
+  const DOMAIN_SEPARATOR = getDomainSeparator(contractName, contractAddress)
+
+  // keccak256("unstake(address staker,uint256 amount,uint256 reward,uint256 nonce,uint256 deadline)");
+  // 0x2174EF2DF701BB3EAA5CDE6DCDC70511CB9F1C387439FE1B7ACF2D7A943FEFC1
+  const STAKE_TYPEHASH = utils.keccak256(
+    utils.toUtf8Bytes('unstake(address staker,uint256 amount,uint256 reward,uint256 nonce,uint256 deadline)')
+  )
+
+  return utils.keccak256(
+    utils.solidityPack(
+      ['bytes1', 'bytes1', 'bytes32', 'bytes32'],
+      [
+        '0x19',
+        '0x01',
+        DOMAIN_SEPARATOR,
+        utils.keccak256(
+          utils.defaultAbiCoder.encode(
+            ['bytes32', 'address', 'uint256', 'uint256', 'uint256', 'uint256'],
+            [STAKE_TYPEHASH, approve.staker, approve.amount, approve.reward, approve.nonce, deadline]
+          )
+        )
+      ]
+    )
+  )
+}
 
 export function getOnboardingRemoteMinerDigest(
   contractName: string,
