@@ -66,6 +66,7 @@ contract ArkreenRECIssuanceExt is
         __Ownable_init_unchained();
         __UUPSUpgradeable_init();
         __ERC721_init_unchained(NAME, SYMBOL);
+        __ReentrancyGuard_init();
         tokenAKRE = _tokenAKRE;
         arkreenRegistry = arkRegistry;
         baseURI = "https://www.arkreen.com/AREC/" ;
