@@ -44,10 +44,14 @@ describe("ArkreenMiner", () => {
     const AKREToken = await upgrades.deployProxy(AKRETokenFactory, [10_000_000_000, deployer.address,'','']) as ArkreenToken
     await AKREToken.deployed();
 
+    const ArkreenMinerProFactory = await ethers.getContractFactory("ArkreenMinerPro")
+    const ArkreenMinerPro = await ArkreenMinerProFactory.deploy()
+
     const ArkreenMinerFactory = await ethers.getContractFactory("ArkreenMiner")
     // _tokenNative is set as AKREToken just for testing
     ArkreenMiner = await upgrades.deployProxy(ArkreenMinerFactory,[AKREToken.address, owner2.address, manager.address, register_authority.address])
     await ArkreenMiner.deployed()
+    await ArkreenMiner.setArkreenMinerPro(ArkreenMinerPro.address);
 
     await AKREToken.transfer(owner1.address, expandTo18Decimals(100000))
     await AKREToken.connect(owner1).approve(ArkreenMiner.address, expandTo18Decimals(100000))

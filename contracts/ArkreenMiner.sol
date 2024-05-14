@@ -10,64 +10,15 @@ import "./libraries/TransferHelper.sol";
 import "./interfaces/IERC20.sol";
 import "./interfaces/IERC20Permit.sol";
 import "./ArkreenMinerTypes.sol";
+import "./ArkreenMinerStorage.sol";
 
 contract ArkreenMiner is 
     OwnableUpgradeable,
     UUPSUpgradeable,
-    ERC721EnumerableUpgradeable
+    ERC721EnumerableUpgradeable,
+    ArkreenMinerStorage
 {
     using AddressUpgradeable for address;
-
-    // Constants
-    string public constant NAME = "Arkreen Miner";
-    string public constant SYMBOL = "AKREM";
-
-    // keccak256("RemoteMinerOnboard(address owner,address miners,address token,uint256 price,uint256 deadline)");
-    bytes32 public constant REMOTE_MINER_TYPEHASH = 0xE397EAA556C649D10F65393AC1D09D5AA50D72547C850822C207516865E89E32;  
-
-    // keccak256("RemoteMinerOnboardBatch(address owner,uint256 quantity,address token,uint256 value,uint256 deadline)");
-    bytes32 public constant REMOTE_MINER_BATCH_TYPEHASH = 0x9E7E2F63BB8D2E99F3FA05B76080E528E9CA50746A4383CDF2803D633AFF18A6;  
-
-    // keccak256("StandardMinerOnboard(address owner,address miner,uint256 deadline)");
-    bytes32 public constant STANDARD_MINER_TYPEHASH = 0x73F94559854A7E6267266A158D1576CBCAFFD8AE930E61FB632F9EC576D2BB37;  
-
-    uint256 public constant MAX_BATCH_SALE = 50;
-
-    // Public variables
-    bytes32 public DOMAIN_SEPARATOR;
-    uint256 public totalStandardMiner;                  // Total amount of standard miner
-    string public baseURI;
-    address public tokenAKRE;                           // Token adddress of AKRE
-    address public tokenNative;                         // The wrapped token of the Native token, such as WETH, WMATIC
-
-    // All registered miner manufactures
-    mapping(address => bool) public AllManufactures;
-
-    // All miner infos
-    mapping(uint256 => Miner) public AllMinerInfo;
-
-    // All managers with various privilege
-    mapping(uint256 => address) public AllManagers;
-
-    // Mapping from miner address to the respective token ID
-    mapping(address => uint256) public AllMinersToken;
-
-    // Miner white list mapping from miner address to miner type
-    mapping(address => uint8) public whiteListMiner;
-
-    uint256 public totalSocketMiner;                  // Total amount of socket miner
-
-    // Miner white list for sales in batch, mapping from index to miner address
-    mapping(uint256 => address) private whiteListMinerBatch;
-    uint256 private whiteListBatchIndexHead;                // Not used after upgrading remoteType support, but need to keep
-    uint256 private whiteListBatchIndexTail;                // Not used after upgrading remoteType support, but need to keep
-
-    mapping(uint256 => uint256) private whiteListBatchPoolIndexHead;
-    mapping(uint256 => uint256) private whiteListBatchPoolIndexTail;
-    mapping(address => uint256) private claimTimestamp;   // protect againt replay 
-
-    uint256 public totalPlantMiner;                   // Total amount of plant miner
-    bool    public bTransferAllowed;                  // Allow miner transfer
 
     // Events
     event MinerOnboarded(address indexed owner, address indexed miner);
@@ -126,6 +77,27 @@ contract ArkreenMiner is
         override
         onlyOwner
     {}
+
+    function callArkreenMinerPro (address minerPro) internal virtual {
+        assembly {
+            // Copy msg.data. We take full control of memory in this inline assembly
+            // block because it will not return to Solidity code. We overwrite the
+            // Solidity scratch pad at memory position 0.
+            calldatacopy(0, 0, calldatasize())
+
+            // Call the implementation.
+            // out and outsize are 0 because we don't know the size yet.
+            let result := delegatecall(gas(), minerPro, 0, calldatasize(), 0, 0)
+
+            // Copy the returned data.
+            returndatacopy(0, 0, returndatasize())
+
+            switch result
+            // delegatecall returns 0 on error.
+            case 0 { revert(0, returndatasize()) }
+            default { return(0, returndatasize()) }
+        }
+    }
 
     /**
      * @dev Onboarding a remote Miner paid with Native token (MATIC)
@@ -463,47 +435,12 @@ contract ArkreenMiner is
         address miner,
         uint256 deadline,
         Sig     calldata permitMiner
-    ) external ensure(deadline) {
-
-        // Check the starndard address
-        require(!miner.isContract(), "Arkreen Miner: Not EOA Address");
-        require(AllMinersToken[miner] == 0, "Arkreen Miner: Miner Repeated");
-        MinerType minerType = MinerType(whiteListMiner[miner]);
-        require((minerType == MinerType.StandardMiner) || 
-                (minerType == MinerType.SocketMiner) ||
-                (minerType == MinerType.PlantMiner), "Arkreen Miner: Wrong Miner");        
-
-        // Check signature
-        bytes32 hashRegister = keccak256(abi.encode(STANDARD_MINER_TYPEHASH, owner, miner, deadline));
-        bytes32 digest = keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR, hashRegister));
-        address recoveredAddress = ecrecover(digest, permitMiner.v, permitMiner.r, permitMiner.s);
-  
-        require(recoveredAddress != address(0) && 
-                recoveredAddress == AllManagers[uint256(MinerManagerType.Register_Authority)], "Arkreen Miner: INVALID_SIGNATURE");
-
-        Miner memory newMiner;
-        newMiner.mAddress = miner;
-        newMiner.mType = minerType;
-        newMiner.mStatus = MinerStatus.Normal;
-        newMiner.timestamp = uint32(block.timestamp);        
-
-        // Mint a new standard miner
-        _mintMiner(owner, miner, newMiner);
-
-        // Increase the counter of total standard/socket miner 
-        if(minerType == MinerType.StandardMiner) { 
-            totalStandardMiner += 1;
-            emit StandardMinerOnboarded(owner,  miner);   // emit onboarding event
-        } else if(minerType == MinerType.SocketMiner) {
-            totalSocketMiner += 1;
-            emit SocketMinerOnboarded(owner,  miner);
-        } else {
-            totalPlantMiner += 1;
-            emit PlantMinerOnboarded(owner,  miner);
-        }
-
-        delete whiteListMiner[miner]; 
+    ) external {
+      _StandardMinerOnboardMute(owner, miner, deadline, permitMiner);
+      callArkreenMinerPro(arkreenMinerPro);
     }
+
+    function _StandardMinerOnboardMute(address owner, address miner, uint256 deadline, Sig calldata permitMiner) internal {}  
 
     /**
      * @dev Onboarding remote miners in batch
@@ -603,52 +540,34 @@ contract ArkreenMiner is
      * @param addressMiners List of the miners
      */
     function UpdateMinerWhiteListBatch(address[] calldata addressMiners) external onlyMinerManager {
-        _UpdatePoolMinerWhiteList(0, addressMiners);
+        _UpdateMinerWhiteListBatchMut(addressMiners);
+        callArkreenMinerPro(arkreenMinerPro);
     }
+
+    function _UpdateMinerWhiteListBatchMut(address[] calldata addressMiners) internal {}
 
     /**
      * @dev Remove the miner from the miner white list for batch sales.
      * @param addressMiner The miner to remove
      */
-/*     
-    function RemoveMinerFromWhiteList(uint256 remoteType, address addressMiner) external onlyMinerManager {
-        // pool id is located at the MSB of index 
-        uint256 indexHead = whiteListBatchPoolIndexHead[remoteType];
-        uint256 indexTail = whiteListBatchPoolIndexTail[remoteType];
-
-        for(uint256 index = indexHead; index < indexTail; index++) {
-            if(whiteListMinerBatch[index] == addressMiner) {
-                if(index != (indexTail-1)) {
-                    whiteListMinerBatch[index] = whiteListMinerBatch[indexTail-1];
-                }
-                whiteListMinerBatch[indexTail-1] = address(0);
-                whiteListBatchPoolIndexTail[remoteType] = indexTail - 1;
-                break;   
-            }
-        }
+    function RemoveMinerFromWhiteList(uint256 remoteType, address addressMiner) external {
+        _RemoveMinerFromWhiteListMute(remoteType, addressMiner);
+        callArkreenMinerPro(arkreenMinerPro);
     }
-*/
+
+    function _RemoveMinerFromWhiteListMute(uint256 remoteType, address addressMiner) internal {}  
+
     /**
      * @dev Update the miner white list for the specified pool. Only miners in the white list are allowed to onboard as an NFT.
      * @param remoteType type of the remote miner to claim, which could be used to differentiate the various type of remote miners
      * @param addressMiners List of the miners
      */
-    function UpdateMinerWhiteListBatchClaim(uint256 remoteType, address[] calldata addressMiners) public onlyMinerManager {
-        require(remoteType <= type(uint8).max, "Arkreen Miner: Wrong Pool ID");
-        _UpdatePoolMinerWhiteList(remoteType, addressMiners);
+    function UpdateMinerWhiteListBatchClaim(uint256 remoteType, address[] calldata addressMiners) public {
+        _UpdateMinerWhiteListBatchClaimMute(remoteType, addressMiners);
+        callArkreenMinerPro(arkreenMinerPro);
     }
 
-    function _UpdatePoolMinerWhiteList(uint256 remoteType, address[] calldata addressMiners) internal  {
-        // pool id is located at the MSB of index 
-        uint256 remoteTypeTag = remoteType << 248;                                                 
-
-        uint256 indexStart = whiteListBatchPoolIndexTail[remoteType];
-        uint256 length = addressMiners.length;
-        for(uint256 index; index < length; index++) {
-            whiteListMinerBatch[remoteTypeTag + indexStart + index] = addressMiners[index];
-        }
-        whiteListBatchPoolIndexTail[remoteType] += length;
-    }
+    function _UpdateMinerWhiteListBatchClaimMute(uint256 remoteType, address[] calldata addressMiners) internal {}
 
     /**
      * @dev get the length of the white list for batch sales
@@ -675,6 +594,10 @@ contract ArkreenMiner is
       AllManagers[managerType] = managerAddress;
     }
 
+    function setArkreenMinerPro(address minerPro) external onlyOwner {
+        arkreenMinerPro = minerPro;
+    }
+
     /**
      * @dev Set the native token address
      * @param native address, not checked againt zero address to disable payment by native token    
@@ -694,19 +617,12 @@ contract ArkreenMiner is
      * @dev Withdraw all the onboarding fee
      * @param token address of the token to withdraw, USDC/ARKE
      */
-    function withdraw(address token) public onlyOwner {
-        address receiver = AllManagers[uint256(MinerManagerType.Payment_Receiver)];
-        if(receiver == address(0)) {
-            receiver = _msgSender();
-        }
-
-        if(token == tokenNative) {
-            TransferHelper.safeTransferETH(receiver, address(this).balance);      
-        } else {
-            uint256 balance = IERC20(token).balanceOf(address(this));
-            TransferHelper.safeTransfer(token, receiver, balance);
-        }
+    function withdraw(address token) public {
+      _withdrawMute(token);
+      callArkreenMinerPro(arkreenMinerPro);
     }
+
+    function _withdrawMute(address token) internal {}  
 
     /**
      * @dev Hook that is called before any token transfer.

@@ -577,7 +577,6 @@ describe("StakingRewards test", ()=> {
         await checkEarnedUser(1)
         await checkEarnedUser(2)
         await checkEarnedUser(3)
-
         
         await ethers.provider.send("evm_increaseTime", [60*60*24*4]);
         await mine(1)

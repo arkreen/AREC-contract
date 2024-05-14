@@ -207,6 +207,9 @@ describe("ArkreenBuilderWithBank", () => {
           const { v,r,s } = ecsign(Buffer.from(digest1.slice(2), 'hex'), Buffer.from(privateKeyOwner.slice(2), 'hex'))
           const signature: SignatureStruct = { v, r, s, token: AKREToken.address, value:mintFee, deadline: constants.MaxUint256 } 
           
+          const price0:BigNumber = expandTo18Decimals(1000).div(expandTo9Decimals(1))
+          await arkreenRECIssuance.updateARECMintPrice(AKREToken.address, price0)
+
           // Mint
           await arkreenRegistry.setArkreenMiner(arkreenMiner.address)
           await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)

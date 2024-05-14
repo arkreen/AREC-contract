@@ -298,7 +298,11 @@ describe("ArkreenRECIssuance", () => {
                 .to.be.revertedWith("AREC: Wrong Payment Token") 
         signature.token = AKREToken.address  
 
-        signature.value = expandTo18Decimals(50)
+        signature.value = expandTo18Decimals(50 * 1000 + 1)
+
+        const price0:BigNumber = expandTo18Decimals(50).div(expandTo9Decimals(1))
+        await arkreenRECIssuance.updateARECMintPrice(AKREToken.address, price0)
+
         await expect(arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature))
                 .to.be.revertedWith("ERC20Permit: invalid signature") 
         signature.value = expandTo18Decimals(100)
@@ -963,6 +967,11 @@ describe("ArkreenRECIssuance", () => {
     })
 
     it("ArkreenRECIssuance: tokenURI, No given URI", async () => {
+
+      signature.value = expandTo18Decimals(50 * 1000)
+      const price0:BigNumber = expandTo18Decimals(50).div(expandTo9Decimals(1))
+      await arkreenRECIssuance.updateARECMintPrice(AKREToken.address, price0)
+
       await arkreenRECIssuance.connect(owner1).mintRECRequest(recMintRequest, signature)
       tokenID = await arkreenRECIssuance.totalSupply()
       await arkreenRECIssuance.connect(manager).certifyRECRequest(tokenID, "Serial12345678")
