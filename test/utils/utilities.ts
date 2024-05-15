@@ -304,6 +304,7 @@ export function getPlantStakingDigest(
   approve: {
     txid:     BigNumber
     staker:   string
+    cspminer: string
     amount:   BigNumber
     nonce:    BigNumber
   },
@@ -311,10 +312,10 @@ export function getPlantStakingDigest(
 ): string {
   const DOMAIN_SEPARATOR = getDomainSeparator(contractName, contractAddress)
 
-  // keccak256("stake(uint256 txid,address staker,uint256 amount,uint256 nonce,uint256 deadline)");
-  // 0xDDA065932D4EDAF754673D5859CC6AFE7FC13DB02D25AB9A58D00DC4E0ACFB90
+  // keccak256("stake(uint256 txid,address staker,address cspminer,uint256 amount,uint256 nonce,uint256 deadline)");
+  // 0xF970E4374212202D8F38B4CD5B1067E6B25AE9F3F76C60C2C45771C286C3F19D
   const STAKE_TYPEHASH = utils.keccak256(
-    utils.toUtf8Bytes('stake(uint256 txid,address staker,uint256 amount,uint256 nonce,uint256 deadline)')
+    utils.toUtf8Bytes('stake(uint256 txid,address staker,address cspminer,uint256 amount,uint256 nonce,uint256 deadline)')
   )
 
   return utils.keccak256(
@@ -326,8 +327,8 @@ export function getPlantStakingDigest(
         DOMAIN_SEPARATOR,
         utils.keccak256(
           utils.defaultAbiCoder.encode(
-            ['bytes32', 'uint256', 'address', 'uint256', 'uint256', 'uint256'],
-            [STAKE_TYPEHASH, approve.txid, approve.staker, approve.amount, approve.nonce, deadline]
+            ['bytes32', 'uint256', 'address', 'address', 'uint256', 'uint256', 'uint256'],
+            [STAKE_TYPEHASH, approve.txid, approve.staker, approve.cspminer, approve.amount, approve.nonce, deadline]
           )
         )
       ]
@@ -341,6 +342,7 @@ export function getPlantUnstakingDigest(
   approve: {
     txid:     BigNumber
     staker:   string
+    cspminer: string
     amount:   BigNumber
     reward:   BigNumber
     nonce:    BigNumber
@@ -349,10 +351,10 @@ export function getPlantUnstakingDigest(
 ): string {
   const DOMAIN_SEPARATOR = getDomainSeparator(contractName, contractAddress)
 
-  // keccak256("unstake(uint256 txid,address staker,uint256 amount,uint256 reward,uint256 nonce,uint256 deadline)");
-  // 0xDB029AD78BC2188138101282FE45AC09339B486D22BF671961241681C21AF58E
-  const STAKE_TYPEHASH = utils.keccak256(
-    utils.toUtf8Bytes('unstake(uint256 txid,address staker,uint256 amount,uint256 reward,uint256 nonce,uint256 deadline)')
+  // keccak256("unstake(uint256 txid,address staker,address cspminer,uint256 amount,uint256 reward,uint256 nonce,uint256 deadline)");
+  // 0xDF27D93C407B51719EF6DE1C85A91844E20B5B3AFADCC7C5BF0828E9F5C6AAC3
+  const UNSTAKE_TYPEHASH = utils.keccak256(
+    utils.toUtf8Bytes('unstake(uint256 txid,address staker,address cspminer,uint256 amount,uint256 reward,uint256 nonce,uint256 deadline)')
   )
 
   return utils.keccak256(
@@ -364,8 +366,8 @@ export function getPlantUnstakingDigest(
         DOMAIN_SEPARATOR,
         utils.keccak256(
           utils.defaultAbiCoder.encode(
-            ['bytes32', 'uint256', 'address', 'uint256', 'uint256', 'uint256', 'uint256'],
-            [STAKE_TYPEHASH, approve.txid, approve.staker, approve.amount, approve.reward, approve.nonce, deadline]
+            ['bytes32', 'uint256', 'address', 'address', 'uint256', 'uint256', 'uint256', 'uint256'],
+            [UNSTAKE_TYPEHASH, approve.txid, approve.staker, approve.cspminer, approve.amount, approve.reward, approve.nonce, deadline]
           )
         )
       ]
