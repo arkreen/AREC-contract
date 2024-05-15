@@ -9,6 +9,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "./libraries/TransferHelper.sol";
 import "./interfaces/IERC20.sol";
 import "./interfaces/IERC20Permit.sol";
+import "./interfaces/IArkreenMinerListener.sol";
 import "./ArkreenMinerTypes.sol";
 import "./ArkreenMinerStorage.sol";
 
@@ -113,7 +114,18 @@ contract ArkreenMinerPro is
             emit PlantMinerOnboarded(owner,  miner);
         }
 
+        checkListener(owner, 1);
         delete whiteListMiner[miner]; 
+    }
+
+    function checkListener(address owner, uint256 quantity) internal {
+        uint256 allListenApps = listenUsers[owner]; 
+        if (allListenApps == 0) return;
+        while (allListenApps != 0) {
+            address appToCall = listenApps[uint8(allListenApps)];
+            IArkreenMinerListener(appToCall).minerOnboarded(owner, quantity);
+            allListenApps = allListenApps >> 8;
+        }
     }
 
     /**

@@ -70,19 +70,27 @@ describe("StakingRewards test", ()=> {
 
         await artToken.deployed()
 
+        const ArkreenMinerProFactory = await ethers.getContractFactory("ArkreenMinerPro")
+        const ArkreenMinerPro = await ArkreenMinerProFactory.deploy()
+
         const ArkreenMinerFactory = await ethers.getContractFactory("ArkreenMiner")
         arkreenMiner = await upgrades.deployProxy(ArkreenMinerFactory, 
                                 [arkreenToken.address, user3.address, user1.address, user2.address]) as ArkreenMiner
         await arkreenMiner.deployed()
 
+        await arkreenMiner.setArkreenMinerPro(ArkreenMinerPro.address);
+
         const miners = randomAddresses(3)
         await arkreenMiner.connect(user1).RemoteMinerOnboardInBatch([user1.address, user2.address, user3.address] , miners)
 
         const stakingRewardsFactory = await ethers.getContractFactory("StakingRewards")
-        const stakingRewards: StakingRewards = await stakingRewardsFactory.deploy(
-                                            arkreenToken.address, artToken.address, arkreenMiner.address, deployer.address)
+        const stakingRewards = await upgrades.deployProxy(stakingRewardsFactory, 
+                                        [arkreenToken.address, artToken.address, arkreenMiner.address, deployer.address]) as StakingRewards
+
         await stakingRewards.deployed()
         await stakingRewards.setStakeParameter(expandTo18Decimals(10000) , 100)
+
+        await arkreenMiner.registerListenApps(1 , stakingRewards.address)
 
         await artToken.approve(stakingRewards.address, constants.MaxUint256)
 
@@ -98,18 +106,12 @@ describe("StakingRewards test", ()=> {
       const lastTimeRewardApplicable = lastBlockN.timestamp < endTimestamp ? lastBlockN.timestamp : endTimestamp
       const lastUpdateTimeForReward = lastUpdateTime < startTimestamp ? startTimestamp : lastUpdateTime
 
-//      const rewardRatePerStake = allStakeAmount.eq(0) ? BigNumber.from(0) :rewardRate.div(allStakeAmount)
-//      console.log("\r\nWWWWWWWWWWWWWWWWWWWW", lastBlockN.timestamp, lastTimeRewardApplicable, rewardRate.toString(),
-//                                              startTimestamp, endTimestamp, rewardRatePerStake.toString())
-
       const rewardsPerStakeIncrease = startTimestamp == 0  || 
                                       lastBlockN.timestamp <= startTimestamp || 
                                       allStakeAmount.eq(0) ||
                                       lastTimeRewardApplicable <= lastUpdateTimeForReward
                                       ? BigNumber.from(0)
                                       : rewardRate.mul(lastTimeRewardApplicable-lastUpdateTimeForReward).div(allStakeAmount)
-
-//      console.log("\r\nVVVVVVVVVVVVVVVVVVVVV", lastRewardsPerStakePaid.toString(), rewardsPerStakeIncrease.toString())
 
       return lastRewardsPerStakePaid.add(rewardsPerStakeIncrease)
     }                                    
@@ -127,10 +129,6 @@ describe("StakingRewards test", ()=> {
       lastRewardsPerStakePaid = getLastRewardsPerStake()
       const newRewards = user1StakeStatus.stakeAmount.mul(lastRewardsPerStakePaid.sub(user1StakeStatus.rewardsPerStakePaid))
 
-//      console.log("\r\nQQQQQQQQQQ0000000000000000000", lastRewardsPerStakePaid.toString(), 
-//                      user1StakeStatus.earnStored.toString(),
-//                      user1StakeStatus.rewardsPerStakePaid.toString(), newRewards.toString())
-
       allStakeAmount = allStakeAmount.add(amount)
       user1StakeStatus.stakeAmount = user1StakeStatus.stakeAmount.add(amount)
       user1StakeStatus.lastTimeStamp = lastBlockN.timestamp
@@ -138,13 +136,6 @@ describe("StakingRewards test", ()=> {
       user1StakeStatus.earnStored = user1StakeStatus.earnStored.add(newRewards.div(expandTo18Decimals(1)).div(expandTo18Decimals(1)))
 
       lastUpdateTime = lastBlockN.timestamp
-
-//      console.log("\r\nQQQQQQQQQQ111111111111111111", lastRewardsPerStakePaid.toString(), 
-//                      user1StakeStatus.earnStored.toString(),
-//                      user1StakeStatus.rewardsPerStakePaid.toString(), newRewards.toString())
-
-//      console.log("\r\nUser 1", lastBlockN.timestamp, user1StakeStatus.stakeAmount.toString(), 
-//          user2StakeStatus.stakeAmount.toString(), user3StakeStatus.stakeAmount.toString(), allStakeAmount.toString())
     }
 
     async function user1StakeWithPermit(amount: BigNumber) {
@@ -188,9 +179,6 @@ describe("StakingRewards test", ()=> {
       user2StakeStatus.earnStored = user2StakeStatus.earnStored.add(newRewards.div(expandTo18Decimals(1)).div(expandTo18Decimals(1)))
 
       lastUpdateTime = lastBlockN.timestamp
-
-//      console.log("User 2", lastBlockN.timestamp, user2StakeStatus.stakeAmount.toString(), 
-//          user2StakeStatus.stakeAmount.toString(), user3StakeStatus.stakeAmount.toString(), allStakeAmount.toString())
     }
 
     async function user3Stake(amount: BigNumber) {
@@ -207,9 +195,6 @@ describe("StakingRewards test", ()=> {
       user3StakeStatus.earnStored = user3StakeStatus.earnStored.add(newRewards.div(expandTo18Decimals(1)).div(expandTo18Decimals(1)))
 
       lastUpdateTime = lastBlockN.timestamp
-
-//      console.log("User 3", lastBlockN.timestamp, user3StakeStatus.stakeAmount.toString(), 
-//            user2StakeStatus.stakeAmount.toString(), user3StakeStatus.stakeAmount.toString(), allStakeAmount.toString())
     }
 
     async function checkEarnedUser1() {
@@ -219,12 +204,6 @@ describe("StakingRewards test", ()=> {
                             .mul(lastRewardsPerStakePaidTemp.sub(user1StakeStatus.rewardsPerStakePaid))
                             .div(expandTo18Decimals(1)).div(expandTo18Decimals(1))
 
-/*                            
-      console.log("\r\n11111111111111111", user1StakeStatus.stakeAmount.toString(), lastRewardsPerStakePaidTemp.toString(),
-            user1StakeStatus.earnStored.toString(), newRewards.toString(),
-            user1StakeStatus.earnStored.add(newRewards).toString(),
-            user1StakeStatus.rewardsPerStakePaid.toString())
-*/
       expect(await stakingRewards.earned(user1.address)).to.eq(user1StakeStatus.earnStored.add(newRewards))
       return user1StakeStatus.earnStored.add(newRewards)
     }
@@ -237,9 +216,6 @@ describe("StakingRewards test", ()=> {
                         .mul(lastRewardsPerStakePaidTemp.sub(user2StakeStatus.rewardsPerStakePaid))
                         .div(expandTo18Decimals(1)).div(expandTo18Decimals(1))
 
-//      console.log("222222222222222", user2StakeStatus.stakeAmount.toString(), lastRewardsPerStakePaidTemp.toString(),
-//            user2StakeStatus.earnStored.toString(), newRewards.toString())
-
       expect(await stakingRewards.earned(user2.address)).to.eq(user2StakeStatus.earnStored.add(newRewards))
       return user2StakeStatus.earnStored.add(newRewards)
     }
@@ -250,9 +226,6 @@ describe("StakingRewards test", ()=> {
       const newRewards = user3StakeStatus.stakeAmount
                           .mul(lastRewardsPerStakePaidTemp.sub(user3StakeStatus.rewardsPerStakePaid))
                           .div(expandTo18Decimals(1)).div(expandTo18Decimals(1))
-
-//      console.log("3333333333333333", user3StakeStatus.stakeAmount.toString(), lastRewardsPerStakePaidTemp.toString(),
-//            user3StakeStatus.earnStored.toString(), newRewards.toString())
 
       expect(await stakingRewards.earned(user3.address)).to.eq(user3StakeStatus.earnStored.add(newRewards))
       return user3StakeStatus.earnStored.add(newRewards)

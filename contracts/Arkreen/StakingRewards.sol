@@ -1,23 +1,27 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/draft-IERC20PermitUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 import "../interfaces/IArkreenMiner.sol";
 import "../interfaces/IArkreenMinerListener.sol";
 
-contract StakingRewards is ReentrancyGuard, Ownable, IArkreenMinerListener {
-    using SafeMath for uint256;
-    using SafeERC20 for IERC20;
+contract StakingRewards is IArkreenMinerListener, ReentrancyGuardUpgradeable, OwnableUpgradeable, UUPSUpgradeable {
+    using SafeMathUpgradeable for uint256;
+    using SafeERC20Upgradeable for ERC20Upgradeable;
 
     uint256 public constant MAX_SUPPLY_STAKES = 1e28;                 // AKRE max supply: 10 Billion, decide calculation accuracy
 
-    IERC20 public stakingToken;
-    IERC20 public rewardsToken;
+    ERC20Upgradeable public stakingToken;
+    ERC20Upgradeable public rewardsToken;
     IArkreenMiner public arkreenMiner;
 
     address public rewardsDistributor;
@@ -45,20 +49,39 @@ contract StakingRewards is ReentrancyGuard, Ownable, IArkreenMinerListener {
     event Withdrawn(address indexed user, uint256 amount);
     event RewardPaid(address indexed user, uint256 reward);
 
-    constructor(
-        address _stakingToken,
-        address _rewardsToken,
-        address _arkreenMiner,
-        address _rewardsDistributor
-    ) {
-        stakingToken = IERC20(_stakingToken);
-        rewardsToken = IERC20(_rewardsToken);
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize( address _stakingToken, 
+                         address _rewardsToken, 
+                         address _arkreenMiner, 
+                         address _rewardsDistributor
+                       ) external virtual initializer {
+        __Ownable_init_unchained();
+        __UUPSUpgradeable_init();     
+        __ReentrancyGuard_init();   
+        
+        stakingToken = ERC20Upgradeable(_stakingToken);
+        rewardsToken = ERC20Upgradeable(_rewardsToken);
         arkreenMiner = IArkreenMiner(_arkreenMiner);
         rewardsDistributor = _rewardsDistributor;
-    }
+    }   
+
+    function postUpdate() external onlyProxy onlyOwner 
+    {}
+
+    function _authorizeUpgrade(address newImplementation) internal virtual override onlyOwner
+    {}
 
     modifier onlyRewardsDistributor() {
         require(msg.sender == rewardsDistributor, "Caller is not RewardsDistribution contract");
+        _;
+    }
+
+    modifier onlyArkreenMiner() {
+        require(msg.sender == address(arkreenMiner), "Caller Not Allowed");
         _;
     }
 
@@ -90,7 +113,7 @@ contract StakingRewards is ReentrancyGuard, Ownable, IArkreenMinerListener {
     }
 
     function stakeWithPermit(uint256 amount, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external nonReentrant updateReward(msg.sender) {
-        IERC20Permit(address(stakingToken)).permit(msg.sender, address(this), amount, deadline, v, r, s);
+        IERC20PermitUpgradeable(address(stakingToken)).permit(msg.sender, address(this), amount, deadline, v, r, s);
         _stake(amount);
     }
 
@@ -148,8 +171,7 @@ contract StakingRewards is ReentrancyGuard, Ownable, IArkreenMinerListener {
         collectReward();
     }
 
-    function minerOnboarded(address owner, uint256) external {
-        require( msg.sender == address(arkreenMiner), "Caller Not Allowed");
+    function minerOnboarded(address owner, uint256) external onlyArkreenMiner updateReward(owner) {
         _updateRewardStake(owner);
     }
 
@@ -173,6 +195,10 @@ contract StakingRewards is ReentrancyGuard, Ownable, IArkreenMinerListener {
         lastUpdateTime = uint32(lastTimeRewardApplicable());
 
         if (account != address(0)) {
+            if ((myRewardsPerStakePaid[account] == 0) && (myStakes[account] == 0)) {
+              	IArkreenMiner(arkreenMiner).registerListener(account);
+            }
+
             myRewards[account] = earned(account);
             myRewardsPerStakePaid[account] = rewardPerStakeLast;
         }

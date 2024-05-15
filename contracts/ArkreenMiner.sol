@@ -146,6 +146,8 @@ contract ArkreenMiner is
 
         // mint new remote miners in batch
         address[] memory minersBatch = _mintRemoteMinerBatch(0, owner, numMiners);
+
+        checkListener(owner, numMiners);
         emit MinerOnboardedBatch(owner, minersBatch);
     }    
 
@@ -173,6 +175,7 @@ contract ArkreenMiner is
             TransferHelper.safeTransferFrom(permitMiner.token, sender, address(this), permitMiner.value);
         }
 
+        checkListener(owner, 1);
         emit MinerOnboarded(owner, miner);
     }
 
@@ -200,6 +203,7 @@ contract ArkreenMiner is
             TransferHelper.safeTransferFrom(permitMiner.token, sender, address(this), permitMiner.value);
         }
 
+        checkListener(owner, numMiners);
         emit MinerOnboardedBatch(owner, minersBatch);
     }
 
@@ -232,6 +236,7 @@ contract ArkreenMiner is
             TransferHelper.safeTransferFrom(permitMiner.token, sender, address(this), permitMiner.value);
         }
 
+        checkListener(owner, numMiners);
         emit MinerOnboardedBatch(owner, minersBatch);
     }
 
@@ -385,6 +390,7 @@ contract ArkreenMiner is
             TransferHelper.safeTransferFrom(permitToPay.token, sender, address(this), permitToPay.value);
         }
 
+        checkListener(owner, 1);
         emit MinerOnboarded(owner, miner);
     }
 
@@ -482,6 +488,17 @@ contract ArkreenMiner is
         }
     }
 
+    function registerListener(address owner) external {
+        uint256 appId = listenAppIds[msg.sender];
+        require( appId != 0, "Arkreen Miner: App Not Registered");
+
+        uint256 allListenApps = listenUsers[owner]; 
+        require( (allListenApps >> 248) == 0, "Arkreen Miner: More Registered");
+
+        allListenApps = (allListenApps << 8) + uint8(appId);
+        listenUsers[owner] = allListenApps;
+    }
+
     /**
      * @dev Get all the miner info of the specified miner
      * @param addrMiner miner address
@@ -553,11 +570,11 @@ contract ArkreenMiner is
      * @param addressMiners List of the miners
      */
     function UpdateMinerWhiteListBatch(address[] calldata addressMiners) external onlyMinerManager {
-        _UpdateMinerWhiteListBatchMut(addressMiners);
+        _UpdateMinerWhiteListBatchMute(addressMiners);
         callArkreenMinerPro(arkreenMinerPro);
     }
 
-    function _UpdateMinerWhiteListBatchMut(address[] calldata addressMiners) internal {}
+    function _UpdateMinerWhiteListBatchMute(address[] calldata addressMiners) internal {}
 
     /**
      * @dev Remove the miner from the miner white list for batch sales.
@@ -611,9 +628,13 @@ contract ArkreenMiner is
         arkreenMinerPro = minerPro;
     }
 
-    function registerCallbackApps(uint256 appid, address newApp) external onlyOwner {
-        require ((appid != 0) && (appid <= 255) && (listenApps[appid] == address(0)), "Arkreen Miner: Wrong App ID");
+    function registerListenApps(uint256 appid, address newApp) external onlyOwner {
+        require ( (appid != 0) && 
+                  (appid <= 255) && 
+                  (listenApps[appid] == address(0)) &&
+                  (listenAppIds[newApp] == 0), "Arkreen Miner: Wrong App ID");
         listenApps[appid] = newApp;
+        listenAppIds[newApp] = appid;
     }
 
     /**

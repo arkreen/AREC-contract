@@ -7,7 +7,10 @@ import { ethers, network, upgrades } from "hardhat";
 import { Block } from "@ethersproject/abstract-provider";
 
 import { constants, BigNumber, } from 'ethers'
-import { getPermitDigest, expandTo18Decimals, expandTo9Decimals, randomAddresses } from "../utils/utilities"
+import { expandTo9Decimals, randomAddresses, MinerType } from "../utils/utilities"
+import { getOnboardingRemoteMinerDigest, getOnboardingRemoteMinerBatchDigest, getPermitDigest, expandTo18Decimals } from "../utils/utilities"
+
+import { SignatureStruct } from "../../typechain/contracts/ArkreenMiner";
 
 import { ecsign } from 'ethereumjs-util'
 
@@ -22,6 +25,10 @@ const endTime =  startTime + 60 * 60 * 24 * 60        // 2 month
 let amountReward: BigNumber
 let rewardRate: BigNumber
 const PREMIUN_PER_MINER =  expandTo18Decimals(10000)
+
+const Miner_Manager       = 0         
+const Register_Authority  = 1    
+const Payment_Receiver    = 2
 
 interface stakeStatus {
   stakeAmount:          BigNumber
@@ -53,6 +60,8 @@ describe("StakingRewards test", ()=> {
     let stakingRewards:           StakingRewards
     let arkreenMiner:             ArkreenMiner
 
+    let privateKeyRegister:       string
+
     let allStakeAmount    = BigNumber.from(0)
     let allReswardStakeAmount    = BigNumber.from(0)
     let lastRewardsPerStakePaid = BigNumber.from(0)
@@ -75,10 +84,15 @@ describe("StakingRewards test", ()=> {
 
         await artToken.deployed()
 
+        const ArkreenMinerProFactory = await ethers.getContractFactory("ArkreenMinerPro")
+        const ArkreenMinerPro = await ArkreenMinerProFactory.deploy()
+    
         const ArkreenMinerFactory = await ethers.getContractFactory("ArkreenMiner")
         arkreenMiner = await upgrades.deployProxy(ArkreenMinerFactory, 
                                 [arkreenToken.address, user3.address, user1.address, user2.address]) as ArkreenMiner
+
         await arkreenMiner.deployed()
+        await arkreenMiner.setArkreenMinerPro(ArkreenMinerPro.address);
 
         const miners3 = randomAddresses(3)
         await arkreenMiner.connect(user1).RemoteMinerOnboardInBatch([user1.address, user2.address, user3.address] , miners3)
@@ -90,10 +104,13 @@ describe("StakingRewards test", ()=> {
         await arkreenMiner.connect(user1).RemoteMinerOnboardInBatch([user1.address] , miners1)
 
         const stakingRewardsFactory = await ethers.getContractFactory("StakingRewards")
-        const stakingRewards: StakingRewards = await stakingRewardsFactory.deploy(
-                                            arkreenToken.address, artToken.address, arkreenMiner.address, deployer.address)
+        const stakingRewards = await upgrades.deployProxy(stakingRewardsFactory, 
+                                        [arkreenToken.address, artToken.address, arkreenMiner.address, deployer.address]) as StakingRewards
+
         await stakingRewards.deployed()
         await stakingRewards.setStakeParameter(expandTo18Decimals(10000) , 200)
+
+        await arkreenMiner.registerListenApps(1 , stakingRewards.address)
 
         await artToken.approve(stakingRewards.address, constants.MaxUint256)
 
@@ -108,20 +125,12 @@ describe("StakingRewards test", ()=> {
       const lastTimeRewardApplicable = lastBlockN.timestamp < endTimestamp ? lastBlockN.timestamp : endTimestamp
       const lastUpdateTimeForReward = lastUpdateTime < startTimestamp ? startTimestamp : lastUpdateTime
 
-//    const rewardRatePerStake = allReswardStakeAmount.eq(0) ? BigNumber.from(0) : rewardRate.div(allReswardStakeAmount)
-//      console.log("\r\nWWWWWWWWWWWWWWWWWWWW", lastBlockN.timestamp, lastTimeRewardApplicable, rewardRate.toString(),
-//                                              startTimestamp, endTimestamp, rewardRatePerStake.toString(),
-//                                              lastRewardsPerStakePaid.toString(),
-//                                              allReswardStakeAmount.toString())
-
       const rewardsPerStakeIncrease = startTimestamp == 0  || 
                                       lastBlockN.timestamp <= startTimestamp || 
                                       allReswardStakeAmount.eq(0) ||
                                       lastTimeRewardApplicable <= lastUpdateTimeForReward
                                       ? BigNumber.from(0)
                                       : rewardRate.mul(lastTimeRewardApplicable-lastUpdateTimeForReward).div(allReswardStakeAmount)
-
-//      console.log("\r\nVVVVVVVVVVVVVVVVVVVVV", lastRewardsPerStakePaid.toString(), rewardsPerStakeIncrease.toString())
 
       return lastRewardsPerStakePaid.add(rewardsPerStakeIncrease)
     }                                    
@@ -183,7 +192,6 @@ describe("StakingRewards test", ()=> {
       userStakeStatus.earnStored = userStakeStatus.earnStored.add(newRewards.div(expandTo18Decimals(1)).div(expandTo18Decimals(1)))
 
       lastUpdateTime = lastBlockN.timestamp
-
     }
 
     async function userUnstake(walletIndex: number, amount: BigNumber) {
@@ -312,6 +320,8 @@ describe("StakingRewards test", ()=> {
     describe('StakingRewards test', () => {
       beforeEach(async () => {
         const fixture = await loadFixture(deployFixture)
+        privateKeyRegister = process.env.REGISTER_TEST_PRIVATE_KEY as string
+
         arkreenToken = fixture.arkreenToken
         artToken = fixture.artToken        
         stakingRewards = fixture.stakingRewards
@@ -492,6 +502,124 @@ describe("StakingRewards test", ()=> {
         expect(await stakingRewards.earned(user2.address)).to.eq(BigNumber.from(0))
         expect(await stakingRewards.earned(user3.address)).to.eq(BigNumber.from(0))
 
+      });
+
+      it("StakingRewards: Miner onboard", async function () {
+
+        await arkreenToken.connect(user1).approve(arkreenMiner.address, constants.MaxUint256)
+        await arkreenToken.connect(user2).approve(arkreenMiner.address, constants.MaxUint256)
+        await arkreenToken.connect(user3).approve(arkreenMiner.address, constants.MaxUint256)
+   
+        const lastBlock = await ethers.provider.getBlock('latest')
+        startTimestamp = lastBlock.timestamp + startTime
+        endTimestamp = lastBlock.timestamp + endTime
+
+        amountReward = expandTo9Decimals(20000)                       // 9408471
+        rewardRate = amountReward.mul(expandTo18Decimals(1)).mul(expandTo18Decimals(1)).div(endTime-startTime)
+
+        const stake1 = expandTo18Decimals(100000)
+        const stake2 = expandTo18Decimals(400000)
+        const stake3 = expandTo18Decimals(500000)
+        
+        await userStake(1, stake1)
+        await userStake(2, stake2)
+        await userStake(3, stake3)
+
+        const rewardStakes1 = await stakingRewards.myRewardStakes(user1.address)
+        const rewardStakes2 = await stakingRewards.myRewardStakes(user2.address)
+        const rewardStakes3 = await stakingRewards.myRewardStakes(user3.address)
+
+        expect(rewardStakes1).to.eq(stake1.add(PREMIUN_PER_MINER.mul(3)))
+        expect(rewardStakes2).to.eq(stake2.add(PREMIUN_PER_MINER.mul(2)))
+        expect(rewardStakes3).to.eq(stake3.add(PREMIUN_PER_MINER.mul(1)))
+
+        await stakingRewards.depolyRewards(startTimestamp, endTimestamp, amountReward )
+
+        await ethers.provider.send("evm_increaseTime", [startTime + 100]);
+        await mine(1)
+
+        // Reward started
+        await userStake(1, stake1)
+        await userStake(2, stake2)
+        await userStake(3, stake3)
+
+        expect(await stakingRewards.myRewardStakes(user1.address)).to.eq(stake1.mul(2).add(PREMIUN_PER_MINER.mul(3)))
+        expect(await stakingRewards.myRewardStakes(user2.address)).to.eq(stake2.mul(2).add(PREMIUN_PER_MINER.mul(2)))
+        expect(await stakingRewards.myRewardStakes(user3.address)).to.eq(stake3.mul(2).add(PREMIUN_PER_MINER.mul(1)))
+
+        await ethers.provider.send("evm_increaseTime", [60*60*24*40]);
+        await mine(1)
+
+        await checkEarnedUser(1)
+        await checkEarnedUser(2)
+        await checkEarnedUser(3)
+        
+        // Onboarding a new remote miner
+        const miners = randomAddresses(10)
+        await arkreenMiner.connect(user1).UpdateMinerWhiteList(MinerType.RemoteMiner, miners) 
+        const minerPrice = expandTo18Decimals(2000)
+  
+        const register_digest = getOnboardingRemoteMinerDigest(
+                        'Arkreen Miner',
+                        arkreenMiner.address,
+                        { owner: user2.address, miner: miners[1], 
+                          token: arkreenToken.address, price: minerPrice, deadline: constants.MaxUint256 }
+                      )
+        await arkreenMiner.setManager(Register_Authority, user2.address)
+
+        const {v,r,s} = ecsign( Buffer.from(register_digest.slice(2), 'hex'), 
+                                              Buffer.from(privateKeyRegister.slice(2), 'hex'))           
+        const signature: SignatureStruct = { v, r, s, token: arkreenToken.address, value:minerPrice, deadline: constants.MaxUint256 } 
+    
+        await arkreenMiner.connect(user2).RemoteMinerOnboardApproved(user2.address,  miners[1], signature)
+
+        expect(await stakingRewards.myRewardStakes(user1.address)).to.eq(stake1.mul(2).add(PREMIUN_PER_MINER.mul(3)))
+        expect(await stakingRewards.myRewardStakes(user2.address)).to.eq(stake2.mul(2).add(PREMIUN_PER_MINER.mul(3))) // one miner added
+        user2StakeStatus.miners = 3
+        await updateUserStakeInfo(2, BigNumber.from(0))
+       
+        expect(await stakingRewards.myRewardStakes(user3.address)).to.eq(stake3.mul(2).add(PREMIUN_PER_MINER.mul(1)))
+
+        await ethers.provider.send("evm_increaseTime", [60*60*24*10]);
+        await mine(1)
+
+        await checkEarnedUser(1)
+        await checkEarnedUser(2)
+        await checkEarnedUser(3)
+
+        ////////////////////////////////
+        {
+          const miners = randomAddresses(10)
+          await arkreenMiner.connect(user1).UpdateMinerWhiteListBatch(miners) 
+          const minerValue = expandTo18Decimals(2000).mul(3)
+
+          const receiver = user3.address
+          const register_digest = getOnboardingRemoteMinerBatchDigest(
+                          'Arkreen Miner',
+                          arkreenMiner.address,
+                          { owner: user3.address, quantity: BigNumber.from(3),
+                            token: arkreenToken.address, price: minerValue, deadline: constants.MaxUint256 }
+                        )
+          await arkreenMiner.setManager(Register_Authority, user2.address)
+          const {v,r,s} = ecsign( Buffer.from(register_digest.slice(2), 'hex'), 
+                                                Buffer.from(privateKeyRegister.slice(2), 'hex'))           
+          const signature: SignatureStruct = { v, r, s, token: arkreenToken.address, value:minerValue, deadline: constants.MaxUint256 } 
+    
+          await arkreenMiner.connect(user3).RemoteMinerOnboardApprovedBatch(receiver, 3, signature)
+
+          expect(await stakingRewards.myRewardStakes(user1.address)).to.eq(stake1.mul(2).add(PREMIUN_PER_MINER.mul(3)))
+          expect(await stakingRewards.myRewardStakes(user2.address)).to.eq(stake2.mul(2).add(PREMIUN_PER_MINER.mul(3)))
+          expect(await stakingRewards.myRewardStakes(user3.address)).to.eq(stake3.mul(2).add(PREMIUN_PER_MINER.mul(4)))   // 3 miners added
+          user3StakeStatus.miners = 4
+          await updateUserStakeInfo(3, BigNumber.from(0))
+
+          await ethers.provider.send("evm_increaseTime", [60*60*24*10]);
+          await mine(1)
+
+          await checkEarnedUser(1)
+          await checkEarnedUser(2)
+          await checkEarnedUser(3)
+         }
       });
 
       it("StakingRewards before stake deposit", async function () {

@@ -67,4 +67,5 @@ abstract contract ArkreenMinerStorage
     address public arkreenMinerPro;                       // Extension of arkreenMiner
     mapping(address => uint256) public listenUsers;       // Listen App ids that need to be called back for the user
     mapping(uint256 => address) public listenApps;        // Listen Apps mapping from appid to address
+    mapping(address => uint256) public listenAppIds;      // Listen App Ids mapping from address to appid
 }
