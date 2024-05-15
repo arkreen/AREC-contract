@@ -65,5 +65,6 @@ abstract contract ArkreenMinerStorage
     bool    public bTransferAllowed;                      // Allow miner transfer
     
     address public arkreenMinerPro;                       // Extension of arkreenMiner
-    mapping(address => uint256) public subscriptions;     // protect againt replay 
+    mapping(address => uint256) public listenUsers;       // Listen App ids that need to be called back for the user
+    mapping(uint256 => address) public listenApps;        // Listen Apps mapping from appid to address
 }

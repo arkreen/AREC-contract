@@ -8,8 +8,9 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "../interfaces/IArkreenMiner.sol";
+import "../interfaces/IArkreenMinerListener.sol";
 
-contract StakingRewards is ReentrancyGuard, Ownable {
+contract StakingRewards is ReentrancyGuard, Ownable, IArkreenMinerListener {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -103,23 +104,23 @@ contract StakingRewards is ReentrancyGuard, Ownable {
         myStakes[msg.sender] = myStakes[msg.sender].add(amount);
         stakingToken.safeTransferFrom(msg.sender, address(this), amount);
 
-        _updateRewardStake();
+        _updateRewardStake(msg.sender);
         emit Staked(msg.sender, amount);
     }
 
-    function _updateRewardStake() internal {
-        uint256 totalMiners = arkreenMiner.balanceOf(msg.sender);
+    function _updateRewardStake(address staker) internal {
+        uint256 totalMiners = arkreenMiner.balanceOf(staker);
         uint256 premium = totalMiners * capMinerPremium;
-        uint256 othersTotalRewardStakes = totalRewardStakes - myRewardStakes[msg.sender];
+        uint256 othersTotalRewardStakes = totalRewardStakes - myRewardStakes[staker];
 
         uint256 rewardStakes;
-        if (myStakes[msg.sender] <= premium) {
-            rewardStakes = myStakes[msg.sender] * ratePremium / 100 ;                     // All stakes are premium stake
+        if (myStakes[staker] <= premium) {
+            rewardStakes = myStakes[staker] * ratePremium / 100 ;                     // All stakes are premium stake
         } else {
-            rewardStakes = myStakes[msg.sender] +  premium * (ratePremium - 100) / 100;   // Cap is premium 
+            rewardStakes = myStakes[staker] +  premium * (ratePremium - 100) / 100;   // Cap is premium 
         }
                 
-        myRewardStakes[msg.sender] = rewardStakes;
+        myRewardStakes[staker] = rewardStakes;
         totalRewardStakes = othersTotalRewardStakes + rewardStakes;
     }
 
@@ -129,7 +130,7 @@ contract StakingRewards is ReentrancyGuard, Ownable {
         myStakes[msg.sender] = myStakes[msg.sender].sub(amount);
         stakingToken.safeTransfer(msg.sender, amount);
 
-        _updateRewardStake();
+        _updateRewardStake(msg.sender);
         emit Withdrawn(msg.sender, amount);
     }
 
@@ -145,6 +146,11 @@ contract StakingRewards is ReentrancyGuard, Ownable {
     function exitStaking() external {
         unstake(myStakes[msg.sender]);
         collectReward();
+    }
+
+    function minerOnboarded(address owner, uint256) external {
+        require( msg.sender == address(arkreenMiner), "Caller Not Allowed");
+        _updateRewardStake(owner);
     }
 
     function depolyRewards(uint256 start, uint256 end, uint256 rewardTotal) external onlyRewardsDistributor updateReward(address(0)) {

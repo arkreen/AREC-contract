@@ -13,11 +13,11 @@ contract PlantStaking is OwnableUpgradeable, ReentrancyGuardUpgradeable, UUPSUpg
     address public rewarder;
     address public manager;
 
-    // keccak256("stake(address staker,uint256 amount,uint256 nonce,uint256 deadline)");
-    bytes32 public constant STAKE_TYPEHASH = 0x1373FE6EB1B91DF1E25D62EF7B059F58B23CFC3A653EFD61E2F2D5D9EA33EEDB;  
+    // keccak256("stake(uint256 txid,address staker,uint256 amount,uint256 nonce,uint256 deadline)");
+    bytes32 public constant STAKE_TYPEHASH = 0xDDA065932D4EDAF754673D5859CC6AFE7FC13DB02D25AB9A58D00DC4E0ACFB90;  
 
-    // keccak256("unstake(address staker,uint256 amount,uint256 reward,uint256 nonce,uint256 deadline)");
-    bytes32 public constant UNSTAKE_TYPEHASH = 0x2174EF2DF701BB3EAA5CDE6DCDC70511CB9F1C387439FE1B7ACF2D7A943FEFC1;  
+    // keccak256("unstake(uint256 txid,address staker,uint256 amount,uint256 reward,uint256 nonce,uint256 deadline)");
+    bytes32 public constant UNSTAKE_TYPEHASH = 0xDB029AD78BC2188138101282FE45AC09339B486D22BF671961241681C21AF58E;  
 
     struct StakeInfo {
         uint64  nonce;
@@ -41,8 +41,8 @@ contract PlantStaking is OwnableUpgradeable, ReentrancyGuardUpgradeable, UUPSUpg
         _;
     }
 
-    event Stake(address indexed staker, uint256 amount);
-    event Unstake(address indexed staker, uint256 amount, uint256 reward);
+    event Stake(uint256 indexed txid, address indexed staker, uint256 amount);
+    event Unstake(uint256 indexed txid, address indexed staker, uint256 amount, uint256 reward);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -84,11 +84,11 @@ contract PlantStaking is OwnableUpgradeable, ReentrancyGuardUpgradeable, UUPSUpg
         if (newRewarder != address(0)) rewarder = newRewarder;
     }
 
-    function stake(uint256 amount, uint256 nonce, uint256 deadline, Sig calldata signature) external nonReentrant ensure(deadline) {
+    function stake(uint256 txid, uint256 amount, uint256 nonce, uint256 deadline, Sig calldata signature) external nonReentrant ensure(deadline) {
         require (amount > 0, "Zero Stake"); 
         require (nonce == stakeInfo[msg.sender].nonce, "Nonce Not Match"); 
 
-        bytes32 stakeHash = keccak256(abi.encode(STAKE_TYPEHASH, msg.sender, amount, nonce, deadline));
+        bytes32 stakeHash = keccak256(abi.encode(STAKE_TYPEHASH, txid, msg.sender, amount, nonce, deadline));
         bytes32 digest = keccak256(abi.encodePacked('\x19\x01', _DOMAIN_SEPARATOR, stakeHash));
         address managerAddress = ECDSAUpgradeable.recover(digest, signature.v, signature.r, signature.s);
 
@@ -100,15 +100,15 @@ contract PlantStaking is OwnableUpgradeable, ReentrancyGuardUpgradeable, UUPSUpg
 
         require(IERC20Upgradeable(stakingToken).transferFrom(msg.sender, address(this), amount));
 
-        emit Stake(msg.sender, amount);
+        emit Stake(txid, msg.sender, amount);
     }
 
-    function unstakeWithReward(uint256 amount, uint256 reward, uint256 nonce, uint256 deadline, Sig calldata signature) external nonReentrant ensure(deadline){
+    function unstakeWithReward(uint256 txid, uint256 amount, uint256 reward, uint256 nonce, uint256 deadline, Sig calldata signature) external nonReentrant ensure(deadline){
         require ((amount + reward) > 0, "Zero Stake");                                 // Zero amount is allowed to just withdraw rewards
         require (nonce == stakeInfo[msg.sender].nonce, "Nonce Not Match"); 
         require(stakeInfo[msg.sender].amountStake >= uint96(amount), "Unstake Overflowed");
 
-        bytes32 unstakeHash = keccak256(abi.encode(UNSTAKE_TYPEHASH, msg.sender, amount, reward, nonce, deadline));
+        bytes32 unstakeHash = keccak256(abi.encode(UNSTAKE_TYPEHASH, txid, msg.sender, amount, reward, nonce, deadline));
         bytes32 digest = keccak256(abi.encodePacked('\x19\x01', _DOMAIN_SEPARATOR, unstakeHash));
         address managerAddress = ECDSAUpgradeable.recover(digest, signature.v, signature.r, signature.s);
 
@@ -123,6 +123,6 @@ contract PlantStaking is OwnableUpgradeable, ReentrancyGuardUpgradeable, UUPSUpg
 
         require(IERC20Upgradeable(stakingToken).transferFrom(rewarder, address(this), reward));
         require(IERC20Upgradeable(stakingToken).transfer(msg.sender, amount + reward));
-        emit Unstake(msg.sender, amount, reward);
+        emit Unstake(txid, msg.sender, amount, reward);
     }
 }
