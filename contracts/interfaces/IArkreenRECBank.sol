@@ -18,13 +18,13 @@ interface IArkreenRECBank {
         uint256             amountPay,
         uint256             amountART,
         bool                isExactPay
-    ) external;
+    ) external returns (uint256);
 
     function buyARTNative(
         address             tokenART,
         uint256             amountART,
         bool                isExactPay
-    ) external payable; 
+    ) external payable returns (uint256); 
 
 
     function buyARTWithPermit(
@@ -32,7 +32,7 @@ interface IArkreenRECBank {
         uint256             amountART,
         bool                isExactPay,
         Signature calldata  permitToPay
-    ) external;
+    ) external returns (uint256);
 
     function saleIncome(
         address             tokenART,

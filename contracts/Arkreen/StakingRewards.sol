@@ -18,7 +18,7 @@ contract StakingRewards is IArkreenMinerListener, ReentrancyGuardUpgradeable, Ow
     using SafeMathUpgradeable for uint256;
     using SafeERC20Upgradeable for ERC20Upgradeable;
 
-    uint256 public constant MAX_SUPPLY_STAKES = 1e28;                 // AKRE max supply: 10 Billion, decide calculation accuracy
+    uint256 public constant MAX_SUPPLY_STAKES = 1e36;                 // Decide calculation accuracy
 
     ERC20Upgradeable public stakingToken;
     ERC20Upgradeable public rewardsToken;

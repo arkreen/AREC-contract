@@ -257,7 +257,38 @@ describe("StakingRewards test", ()=> {
    
       })
 
+      function APR() {
+        //const times = expandTo18Decimals(1).mul(expandTo9Decimals(10))
+        const times = expandTo18Decimals(1).mul(expandTo18Decimals(1))  
+
+        
+        const ARTAmout = expandTo9Decimals(20000)
+        const duration = BigNumber.from(3600 *24 *60)
+        const allStakeAmount = expandTo18Decimals(6000 * 10000)
+        const myStakeAmount = expandTo18Decimals(10000)
+        const priceAKRE = BigNumber.from(5000)
+        const priceART = BigNumber.from(10 * 1000 * 1000)
+
+        const valueAKRE = myStakeAmount.mul(priceAKRE).div(expandTo18Decimals(1))
+
+        const rewardPerStake = ARTAmout.mul(times).div(duration).div(allStakeAmount)
+
+        const rewardOneYear = rewardPerStake.mul(3600 *24 * 360).mul(myStakeAmount)
+        const valueRewardOneYear = rewardOneYear.mul(priceART)
+
+        const APR = valueRewardOneYear.div(valueAKRE).div(times)
+
+        const APRA = rewardPerStake.mul(3600 *24 * 360).mul(priceART).div(priceAKRE).div(expandTo18Decimals(100000))
+
+        console.log("AAAAAAAAAAAAA", rewardPerStake.toString(), valueAKRE.toString(),
+                    rewardOneYear.div(times).toString(), 
+                    APR.toString(), APRA.toString()) 
+
+      }
+  
       it("StakingRewards basics", async function () {
+
+        APR()
    
         const lastBlock = await ethers.provider.getBlock('latest')
 
@@ -266,6 +297,8 @@ describe("StakingRewards test", ()=> {
 
         amountReward = expandTo9Decimals(20000)                      // 9408471
         rewardRate = amountReward.mul(expandTo18Decimals(1)).mul(expandTo18Decimals(1)).div(endTime-startTime)
+
+        console.log('QQQQQQQQQQQQ', rewardRate.toString())
 
         const stake1 = expandTo18Decimals(100000)
         const stake2 = expandTo18Decimals(400000)

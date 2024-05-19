@@ -9,9 +9,6 @@ import "./interfaces/IERC20.sol";
 import "./interfaces/IERC20Permit.sol";
 import "./interfaces/IWETH.sol";
 
-// Import this file to use console.log
-import "hardhat/console.sol";
-
 struct IncomeInfo {
     uint128     priceForSale;           // 1 ART -> X Payment token
     uint128     amountReceived;         // Amount of payment token received
@@ -76,8 +73,8 @@ contract ArkreenRECBank is
         uint256             amountPay,
         uint256             amountART,
         bool                isExactPay
-    ) external {
-        _buyART (msg.sender, _msgSender(), tokenPay, tokenART, amountPay, amountART, isExactPay);
+    ) external returns (uint256) {
+        return _buyART (msg.sender, _msgSender(), tokenPay, tokenART, amountPay, amountART, isExactPay);
     }
 
     /** 
@@ -94,7 +91,7 @@ contract ArkreenRECBank is
         address             tokenART,
         uint256             amountART,
         bool                isExactPay
-    ) external payable {
+    ) external payable returns (uint256) {
 
         uint256 priceSale = saleIncome[tokenART][tokenNative].priceForSale;
         require (priceSale !=0, "ARBK: Payment token not allowed");
@@ -111,6 +108,7 @@ contract ArkreenRECBank is
             artSaleInfo[tokenART].amountSold += uint128(amountARTReal);
 
             emit ARTSold(tokenART, tokenNative, amountARTReal, amountPay);
+            return amountARTReal;
         } else {
             uint256 amountPayReal = (amountART * priceSale + (10**9) -1) / (10**9);       // ART decimal is always 9, so hardcoded here
             require (amountPay >= amountPayReal, "ARBK: Pay Less");                       // amountPay plays as the maximum to pay
@@ -123,6 +121,7 @@ contract ArkreenRECBank is
             if(amountPay > amountPayReal) TransferHelper.safeTransferETH(msg.sender, amountPay - amountPayReal);
 
             emit ARTSold(tokenART, tokenNative, amountART, amountPayReal);
+            return amountART;
         }
     }
 
@@ -131,14 +130,14 @@ contract ArkreenRECBank is
         uint256             amountART,
         bool                isExactPay,
         Signature calldata  permitToPay
-    ) external  {                       // Deadline will be checked by router, no need to check here.
+    ) external returns (uint256) {                       // Deadline will be checked by router, no need to check here.
         // Permit payment token
         address payer = _msgSender();
         IERC20Permit(permitToPay.token).permit(payer, address(this), 
                         permitToPay.value, permitToPay.deadline, permitToPay.v, permitToPay.r, permitToPay.s);
 
         // Transfer payement 
-        _buyART(payer, payer, permitToPay.token, tokenART, permitToPay.value, amountART, isExactPay);
+        return _buyART(payer, payer, permitToPay.token, tokenART, permitToPay.value, amountART, isExactPay);
     }
 
     function _buyART(
@@ -149,7 +148,7 @@ contract ArkreenRECBank is
         uint256             amountPay,
         uint256             amountART,
         bool                isExactPay
-    ) internal {
+    ) internal returns (uint256) {
 
         // priceSale: 1 ART = priceSale (Payment Tokens), for example:
         // 1 ART = 5 USDC, priceSale = 5 000 000
@@ -168,6 +167,7 @@ contract ArkreenRECBank is
             artSaleInfo[tokenART].amountSold += uint128(amountARTReal);
 
             emit ARTSold(tokenART, tokenPay, amountARTReal, amountPay);
+            return amountARTReal;
         } else {
             // The minimum payment is 1 (Payment Token) to avoid attack buying very small amount of ART tokens
             uint256 amountPayReal = (amountART * priceSale + (10**9) -1 ) / (10**9);    // ART decimal is always 9, so hardcoded here 
@@ -181,6 +181,7 @@ contract ArkreenRECBank is
             artSaleInfo[tokenART].amountSold += uint128(amountART);
 
             emit ARTSold(tokenART, tokenPay, amountART, amountPayReal);
+            return amountART;
         }
     }
 
