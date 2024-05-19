@@ -2,15 +2,12 @@
 pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 import "../libraries/TransferHelper.sol";
-import "../interfaces/IArkreenBadge.sol";
-import "../interfaces/IPausable.sol";
 import "../interfaces/IArkreenRECBank.sol";
 import "../interfaces/IArkreenBuilder.sol";
 import "../interfaces/IArkreenRECToken.sol";
@@ -125,7 +122,7 @@ contract KWhToken is
         return amountKWh;
     }
 
-    /// @dev Receive hook to liquidize Arkreen RE Certificate into RE ERC20 Token
+    /// @dev Receive climate badge
     function onERC721Received(
         address,        /* operator */
         address,        /* from */
