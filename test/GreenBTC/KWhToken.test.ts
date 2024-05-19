@@ -17,27 +17,15 @@ import {
     KWhToken,
     WETH9,
     ERC20F,
-    GreenBTCImage
 } from "../../typechain";
 
 import { time, loadFixture, mine } from "@nomicfoundation/hardhat-network-helpers";
 import { getApprovalDigest, expandTo18Decimals, randomAddresses, getGreenBitcoinDigest, expandTo9Decimals } from "../utils/utilities";
-import { getGreenBitcoinDigestBatch, GreenBTCInfo } from "../utils/utilities";
 
 import { ecsign, fromRpcSig, ecrecover } from 'ethereumjs-util'
 import { RECRequestStruct, SignatureStruct, RECDataStruct } from "../../typechain/contracts/ArkreenRECIssuance";
 
-// import { mineBlock } from "../utils/utilities";
-// import { Web3Provider } from "@ethersproject/providers";
-
 const constants_MaxDealine = BigNumber.from('0xFFFFFFFF')
-const constants_MaxDealine_with_Subsidy = BigNumber.from('0xFFFFFFFF').add(BigNumber.from(40).shl(48))
-
-const constants_MaxDealineAndOpen = constants_MaxDealine.or(BigNumber.from(1).shl(63))
-const constants_MaxDealineAndOpen_with_Subsidy = constants_MaxDealine.or(BigNumber.from(1).shl(63)).add(BigNumber.from(40).shl(48))
-
-const constants_MaxDealineAndOpenSkip = constants_MaxDealine.or(BigNumber.from(3).shl(62))
-
 
 describe("KWhToken Test Campaign", () => {
     let deployer: SignerWithAddress;
@@ -290,6 +278,9 @@ describe("KWhToken Test Campaign", () => {
                   .to.emit(kWhToken, 'Transfer')
                   .withArgs(0, kWhToken.address, expandTo9Decimals(5000))   
 
+        // Check totalSupply
+        expect(await kWhToken.totalSupply()).to.eq(expandTo9Decimals(5000))
+
         // Check amount of kWh token                  
         expect(await kWhToken.balanceOf(kWhToken.address)).to.eq(balancekWhTokenBefore.add(expandTo9Decimals(5000)))
 
@@ -367,7 +358,91 @@ describe("KWhToken Test Campaign", () => {
                   .withArgs(tokenA.address, expandTo18Decimals(600000), expandTo9Decimals(3800))   
                   .to.emit(kWhToken, 'Transfer')
                   .withArgs(0, kWhToken.address, expandTo9Decimals(3800))   
+      });
+      
+      it("KWhToken Test: convertKWh with ART", async () => {
+        await arkreenRECBank.addNewART( arkreenRECToken.address,  maker1.address)
+        await arkreenRECBank.connect(maker1).depositART( arkreenRECToken.address,  expandTo9Decimals(9000))
+        await arkreenRECToken.setClimateBuilder(arkreenBuilder.address)
+
+        const badgeInfo =  {
+          beneficiary:    owner1.address,
+          offsetEntityID: 'Owner1',
+          beneficiaryID:  'Tester',
+          offsetMessage:  "Just Testing"
+        }    
+
+        await kWhToken.setBadgeInfo(badgeInfo)
+
+        // MintKWh with ART
+        await arkreenRECToken.connect(owner1).transfer(kWhToken.address, expandTo9Decimals(5000))
+
+        // Normal MintKWh                         
+        expect(await kWhToken.MintKWh( arkreenRECToken.address, expandTo9Decimals(5000)))
+                  .to.emit(kWhToken, 'KWhMinted')
+                  .withArgs(arkreenRECToken.address, expandTo9Decimals(5000), expandTo9Decimals(5000))   
+                  .to.emit(kWhToken, 'Transfer')
+                  .withArgs(0, kWhToken.address, expandTo9Decimals(5000))   
+
+        await arkreenRECToken.connect(owner1).transfer(owner2.address, expandTo9Decimals(3000))
+        await arkreenRECToken.connect(owner2).approve(kWhToken.address, expandTo9Decimals(3000))
+
+        // Test changeSwapPrice
+        await expect(kWhToken.connect(owner1).changeSwapPrice(arkreenRECToken.address, expandTo9Decimals(1)))
+                        .to.be.revertedWith("kWh: Not Allowed")
+
+        await expect(kWhToken.connect(owner2).convertKWh(arkreenRECToken.address, expandTo9Decimals(3000)))                        
+                        .to.be.revertedWith("kWh: Payment Token Not Supported")
+
+        await kWhToken.changeSwapPrice(arkreenRECToken.address, expandTo9Decimals(1))
+        await kWhToken.connect(manager).changeSwapPrice(arkreenRECToken.address, expandTo9Decimals(1))
+
+        // Normal convertKWh
+        expect(await kWhToken.connect(owner2).convertKWh(arkreenRECToken.address, expandTo9Decimals(3000)))
+                  .to.emit(arkreenRECToken, 'Transfer')
+                  .withArgs(owner2.address, kWhToken.address, expandTo9Decimals(3000))   
+                  .to.emit(kWhToken, 'Transfer')
+                  .withArgs(kWhToken.address, owner2.address, expandTo9Decimals(3000))   
+                  .to.emit(kWhToken, 'ARTConverted')
+                  .withArgs(owner2.address, arkreenRECToken.address,  expandTo9Decimals(3000), expandTo9Decimals(3000))   
+
       }); 
 
+      it("KWhToken Test: convertKWh with Token", async () => {
+        await arkreenRECBank.addNewART( arkreenRECToken.address,  maker1.address)
+        await arkreenRECBank.connect(maker1).depositART( arkreenRECToken.address,  expandTo9Decimals(9000))
+        await arkreenRECToken.setClimateBuilder(arkreenBuilder.address)
+
+        const badgeInfo =  {
+          beneficiary:    owner1.address,
+          offsetEntityID: 'Owner1',
+          beneficiaryID:  'Tester',
+          offsetMessage:  "Just Testing"
+        }    
+
+        await kWhToken.setBadgeInfo(badgeInfo)
+
+        // MintKWh with ART
+        await arkreenRECToken.connect(owner1).transfer(kWhToken.address, expandTo9Decimals(5000))
+
+        // Normal MintKWh                         
+        await kWhToken.MintKWh( arkreenRECToken.address, expandTo9Decimals(5000))
+
+        // Normal convertKWh with token
+        await tokenA.transfer(maker1.address, expandTo18Decimals(300000))
+        await tokenA.connect(maker1).approve(kWhToken.address, expandTo18Decimals(300000))
+
+        await kWhToken.changeSwapPrice(tokenA.address, expandTo18Decimals(150).div(1000))   // 1kWh = 0.15 TokenA
+
+        // Normal convertKWh
+        expect(await kWhToken.connect(maker1).convertKWh(tokenA.address, expandTo18Decimals(300000)))
+                  .to.emit(tokenA, 'Transfer')
+                  .withArgs(maker1.address, kWhToken.address, expandTo18Decimals(300000))   
+                  .to.emit(kWhToken, 'Transfer')
+                  .withArgs(kWhToken.address, maker1.address, expandTo9Decimals(2000))   
+                  .to.emit(kWhToken, 'ARTConverted')
+                  .withArgs(maker1.address, tokenA.address,  expandTo18Decimals(300000), expandTo9Decimals(2000))   
+
+      }); 
     })  
 });

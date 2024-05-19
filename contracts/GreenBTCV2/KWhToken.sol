@@ -6,6 +6,7 @@ import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 import "../libraries/TransferHelper.sol";
 import "../interfaces/IArkreenBadge.sol";
@@ -15,19 +16,13 @@ import "../interfaces/IArkreenBuilder.sol";
 import "../interfaces/IArkreenRECToken.sol";
 
 contract KWhToken is
+    ReentrancyGuardUpgradeable,
     OwnableUpgradeable,
     UUPSUpgradeable,
     ERC20Upgradeable
 {
-    struct SwapInfo {
-        uint64      priceForSwap;           // 1 ART -> X Payment token
-        uint96      amountReceived;         // Amount of payment token received
-        uint96      amountKWhSwapped;     	// Amount of kWh converted
-        uint96      amountPaidOffset;       // Amount paid to buy&Offset ART, or ART being offset
-    }
-
     // Public constant variables
-    string public constant NAME = "REC kWh";
+    string public constant NAME = "AREC kWh";
     string public constant SYMBOL = "kWh";
 
     address public tokenART;
@@ -35,7 +30,7 @@ contract KWhToken is
     address public arkreenBuilder;
     address public offsetManager;
 
-    mapping(address => SwapInfo) public swapInfo;               // Mapping ART/USDC/USDT -> ConverterInfo
+    mapping(address => uint256) public priceForSwap;               // Mapping ART/USDC/USDT -> ConverterInfo
 
     IArkreenBuilder.BadgeInfo public badgeInfo;									// Badge info used for AREC Climate badge
 
@@ -50,6 +45,7 @@ contract KWhToken is
     }
 
     function initialize(address art, address bank, address builder, address manager) external virtual initializer {
+        __ReentrancyGuard_init();   
         __Ownable_init_unchained();
         __UUPSUpgradeable_init();        
         __ERC20_init_unchained(NAME, SYMBOL);
@@ -112,21 +108,18 @@ contract KWhToken is
 
     /**
      * @dev Convert ART/USDC/UDSDT tokens to kWh tokens
+     * @param tokenToPay Address of the payment token used to pay for swapping ART
+     * @param amountPayment amount of the tokeen to swap out
      */
     function convertKWh(address tokenToPay, uint256 amountPayment) public returns (uint256) {
-
-        uint256 price = swapInfo[tokenToPay].priceForSwap;
+        uint256 price = priceForSwap[tokenToPay];
         require (price != 0, "kWh: Payment Token Not Supported");
 
         uint256 amountKWh = amountPayment;
-        if (tokenToPay != tokenART) {
-            amountKWh = amountPayment * price / (10**6);              // USDT/USDC decimal is 6, so hardcoded here
-        }
+        if (tokenToPay != tokenART) amountKWh = amountPayment * (10**6) / price;      // kWh decimal is 6, so hardcoded here
 
         require(IERC20Upgradeable(tokenToPay).transferFrom(msg.sender, address(this), amountPayment));
         require(IERC20Upgradeable(this).transfer(msg.sender, amountKWh));
-        swapInfo[tokenToPay].amountReceived += uint96(amountPayment);
-        swapInfo[tokenToPay].amountKWhSwapped += uint96(amountKWh);
 
         emit ARTConverted(msg.sender, tokenToPay, amountPayment, amountKWh);
         return amountKWh;
@@ -134,22 +127,23 @@ contract KWhToken is
 
     /// @dev Receive hook to liquidize Arkreen RE Certificate into RE ERC20 Token
     function onERC721Received(
-        address, /* operator */
-        address, /* from */
-        uint256, /* tokenId*/
-        bytes calldata /* data */
+        address,        /* operator */
+        address,        /* from */
+        uint256,        /* tokenId*/
+        bytes calldata  /* data */
     ) external pure returns (bytes4) {
         return this.onERC721Received.selector;
     }
-
 
     /**
      * @dev Change the ART swap price based on the payToken. Price-zero means not-supporting
      * @param payToken Address of the payment token used to pay for swapping ART. 
      * @param newPrice Price of the ART token priced in payment token. 
+     *        1 kWh -> 0.001ART, newPrice = 10**6 
+     *        1 kWh -> 0.01 USDC, newPrice = 10**4
     */
     function changeSwapPrice(address payToken, uint256 newPrice ) external onlyOwnerOrManager {
-        swapInfo[payToken].priceForSwap = uint64(newPrice);            // price = 0 to disable the payToken
+        priceForSwap[payToken] = newPrice;                  // price = 0 to disable the payToken
         emit SwapPriceChanged(payToken, newPrice);    
     }  
 
