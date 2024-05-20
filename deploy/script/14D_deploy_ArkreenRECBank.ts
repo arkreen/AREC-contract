@@ -11,7 +11,6 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   console.log("Deploying: ", CONTRACTS.ArtBank, deployer);  
   const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(100_000_000_000)
 
-
   const arkreenRECBank = await deploy(CONTRACTS.ArtBank, {
       from: deployer,
       args: [],
@@ -38,6 +37,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/04/20: Deployed on Polygon Amoy testnet 
 // deploy:matic_test:ArtBankD 
 // 0xB182210EdF8dC4acbe1b92B304e2F1a6986FD093
+
+// 2024/05/20: Deployed on Polygon Amoy testnet, support return value while buying ART
+// deploy:matic_test:ArtBankD 
+// 0x16BCB4B078AcDF8b5fAEd988FEcC61FB0D84d352
+
 
 func.tags = ["ArtBankD"];
 

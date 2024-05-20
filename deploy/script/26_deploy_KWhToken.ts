@@ -1,0 +1,60 @@
+import { HardhatRuntimeEnvironment } from "hardhat/types";
+import { DeployFunction } from "hardhat-deploy/types";
+import { CONTRACTS } from "../constants";
+import { BigNumber } from "ethers";
+
+const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
+
+    const { deployments, getNamedAccounts } = hre;
+    const { deploy } = deployments;
+    const { deployer } = await getNamedAccounts();
+
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(160_000_000_000)
+
+    let tokenART
+    let artBank
+    let arkreenBuilder
+    let offsetManager
+    
+    // function initialize(address art, address bank, address builder, address manager)
+    if(hre.network.name === 'matic_test')  {
+      // 2024/05/16: AKRE on Amoy testnet                        
+      tokenART = "0x615835Cc22064a17df5A3E8AE22F58e67bCcB778"
+      artBank = "0xf9aAcFf1B292F82b60662e47610C570ef58d3c70"
+      arkreenBuilder = "0x12De6c1FB46B64e3DA5bFDD274E98B9103353dF7"
+      offsetManager = "0x364a71ee7a1c9eb295a4f4850971a1861e9d3c7d"
+    } else if(hre.network.name === 'matic')  {
+      tokenART = ""
+      artBank = ""
+      arkreenBuilder = ""
+      offsetManager = ""
+    } 
+
+    console.log("Deploying: ", "KWhToken", deployer);  
+    const claimToken = await deploy("KWhToken", {
+        from: deployer,
+        proxy: {
+          proxyContract: "UUPSProxy",
+          execute: {
+            init: {
+              methodName: "initialize",     // Function to call when deployed first time.
+              args: [tokenART, artBank, arkreenBuilder, offsetManager]
+            },
+          },
+        },
+        log: true,
+        skipIfAlreadyDeployed: false,
+        gasPrice: defaultGasPrice
+    });
+
+    console.log("USDT deployed to %s: ", hre.network.name, claimToken.address);
+};
+
+// 2024/05/20
+// yarn deploy:matic_test:WKH    : Amoy testnet (Dev Anv)
+// Proxy:                 0x3B109eA4298870D8dEF8b512444A58Dac909b23f
+// Implementaion:         0xa299B0E5E55988b07DEa7eCCfB23BFdd14B1B2b0
+
+func.tags = ["WKH"];
+
+export default func;

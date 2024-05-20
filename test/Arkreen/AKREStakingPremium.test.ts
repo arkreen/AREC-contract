@@ -445,7 +445,11 @@ describe("StakingRewards test", ()=> {
         await mine(1)
         const stake1A  = await stakingRewards.myStakes(user1.address)
         const totalStakes1A  = await stakingRewards.totalStakes()
+
+        await expect(stakingRewards.connect(user1).unstake(stake1A.add(1))).to.be.reverted
+
         await userUnstake(1, stake1)
+        
         const stake1B  = await stakingRewards.myStakes(user1.address)
         const totalStakes1B  = await stakingRewards.totalStakes()
         expect(stake1B).to.eq(stake1A.sub(stake1))
