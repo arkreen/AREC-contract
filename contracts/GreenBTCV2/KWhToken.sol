@@ -81,7 +81,7 @@ contract KWhToken is
         }
     }
 
-    function MintKWh(address tokenToPay, uint256 amount) public onlyOwnerOrManager {
+    function MintKWh(address tokenToPay, uint256 amount) public nonReentrant onlyOwnerOrManager returns (uint256) {
 
         uint256 amountART = amount;
         if (tokenToPay != tokenART) {
@@ -100,15 +100,15 @@ contract KWhToken is
 
         emit KWhMinted(tokenToPay, amount, amountART);
         _mint(address(this), amountART);
+        return amountART;
     }
-
 
     /**
      * @dev Convert ART/USDC/UDSDT tokens to kWh tokens
      * @param tokenToPay Address of the payment token used to pay for swapping ART
      * @param amountPayment amount of the tokeen to swap out
      */
-    function convertKWh(address tokenToPay, uint256 amountPayment) public returns (uint256) {
+    function convertKWh(address tokenToPay, uint256 amountPayment) public nonReentrant returns (uint256) {
         uint256 price = priceForSwap[tokenToPay];
         require (price != 0, "kWh: Payment Token Not Supported");
 
