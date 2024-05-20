@@ -66,8 +66,12 @@ contract KWhToken is
     }
 
     modifier onlyOwnerOrManager(){
-        require ((msg.sender == offsetManager) || (msg.sender == owner()), "kWh: Not Allowed");
+        require ((msg.sender == owner()) || ((offsetManager != address(0)) && (msg.sender == offsetManager)), "kWh: Not Allowed");
         _;
+    }
+
+    function setOffsetManager(address manager) public onlyOwner {
+        offsetManager = manager;                      // set offsetManager to 0 to disable the offsetManager
     }
 
     /**
