@@ -156,7 +156,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2024/05/11: yarn deploy:matic_test:AMinerV10D 
 // Deployed on Polygon Amoy testnet to add Remove white list
-// 
+// 0x0463729b34a867b3fd155943e0aae9790cb7bfef
+
+// 2024/05/21: yarn deploy:matic_test:AMinerV10D 
+// Deployed on Polygon Amoy testnet to upgrade to support for staking
+// 0x3b4BAf0aE0D209c3F774d4f4592948450f80293b
 
 export default func;
 func.tags = ["AMinerV10D"];

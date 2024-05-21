@@ -13,6 +13,7 @@ import { ArkreenMiner__factory } from "../../typechain";
 import { ArkreenReward__factory } from "../../typechain";
 import { ArkreenToken__factory } from "../../typechain";
 import { ArkreenNotary__factory } from "../../typechain";
+import { PlantStaking__factory } from "../../typechain";
 
 import { BigNumber } from "ethers";
 
@@ -103,6 +104,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const WMATIC_ADDRESS    = "0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889"          // WMATIC address  
   */
 
+/*  
   // 2024/04/28, Amoy Pre-Env
   const IMPLEMENTATION_ADDRESS  = "0x723f5C282F1e0a131bA80b220C5895f9066f7642"    // 2024/04/28
 
@@ -116,6 +118,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   // 2024/04/28:  
   const callData = ArkreenMiner__factory.createInterface().encodeFunctionData("initialize",     // Create new ArkreenIssuance
                       [AKREToken_ADDRESS, WMATIC_ADDRESS, MANAGER_ADDRESS, REGISTER_ADDRESS])   // 2023/05/10 // 2023/06/08 // 2024/04/28
+*/
 
 /*
   // Proxy of ArkreenRegistry for pre-production
@@ -234,6 +237,17 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const callData = ArkreenNotary__factory.createInterface().encodeFunctionData("initialize", [notaryManager])     // Create  ArkreenNotary
 */
 
+
+  // 2024/05/20: Polygon Amoy PlantStaking
+  const IMPLEMENTATION_ADDRESS  = "0xf8bd14e5af9177ffdb9fe903a76b684986d7fb45"    // 2024/05/20: PlantStaking Implementation 
+
+  // 2024/04/28A, 2024/04/28B 
+  const tokenAKRE = "0xd092e1f47d4e5d1C1A3958D7010005e8e9B48206"
+  const rewarder = "0x0Bb830D12cC081F211479FFfc6B94239Df708971"
+  const manager = "0x167d655B9F3fB17d08C5aE05860e6262bBb98e9b"
+
+  const callData = PlantStaking__factory.createInterface().encodeFunctionData("initialize", [tokenAKRE, rewarder, manager])     // Create  ArkreenNotary
+  
   const UUPSProxyContract = await deploy(CONTRACTS.UUPSProxy, {
       from: deployer,
       args: [IMPLEMENTATION_ADDRESS, deployer, callData],
@@ -298,7 +312,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:UUPSProxy
 // Proxy:   0xf282966Af366c349DBb41C54670c536EFA534691
 
-// 2023/06/08:  yarn deploy:matic_test:UUPSProxy:   ArkreenMiner for Amoy Pre-Env
+// 2024/05/20:  yarn deploy:matic_test:UUPSProxy:   PlantStaking for Amoy Dev env
 // Proxy:   
 
 export default func;
