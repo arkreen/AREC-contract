@@ -109,10 +109,12 @@
     "deploy:matic_test:ClaimToken": "hardhat --network matic_test deploy --tags ClaimToken",
     "deploy:matic_test:PlantStaking": "hardhat --network matic_test deploy --tags PlantStaking",
     "deploy:matic_test:StakingRewards": "hardhat --network matic_test deploy --tags StakingRewards",
+    "deploy:matic_test:StakingRewardsD": "hardhat --network matic_test deploy --tags StakingRewardsD",
     "deploy:matic_test:WKH": "hardhat --network matic_test deploy --tags WKH",
     "deploy:matic_test:WKHI": "hardhat --network matic_test deploy --tags WKHI",
     "deploy:matic_test:AMinerProD": "hardhat --network matic_test deploy --tags AMinerProD",
     "deploy:matic_test:StakingRewardsI": "hardhat --network matic_test deploy --tags StakingRewardsI",
+    "deploy:matic_test:StakingRewardsU": "hardhat --network matic_test deploy --tags StakingRewardsU",
 
     "deploy:matic:gAKRE": "hardhat --network matic deploy --tags gAKRE",
     "deploy:matic:arkReward": "hardhat --network matic deploy --tags arkReward",

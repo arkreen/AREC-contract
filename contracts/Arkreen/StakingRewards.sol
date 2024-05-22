@@ -42,10 +42,12 @@ contract StakingRewards is IArkreenMinerListener, ReentrancyGuardUpgradeable, Ow
     mapping(address => uint256) public myStakes;
     mapping(address => uint256) public myRewardStakes;
 
-    event RewardAdded(uint256 reward);
+    event RewardAdded(uint256 startTime, uint256 endTime, uint256 reward);
     event Staked(address indexed user, uint256 amount);
     event Withdrawn(address indexed user, uint256 amount);
     event RewardPaid(address indexed user, uint256 reward);
+
+
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -173,6 +175,42 @@ contract StakingRewards is IArkreenMinerListener, ReentrancyGuardUpgradeable, Ow
         _updateRewardStake(owner);
     }
 
+    function getBasicStakeStatus() external view 
+        returns ( uint256 startTime, 
+                  uint256 endTime, 
+                  uint256 allMiners,
+                  uint256 allStakes, 
+                  uint256 allNormalStakes,
+                  uint256 allBoostStakes, 
+                  uint256 capMinerBoost,
+                  uint256 rateBoost,
+                  uint256 rewardPerStake
+                ) {
+      startTime = periodStart;
+      endTime = periodEnd;
+      allMiners = (allStakes == 0) ? 0 : (totalRewardStakes - allStakes) * 100 / (capMinerPremium * (rewardRate - 100));
+      allStakes = totalStakes;
+      allBoostStakes = allMiners * capMinerPremium;
+      allNormalStakes = totalStakes - allBoostStakes;
+      capMinerBoost = capMinerPremium;
+      rateBoost = rewardRate;
+      rewardPerStake = rewardPerStakeLast;
+    }
+
+    function getUserStakeStatus(address owner) external view 
+        returns ( uint256 userMiners, 
+                  uint256 userStakes, 
+                  uint256 userNormalStakes, 
+                  uint256 userBoostStakes, 
+                  uint256 userRewards) {
+      userMiners = arkreenMiner.balanceOf(owner);
+      userStakes = myStakes[owner];
+      userBoostStakes = capMinerPremium * userMiners;
+      if(userStakes < userBoostStakes)  userBoostStakes = userStakes;
+      userNormalStakes = userStakes - userBoostStakes;
+      userRewards = earned(owner);
+    }
+
     function depolyRewards(uint256 start, uint256 end, uint256 rewardTotal) external onlyRewardsDistributor updateReward(address(0)) {
         // following reward round can only be started after the previous round completed
         require ((start > periodEnd) && (start > block.timestamp ) && (end > start), "Wrong period");
@@ -183,7 +221,7 @@ contract StakingRewards is IArkreenMinerListener, ReentrancyGuardUpgradeable, Ow
         rewardRate = rewardTotal.mul(MAX_SUPPLY_STAKES).div(end - start);                          // For accuracy
         lastUpdateTime = uint32(start);
 
-        emit RewardAdded(rewardTotal);
+        emit RewardAdded(start, end, rewardTotal);
     }
 
     // If staking reward period is started, but no one stake, the reward unpaid will be kept.
