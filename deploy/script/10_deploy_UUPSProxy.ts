@@ -14,6 +14,7 @@ import { ArkreenReward__factory } from "../../typechain";
 import { ArkreenToken__factory } from "../../typechain";
 import { ArkreenNotary__factory } from "../../typechain";
 import { PlantStaking__factory } from "../../typechain";
+import { StakingRewards__factory } from "../../typechain";
 
 import { BigNumber } from "ethers";
 
@@ -237,7 +238,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const callData = ArkreenNotary__factory.createInterface().encodeFunctionData("initialize", [notaryManager])     // Create  ArkreenNotary
 */
 
-
+/*
   // 2024/05/20: Polygon Amoy PlantStaking
   const IMPLEMENTATION_ADDRESS  = "0xf8bd14e5af9177ffdb9fe903a76b684986d7fb45"    // 2024/05/20: PlantStaking Implementation 
 
@@ -255,8 +256,28 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       skipIfAlreadyDeployed: false,
       gasPrice: defaultGasPrice
   });
+*/
+  // 2024/05/22: Polygon Amoy StakingRewards
+  const IMPLEMENTATION_ADDRESS  = "0xe07968E3b0D64B99EA3653Dd925a850eBb9a3Bb9"    // 2024/05/22: StakingRewards Implementation 
 
-  console.log("UUPSProxy deployed to %s: ", hre.network.name, UUPSProxyContract.address);
+  // 2024/05/22
+  const tokenAKRE = "0xd092e1f47d4e5d1C1A3958D7010005e8e9B48206"
+  const tokenART = "0x615835Cc22064a17df5A3E8AE22F58e67bCcB778"
+  const minerContract = "0xF390caaF4FF0d297e0b4C3c1527D707C75541736"
+  const rewardsDistributor = "0x576Ab950B8B3B18b7B53F7edd8A47986a44AE6F4"
+
+  const callData = StakingRewards__factory.createInterface().encodeFunctionData("initialize", [tokenAKRE, tokenART, minerContract, rewardsDistributor])     // Create  StakingRewards
+  
+  const UUPSProxyContract = await deploy(CONTRACTS.UUPSProxy, {
+      from: deployer,
+      args: [IMPLEMENTATION_ADDRESS, deployer, callData],
+      log: true,
+      skipIfAlreadyDeployed: false,
+      gasPrice: defaultGasPrice
+  });
+
+
+console.log("UUPSProxy deployed to %s: ", hre.network.name, UUPSProxyContract.address);
 
 };
 
@@ -313,7 +334,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // Proxy:   0xf282966Af366c349DBb41C54670c536EFA534691
 
 // 2024/05/20:  yarn deploy:matic_test:UUPSProxy:   PlantStaking for Amoy Dev env
-// Proxy:   
+// Proxy:   0xf8bd14e5af9177ffdb9fe903a76b684986d7fb45
+
+// 2024/05/22:  yarn deploy:matic_test:UUPSProxy:   StakingRewards for Amoy Dev env
+// Proxy:   0xe233f1aC801eD919A774295503eCFE359A647B8B
 
 export default func;
 func.tags = ["UUPSProxy"];

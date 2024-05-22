@@ -46,8 +46,7 @@ contract StakingRewards is IArkreenMinerListener, ReentrancyGuardUpgradeable, Ow
     event Staked(address indexed user, uint256 amount);
     event Withdrawn(address indexed user, uint256 amount);
     event RewardPaid(address indexed user, uint256 reward);
-
-
+    event RewardStakeUpdated(address indexed user, uint256 totalMiners, uint256 userRewardStakes, uint256 totalRewardStakes);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -134,7 +133,9 @@ contract StakingRewards is IArkreenMinerListener, ReentrancyGuardUpgradeable, Ow
     function _updateRewardStake(address staker) internal {
         uint256 totalMiners = arkreenMiner.balanceOf(staker);
         uint256 premium = totalMiners * capMinerPremium;
-        uint256 othersTotalRewardStakes = totalRewardStakes - myRewardStakes[staker];
+
+        uint256 rewardStakesPre =  myRewardStakes[staker];
+        uint256 othersTotalRewardStakes = totalRewardStakes - rewardStakesPre;
 
         uint256 rewardStakes;
         if (myStakes[staker] <= premium) {
@@ -143,8 +144,12 @@ contract StakingRewards is IArkreenMinerListener, ReentrancyGuardUpgradeable, Ow
             rewardStakes = myStakes[staker] +  premium * (ratePremium - 100) / 100;   // Cap is premium 
         }
                 
-        myRewardStakes[staker] = rewardStakes;
-        totalRewardStakes = othersTotalRewardStakes + rewardStakes;
+        if (rewardStakesPre != rewardStakes) {
+            myRewardStakes[staker] = rewardStakes;
+            totalRewardStakes = othersTotalRewardStakes + rewardStakes;
+        }
+
+        emit RewardStakeUpdated(staker, totalMiners, rewardStakes, othersTotalRewardStakes + rewardStakes);
     }
 
     function unstake(uint256 amount) public nonReentrant updateReward(msg.sender) {

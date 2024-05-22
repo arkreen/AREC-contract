@@ -483,7 +483,7 @@ contract ArkreenMiner is
         if (allListenApps == 0) return;
         while (allListenApps != 0) {
             address appToCall = listenApps[uint8(allListenApps)];
-            IArkreenMinerListener(appToCall).minerOnboarded(owner, quantity);
+            if(appToCall != address(0)) IArkreenMinerListener(appToCall).minerOnboarded(owner, quantity);
             allListenApps = allListenApps >> 8;
         }
     }
@@ -629,12 +629,21 @@ contract ArkreenMiner is
     }
 
     function registerListenApps(uint256 appid, address newApp) external onlyOwner {
-        require ( (appid != 0) && 
-                  (appid <= 255) && 
-                  (listenApps[appid] == address(0)) &&
-                  (listenAppIds[newApp] == 0), "Arkreen Miner: Wrong App ID");
-        listenApps[appid] = newApp;
-        listenAppIds[newApp] = appid;
+        require ((appid != 0) && (appid <= 255), "Arkreen Miner: Wrong App ID");
+
+        address oldApp = listenApps[appid];
+        if ((oldApp != address(0)) && (newApp == address(0))) {
+            listenApps[appid] = address(0);
+            listenAppIds[oldApp] = 0;
+            return;
+        }
+
+        if ((oldApp == address(0)) && (newApp != address(0))) {
+            listenApps[appid] = newApp;
+            listenAppIds[newApp] = appid;
+            return;
+        }
+        revert("Arkreen Miner: Wrong App Data");
     }
 
     /**

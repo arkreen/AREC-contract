@@ -15,12 +15,19 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   
   if(hre.network.name === 'matic_test') {
     // 2024/05/21
-    const stakingRewardsAddress  = "0x691938a6e88a85E66Aab05ECf84Fe84ECE8351C9"           // Amoy testnet
+    // const stakingRewardsAddress  = "0x691938a6e88a85E66Aab05ECf84Fe84ECE8351C9"        // Amoy testnet
+    const stakingRewardsAddress  = "0xe233f1aC801eD919A774295503eCFE359A647B8B"           // 2024/05/22: Amoy testnet
+
     const stakingRewards = StakingRewards__factory.connect(stakingRewardsAddress, deployer);
 
     // 2024/05/21, Amoy testnet
-    const capMinerPremium = expandTo18Decimals(5000)
-    const ratePremium = 250
+//    const capMinerPremium = expandTo18Decimals(5000)
+//    const ratePremium = 250
+
+    // 2024/05/22: Amoy testnet: 2nd Deployment
+    const capMinerPremium = expandTo18Decimals(6000)
+    const ratePremium = 200
+
     const setStakeParameterTx = await stakingRewards.setStakeParameter(capMinerPremium, ratePremium, {gasPrice: defaultGasPrice})
     await setStakeParameterTx.wait()
 
@@ -32,6 +39,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2024/05/21: Call setStakeParameter (Amoy testnet)
 // yarn deploy:matic_test:StakingRewardsI
+
+// 2024/05/22: Call setStakeParameter (Amoy testnet)
+// yarn deploy:matic_test:StakingRewardsI
+
 
 func.tags = ["StakingRewardsI"];
 

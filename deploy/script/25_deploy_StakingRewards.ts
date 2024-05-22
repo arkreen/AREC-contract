@@ -56,6 +56,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // Proxy:                 0x691938a6e88a85E66Aab05ECf84Fe84ECE8351C9
 // Implementaion:         0x529D9956844af588b6B6Bc8eA6c8F80CaF5ac7B9
 
+// 2024/05/22
+// yarn deploy:matic_test:StakingRewards    : Amoy testnet (Dev Anv)
+// Proxy:                 0xe233f1aC801eD919A774295503eCFE359A647B8B （UUPS）
+// Implementaion:         0xe07968E3b0D64B99EA3653Dd925a850eBb9a3Bb9
+
+
 func.tags = ["StakingRewards"];
 
 export default func;

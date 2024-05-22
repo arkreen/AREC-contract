@@ -162,5 +162,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // Deployed on Polygon Amoy testnet to upgrade to support for staking
 // 0x3b4BAf0aE0D209c3F774d4f4592948450f80293b
 
+// 2024/05/22: yarn deploy:matic_test:AMinerV10D 
+// Deployed on Polygon Amoy testnet to change registerListenApps
+// 0xd1348Bb43DbF51a2446DB6e40DE5F6c178cb2D47
+
 export default func;
 func.tags = ["AMinerV10D"];
