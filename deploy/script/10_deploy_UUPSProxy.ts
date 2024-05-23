@@ -258,16 +258,26 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   });
 */
   // 2024/05/22: Polygon Amoy StakingRewards
-  const IMPLEMENTATION_ADDRESS  = "0xe07968E3b0D64B99EA3653Dd925a850eBb9a3Bb9"    // 2024/05/22: StakingRewards Implementation 
 
   // 2024/05/22
+  /*
+  const IMPLEMENTATION_ADDRESS  = "0xe07968E3b0D64B99EA3653Dd925a850eBb9a3Bb9"    // 2024/05/22: StakingRewards Implementation 
+
   const tokenAKRE = "0xd092e1f47d4e5d1C1A3958D7010005e8e9B48206"
   const tokenART = "0x615835Cc22064a17df5A3E8AE22F58e67bCcB778"
   const minerContract = "0xF390caaF4FF0d297e0b4C3c1527D707C75541736"
   const rewardsDistributor = "0x576Ab950B8B3B18b7B53F7edd8A47986a44AE6F4"
 
   const callData = StakingRewards__factory.createInterface().encodeFunctionData("initialize", [tokenAKRE, tokenART, minerContract, rewardsDistributor])     // Create  StakingRewards
-  
+  */
+
+  const IMPLEMENTATION_ADDRESS ="0xD2c96ACD402e913B5aD2d2C3bCb557d384b5c551"
+  const tokenAKRE = "0xE9c21De62C5C5d0cEAcCe2762bF655AfDcEB7ab3"
+  const rewarder = "0xDcF10d429c0422Af80790bC810A33189771D643d"
+  const manager = "0x9f655898f160299E4Acdcf92E04816bB7250fd81" 
+
+  const callData = PlantStaking__factory.createInterface().encodeFunctionData("initialize", [tokenAKRE, rewarder, manager])     // Create  PlantStaking
+
   const UUPSProxyContract = await deploy(CONTRACTS.UUPSProxy, {
       from: deployer,
       args: [IMPLEMENTATION_ADDRESS, deployer, callData],

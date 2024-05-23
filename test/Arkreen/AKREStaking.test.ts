@@ -260,29 +260,38 @@ describe("StakingRewards test", ()=> {
       function APR() {
         //const times = expandTo18Decimals(1).mul(expandTo9Decimals(10))
         const times = expandTo18Decimals(1).mul(expandTo18Decimals(1))  
+       
+        const ARTAmout = expandTo9Decimals(400)
+        //const duration = BigNumber.from(3600 *24 *60)
+        const duration = BigNumber.from(1716793200).sub(BigNumber.from(1716447600))
 
-        
-        const ARTAmout = expandTo9Decimals(20000)
-        const duration = BigNumber.from(3600 *24 *60)
-        const allStakeAmount = expandTo18Decimals(6000 * 10000)
-        const myStakeAmount = expandTo18Decimals(10000)
-        const priceAKRE = BigNumber.from(5000)
+        //const allRewardStakeAmount = expandTo18Decimals(6000 * 10000)
+        const allRewardStakeAmount = BigNumber.from("60200000000000000000000")
+
+        const unitStakeAmount = expandTo18Decimals(1)
+        const accuracy = BigNumber.from("1000000")   // xxxxx.yyyy %
+
+        const priceAKRE = BigNumber.from(8000)
         const priceART = BigNumber.from(10 * 1000 * 1000)
 
-        const valueAKRE = myStakeAmount.mul(priceAKRE).div(expandTo18Decimals(1))
+        const valueAKRE = unitStakeAmount.mul(priceAKRE).div(expandTo18Decimals(1))
 
-        const rewardPerStake = ARTAmout.mul(times).div(duration).div(allStakeAmount)
+        const rewardPerStake = ARTAmout.mul(times).mul(3600 *24 * 360).mul(unitStakeAmount).mul(priceART)
+                                .div(duration).div(allRewardStakeAmount).div(priceAKRE)
 
-        const rewardOneYear = rewardPerStake.mul(3600 *24 * 360).mul(myStakeAmount)
+        const rewardOneYear = rewardPerStake.mul(3600 *24 * 360).mul(unitStakeAmount)
         const valueRewardOneYear = rewardOneYear.mul(priceART)
 
         const APR = valueRewardOneYear.div(valueAKRE).div(times)
 
         const APRA = rewardPerStake.mul(3600 *24 * 360).mul(priceART).div(priceAKRE).div(expandTo18Decimals(100000))
 
-        console.log("AAAAAAAAAAAAA", rewardPerStake.toString(), valueAKRE.toString(),
+        const APRA_Last = ARTAmout.mul(times).mul(3600 *24 * 360).mul(unitStakeAmount).mul(priceART).mul(accuracy)
+                                .div(duration).div(allRewardStakeAmount).div(priceAKRE).mul(times)
+
+        console.log("APR: ", rewardPerStake.toString(), valueAKRE.toString(),
                     rewardOneYear.div(times).toString(), 
-                    APR.toString(), APRA.toString()) 
+                    APR.toString(), APRA.toString(), APRA_Last.toString()) 
 
       }
   

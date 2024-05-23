@@ -193,13 +193,13 @@ contract StakingRewards is IArkreenMinerListener, ReentrancyGuardUpgradeable, Ow
                 ) {
       startTime = periodStart;
       endTime = periodEnd;
-      allMiners = (allStakes == 0) ? 0 : (totalRewardStakes - allStakes) * 100 / (capMinerPremium * (rewardRate - 100));
+      allMiners = arkreenMiner.totalSupply();
       allStakes = totalStakes;
-      allBoostStakes = allMiners * capMinerPremium;
-      allNormalStakes = totalStakes - allBoostStakes;
+      allBoostStakes = (totalRewardStakes - allStakes) * 100 / (ratePremium - 100);
+      allNormalStakes = allStakes - allBoostStakes;
       capMinerBoost = capMinerPremium;
-      rateBoost = rewardRate;
-      rewardPerStake = rewardPerStakeLast;
+      rateBoost = ratePremium;
+      rewardPerStake = rewardPerToken();
     }
 
     function getUserStakeStatus(address owner) external view 
