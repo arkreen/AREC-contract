@@ -134,7 +134,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //  const NEW_IMPLEMENTATION =  "0x7a0Df5eFfdbb91DF24cb7F7dB2500ce9721a7A78"       // 2023/05/10: Original Implementation
 //  const NEW_IMPLEMENTATION =  "0x604e10b67736773BD5517fF628e350F443Db85F0"       // 2023/09/12: Upgrade: 1)Socket Miner, 2) Batch sales
 //  const NEW_IMPLEMENTATION =  "0x5C3C5f4a3694B89F48D25964070aB68EF82884d4"       // 2024/02/01: Upgrade to support PlantMiner, and block transferring
-    const NEW_IMPLEMENTATION =  "0x4bfE8d12b01756A04AB9762D28ebCF4210E9A59B"       // 2024/04/12: Update to correct according audit result and prepare for upgrading on mainnet
+//  const NEW_IMPLEMENTATION =  "0x4bfE8d12b01756A04AB9762D28ebCF4210E9A59B"       // 2024/04/12: Update to correct according audit result and prepare for upgrading on mainnet
+    const NEW_IMPLEMENTATION =  "0xeCAac43Ef76a7c76613986FaaAd26707a3BFF59a"       // 2024/05/28: Upgrade to support StakingRewards (App register/listen)
 
     const [deployer] = await ethers.getSigners();
     const ArkreenMinerFactory = ArkreenMiner__factory.connect(MINER_PROXY_ADDRESS, deployer);
@@ -145,22 +146,33 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //                                            [AKREToken_ADDRESS as string, MANAGER_ADDRESS as string])
 //  const updateTx = await ArkreenMinerFactory.upgradeToAndCall(NEW_IMPLEMENTATION, callData)
 
+/*
     // 2024/02/01: Upgrade to support PlantMiner, and block transferring, !!!!!!!!!!!!! call postUpdate
     const callData = ArkreenMinerFactory.interface.encodeFunctionData("postUpdate")
 
     const upgradeToAndCallData = ArkreenMinerFactory.interface.encodeFunctionData("upgradeToAndCall", [NEW_IMPLEMENTATION, callData])
+*/
+/*
+    // 2024/05/28: Upgrade to support StakingRewards (App register/listen)
+    const arkreenMinerPro = "0xB6701746312304F9f751bEe707fa0ca51Ec6724c"
+    const stakingRewards = "0xa777d8855456eac0E3f1C64c148dabaf8e8CcC1F"
+    const callData = ArkreenMinerFactory.interface.encodeFunctionData("postUpdate",[arkreenMinerPro, stakingRewards])
 
+    const upgradeToAndCallData = ArkreenMinerFactory.interface.encodeFunctionData("upgradeToAndCall", [NEW_IMPLEMENTATION, callData])
+*/
     //const updateTx = await ArkreenMinerFactory.callStatic['upgradeToAndCall'](NEW_IMPLEMENTATION, callData)
 
-    /*
-    const updateTx = await ArkreenMinerFactory.upgradeToAndCall(NEW_IMPLEMENTATION, callData)
+  
+    // const updateTx = await ArkreenMinerFactory.upgradeToAndCall(NEW_IMPLEMENTATION, callData)
 
-    //const updateTx = await ArkreenMinerFactory.upgradeTo(NEW_IMPLEMENTATION)
+    const updateTx = await ArkreenMinerFactory.upgradeTo(NEW_IMPLEMENTATION)
     await updateTx.wait()
-    */
 
-    console.log("Update Trx:", upgradeToAndCallData)
-    console.log("Game miner Updated: ", hre.network.name, ArkreenMinerFactory.address);
+    const arkreenMinerPro = "0xB6701746312304F9f751bEe707fa0ca51Ec6724c"
+    await ArkreenMinerFactory.setArkreenMinerPro(arkreenMinerPro)
+
+    console.log("Update Trx:", updateTx)
+    console.log("Remote miner Updated: ", hre.network.name, ArkreenMinerFactory.address, NEW_IMPLEMENTATION, arkreenMinerPro);
   } 
 };
 
@@ -260,6 +272,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // Upgrade: registerListenApps is changed
 // And Call registerListenApps to register StakingRewards
 // immplementaion: 0xd1348Bb43DbF51a2446DB6e40DE5F6c178cb2D47
+
+// 2024/05/28: yarn deploy:matic:AMinerUV10: Update on Polygon mainnet to support StakeRewards
+// And Call setArkreenMinerPro: 0xB6701746312304F9f751bEe707fa0ca51Ec6724c
+// immplementaion: 0xeCAac43Ef76a7c76613986FaaAd26707a3BFF59a
 
 export default func;
 func.tags = ["AMinerUV10"];

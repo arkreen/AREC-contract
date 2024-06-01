@@ -1161,7 +1161,7 @@ describe("GreenBTC Test Campaign", () => {
         // Check NFT ID and owner
         expect(await greenBitcoin.ownerOf(12345)).to.equal(owner2.address)
 
-        // Error: authMintGreenBTCWithApprove                     
+        // Error: authMintGreenBTCWithApprove       
         await expect(greenBitcoin.connect(owner1).authMintGreenBTCWithApprove( greenBTCInfo, {v,r,s}, badgeInfo, 
                                             {token: AKREToken.address, amount: amountPay}, constants_MaxDealine))
                       .to.be.revertedWith("GBTC: Already Minted")   
@@ -1195,7 +1195,7 @@ describe("GreenBTC Test Campaign", () => {
           const {v,r,s} = ecsign( Buffer.from(register_digest.slice(2), 'hex'), 
                                                 Buffer.from(privateKeyRegister.slice(2), 'hex'))  
 
-          // Error: authMintGreenBTCWithApprove                     
+          // Error: authMintGreenBTCWithApprove       
           await greenBitcoin.connect(owner1).authMintGreenBTCWithApprove( greenBTCInfo, {v,r,s}, badgeInfo, 
                                   {token: AKREToken.address, amount: amountPay}, constants_MaxDealineAndOpen)
 

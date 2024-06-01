@@ -53,7 +53,7 @@ contract ArkreenNotary is
         string calldata arweaveTransactionId_
     ) public onlyDataManager {
         require(blockHeight_ >= blockHeight, "blockHeight data must increase!");
-        require(totalPowerGeneraton_ >= totalPowerGeneraton, "totalPowerGeneraton data must increase!");
+        // require(totalPowerGeneraton_ >= totalPowerGeneraton, "totalPowerGeneraton data must increase!");
         require(circulatingSupply_ >= circulatingSupply, "circulatingSupply data must increase!");
 
         blockHash          = blockHash_;

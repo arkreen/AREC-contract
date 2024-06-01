@@ -10,7 +10,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   let MANAGER_ADDRESS
   let REGISTER_ADDRESS
 
-  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(300_000_000_000)
+  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(50_000_000_000)
 
   if(hre.network.name === 'localhost') {
     AKREToken_ADDRESS = "0xa0cE9DC3d93F4c84aAACd8DA3f66Cd6dA9D5b1F8"
@@ -165,6 +165,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/05/22: yarn deploy:matic_test:AMinerV10D 
 // Deployed on Polygon Amoy testnet to change registerListenApps
 // 0xd1348Bb43DbF51a2446DB6e40DE5F6c178cb2D47
+
+// 2024/05/28: yarn deploy:matic:AMinerV10D 
+// Deployed on Polygon mainnet to upgrade to support for staking
+// 0xeCAac43Ef76a7c76613986FaaAd26707a3BFF59a
 
 export default func;
 func.tags = ["AMinerV10D"];

@@ -175,6 +175,12 @@
     "deploy:matic:ClaimToken": "hardhat --network matic deploy --tags ClaimToken",
     "deploy:matic:GreenBTCProD": "hardhat --network matic deploy --tags GreenBTCProD",
     "deploy:matic:PlantStaking": "hardhat --network matic deploy --tags PlantStaking",
+    "deploy:matic:AMinerProD": "hardhat --network matic deploy --tags AMinerProD",
+    "deploy:matic:StakingRewards": "hardhat --network matic deploy --tags StakingRewards",
+    "deploy:matic:StakingRewardsI": "hardhat --network matic deploy --tags StakingRewardsI",
+    "deploy:matic:StakingRewardsU": "hardhat --network matic deploy --tags StakingRewardsU",
+    "deploy:matic:AMinerI": "hardhat --network matic deploy --tags AMinerI",
+    "deploy:matic:NotaryU": "hardhat --network matic deploy --tags NotaryU",
 
     "storageExplorerGreenBTC:matic": "hardhat run --network matic ./deploy/storageExplorerGreenBTC.ts",
     "GreenBTCTest:matic": "hardhat run --network matic ./deploy/GreenBTCTest.ts",

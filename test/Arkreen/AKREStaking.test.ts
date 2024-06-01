@@ -261,12 +261,46 @@ describe("StakingRewards test", ()=> {
         //const times = expandTo18Decimals(1).mul(expandTo9Decimals(10))
         const times = expandTo18Decimals(1).mul(expandTo18Decimals(1))  
        
-        const ARTAmout = expandTo9Decimals(400)
+        const ARTAmout = expandTo9Decimals(500) // 400
+
         //const duration = BigNumber.from(3600 *24 *60)
-        const duration = BigNumber.from(1716793200).sub(BigNumber.from(1716447600))
+        const duration = BigNumber.from(1717061400).sub(BigNumber.from(1716802200))
 
         //const allRewardStakeAmount = expandTo18Decimals(6000 * 10000)
-        const allRewardStakeAmount = BigNumber.from("60200000000000000000000")
+
+        // rewardPerStake   uint256 :  380320236109359866310152
+        //allNormalStakes   uint256 :  3216850123449999983222784
+        //allBoostStakes   uint256 :  1765450740389541292991808
+
+        //allStakes   uint256 :  4982300863839541276214592
+        //allNormalStakes   uint256 :  3216850123449999983222784
+        //allBoostStakes   uint256 :  1765450740389541292991808
+
+        //allStakes   uint256 :  4982300863839541276214592
+        //allNormalStakes   uint256 :  3096850123449999983222784
+        //allBoostStakes   uint256 :  1885450740389541292991808
+
+        /*
+        startTime   uint256 :  1716802200
+        endTime   uint256 :  1717061400
+        allMiners   uint256 :  1319
+        allStakes   uint256 :  11601692078853375393185964
+        allNormalStakes   uint256 :  9594100246450000000000000
+        allBoostStakes   uint256 :  2007591832403375393185964
+        capMinerBoost   uint256 :  6000000000000000000000
+        rateBoost   uint256 :  200
+        rewardRateSecond   uint256 :  1929012345679012345679012345679012345679012
+        rewardPerStake   uint256 :  409752293654193077102188
+        */
+
+        const allNormalStakes = BigNumber.from("9594100246450000000000000") 
+        const allBoostStakes = BigNumber.from("2007591832403375393185964") 
+        const allRewardStakeAmount = allNormalStakes.add(allBoostStakes.mul(2))
+
+        // const allRewardStakeAmount = BigNumber.from("380320236109359866310152")  // 
+
+        //   60200.000000000000000000
+        // 4758949.999999999983222784 uint256
 
         const unitStakeAmount = expandTo18Decimals(1)
         const accuracy = BigNumber.from("1000000")   // xxxxx.yyyy %
@@ -274,24 +308,35 @@ describe("StakingRewards test", ()=> {
         const priceAKRE = BigNumber.from(8000)
         const priceART = BigNumber.from(10 * 1000 * 1000)
 
-        const valueAKRE = unitStakeAmount.mul(priceAKRE).div(expandTo18Decimals(1))
+        const valueAKRE = allRewardStakeAmount.mul(priceAKRE).div(expandTo18Decimals(1))
 
-        const rewardPerStake = ARTAmout.mul(times).mul(3600 *24 * 360).mul(unitStakeAmount).mul(priceART)
-                                .div(duration).div(allRewardStakeAmount).div(priceAKRE)
+        const valueARTOneYear = ARTAmout.mul(priceART).mul(3600 *24 * 365).div(duration.mul(expandTo9Decimals(1)))
 
-        const rewardOneYear = rewardPerStake.mul(3600 *24 * 360).mul(unitStakeAmount)
-        const valueRewardOneYear = rewardOneYear.mul(priceART)
+        const APR1 = valueARTOneYear.mul(accuracy).div(valueAKRE)
 
-        const APR = valueRewardOneYear.div(valueAKRE).div(times)
+        console.log("APR1: ", allNormalStakes.toString(), allBoostStakes.toString(), allRewardStakeAmount.toString(), APR1.toString()) 
 
-        const APRA = rewardPerStake.mul(3600 *24 * 360).mul(priceART).div(priceAKRE).div(expandTo18Decimals(100000))
+        const rewardRate = ARTAmout.mul(times).div(duration)
 
-        const APRA_Last = ARTAmout.mul(times).mul(3600 *24 * 360).mul(unitStakeAmount).mul(priceART).mul(accuracy)
-                                .div(duration).div(allRewardStakeAmount).div(priceAKRE).mul(times)
+        const rewardPerStake = ARTAmout.mul(times)
+                                .div(duration.mul(allRewardStakeAmount))
 
-        console.log("APR: ", rewardPerStake.toString(), valueAKRE.toString(),
-                    rewardOneYear.div(times).toString(), 
-                    APR.toString(), APRA.toString(), APRA_Last.toString()) 
+        const rewardOneYear = rewardPerStake.mul(3600 *24 * 365).mul(unitStakeAmount)
+
+        const valueRewardOneYear = rewardOneYear.mul(priceART).div(expandTo9Decimals(1))
+
+        const APR2 = valueRewardOneYear.mul(accuracy)
+                        .div(priceAKRE.mul(times))
+
+        const APR3 = rewardPerStake.mul(3600 *24 * 365).mul(expandTo18Decimals(1)).mul(priceART).mul(accuracy)
+                              .div(expandTo9Decimals(1).mul(priceAKRE).mul(times))
+
+        const APR4 = ARTAmout.mul(times).mul(3600 *24 * 365).mul(unitStakeAmount).mul(priceART).mul(accuracy)
+                                .div(expandTo9Decimals(1).mul(duration).mul(allRewardStakeAmount).mul(priceAKRE).mul(times))
+
+        console.log("APR: ", rewardRate.toString(), rewardPerStake.toString(),
+                    rewardOneYear.div(times).toString(), valueRewardOneYear.toString(),
+                    APR2.toString(), APR3.toString(), APR4.toString()) 
 
       }
   

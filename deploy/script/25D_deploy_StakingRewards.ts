@@ -50,6 +50,13 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:StakingRewardsD    : Amoy testnet (Dev Anv)
 // Implementaion:         0xfFdD75c441a50cBf9aAEA3984Dc174D2352C309F
 
+// 2024/05/23D: correct: getBasicStakeStatus
+// yarn deploy:matic_test:StakingRewardsD    : Amoy testnet (Dev Anv)
+// Implementaion:         0x2e50A76D8C334315583617Df5c02420Ff166b6B0
+
+// 2024/05/23E: correct: getBasicStakeStatus
+// yarn deploy:matic_test:StakingRewardsD    : Amoy testnet (Dev Anv)
+// Implementaion:         0x1FAc329c4f9556654e0beCb527977228100F7742
 
 func.tags = ["StakingRewardsD"];
 

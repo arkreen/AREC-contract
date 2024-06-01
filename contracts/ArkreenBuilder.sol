@@ -20,9 +20,6 @@ import "./interfaces/IFeSwapRouter.sol";
 import "./interfaces/ISwapRouter.sol";
 import "./interfaces/IArkreenRECToken.sol";
 
-// Import this file to use console.log
-// import "hardhat/console.sol";
-
 contract ArkreenBuilder is
     OwnableUpgradeable,
     UUPSUpgradeable,
@@ -199,6 +196,10 @@ contract ArkreenBuilder is
                                                       amountPay, amountART, isExactPay);
 
         _genericCall(artBank, bankCallData, "BLD: Error Call to buyART");
+
+        uint256 balanceART = IERC20(tokenART).balanceOf(address(this));
+        (bool success, bytes memory data) = tokenART.call(abi.encodePacked(abi.encodeWithSelector(0xa9059cbb, msg.sender, balanceART), address(this)));
+        require(success && abi.decode(data, (bool)),  "BLD: Transfer Failed");
 
         // Repay more payment back  
         _payBackOverPayment(tokenPay, _msgSender(), 0);

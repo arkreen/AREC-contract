@@ -2,7 +2,7 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { CONTRACTS } from "../constants";
 import { BigNumber } from "ethers";
-import { UChildERC20__factory } from "../../typechain";
+import { ArkreenMiner__factory } from "../../typechain";
 import { ethers } from "hardhat";
 import { utils } from 'ethers'
 
@@ -12,30 +12,28 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(100000000000)
 
-    if(hre.network.name === 'matic_test')  {
-      // 2024/04/16: Amoy testnet                        
-      const USDTAddress  = "0xc7767ae828E4830e2f800981E573f333d1E492b5"         // Amoy testnet
-      const mintAddress  = "0x364a71eE7a1C9EB295a4F4850971a1861E9d3c7D"         // Amoy testnet
-      const valueUSDT = "100000000000000"
+    if(hre.network.name === 'matic')  {
+      const MINER_PROXY_ADDRESS = "0xbf8eF5D950F78eF8edBB8674a48cDACa675831Ae"       // Miner Contract in production env
+      const NEW_IMPLEMENTATION =  "0xeCAac43Ef76a7c76613986FaaAd26707a3BFF59a"       // 2024/05/28: Upgrade to support StakingRewards (App register/listen)
 
-      const USDTFactory = UChildERC20__factory.connect(USDTAddress, deployer);
+      const arkreenMiner = ArkreenMiner__factory.connect(MINER_PROXY_ADDRESS, deployer);
 
-      const depositData = utils.defaultAbiCoder.encode(['uint256'], [valueUSDT])
+      // 2024/05/28, Call registerListenApps
+      const appid = 1
+      const stakingRewards = "0xa777d8855456eac0E3f1C64c148dabaf8e8CcC1F"
 
-      console.log("USDT deposit Tx:", mintAddress, depositData)
+      // registerListenApps(uint256 appid, address newApp)
+      await arkreenMiner.registerListenApps(appid, stakingRewards, {gasPrice: defaultGasPrice})
 
-      // 2024/04/16, Amoy testnet
-      const depositTx = await USDTFactory.deposit(mintAddress, depositData, {gasPrice: defaultGasPrice})
-      await depositTx.wait()
-
-      console.log("USDT deposit Tx:", depositTx, mintAddress, depositData)
+      console.log("New ArkreenMiner deployed to %s:", hre.network.name, NEW_IMPLEMENTATION, stakingRewards);
+    
     }
 };
 
-// 2024/04/16
-// yarn deploy:matic_test:USDTI    : Amoy testnet (Dev Anv)
-// deposit to 0x364a71eE7a1C9EB295a4F4850971a1861E9d3c7D: 100000000 USDT
+// 2024/05/28
+// yarn deploy:matic:AMinerI    : Polygon mainnet
+// call registerListenApps: (1, 0xa777d8855456eac0E3f1C64c148dabaf8e8CcC1F)
 
-func.tags = ["USDTI"];
+func.tags = ["AMinerI"];
 
 export default func;

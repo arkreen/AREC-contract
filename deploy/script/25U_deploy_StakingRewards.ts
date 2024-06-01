@@ -22,7 +22,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     // const NEW_IMPLEMENTATION       = "0x71D65c314C7F2f0F2d332825e0db2dA818386b7E"  // 2024/05/23: Correct getBasicStakeStatus
     // const NEW_IMPLEMENTATION       = "0xf674A664f66E4f7eC8A582D3ea12007883C93Eb4"  // 2024/05/23A: Correct getBasicStakeStatus
     // const NEW_IMPLEMENTATION       = "0x5BF719CcF15b730a0b74a933c18c94b9B2516D75"  // 2024/05/23B: Correct getBasicStakeStatus
-    const NEW_IMPLEMENTATION          = "0xfFdD75c441a50cBf9aAEA3984Dc174D2352C309F"  // 2024/05/23C: Correct getBasicStakeStatus
+    // const NEW_IMPLEMENTATION       = "0xfFdD75c441a50cBf9aAEA3984Dc174D2352C309F"  // 2024/05/23C: Correct getBasicStakeStatus
+    // const NEW_IMPLEMENTATION       = "0x2e50A76D8C334315583617Df5c02420Ff166b6B0"  // 2024/05/23D: Correct getBasicStakeStatus
+    const NEW_IMPLEMENTATION          = "0x1FAc329c4f9556654e0beCb527977228100F7742"  // 2024/05/23E: Correct getBasicStakeStatus
 
     console.log("Updating StakingRewards: ", STAKE_REWARD_PROXY_ADDRESS, chainID, defaultGasPrice.toString());  
 
@@ -63,6 +65,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2024/05/23C: Correct getBasicStakeStatus for 0xe233f1aC801eD919A774295503eCFE359A647B8B
 // yarn deploy:matic_test:StakingRewardsU: 0xfFdD75c441a50cBf9aAEA3984Dc174D2352C309F
+
+// 2024/05/23D: Correct getBasicStakeStatus for 0xe233f1aC801eD919A774295503eCFE359A647B8B
+// yarn deploy:matic_test:StakingRewardsU: 0x2e50A76D8C334315583617Df5c02420Ff166b6B0
+
+// 2024/05/23E: Correct getBasicStakeStatus for 0xe233f1aC801eD919A774295503eCFE359A647B8B
+// yarn deploy:matic_test:StakingRewardsU: 0x1FAc329c4f9556654e0beCb527977228100F7742
 
 export default func;
 func.tags = ["StakingRewardsU"];

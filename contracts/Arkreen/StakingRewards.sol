@@ -46,6 +46,7 @@ contract StakingRewards is IArkreenMinerListener, ReentrancyGuardUpgradeable, Ow
     event Staked(address indexed user, uint256 amount);
     event Withdrawn(address indexed user, uint256 amount);
     event RewardPaid(address indexed user, uint256 reward);
+    event SetStakeParameter(uint256 newPremiumCap, uint256 newPremiumRate);
     event RewardStakeUpdated(address indexed user, uint256 totalMiners, uint256 userRewardStakes, uint256 totalRewardStakes);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -91,6 +92,7 @@ contract StakingRewards is IArkreenMinerListener, ReentrancyGuardUpgradeable, Ow
         if (newPremiumRate != 0) {
             ratePremium = uint32(newPremiumRate);
         }
+        emit SetStakeParameter(newPremiumCap, newPremiumRate);
     }
 
     function lastTimeRewardApplicable() public view returns (uint256) {
@@ -177,7 +179,7 @@ contract StakingRewards is IArkreenMinerListener, ReentrancyGuardUpgradeable, Ow
     }
 
     function minerOnboarded(address owner, uint256) external onlyArkreenMiner updateReward(owner) {
-        _updateRewardStake(owner);
+        if(ratePremium != 0) _updateRewardStake(owner);        // If not intialized, doing nothing
     }
 
     function getBasicStakeStatus() external view 
@@ -189,6 +191,7 @@ contract StakingRewards is IArkreenMinerListener, ReentrancyGuardUpgradeable, Ow
                   uint256 allBoostStakes, 
                   uint256 capMinerBoost,
                   uint256 rateBoost,
+                  uint256 rewardRateSecond,
                   uint256 rewardPerStake
                 ) {
       startTime = periodStart;
@@ -199,6 +202,7 @@ contract StakingRewards is IArkreenMinerListener, ReentrancyGuardUpgradeable, Ow
       allNormalStakes = allStakes - allBoostStakes;
       capMinerBoost = capMinerPremium;
       rateBoost = ratePremium;
+      rewardRateSecond = rewardRate;
       rewardPerStake = rewardPerToken();
     }
 
@@ -207,13 +211,16 @@ contract StakingRewards is IArkreenMinerListener, ReentrancyGuardUpgradeable, Ow
                   uint256 userStakes, 
                   uint256 userNormalStakes, 
                   uint256 userBoostStakes, 
-                  uint256 userRewards) {
+                  uint256 userRewards,
+                  uint256 blockTime
+                  ) {
       userMiners = arkreenMiner.balanceOf(owner);
       userStakes = myStakes[owner];
       userBoostStakes = capMinerPremium * userMiners;
       if(userStakes < userBoostStakes)  userBoostStakes = userStakes;
       userNormalStakes = userStakes - userBoostStakes;
       userRewards = earned(owner);
+      blockTime = block.timestamp;
     }
 
     function depolyRewards(uint256 start, uint256 end, uint256 rewardTotal) external onlyRewardsDistributor updateReward(address(0)) {

@@ -9,13 +9,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const { deploy } = deployments;
     const { deployer } = await getNamedAccounts();
 
-    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(160_000_000_000)
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(60_000_000_000)
 
     let tokenAKRE
     let tokenART
     let minerContract    
     let rewardsDistributor
-    let from
     
     if(hre.network.name === 'matic_test')  {
       // 2024/05/16: AKRE on Amoy testnet                        
@@ -24,15 +23,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       minerContract = "0xF390caaF4FF0d297e0b4C3c1527D707C75541736"
       rewardsDistributor = "0x576Ab950B8B3B18b7B53F7edd8A47986a44AE6F4"
     } else if(hre.network.name === 'matic')  {
-      tokenAKRE = ""
-      tokenART = ""
-      minerContract = ""
-      rewardsDistributor = ""
-      from = "" 
+      tokenAKRE           = "0xE9c21De62C5C5d0cEAcCe2762bF655AfDcEB7ab3"
+      tokenART            = "0x58E4D14ccddD1E993e6368A8c5EAa290C95caFDF"
+      minerContract       = "0xbf8eF5D950F78eF8edBB8674a48cDACa675831Ae"
+      rewardsDistributor  = "0x1249B1eABcAE642CF3Cb1e512a0075CEe92769BE"
     } 
 
     console.log("Deploying: ", "StakingRewards", deployer);  
-    const claimToken = await deploy("StakingRewards", {
+    const stakingRewards = await deploy("StakingRewards", {
         from: deployer,
         proxy: {
           proxyContract: "UUPSProxy",
@@ -48,7 +46,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         gasPrice: defaultGasPrice
     });
 
-    console.log("USDT deployed to %s: ", hre.network.name, claimToken.address);
+    console.log("USDT deployed to %s: ", hre.network.name, stakingRewards.address);
 };
 
 // 2024/05/16
@@ -61,6 +59,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // Proxy:                 0xe233f1aC801eD919A774295503eCFE359A647B8B （UUPS）
 // Implementaion:         0xe07968E3b0D64B99EA3653Dd925a850eBb9a3Bb9
 
+// 2024/05/28
+// yarn deploy:matic:StakingRewards    : Polygon mainnet
+// Proxy:                 0xa777d8855456eac0E3f1C64c148dabaf8e8CcC1F
+// Implementaion:         0x7D2Cebe75a5D46cee170A3aAC175453673125A9E
 
 func.tags = ["StakingRewards"];
 

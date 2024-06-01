@@ -18,7 +18,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     // const NEW_IMPLEMENTATION = "0xd320E323293d092d3dcC3533AF477cD14976C31B"        // 2023/10/11: Upgrade to support directly using ART in AREC Builder
     // const NEW_IMPLEMENTATION = "0x4aF1eADF9f2f51395Fc2329ac0ab554DBb7EBF57"        // 2023/12/05: Overpayemnt payback target address is configed with modeAction
     // const NEW_IMPLEMENTATION = "0x5054ce5432f3597dAFa90b246253F6433b56e3a9"        // 2024/01/27: Upgrade to support UniV3 and Charging offset fee
-    const NEW_IMPLEMENTATION = "0x93eFC409Ff44788E8b1DAF395F46965046cAe84B"           // 2024/05/06: Upgrade to support GreenBTC discount
+    // const NEW_IMPLEMENTATION = "0x93eFC409Ff44788E8b1DAF395F46965046cAe84B"        // 2024/05/06: Upgrade to support GreenBTC discount
+    const NEW_IMPLEMENTATION = "0xbF6308e2564FDB7F98C0578A35fC2ecCc14432db"           // 2024/06/01: Upgrade to fix the bug in ArkreenBuilder to send bought ART to greenBTC
 
     console.log("Updating HashKey ESG Builder: ", ESG_BUILDER_ADDRESS);  
 
@@ -43,7 +44,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const ESG_BUILDER_ADDRESS = "0x7073Ea8C9B0612F3C3FE604425E2af7954c4c92e"          // ArkreenBuilder
     // const NEW_IMPLEMENTATION = "0x076bB3051f273Ea6f6AA76e41797241124B3B157"        // 2023/10/30: Upgrade to support ART offset directly
     // const NEW_IMPLEMENTATION = "0x3E458Ff2c39fe10636003e02C1DdA387b455Ee6F"        // 2024/02/03: Upgrade to support UniV3 and Charging offset fee
-    const NEW_IMPLEMENTATION = "0xC3b89B7e71D36cf90bD30ED0e79A97738FD59Fd3"           // 2024/05/06: Upgrade to support ART subsidy
+    // const NEW_IMPLEMENTATION = "0xC3b89B7e71D36cf90bD30ED0e79A97738FD59Fd3"        // 2024/05/06: Upgrade to support ART subsidy
+    const NEW_IMPLEMENTATION = "0xADA5FDC7c1258dCC8F47BF5204BD967e0466c290"           // 2024/06/01: Deployed on Polygon mainnet to fix the bug in ArkreenBuilder to send bought ART to greenBTC
 
     console.log("Updating ESG Builder: ", ESG_BUILDER_ADDRESS);  
 
@@ -56,7 +58,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     console.log("HashKey ESG BTC Updated: ", hre.network.name, ArkreenBuilderFactory.address, NEW_IMPLEMENTATION);
       
   } 
-  
+ 
 };
 
 // 2023/10/11: 
@@ -83,11 +85,13 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:ABuilderU
 // Upgrade to implementation: 0x93eFC409Ff44788E8b1DAF395F46965046cAe84B
 
-// 2024/05/06: Upgrade on Polygon mainnet
+// 2024/06/01: Upgrade on Polygon mainnet
 // yarn deploy:matic:ABuilderU
-// Upgrade to implementation: 0xC3b89B7e71D36cf90bD30ED0e79A97738FD59Fd3
+// Upgrade to implementation: 0xADA5FDC7c1258dCC8F47BF5204BD967e0466c290
+
+// 2024/06/01A: Upgrade on Polygon mainnet
+// yarn deploy:matic_test:ABuilderU
+// Upgrade to implementation: 0xbF6308e2564FDB7F98C0578A35fC2ecCc14432db
 
 export default func;
 func.tags = ["ABuilderU"];
-
-

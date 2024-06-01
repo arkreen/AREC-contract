@@ -59,6 +59,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:ABuilderD
 // 0xC3b89B7e71D36cf90bD30ED0e79A97738FD59Fd3
 
+// 2024/06/01: Deployed on Polygon mainnet to fix the bug in ArkreenBuilder to send bought ART to greenBTC
+// yarn deploy:matic:ABuilderD
+// 0xADA5FDC7c1258dCC8F47BF5204BD967e0466c290
+
+// 2024/06/01: Deployed on Amoy testnet to fix the bug in ArkreenBuilder to send bought ART to greenBTC
+// yarn deploy:matic_test:ABuilderD
+// 0xbF6308e2564FDB7F98C0578A35fC2ecCc14432db
+
 func.tags = ["ABuilderD"];
 
 export default func;

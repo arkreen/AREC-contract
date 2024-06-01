@@ -1,14 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-//import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-//import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
-//import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
-//import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-
-//import "./libraries/TransferHelper.sol";
-//import "./interfaces/IERC20.sol";
-//import "./interfaces/IERC20Permit.sol";
 import "./ArkreenMinerTypes.sol";
 
 abstract contract ArkreenMinerStorage 
