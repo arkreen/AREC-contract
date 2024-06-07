@@ -28,7 +28,8 @@ struct Domain {
 // shot1: MSB20:3; shot2: MSB23:3; shot3: MSB26:3; shot4: MSB29:3
 
 struct DomainStatus {
-    uint32      boxMadeGreen;       // the progress of greenization, should be less than boxTop
+    uint24      boxMadeGreen;       // the progress of greenization, should be less than boxTop
+    uint40      empty;
     uint24      won1;               // number of box winning type 1
     uint24      won2;               // number of box winning type 2
     uint24      won3;               // number of box winning type 3
@@ -46,10 +47,10 @@ struct DomainStatus {
 
 struct action {
     uint32      blockHeight;        // block height of the action
-    uint16      domainId;           // Id of the domain
-    uint32      boxStart;           // box position starting from 
-    uint32      boxAmount;          // amount of box greenized 
-    uint16      won1;               // number of box winning type 1
+    uint16      domainId;           // Id of the domain, msb flaging claimed or not
+    uint24      boxStart;           // box position starting from 
+    uint24      boxAmount;          // amount of box greenized 
+    uint16      won1;               // number of box winning type 1, either the address of owner: MSB12-MSB31
     uint16      won2;
     uint16      won3;
     uint16      won4;
@@ -57,5 +58,4 @@ struct action {
     uint16      shot2;
     uint16      shot3;
     uint16      shot4;
-    uint16      claimed;            // if claimed
 }

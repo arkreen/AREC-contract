@@ -206,8 +206,7 @@
 
     "allowance:celo_test": "hardhat run --network celo_test ./deploy/allowance_manager.ts",
     "confirmAuto:celo_test": "hardhat run --network celo_test ./deploy/confirmIssuance_celo.ts",
-
-
+    
     "etherscan:celo_test": "hardhat --network celo_test etherscan-verify --api-url https://api-alfajores.celoscan.io --api-key",
     "deploy:celo:gRegistry": "hardhat --network celo deploy --tags gRegistry",
     "deploy:celo:RECIssueExtD": "hardhat --network celo deploy --tags RECIssueExtD",
@@ -222,6 +221,8 @@
     "deploy:celo:ABuilderI": "hardhat --network celo deploy --tags ABuilderI",
     "deploy:celo:ArtBankI": "hardhat --network celo deploy --tags ArtBankI",
     "deploy:celo:MulticallD": "hardhat --network celo deploy --tags MulticallD",
+    "gnosis_wallet:celo": "hardhat run --network celo ./deploy/gnosis_celo.ts",
+
     "etherscan:celo": "hardhat --network celo etherscan-verify --api-url https://api.celoscan.io --api-key",
     "test": "hardhat test",
     "gas": "set REPORT_GAS=true && hardhat test",

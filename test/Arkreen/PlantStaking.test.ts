@@ -71,37 +71,37 @@ describe("PlantStaking test", ()=> {
         const {nonce}  = await plantStaking.stakeInfo(wallet.address)
         const txid =  BigNumber.from(1234)
 
-        const cspminer = randomAddresses(5)
+        const cspminer = "0x280a7c4E032584F97E84eDd396a00799da8D061A"
   
         const digest = getPlantStakingDigest(
             'Plant Miner Staking',
             plantStaking.address,
-            { txid, staker: wallet.address, cspminer: cspminer[0], amount: amount, nonce: nonce},
+            { txid, staker: wallet.address, cspminer: cspminer, amount: amount, nonce: nonce},
             constants.MaxUint256
           )
 
         const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))   
         const signature: PlantStaking.SigStruct = { v, r, s }  
 
-        await plantStaking.connect(wallet).stake(txid, cspminer[0], amount, nonce, constants.MaxUint256, signature) 
+        await plantStaking.connect(wallet).stake(txid, cspminer, amount, nonce, constants.MaxUint256, signature) 
       }
 
       async function walletUnstake(wallet: SignerWithAddress, amount: BigNumber, reward: BigNumber) {
         const {nonce}  = await plantStaking.stakeInfo(wallet.address)
         const txid = BigNumber.from(2345)
-        const cspminer = randomAddresses(1)
+        const cspminer = "0x280a7c4E032584F97E84eDd396a00799da8D061A"
   
         const digest = getPlantUnstakingDigest(
             'Plant Miner Staking',
             plantStaking.address,
-            {txid, staker: wallet.address, cspminer: cspminer[0], amount: amount, reward:reward, nonce: nonce},
+            {txid, staker: wallet.address, cspminer: cspminer, amount: amount, reward:reward, nonce: nonce},
             constants.MaxUint256
           )
 
         const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))   
         const signature: PlantStaking.SigStruct = { v, r, s }  
 
-        await plantStaking.connect(wallet).unstakeWithReward(txid, cspminer[0], amount, reward, nonce, constants.MaxUint256, signature) 
+        await plantStaking.connect(wallet).unstakeWithReward(txid, cspminer, amount, reward, nonce, constants.MaxUint256, signature) 
       }
 
       it("PlantStaking Test", async function () {
@@ -186,43 +186,43 @@ describe("PlantStaking test", ()=> {
         const {nonce}  = await plantStaking.stakeInfo(user1.address)
         const txid = BigNumber.from(4567)
 
-        const cspminer = randomAddresses(5)
+        const cspminer = "0x280a7c4E032584F97E84eDd396a00799da8D061A"
   
         const digest = getPlantUnstakingDigest(
             'Plant Miner Staking',
             plantStaking.address,
-            {txid, staker: user1.address, cspminer: cspminer[0], amount, reward, nonce},
+            {txid, staker: user1.address, cspminer: cspminer, amount, reward, nonce},
             constants.MaxUint256
           )
 
         const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))   
         const signature: PlantStaking.SigStruct = { v, r, s }  
 
-        await expect(plantStaking.connect(user1).unstakeWithReward(txid, cspminer[0], 0, 0, nonce, constants.MaxUint256, signature))
+        await expect(plantStaking.connect(user1).unstakeWithReward(txid, cspminer, 0, 0, nonce, constants.MaxUint256, signature))
                       .to.be.revertedWith("Zero Stake")
 
-        await expect(plantStaking.connect(user1).unstakeWithReward(txid, cspminer[0], amount, reward, nonce.add(1), constants.MaxUint256, signature))
+        await expect(plantStaking.connect(user1).unstakeWithReward(txid, cspminer, amount, reward, nonce.add(1), constants.MaxUint256, signature))
                       .to.be.revertedWith("Nonce Not Match")
 
-        await expect(plantStaking.connect(user1).unstakeWithReward(txid, cspminer[0], expandTo18Decimals(150000+10000).add(1), reward, nonce, constants.MaxUint256, signature))
+        await expect(plantStaking.connect(user1).unstakeWithReward(txid, cspminer, expandTo18Decimals(150000+10000).add(1), reward, nonce, constants.MaxUint256, signature))
                       .to.be.revertedWith("Unstake Overflowed")
 
-        await expect(plantStaking.connect(user1).unstakeWithReward(txid, cspminer[0], amount.add(1), reward, nonce, constants.MaxUint256, signature))
+        await expect(plantStaking.connect(user1).unstakeWithReward(txid, cspminer, amount.add(1), reward, nonce, constants.MaxUint256, signature))
                       .to.be.revertedWith("Wrong Signature")
 
-        await expect(plantStaking.connect(user1).unstakeWithReward(txid, cspminer[0], amount, reward, nonce, constants.MaxUint256, signature))
+        await expect(plantStaking.connect(user1).unstakeWithReward(txid, cspminer, amount, reward, nonce, constants.MaxUint256, signature))
                       .to.be.revertedWith("ERC20: insufficient allowance")
 
         await arkreenToken.approve(plantStaking.address, constants.MaxUint256)
 
          // Event
-         await expect(plantStaking.connect(user1).unstakeWithReward(txid, cspminer[0], amount, reward, nonce, constants.MaxUint256, signature))
+         await expect(plantStaking.connect(user1).unstakeWithReward(txid, cspminer, amount, reward, nonce, constants.MaxUint256, signature))
                       .to.emit(arkreenToken, 'Transfer')
                       .withArgs(deployer.address, plantStaking.address, reward)    
                       .to.emit(arkreenToken, 'Transfer')
                       .withArgs(plantStaking.address, user1.address, amount.add(reward))    
                       .to.emit(plantStaking, 'Unstake')
-                      .withArgs(txid, user1.address, cspminer[0], amount, reward)   
+                      .withArgs(txid, user1.address, cspminer, amount, reward)   
 
         const stakeInfo1A = await plantStaking.stakeInfo(user1.address)
         const stakeInfo2A = await plantStaking.stakeInfo(user2.address)

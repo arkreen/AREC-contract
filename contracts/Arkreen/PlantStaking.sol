@@ -6,7 +6,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeab
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
-contract PlantStaking is OwnableUpgradeable, ReentrancyGuardUpgradeable, UUPSUpgradeable {
+contract PlantStaking is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgradeable {
 
     bytes32 public _DOMAIN_SEPARATOR;
     IERC20Upgradeable public stakingToken;
@@ -21,8 +21,15 @@ contract PlantStaking is OwnableUpgradeable, ReentrancyGuardUpgradeable, UUPSUpg
 
     struct StakeInfo {
         uint64  nonce;
-        uint96 amountStake;   							// Enough for AKRE: 10**28 
-        uint96 rewardStake;							    // Enough for AKRE or ART
+        uint96  amountStake;   							  // Enough for AKRE: 10**28 
+        uint96  rewardStake;							    // Enough for AKRE or ART
+    }  
+
+    struct MinerStakeInfo {
+        uint32  stakeCounter;
+        uint32  unstakeCounter;
+        uint96  amountStake;   							  // Enough for AKRE: 10**28 
+        uint96  rewardStake;							    // Enough for AKRE or ART
     }  
 
     struct Sig {
@@ -32,6 +39,7 @@ contract PlantStaking is OwnableUpgradeable, ReentrancyGuardUpgradeable, UUPSUpg
     }
 
     mapping(address => StakeInfo) public stakeInfo;
+    mapping(address => MinerStakeInfo) public minerStakeInfo;
 
     uint96 public totalStake;
     uint96 public totalReward;
@@ -98,6 +106,9 @@ contract PlantStaking is OwnableUpgradeable, ReentrancyGuardUpgradeable, UUPSUpg
         stakeInfo[msg.sender].amountStake = stakeInfo[msg.sender].amountStake + uint96(amount);   // imposssible overflow for AKRE
         totalStake = totalStake + uint96(amount);
 
+        minerStakeInfo[cspminer].stakeCounter += 1; 
+        minerStakeInfo[cspminer].amountStake += uint96(amount); 
+
         require(IERC20Upgradeable(stakingToken).transferFrom(msg.sender, address(this), amount));
 
         emit Stake(txid, msg.sender, cspminer, amount);
@@ -120,6 +131,10 @@ contract PlantStaking is OwnableUpgradeable, ReentrancyGuardUpgradeable, UUPSUpg
         stakeInfo[msg.sender].rewardStake = stakeInfo[msg.sender].rewardStake + uint96(reward);
         totalStake = totalStake - uint96(amount);
         totalReward = totalReward + uint96(reward);
+
+        minerStakeInfo[cspminer].unstakeCounter += 1; 
+        minerStakeInfo[cspminer].amountStake -= uint96(amount); 
+        minerStakeInfo[cspminer].rewardStake += uint96(reward); 
 
         require(IERC20Upgradeable(stakingToken).transferFrom(rewarder, address(this), reward));
         require(IERC20Upgradeable(stakingToken).transfer(msg.sender, amount + reward));

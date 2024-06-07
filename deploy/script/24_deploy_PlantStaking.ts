@@ -33,7 +33,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     /*
     console.log("Deploying: ", "PlantStaking", deployer);  
-    const claimToken = await deploy("PlantStaking", {
+    const plantStaking = await deploy("PlantStaking", {
         from: deployer,
         proxy: {
           proxyContract: "UUPSProxy",
@@ -48,21 +48,25 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         skipIfAlreadyDeployed: false,
         gasPrice: defaultGasPrice
     });
-  */
-  
-    // 2024/05/23
-    const IMPLEMENTATION_ADDRESS ="0xD2c96ACD402e913B5aD2d2C3bCb557d384b5c551"
-    const callData = PlantStaking__factory.createInterface().encodeFunctionData("initialize", [tokenAKRE, rewarder, manager])
+    */
     
-    const UUPSProxyContract = await deploy(CONTRACTS.UUPSProxy, {
+    // 2024/05/23
+    // const IMPLEMENTATION_ADDRESS ="0xD2c96ACD402e913B5aD2d2C3bCb557d384b5c551"   // Polygon mainnet
+
+    // 2024/06/04
+    const IMPLEMENTATION_ADDRESS ="0x444a7eec4b796372102b905d9ecab5a2080dc65b"
+    
+    const callData = PlantStaking__factory.createInterface().encodeFunctionData("initialize", [tokenAKRE, rewarder, manager])
+    const plantStaking = await deploy(CONTRACTS.UUPSProxy, {
         from: deployer,
         args: [IMPLEMENTATION_ADDRESS, deployer, callData],
         log: true,
         skipIfAlreadyDeployed: false,
         gasPrice: defaultGasPrice
     });
+    
   
-    console.log("USDT deployed to %s: ", hre.network.name, UUPSProxyContract.address);
+    console.log("PlantStaking deployed to %s: ", hre.network.name, plantStaking.address);
 };
 
 // 2024/05/16
@@ -74,6 +78,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:PlantStaking    : Polygon mainnet
 // Proxy:                 0xD16457cD8b1a0ac6f7F3dFFdaA610B038Cf91579 （UUPS）
 // Implementaion:         0xD2c96ACD402e913B5aD2d2C3bCb557d384b5c551 
+
+// 2024/06/4
+// yarn deploy:matic_test:PlantStaking    : Amoy testnet (Dev Anv), add miner statistics
+// Proxy:                 0xc585886B2A3E8a177351cB47754c7295C3C49922
+// Implementaion:         0x444a7eec4b796372102b905d9ecab5a2080dc65b
 
 func.tags = ["PlantStaking"];
 

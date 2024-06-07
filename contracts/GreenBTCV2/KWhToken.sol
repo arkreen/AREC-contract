@@ -28,7 +28,7 @@ contract KWhToken is
     address public arkreenBuilder;
     address public offsetManager;
 
-    mapping(address => uint256) public priceForSwap;               // Mapping ART/USDC/USDT -> ConverterInfo
+    mapping(address => uint256) public priceForSwap;            // Mapping ART/USDC/USDT -> ConverterInfo
 
     IArkreenBuilder.BadgeInfo public badgeInfo;									// Badge info used for AREC Climate badge
 
@@ -119,6 +119,8 @@ contract KWhToken is
 
         uint256 amountKWh = amountPayment;
         if (tokenToPay != tokenART) amountKWh = amountPayment * (10**6) / price;      // kWh decimal is 6, so hardcoded here
+
+        
 
         require(IERC20Upgradeable(tokenToPay).transferFrom(msg.sender, address(this), amountPayment));
         require(IERC20Upgradeable(this).transfer(msg.sender, amountKWh));

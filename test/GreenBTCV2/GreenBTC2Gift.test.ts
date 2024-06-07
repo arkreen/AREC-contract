@@ -21,6 +21,8 @@ import {
     WETH9,
     ERC20F,
     GreenBTC2,
+    GreenBTCGift,
+    GreenBTCGift__factory,
     GreenBTC2__factory,
     ArkreenToken__factory,
     ArkreenTokenTest__factory
@@ -66,6 +68,8 @@ describe("GreenBTC2 Test Campaign", ()=>{
     let WETH:                         WETH9
     let tokenA:                       ERC20F
     let greenBTC2:                    GreenBTC2
+    let greenBTCGift:                 GreenBTCGift
+   
 
     const FORMAL_LAUNCH = 1682913600;         // 2024-05-01, 12:00:00
     const Miner_Manager       = 0 
@@ -152,9 +156,15 @@ describe("GreenBTC2 Test Campaign", ()=>{
         const greenBTC2 = await upgrades.deployProxy(GreenBTC2Factory, [kWhToken.address, manager.address]) as GreenBTC2
         await greenBTC2.deployed()
 
+        const GreenBTCGiftFactory = await ethers.getContractFactory("GreenBTCGift")
+        const greenBTCGift = await upgrades.deployProxy(GreenBTCGiftFactory, [greenBTC2.address, AKREToken.address]) as GreenBTCGift
+        await greenBTCGift.deployed()
+
+
+
         return { AKREToken, arkreenMiner, arkreenRegistry, arkreenRECIssuance, arkreenRECToken, 
           arkreenRetirement, arkreenRECIssuanceExt, arkreenRECBank, kWhToken, WETH, tokenA,
-          greenBTC2 }
+          greenBTC2, greenBTCGift }
     }
 
     describe('GreenBTC2 test', () => {
@@ -235,6 +245,7 @@ describe("GreenBTC2 Test Campaign", ()=>{
         WETH = fixture.WETH
         tokenA = fixture.tokenA
         greenBTC2 = fixture.greenBTC2
+        greenBTCGift = fixture.greenBTCGift
 
         {
           const startTime = 1564888526
@@ -308,8 +319,14 @@ describe("GreenBTC2 Test Campaign", ()=>{
       });
 
 
+      it("GreenBTC2Gift basics test", async function () {
 
-      it("GreenBTC2 basics test", async function () {
+        await greenBTCGift.testDecimalPower()
+        
+      });
+
+
+      it("GreenBTC2Gift basics test", async function () {
 
         await AKREToken.transfer(greenBTC2.address, expandTo18Decimals(100000000))
 
@@ -332,8 +349,8 @@ describe("GreenBTC2 Test Campaign", ()=>{
         await mine(5)
 
         const Bytes32_Zero = "0x0000000000000000000000000000000000000000000000000000000000000000"
-        const shotResult = await greenBTC2["checkIfShot(uint256,bytes32)"](1, Bytes32_Zero)
 
+        const shotResult = await greenBTC2["checkIfShot(uint256,bytes32)"](1, Bytes32_Zero)
 
 //        console.log("VVVVVVVVVVVVVVVV", receipt, shotResult);
         console.log("VVVVVVVVVVVVVVVV", shotResult);

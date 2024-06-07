@@ -61,17 +61,7 @@ describe("KWhToken Test Campaign", () => {
     let WETH:                         WETH9
     let tokenA:                       ERC20F
 
-    const FORMAL_LAUNCH = 1682913600;         // 2024-05-01, 12:00:00
     const Miner_Manager       = 0 
-    const MASK_OFFSET = BigNumber.from('0x8000000000000000')
-    const MASK_DETAILS = BigNumber.from('0xC000000000000000')    
-
-    const startTime = 1564888526
-    const endTime   = 1654888526
-    const region = "Shanghai"
-    const url = "https://www.arkreen.com/AREC/"
-    const memo = "Test Update"   
-    const cID = "bafybeihepmxz4ytc4ht67j73nzurkvsiuxhsmxk27utnopzptpo7wuigte"        
 
     async function deployFixture() {
       let lastBlock = await ethers.provider.getBlock('latest')
