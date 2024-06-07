@@ -392,7 +392,7 @@ contract GreenBTC2 is
 
     /**
      * @dev Calculate if won the gifts
-     * @param actionInfo the actionInfo used in calculation, must be in the format:
+     * @param actionInfo the actionInfo used in calculation, must be in the correct format:
      *      blockHeight: MSB0:4; domainId: MSB4:2, msb (Claimed Flag) must be cleared
      *      boxStart: MSB6:3; boxAmount: MSB9:3; Owner address: MSB12:20
      * @return counters offset of the green box IDs in the wonList, an array with length of 8
@@ -418,30 +418,11 @@ contract GreenBTC2 is
         for (uint256 index = 0; index < boxAmount; index++) {
             uint16 ration = uint16(luckyTemp);
             if (ration < ratioSum) {
-                if (ration < uint16(domainInfo >> 176)) {
-                    result[index] = 1; 
-                    counters[0] += 1;
-                } else if (ration < uint16(domainInfo >> 160)) {
-                    result[index] = 2;
-                    counters[1] += 1;
-                } else if (ration < uint16(domainInfo >> 144)) { 
-                    result[index] = 3;
-                    counters[2] += 1;
-                } else if (ration < uint16(domainInfo >> 128)) { 
-                    result[index] = 4;
-                    counters[3] += 1;
-                } else if (ration < uint16(domainInfo >> 112)) {
-                    result[index] = 5;
-                    counters[4] += 1;
-                } else if (ration < uint16(domainInfo >>  96)) { 
-                    result[index] = 6;
-                    counters[5] += 1;
-                } else if (ration < uint16(domainInfo >>  80)) { 
-                    result[index] = 7;
-                    counters[6] += 1;
-                } else if (ration < uint16(domainInfo >>  64)) {    // here must be (ration < uint16(domainInfo >> 64))
-                    result[index] = 8;                              
-                    counters[7] += 1;
+                for (uint256 ind = 0; ind < 8; ind++) {
+                    if (ration < uint16(domainInfo >> (176 - (16 * ind)))) {
+                        result[index] = uint8(ind + 1); 
+                        counters[ind] += 1;
+                    }
                 }
             }
 
@@ -453,17 +434,6 @@ contract GreenBTC2 is
             }
         }
 
-        /*
-        // For testing
-        {
-            bytes memory resultBytes = new bytes(boxAmount);
-            for (uint256 index = 0; index < boxAmount; index++) {
-                resultBytes[index] = bytes1(0x30 + result[index]);
-            }
-            console.log(string(resultBytes));
-        }
-        */
-
         uint256 totalWon = 0;
         for (uint256 index = 0; index < 8; index++)
             (totalWon, counters[index]) = (totalWon + counters[index], uint24(totalWon));   // counter become the offset
@@ -474,7 +444,7 @@ contract GreenBTC2 is
             if (wonType != 0) {
                 uint24 offset = counters[--wonType];                                       // get won offset
                 wonList[offset] = uint24(boxStart + index);
-                counters[wonType] = offset + 1;                                             // move the offset
+                counters[wonType] = offset + 1;                                            // move the offset
             }
         }
 
