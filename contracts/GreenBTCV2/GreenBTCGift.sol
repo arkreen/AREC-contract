@@ -146,7 +146,7 @@ contract GreenBTCGift is
 
         //address akre1 = tokenAKRE;
         //result = uint256(greenBTCGifts[0x123]);
-        uint256[] memory buffer = new uint256[](200);
+        uint8[] memory buffer = new uint8[](200);
         uint256 gasAfter3 = gasleft();
 
         console.log('QQQQQQQQQ', akre, gasAfter2, gasAfter3);

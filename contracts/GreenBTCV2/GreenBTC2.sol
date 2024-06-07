@@ -269,22 +269,13 @@ contract GreenBTC2 is
     function checkIfShot (uint256 actionID, bytes32 hash) public view 
             returns (uint256, uint256, uint24[] memory, uint24[] memory) {
             
-//        bytes storage actionIds = userActionIDs[user];
-//        uint256 totalActions = actionIds.length / 4;
-
-//        if (actionID == 0) {
-//            uint256 index = actionIds.length - 4 ;
-//            actionID =  (uint256(uint8(actionIds[index])) << 24) + (uint256(uint8(actionIds[index+1])) << 16) +
- //                           (uint256(uint8(actionIds[index+2])) << 8) + (uint256(uint8(actionIds[index+3])));
-//        }
-
         uint256 actionInfo = uint256(greenActions[actionID]);
         uint256 blockHeight = actionInfo >> 224;                        // block height of the green action
 
         uint256 domainID = (actionInfo >> 208) & 0xFFFF;
 
         uint24[] memory wonList;
-        uint24[] memory counters = new uint24[](8);
+        uint24[] memory counters;
 
         uint256 actionResult = uint256(ShotStatus.Normal);
         if (blockHeight == 0) {
@@ -298,95 +289,11 @@ contract GreenBTC2 is
             } else if (block.number > (blockHeight+256)) {
                 actionResult = uint256(ShotStatus.Overtimed);           // overtimed
             } else {
-                uint256 luckyNumber = (actionID << 224) + ((actionInfo << 4) >> 4);                  // replace blockHeight with actionID
-                luckyNumber = uint256(keccak256(abi.encodePacked(blockhash(blockHeight), luckyNumber)));
-
-                console.logBytes32(bytes32(hash));
-
-                uint256 domainInfo = uint256(domains[domainID]);
-                uint256 boxStart = (actionInfo >> 184) & 0xFFFFFF;
-                uint256 boxAmount = (actionInfo >> 160) & 0xFFFFFF;
-                uint256 luckyTemp = luckyNumber;
-                uint16 ratioSum = uint16(domainInfo >> 64);
-
-                //// console.log("55555555555555555555555");
-                //// console.logBytes32(bytes32(domainInfo));
-
-                uint8[] memory result = new uint8[](boxAmount);
-                
-                for (uint256 index = 0; index < boxAmount; index++) {
-                    uint16 ration = uint16(luckyTemp);
-                    if (ration < ratioSum) {
-                        if (ration < uint16(domainInfo >> 176)) {
-                          //// console.log("11111111111", ration, uint16(domainInfo >> 176));  
-                          result[index] = 1; 
-                          counters[0] += 1;
-                        } else if (ration < uint16(domainInfo >> 160)) {
-                          //// console.log("22222222222", ration, uint16(domainInfo >> 160));  
-                          result[index] = 2;
-                          counters[1] += 1;
-                        } else if (ration < uint16(domainInfo >> 144)) { 
-                          //// console.log("33333333333", ration, uint16(domainInfo >> 144));  
-                          result[index] = 3;
-                          counters[2] += 1;
-                        } else if (ration < uint16(domainInfo >> 128)) { 
-                          //// console.log("444444444444444", uint16(domainInfo >> 128));  
-                          result[index] = 4;
-                          counters[3] += 1;
-                        } else if (ration < uint16(domainInfo >> 112)) {
-                          //// console.log("555555555555", ration, uint16(domainInfo >> 112));  
-                          result[index] = 5;
-                          counters[4] += 1;
-                        } else if (ration < uint16(domainInfo >>  96)) { 
-                          //// console.log("66666666666666", ration, uint16(domainInfo >> 96));  
-                          result[index] = 6;
-                          counters[5] += 1;
-                        } else if (ration < uint16(domainInfo >>  80)) { 
-                          //// console.log("777777777777777", ration, uint16(domainInfo >> 80));  
-                          result[index] = 7;
-                          counters[6] += 1;
-                        } else { 
-                          //// console.log("8888888888888888", ration, uint16(domainInfo >> 64));  
-                          result[index] = 8;         // here must be (ration < uint16(domainInfo >> 64))
-                          counters[7] += 1;
-                        }
-                    }
-                    luckyTemp = (luckyTemp >> 16);
-                    if ((index & 0xF) == 0x0F) {
-                      luckyNumber = uint256(keccak256(abi.encodePacked(luckyNumber)));
-                      luckyTemp = luckyNumber;
-                      //// console.logBytes32(bytes32(luckyNumber));
-                    }
-                }
-
-                {
-                    bytes memory resultBytes = new bytes(boxAmount);
-                    for (uint256 index = 0; index < boxAmount; index++) {
-                        resultBytes[index] = bytes1(0x30 + result[index]);
-                    }
-                    //// console.log(string(resultBytes));
-                }
-
-                uint256 totalWon = 0;
-                for (uint256 index = 0; index < 8; index++) {
-                    uint256 offset = totalWon;
-                    totalWon += counters[index];
-                    counters[index] = uint24(offset);               // accumulate counter to be offset
-                }
-
-                wonList = new uint24[](totalWon);
-                for (uint256 index = 0; index < boxAmount; index++) {
-                    uint256 wonType = result[index];
-                    if (wonType != 0) {
-                        wonType -= 1;                               // used as the offset
-                        wonList[counters[wonType]] = uint24(boxStart + index);
-                        counters[wonType] += 1;                     // move the offset
-                    }
-                }
+                actionInfo = (actionID << 224) + ((actionInfo << 4) >> 4);      // replace blockHeight with actionID
+                (counters, wonList) = CalculateGifts(actionInfo, blockhash(blockHeight));
             }
         }
 
-        //// console.log('QQQQQQQQQQQQ', totalActions);
         return (actionResult, blockHeight, counters, wonList);
     }  
 
@@ -422,17 +329,27 @@ contract GreenBTC2 is
                     if (ration < uint16(domainInfo >> (176 - (16 * ind)))) {
                         result[index] = uint8(ind + 1); 
                         counters[ind] += 1;
+                        break;
                     }
                 }
             }
 
-            if ((index & 0xF) == 0x0F) {
+            if ((index & 0x0F) == 0x0F) {
                 luckyNumber = uint256(keccak256(abi.encodePacked(luckyNumber)));
                 luckyTemp = luckyNumber;
             } else {
                 luckyTemp = (luckyTemp >> 16);
             }
         }
+
+                {
+                    bytes memory resultBytes = new bytes(boxAmount);
+                    for (uint256 index = 0; index < boxAmount; index++) {
+                        resultBytes[index] = bytes1(0x30 + result[index]);
+                    }
+                    console.log(string(resultBytes));
+                }
+
 
         uint256 totalWon = 0;
         for (uint256 index = 0; index < 8; index++)
