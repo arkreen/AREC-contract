@@ -570,6 +570,7 @@ export function getGreenBitcoinDigestBatch(
 export function getGreenBitcoinClaimGifts(
   contractName: string,
   contractAddress: string,
+  actionID:     number,
   blockHeight: number,
   blockHash: string,
 ): string {
@@ -590,8 +591,8 @@ export function getGreenBitcoinClaimGifts(
         DOMAIN_SEPARATOR,
         utils.keccak256(
           utils.defaultAbiCoder.encode(
-            ['bytes32', 'uint256', 'bytes32'],
-            [GREENBTC2_HASH, blockHeight, blockHash]
+            ['bytes32', 'uint256', 'uint256', 'bytes32'],
+            [GREENBTC2_HASH, actionID, blockHeight, blockHash]
           )
         )
       ]

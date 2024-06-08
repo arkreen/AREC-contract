@@ -81,7 +81,7 @@ contract GreenBTCGift is
 
             address giftToken = address(uint160(giftInfo >> 96));
             if ((giftToken == akre) || giftToken == address(0)) {
-                amountAKRE += uint256(uint32(giftInfo) >> 8) * amounts[index];
+                amountAKRE += (amounts[index] * uint256((uint32(giftInfo) >> 8)));
                 if (akreAmountDecimal == 0) {
                     akreAmountDecimal = uint8(giftInfo);
                 }
@@ -92,6 +92,7 @@ contract GreenBTCGift is
         }
 
         if (amountAKRE != 0) {
+            console.log('YYYYYYYYYYYYYYYYYYYY', amountAKRE);
             TransferHelper.safeTransferFrom(akre, msg.sender, address(this), amountAKRE * getDecimalPower(akreAmountDecimal));
         }
         _mintBatch(greener, giftIDs, amounts, '');
@@ -102,6 +103,7 @@ contract GreenBTCGift is
     function claimGift(uint256 giftID, uint256 amount) public {
         uint256 giftInfo = uint256(greenBTCGifts[giftID]);
         require ( giftInfo != 0, "GBTC: Wrong Gift ID");
+        require ( amount != 0, "GBTC: Zero Amout");
 
         _burn(msg.sender, giftID, amount);
 
@@ -113,32 +115,34 @@ contract GreenBTCGift is
         TransferHelper.safeTransfer(giftToken, msg.sender, amountToken);
     }
 
-    function claimMultiGifts(uint256[] memory giftIDs, uint256[] memory amounts) public {
+    function claimGiftBatch(uint256[] memory giftIDs, uint256[] memory amounts) public {
 
         require (giftIDs.length == amounts.length, "GBTC: Wrong Length");
         _burnBatch(msg.sender, giftIDs, amounts);
 
-        uint32 amountAKRE = 0;
+        uint256 amountAKRE;
+        uint8 akreAmountDecimal;
         address akre = tokenAKRE;
-        uint8 akreAmountDecimal = 0;
         for (uint256 index; index < giftIDs.length; index++) {
             uint256 giftInfo = uint256(greenBTCGifts[giftIDs[index]]);
             require ( giftInfo != 0, "GBTC: Wrong Gift ID");
 
             address giftToken = address(uint160(giftInfo >> 96));
             if ((giftToken == akre) || giftToken == address(0)) {
-                amountAKRE += (uint32(giftInfo) >> 8);
+                amountAKRE += (amounts[index] * uint256((uint32(giftInfo) >> 8)));
                 if (akreAmountDecimal == 0) {
                     akreAmountDecimal = uint8(giftInfo);
                 }
+                console.log("QQQQQQQQQQQ", amountAKRE, amounts[index], (uint32(giftInfo) >> 8));
             } else {
-                 uint256 amountToken = uint256(uint32(giftInfo) >> 8) * getDecimalPower(uint8(giftInfo));
-                TransferHelper.safeTransferFrom(giftToken, address(this), msg.sender, amountToken);
+                 uint256 amountToken = amounts[index] * uint256(uint32(giftInfo) >> 8) * getDecimalPower(uint8(giftInfo));
+                TransferHelper.safeTransfer(giftToken, msg.sender, amountToken);
             }
         }
 
         if (amountAKRE != 0) {
-            TransferHelper.safeTransferFrom(akre, address(this), msg.sender, amountAKRE * getDecimalPower(akreAmountDecimal));
+            console.log("PPPPPPPPPPPPPPPPPP", amountAKRE);
+            TransferHelper.safeTransfer(akre, msg.sender, amountAKRE * getDecimalPower(akreAmountDecimal));
         }
 
         emit GiftBatchClaimed(msg.sender, giftIDs, amounts);

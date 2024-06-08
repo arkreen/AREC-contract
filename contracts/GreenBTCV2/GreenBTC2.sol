@@ -86,7 +86,7 @@ contract GreenBTC2 is
 
     mapping (uint256 => uint256)  public blockHash;     // Mapping from block height to block hash
 
-    event ClaimedActionGifts(address indexed gbtcActor, uint256 actionID, uint256 height, bytes32 hash, uint256[] giftIDs, uint256[] amounts);
+    event ActionGiftsOpened(address indexed gbtcActor, uint256 actionID, uint256 height, bytes32 hash, uint256[] giftIDs, uint256[] amounts);
     event DomainRegistered(uint256 domainID, bytes32 domainInfo);
     event DomainGreenized(address gbtcActor, uint256 actionNumber, uint256 blockHeight, uint256 domainID, uint256 boxStart, uint256 boxNumber);
     event FundDeposit(address fundToken, uint256 fundAmount);
@@ -380,13 +380,13 @@ contract GreenBTC2 is
         return (counters, wonList);
     }
 
-    function claimActionGifts (uint256 actionID, uint256 height,  bytes32 hash, Sig calldata signature) public {
+    function openActionGifts (uint256 actionID, uint256 height,  bytes32 hash, Sig calldata signature) public {
         uint256 actionInfo = uint256(greenActions[actionID]);
 
         {   // Tricky to solve stack too deep problem
             require (height == (actionInfo >> 224), "GBC2: Wrong Block Height");    // check block height is same
 
-            bytes32 claimHash = keccak256(abi.encode(GREENBTC2_HASH, height, hash));
+            bytes32 claimHash = keccak256(abi.encode(GREENBTC2_HASH, actionID, height, hash));
             bytes32 digest = keccak256(abi.encodePacked('\x19\x01', DOMAIN_SEPARATOR, claimHash));
             address manager = ECDSAUpgradeable.recover(digest, signature.v, signature.r, signature.s);
 
@@ -439,6 +439,6 @@ contract GreenBTC2 is
             IGreenBTCGift(greenBTCGift).mintGifts(actionOwner, giftIDs, amounts);
         }
 
-      	emit ClaimedActionGifts(actionOwner, actionID, height, hash, giftIDs, amounts);
+      	emit ActionGiftsOpened(actionOwner, actionID, height, hash, giftIDs, amounts);
     }
 }
