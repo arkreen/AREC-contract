@@ -55,25 +55,38 @@ contract GreenBTCGift is
     function _authorizeUpgrade(address newImplementation) internal virtual override onlyOwner
     {}
 
+    function initGift(uint256 giftId, bytes32 giftInfo) public onlyOwner {
+
+        //console.log("GGGGGGGGGGGGGGGGGGGGGGG", giftId);
+        //console.logBytes32(giftInfo);
+        //console.logBytes32(greenBTCGifts[giftId]);
+
+        require (uint256(giftInfo) != 0, "GBTC: Wrong Gift Info");
+        require (uint256(greenBTCGifts[giftId]) == 0, "GBTC: Gift Repteated");
+        greenBTCGifts[giftId] = giftInfo;
+    }
+
+
     function mintGifts(address greener, uint256[] memory giftIDs, uint256[] memory amounts) public {
         require (msg.sender == greenBTC, "GBTC: Wrong Caller");
         require (giftIDs.length == amounts.length, "GBTC: Wrong Length");
 
-        uint32 amountAKRE = 0;
+        uint256 amountAKRE = 0;
         address akre = tokenAKRE;
         uint8 akreAmountDecimal = 0;
         for (uint256 index; index < giftIDs.length; index++) {
             uint256 giftInfo = uint256(greenBTCGifts[giftIDs[index]]);
+            //console.log("XXXXXXXXXX", giftIDs[index], giftInfo);
             require (giftInfo != 0, "GBTC: Wrong Gift ID");
 
             address giftToken = address(uint160(giftInfo >> 96));
             if ((giftToken == akre) || giftToken == address(0)) {
-                amountAKRE += (uint32(giftInfo) >> 8);
+                amountAKRE += uint256(uint32(giftInfo) >> 8) * amounts[index];
                 if (akreAmountDecimal == 0) {
                     akreAmountDecimal = uint8(giftInfo);
                 }
             } else {
-                 uint256 amountToken = uint256(uint32(giftInfo) >> 8) * getDecimalPower(uint8(giftInfo));
+                 uint256 amountToken = uint256(uint32(giftInfo) >> 8) * amounts[index] * getDecimalPower(uint8(giftInfo));
                 TransferHelper.safeTransferFrom(giftToken, msg.sender, address(this), amountToken);
             }
         }
@@ -96,6 +109,7 @@ contract GreenBTCGift is
         uint256 amountToken = amount * (uint24(giftInfo >> 8)) * getDecimalPower(uint8(giftInfo));
 
         emit GiftClaimed(msg.sender, giftID, amount);
+
         TransferHelper.safeTransfer(giftToken, msg.sender, amountToken);
     }
 

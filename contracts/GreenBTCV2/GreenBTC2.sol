@@ -55,8 +55,9 @@ contract GreenBTC2 is
 
     address public kWhToken;
     address public greenBTCGift;
-    uint256 public actionNumber;
     address public claimManager;
+
+    uint256 public actionNumber;
 
     // domains struct in bytes32: 
     // x: MSB0:1; y: MSB1:1; w: MSB2:1; h: MSB3:1; boxTop:MSB4:4
@@ -88,6 +89,7 @@ contract GreenBTC2 is
     event ClaimedActionGifts(address indexed gbtcActor, uint256 actionID, uint256 height, bytes32 hash, uint256[] giftIDs, uint256[] amounts);
     event DomainRegistered(uint256 domainID, bytes32 domainInfo);
     event DomainGreenized(address gbtcActor, uint256 actionNumber, uint256 blockHeight, uint256 domainID, uint256 boxStart, uint256 boxNumber);
+    event FundDeposit(address fundToken, uint256 fundAmount);
 
     // event Subsidy(uint256 height, uint256 ratio);
 
@@ -121,15 +123,15 @@ contract GreenBTC2 is
         DOMAIN_SEPARATOR = keccak256(
             abi.encode(
                 keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
-                keccak256(bytes(NAME)),
-                keccak256(bytes(VERSION)),
+                keccak256(bytes("Green BTC Club")),
+                keccak256(bytes("2")),
                 block.chainid,
                 address(this)
             )
         );  
 
-        claimManager = manager;
         kWhToken        = kWh;
+        claimManager    = manager;
     }
 
     function _authorizeUpgrade(address newImplementation) internal virtual override onlyOwner
@@ -138,6 +140,32 @@ contract GreenBTC2 is
     function convertRatio(uint16 chance) internal pure returns (uint16) {
         return  uint16((65536 * uint256(chance) + 5000) / 10000); 
     }
+
+    function setGreenBTCGift(address gift) public onlyOwner {
+        require(gift != address(0), "GBTC: Zero Address");
+        greenBTCGift = gift;
+    }
+
+    /**
+     * @dev Approve the tokens which can be transferred from this GreenBTC contract by arkreenBuilder
+     * @param tokens The token list
+     */
+    function approveGift(address[] calldata tokens) public onlyOwner {
+        require(greenBTCGift != address(0), "GBTC: No Gift");
+        for(uint256 i = 0; i < tokens.length; i++) {
+            TransferHelper.safeApprove(tokens[i], greenBTCGift, type(uint256).max);
+        }
+    }
+
+    /**
+     * @dev Deposit various fund tokens to green BTC club 2
+     * @param fundToken Token address of the ART to deposit. 
+     * @param fundAmount Amount of the fund to deposit.
+     */
+    function depositFund(address fundToken, uint256 fundAmount) external {
+        TransferHelper.safeTransferFrom(fundToken, msg.sender, address(this), fundAmount);
+        emit FundDeposit(fundToken, fundAmount);
+    }  
 
     /**
      * @dev Register a new domain
@@ -164,6 +192,7 @@ contract GreenBTC2 is
         require (ratioSum < 65536, "GBC2: Wrong Chance");
 
         domainInfoSaved += ((uint256(domainInfo) >> 192) << 192);
+        domainInfoSaved += uint64(uint256(domainInfo));
         domains[domainID] = bytes32(domainInfoSaved);
         emit DomainRegistered(domainID, domainInfo);
     }
@@ -200,7 +229,7 @@ contract GreenBTC2 is
 
         uint256 kWhAmount = boxSteps * 1e8;     // convert to kWh
 
-        console.log('AAAAAAAAAAAA', boxMadeGreen, boxSteps, kWhAmount);
+        //console.log('AAAAAAAAAAAA', boxMadeGreen, boxSteps, kWhAmount);
 
         IkWhToken(kWhToken).burnFrom(msg.sender, kWhAmount);
 
@@ -217,44 +246,19 @@ contract GreenBTC2 is
 
         setDomainBoxMadeGreen(domainID, boxMadeGreen + boxSteps);
 
-        console.logBytes32(actionValue);
-        console.logBytes(userActionIDs[msg.sender]);
-        console.logBytes(domainActionIDs[domainID]);
+        //console.logBytes32(actionValue);
+        //console.logBytes(userActionIDs[msg.sender]);
+        //console.logBytes(domainActionIDs[domainID]);
 
         emit DomainGreenized(msg.sender, actionNumber, block.number, domainID, boxMadeGreen, boxSteps);
     }
 
     /**
      * @dev Check the green action lucky result of a given user and the given green action
-     * @param user address of the user
-     * @return actionResult the result of the checking:
-     *                      0: Normal, the action has not been claimed, all action lucky result returned
-     *                      1: Claimed, the action has been claimed, all action lucky result returned
-     *                      2: Overtimed, all action lucky result not available as the 256 blocks passed
-     *                      3: Not Ready, too early to reveal the result, all action lucky result not available
-     * @return totalActions the total green action executed by the given user   
-     * @return counters offset of the green box IDs in the wonList, an array with length of 8
-     * @return wonList the lucky green box IDs list, whose length is always counters[7]
-     */
-    function checkIfShot (address user, bytes32 hash) public view 
-            returns (uint256, uint256, uint24[] memory, uint24[] memory) {
-            
-        bytes storage actionIds = userActionIDs[user];
-
-        uint256 index = actionIds.length - 4 ;
-        uint256 actionID =  (uint256(uint8(actionIds[index])) << 24) + (uint256(uint8(actionIds[index+1])) << 16) +
-                            (uint256(uint8(actionIds[index+2])) << 8) + (uint256(uint8(actionIds[index+3])));
-
-        return checkIfShot(actionID, hash);
-    }
-
-//      * @return totalActions the total green action executed by the given user   
-//     * @return actionID the green action id of the returned result
-
-
-    /**
-     * @dev Check the green action lucky result of a given user and the given green action
-     * @param actionID ID of the green action to be checked. = 0, check last action; others, unique green action ID for each green action
+     * @param user address of the user, if the acion pointered by actionID is not claimed, the 'user' can be optional
+     * @param actionID ID of the green action to be checked. = 0, check last action; others, unique green action ID of the actiom
+     * @param hash Hash value of the block containing the action
+     * @return actionID action ID of the action, same as the input if it is non-zero, otherwise it is the user's last action.
      * @return actionResult the result of the checking:
      *                      0: Normal, the action has not been claimed, all action lucky result returned
      *                      1: Claimed, the action has been claimed, all action lucky result returned
@@ -264,37 +268,54 @@ contract GreenBTC2 is
      * @return counters offset of the green box IDs in the wonList, an array with length of 8
      * @return wonList the lucky green box IDs list, whose length is always counters[7]
      */
+    function checkIfShot (address user, uint256 actionID, bytes32 hash) public view 
+            returns (uint256, uint256, uint256, uint24[] memory, uint24[] memory) {
 
-
-    function checkIfShot (uint256 actionID, bytes32 hash) public view 
-            returns (uint256, uint256, uint24[] memory, uint24[] memory) {
-            
+        if (actionID == 0) {                                            // use last action id if not provided
+            bytes storage actionIds = userActionIDs[user];              // assume user is given here
+            uint256 index = actionIds.length - 4 ;
+            actionID = (uint256(uint8(actionIds[index])) << 24) + (uint256(uint8(actionIds[index+1])) << 16) +
+                            (uint256(uint8(actionIds[index+2])) << 8) + (uint256(uint8(actionIds[index+3])));
+        }
+           
         uint256 actionInfo = uint256(greenActions[actionID]);
         uint256 blockHeight = actionInfo >> 224;                        // block height of the green action
-
         uint256 domainID = (actionInfo >> 208) & 0xFFFF;
 
         uint24[] memory wonList;
         uint24[] memory counters;
-
         uint256 actionResult = uint256(ShotStatus.Normal);
         if (blockHeight == 0) {
             actionResult = uint256(0xFF);                               // no given green action
         } else if (domainID >= 0x8000) {
             actionResult = uint256(ShotStatus.Claimed);                 // already claimed.
-        } else {
-            // waiting 3 blocks to protect againt in case blockchain is forked. Less than is possible if a node is lagged
-            if (block.number <= (blockHeight + 3)) {
-                actionResult = uint256(ShotStatus.NotReady);            // not ready
-            } else if (block.number > (blockHeight+256)) {
-                actionResult = uint256(ShotStatus.Overtimed);           // overtimed
+            if ((user == address(0)) || (uint256(hash) == 0)) {         // return stored won info
+                counters = new uint24[](8);
+                for (uint256 index = 0; index < 8; index++) {
+                    counters[index] = uint24(actionInfo >> (144 - (16 * index)));
+                }
             } else {
-                actionInfo = (actionID << 224) + ((actionInfo << 4) >> 4);      // replace blockHeight with actionID
-                (counters, wonList) = CalculateGifts(actionInfo, blockhash(blockHeight));
+                actionInfo = (actionID << 224) + ((actionInfo << 4) >> 4);          // replace blockHeight with actionID
+                actionInfo = ((actionInfo >> 160) << 160) + uint256(uint160(user)); // merge user address
+                actionInfo ^= (1 << 223);                                           // clear "Claimed" flag
+                (counters, wonList) = CalculateGifts(actionInfo, hash);             // hash must be correct, otherwise get wrong result
             }
+        } else {
+            // waiting 3 blocks to protect againt blockchain is forked. Less than is possible if a node is lagged
+            if (block.number <= (blockHeight + 3)) {
+                actionResult = uint256(ShotStatus.NotReady);                        // not ready
+            } else {
+                if ((block.number > (blockHeight+256)) && (uint256(hash) == 0)) {
+                    actionResult = uint256(ShotStatus.Overtimed);                   // overtimed                    
+                } else {
+                    actionInfo = (actionID << 224) + ((actionInfo << 4) >> 4);      // replace blockHeight with actionID
+                    if (block.number <= (blockHeight+256)) hash = blockhash(blockHeight); 
+                    (counters, wonList) = CalculateGifts(actionInfo, hash);
+                }
+            }            
         }
 
-        return (actionResult, blockHeight, counters, wonList);
+        return (actionID, actionResult, blockHeight, counters, wonList);
     }  
 
     /**
@@ -342,15 +363,6 @@ contract GreenBTC2 is
             }
         }
 
-                {
-                    bytes memory resultBytes = new bytes(boxAmount);
-                    for (uint256 index = 0; index < boxAmount; index++) {
-                        resultBytes[index] = bytes1(0x30 + result[index]);
-                    }
-                    console.log(string(resultBytes));
-                }
-
-
         uint256 totalWon = 0;
         for (uint256 index = 0; index < 8; index++)
             (totalWon, counters[index]) = (totalWon + counters[index], uint24(totalWon));   // counter become the offset
@@ -381,7 +393,10 @@ contract GreenBTC2 is
             require (manager == claimManager, "Wrong Signature");
         }
 
-        (uint256 actionResult, , uint24[] memory counters,) = checkIfShot(actionID, hash);           
+        (, uint256 actionResult, , uint24[] memory counters,) = checkIfShot(address(0), actionID, hash);    
+
+        //console.log('HHHHHHHHHHHHHHHHHHHH', actionResult, actionID);
+        //console.logBytes32(hash);
 
         if (actionResult != uint256(ShotStatus.Normal)) {
             if (actionResult == uint256(0xFF)) revert ("GBC2: Wrong Action ID");
@@ -395,12 +410,14 @@ contract GreenBTC2 is
 
         for (uint256 index = 0; index < 8; index++) { 
             wontimes[index] = (index == 0) ? counters[index] : (counters[index] - counters[index - 1]);
-            wonResult = (wonResult << (index * 16)) + wontimes[index];                      // Merge the wonResult
+            require(wontimes[index] <= 0xFFFF);
+            wonResult = (wonResult << (index * 16)) + wontimes[index];         // !!!! Assuming wontimes less than uint16 here !!!!
             if (wontimes[index] != 0) wonCounter++;
         }
 
+        address actionOwner = address(uint160(actionInfo));
         actionInfo = ((actionInfo >> 160) << 160) + (wonResult << 32) + (1 << 223);         // Merge the wonResult and set "Claimed" flag
-        greenActions[actionID] = bytes32(actionInfo);
+        greenActions[actionID] = bytes32(actionInfo);                                       // Saved on chain as proof
 
         uint256[] memory giftIDs;
         uint256[] memory amounts;
@@ -419,9 +436,9 @@ contract GreenBTC2 is
                 }
             }
 
-            IGreenBTCGift(greenBTCGift).mintGifts(msg.sender, giftIDs, amounts);
+            IGreenBTCGift(greenBTCGift).mintGifts(actionOwner, giftIDs, amounts);
         }
 
-      	emit ClaimedActionGifts(msg.sender, actionID, height, hash, giftIDs, amounts);
+      	emit ClaimedActionGifts(actionOwner, actionID, height, hash, giftIDs, amounts);
     }
 }

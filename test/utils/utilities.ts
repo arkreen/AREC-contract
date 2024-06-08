@@ -73,8 +73,10 @@ export function RemoveLeftPercent(n: BigNumber, ratio: number, Liquidity: BigNum
   return n.mul(BigNumber.from(ratio)).div(BigNumber.from(100)).mul(MINIMUM_LIQUIDITY).div(Liquidity)
 }
 
-export function getDomainSeparator(name: string, contractAddress: string) {
+export function getDomainSeparator(name: string, contractAddress: string, version?: string ) {
   const chainId = hre.network.config.chainId
+
+  if (version === undefined) version = '1'
 
   return utils.keccak256(
     utils.defaultAbiCoder.encode(
@@ -82,7 +84,7 @@ export function getDomainSeparator(name: string, contractAddress: string) {
       [
         utils.keccak256(utils.toUtf8Bytes('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)')),
         utils.keccak256(utils.toUtf8Bytes(name)),
-        utils.keccak256(utils.toUtf8Bytes('1')),
+        utils.keccak256(utils.toUtf8Bytes(version)),
         chainId,
         contractAddress
       ]
@@ -564,6 +566,39 @@ export function getGreenBitcoinDigestBatch(
     )
   )
 }
+
+export function getGreenBitcoinClaimGifts(
+  contractName: string,
+  contractAddress: string,
+  blockHeight: number,
+  blockHash: string,
+): string {
+  const DOMAIN_SEPARATOR = getDomainSeparator(contractName, contractAddress, '2')
+
+  // keccak256("GreenBTC2(uint256 height,bytes32 hash)");
+  // 0xC06BCEF3A0C6ADEEA66203210D224C78DCC6461AC236D0B3451FC8707E963A22
+  const GREENBTC2_HASH = utils.keccak256(
+    utils.toUtf8Bytes('GreenBTC2(uint256 height,bytes32 hash)')
+  )
+
+  return utils.keccak256(
+    utils.solidityPack(
+      ['bytes1', 'bytes1', 'bytes32', 'bytes32'],
+      [
+        '0x19',
+        '0x01',
+        DOMAIN_SEPARATOR,
+        utils.keccak256(
+          utils.defaultAbiCoder.encode(
+            ['bytes32', 'uint256', 'bytes32'],
+            [GREENBTC2_HASH, blockHeight, blockHash]
+          )
+        )
+      ]
+    )
+  )
+}
+
 
 export async function getApprovalDigest(
   token: Contract,

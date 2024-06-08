@@ -160,7 +160,7 @@ describe("GreenBTC2 Test Campaign", ()=>{
         const greenBTCGift = await upgrades.deployProxy(GreenBTCGiftFactory, [greenBTC2.address, AKREToken.address]) as GreenBTCGift
         await greenBTCGift.deployed()
 
-
+        await greenBTC2.setGreenBTCGift(greenBTCGift.address)
 
         return { AKREToken, arkreenMiner, arkreenRegistry, arkreenRECIssuance, arkreenRECToken, 
           arkreenRetirement, arkreenRECIssuanceExt, arkreenRECBank, kWhToken, WETH, tokenA,
@@ -349,10 +349,10 @@ describe("GreenBTC2 Test Campaign", ()=>{
         await mine(5)
 
         const Bytes32_Zero = "0x0000000000000000000000000000000000000000000000000000000000000000"
+        const shotResult = await greenBTC2.checkIfShot(deployer.address, 1, Bytes32_Zero)
 
-        const shotResult = await greenBTC2["checkIfShot(uint256,bytes32)"](1, Bytes32_Zero)
 
-//        console.log("VVVVVVVVVVVVVVVV", receipt, shotResult);
+        console.log("VVVVVVVVVVVVVVVV", receipt, shotResult);
         console.log("VVVVVVVVVVVVVVVV", shotResult);
 
 //        await expect(GreenBTC2.registerDomain(domainID, domainInfoBigInt.toHexString())).to.be.revertedWith("CLAIM: Not Manager")
