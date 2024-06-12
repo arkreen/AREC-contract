@@ -360,25 +360,19 @@ describe("GreenBTC2 Test Campaign", ()=>{
           await kWhToken.connect(owner1).convertKWh(arkreenRECToken.address, expandTo9Decimals(5000))
 
         }
-        
       });
 
-/*
       it("GreenBTC2 basics test", async function () {
 
         await AKREToken.transfer(greenBTC2.address, expandTo18Decimals(100000000))
 
         const domainID = 1
+        await expect( await greenBTC2.registerDomain(domainID, domainInfoBigInt.toHexString()))
+                .to.emit(greenBTC2, 'DomainRegistered')
+                .withArgs(domainID, domainInfoBigInt.toHexString())
 
-        const registerDomainTx = await greenBTC2.registerDomain(domainID, domainInfoBigInt.toHexString())
-
-        expect(await greenBTC2.getDomain(1)).to.eq(domainInfoBigIntConverted)
-        
-        const domain = await  greenBTC2.getDomain(1)
-
-        //console.log("WWWWWWWWWWWWWWWW", registerDomainTx, domain);
-        //console.log("WWWWWWWWWWWWWWWW", domain);
-
+        expect(await greenBTC2.domains(1)).to.eq(domainInfoBigIntConverted)
+                
         await kWhToken.connect(owner1).approve(greenBTC2.address, constants.MaxUint256)
 
         const greenizetx = await  greenBTC2.connect(owner1).makeGreenBox(1,123)
@@ -389,10 +383,7 @@ describe("GreenBTC2 Test Campaign", ()=>{
 
         await mine(5)
 
-        const shotResult = await greenBTC2.checkIfShot(owner1.address, 1, Bytes32_Zero)
-
-        //console.log("VVVVVVVVVVVVVVVV", receipt, shotResult);
-        //console.log("VVVVVVVVVVVVVVVV", shotResult);
+        await greenBTC2.checkIfShot(owner1.address, 1, Bytes32_Zero)
 
         const digest = getGreenBitcoinClaimGifts(
             'Green BTC Club',
@@ -404,32 +395,17 @@ describe("GreenBTC2 Test Campaign", ()=>{
 
         const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))   
 
-        const claimActionGiftsTx = await greenBTC2.connect(owner1).openActionGifts(1, blockHeight, blockHash, {v,r,s})
-        const claimReceipt = await claimActionGiftsTx.wait()
-
-        //console.log("JJJJJJJJJJJJJ", claimReceipt);
-
+        await greenBTC2.connect(owner1).openActionGifts(1, blockHeight, blockHash, {v,r,s})
 
         const amount1 = await greenBTCGift.balanceOf(owner1.address, 1)
         const amount2 = await greenBTCGift.balanceOf(owner1.address, 2)
         const amount3 = await greenBTCGift.balanceOf(owner1.address, 3)
 
-        const balanceAKREGift = await AKREToken.balanceOf(greenBTCGift.address);
-
-        //console.log("KKKKKKKKKKKKKKK", amount1, amount2, amount3, AKREToken.address, balanceAKREGift.toHexString());
-
-        const claimGiftTX = await greenBTCGift.connect(owner1).claimGift(3, BigNumber.from(2))
-
-        const claimGiftReceipt = await claimGiftTX.wait()
-
-        //console.log("HHHHHHHHHHHHHHHHHH", claimGiftReceipt);
-
-//        const claimMultiGiftsTX = await greenBTCGift.claimMultiGifts([1,2,3], [amount1, amount2, amount3.sub(BigNumber.from(2))])
-//        const claimMultiGiftsReceipt = await claimMultiGiftsTX.wait()
-//        console.log("MMMMMMMMMMMMMMM", claimMultiGiftsReceipt);
+        await greenBTCGift.connect(owner1).claimGift(3, BigNumber.from(2))
+        await greenBTCGift.connect(owner1).claimGiftBatch([1,2,3], [amount1, amount2, amount3.sub(BigNumber.from(2))])
         
       });
-*/
+
       it("GreenBTC2 makeGreenBox test", async function () {
 
         await AKREToken.transfer(greenBTC2.address, expandTo18Decimals(100000000))
@@ -445,6 +421,9 @@ describe("GreenBTC2 Test Campaign", ()=>{
         await expect(greenBTC2.connect(owner1).makeGreenBox(1, 0x2000000))
                   .to.be.revertedWith("GBC2: Over Limit")
 
+        await expect(greenBTC2.connect(owner1).makeGreenBox(10, 123))
+                  .to.be.revertedWith("GBC2: Empty Domain")
+
         const balancekWh = await kWhToken.balanceOf(owner1.address)                  
 
         let greenizetx
@@ -454,9 +433,6 @@ describe("GreenBTC2 Test Campaign", ()=>{
                 
         const receipt = await greenizetx.wait()
         console.log('makeGreenBox gas usage:', receipt.gasUsed )
-
-        const balancekWhA = await kWhToken.balanceOf(owner1.address)    
-        console.log('AAAAAAAAAAAAAAA', balancekWh, balancekWhA)              
 
         expect(await kWhToken.balanceOf(owner1.address)).to.eq(balancekWh.sub(expandTo9Decimals(123).div(10)))  
 
@@ -468,7 +444,7 @@ describe("GreenBTC2 Test Campaign", ()=>{
         const domainStatus = await greenBTC2.domainStatus(1)
         expect((BigNumber.from(domainStatus)).shr(224)).to.eq(BigNumber.from(123+234))
 
-        console.log('BBBBBBBBBBBBBBBBBBB', domainStatus)
+        expect(await kWhToken.balanceOf(owner1.address)).to.eq(balancekWh.sub(expandTo9Decimals(123+234).div(10)))
         
       });
 
@@ -691,7 +667,7 @@ describe("GreenBTC2 Test Campaign", ()=>{
         }
 
       });
-/*
+
       it("GreenBTC2 initGift Test", async function () {
         await expect(greenBTCGift.initGift(5, Bytes32_Zero))
               .to.be.revertedWith("GBTC: Wrong Gift Info")
@@ -808,6 +784,6 @@ describe("GreenBTC2 Test Campaign", ()=>{
         const claimGiftBatchReceipt = await claimGiftBatchTx.wait()
         console.log("claimGiftBatch Gas Usage:", claimGiftBatchReceipt.gasUsed);
       });
-*/
+
     })
 })

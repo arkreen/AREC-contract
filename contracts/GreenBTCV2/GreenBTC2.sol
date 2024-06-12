@@ -173,7 +173,8 @@ contract GreenBTC2 is
      * @param domainID the ID of the domain to be registered
      * @param domainInfo config info of the domain, formated as: 
      *  x: B0:1; y: B1:1; w: B2:1; h: B3:1; (x,y,w,h) define the position of the domain in map, 1 unit = 16 blocks
-     *  boxCap: B4:4, the box cap of the domain
+     *  decimal:MSB4:1, how much kWh token for 1 box, in the exp power; 
+     *  boxCap: B5:3, the box cap of the domain
      *  chance1: B8:2; chance2: B10:2; chance3: B12:2; chance4: B14:2, the chance of the prize without lock , 500 means 5% 
      *  ratio1: B16:2; ratio1: B18:2; ratio1: B20:2; ratio1: B22:2, the chance of the prize with lock, 1500 means 15% 
      *  reserve: B24:8; not used 
@@ -198,28 +199,16 @@ contract GreenBTC2 is
         emit DomainRegistered(domainID, domainInfo);
     }
 
-    function getDomain (uint256 domainID) public view returns (bytes32 domainInfo) {
-        domainInfo = domains[domainID];
-    }
-
-    function getDomainBoxMadeGreen (uint256 domainID) internal view returns (uint256) {
-        uint256 status = uint256(domainStatus[domainID]);
-        return status >> 224;
-    }
-
-    function setDomainBoxMadeGreen (uint256 domainID, uint256 boxMadeGreen) internal {
-        uint256 status = uint256(domainStatus[domainID]);
-        domainStatus[domainID] = bytes32(((status << 32) >> 32) + (boxMadeGreen << 224));
-    }
-
     function makeGreenBox (uint256 domainID, uint256 boxSteps) public {
         require ((domainID < 0x7FFF) && (boxSteps < 0x1000000), "GBC2: Over Limit");
 
         uint256 domainInfo = uint256(domains[domainID]);
+        require ( domainInfo != 0 , "GBC2: Empty Domain");
+
         uint256 boxTop = uint256(domainInfo >> 192) & 0xFFFFFFF;    // BoxTop use 7 nibbles
         uint8 decimalStep = uint8(domainInfo >> 220) & 0x0F;     // decimal use  4 bits
 
-        uint256 boxMadeGreen = getDomainBoxMadeGreen(domainID);
+        uint256 boxMadeGreen = uint256(domainStatus[domainID]) >> 224;
 
         require (boxMadeGreen < boxTop, "GBC2: All Greenized");
 
@@ -241,7 +230,8 @@ contract GreenBTC2 is
         userActionIDs[msg.sender] = bytes.concat(userActionIDs[msg.sender], bytes4(uint32(actionNumber)));
         domainActionIDs[domainID] = bytes.concat(domainActionIDs[domainID], bytes4(uint32(actionNumber)));
 
-        setDomainBoxMadeGreen(domainID, boxMadeGreen + boxSteps);
+        uint256 status = uint256(domainStatus[domainID]);
+        domainStatus[domainID] = bytes32(((status << 32) >> 32) + ((boxMadeGreen + boxSteps) << 224));
 
         emit DomainGreenized(msg.sender, actionNumber, block.number, domainID, boxMadeGreen, boxSteps);
     }
