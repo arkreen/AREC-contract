@@ -120,8 +120,6 @@ contract KWhToken is
         uint256 amountKWh = amountPayment;
         if (tokenToPay != tokenART) amountKWh = amountPayment * (10**6) / price;      // kWh decimal is 6, so hardcoded here
 
-        
-
         require(IERC20Upgradeable(tokenToPay).transferFrom(msg.sender, address(this), amountPayment));
         require(IERC20Upgradeable(this).transfer(msg.sender, amountKWh));
 

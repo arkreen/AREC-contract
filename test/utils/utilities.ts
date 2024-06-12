@@ -3,6 +3,7 @@ import { providers, utils, BigNumber, Signer, Wallet } from 'ethers'
 
 import hre from 'hardhat'
 
+
 export const MINIMUM_LIQUIDITY = BigNumber.from(10).pow(3)
 
 const PERMIT_TYPEHASH = utils.keccak256(
@@ -600,6 +601,100 @@ export function getGreenBitcoinClaimGifts(
   )
 }
 
+export interface ActionInfo {
+  actionID:             BigNumber,
+  domainID:             BigNumber,
+  boxStart:             BigNumber,
+  boxAmount:            BigNumber,
+  actor:                string,
+  blockHash:            string,
+  blockHeigh:           BigNumber,
+  domainInfo:           BigNumber
+}
+
+export function UtilCalculateGifts(actionInfo: ActionInfo) {
+    const actionInfoBN = actionInfo.actionID.shl(224).add(actionInfo.domainID.shl(208))
+                        .add(actionInfo.boxStart.shl(184)).add(actionInfo.boxAmount.shl(160))
+                        .add(BigNumber.from(actionInfo.actor))
+
+    let luckyNumber =  utils.keccak256(
+                          utils.defaultAbiCoder.encode(
+                            ['bytes32', 'uint256'],
+                            [actionInfo.blockHash, actionInfoBN]
+                          )
+                        )
+
+    const ratio1 =  actionInfo.domainInfo.shr(176).and(65535)
+    const ratio2 =  actionInfo.domainInfo.shr(160).and(65535)
+    const ratio3 =  actionInfo.domainInfo.shr(144).and(65535)
+    const ratio4 =  actionInfo.domainInfo.shr(128).and(65535)
+    const ratio5 =  actionInfo.domainInfo.shr(112).and(65535)
+    const ratio6 =  actionInfo.domainInfo.shr(96).and(65535)
+    const ratio7 =  actionInfo.domainInfo.shr(80).and(65535)
+    const ratio8 =  actionInfo.domainInfo.shr(64).and(65535)
+
+    let luckyTemp = BigNumber.from(luckyNumber);
+
+    let result = new Array<number>(actionInfo.boxAmount.toNumber()).fill(0);        // save the gift type of each won box
+    let counters = new Array<number>(8).fill(0);                                    // save the won number of 8 gift types
+
+    for (let index = 0; index < actionInfo.boxAmount.toNumber(); index++) {
+     const ration = luckyTemp.and(65535)
+      if (ration.lt(ratio8)) {
+          if (ration.lt(ratio1)) {
+            result[index] = 1
+            counters[0] += 1
+          } else if (ration.lt(ratio2)) {
+            result[index] = 2
+            counters[1] += 1
+          } else if (ration.lt(ratio3)) { 
+            result[index] = 3
+            counters[2] += 1
+          } else if (ration.lt(ratio4)) { 
+            result[index] = 4
+            counters[3] += 1
+          } else if (ration.lt(ratio5)) {
+            result[index] = 5
+            counters[4] += 1
+          } else if (ration.lt(ratio6)) { 
+            result[index] = 6
+            counters[5] += 1
+          } else if (ration.lt(ratio7)) { 
+            result[index] = 7
+            counters[6] += 1
+          } else { 
+            result[index] = 8         // here must be (ration < uint16(domainInfo >> 64))
+            counters[7] += 1
+          }
+      }
+ 
+      if ((index & 0x0F) == 0x0F) {
+        luckyNumber = utils.keccak256(luckyNumber)
+        luckyTemp = BigNumber.from(luckyNumber)
+      } else {
+        luckyTemp = luckyTemp.shr(16)
+      }
+    }
+
+    let totalWon:number = 0;
+    for (let index = 0; index < 8; index++) {
+        const offset = totalWon
+        totalWon += counters[index];
+        counters[index] = offset;
+    }
+
+    let wonList = new Array<number>(totalWon).fill(0);
+    for (let index = 0; index < actionInfo.boxAmount.toNumber(); index++) {
+        const wonType = result[index];
+        if (wonType != 0) {
+          const offset = counters[wonType-1];                                        // get won offset
+          wonList[offset] = (actionInfo.boxStart.toNumber() + index);
+          counters[wonType-1] = offset + 1;                                            // move the offset
+        }
+    }
+    return { counters, wonList }
+
+}
 
 export async function getApprovalDigest(
   token: Contract,

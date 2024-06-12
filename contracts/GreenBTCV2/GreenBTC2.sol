@@ -26,6 +26,7 @@ import "../interfaces/IERC20.sol";
 import "../GreenBTCStorage.sol";
 import "./GreenBTC2Type.sol";
 import "../interfaces/IGreenBTCGift.sol";
+import "../libraries/DecimalMath.sol";
 
 // Import this file to use console.log
 import "hardhat/console.sol";
@@ -60,13 +61,13 @@ contract GreenBTC2 is
     uint256 public actionNumber;
 
     // domains struct in bytes32: 
-    // x: MSB0:1; y: MSB1:1; w: MSB2:1; h: MSB3:1; boxTop:MSB4:4
+    // x: MSB0:1; y: MSB1:1; w: MSB2:1; h: MSB3:1; decimal:MSB4:1; boxTop:MSB5:3
     // chance1: MSB8:2; chance10: MSB10:2; chance3: MSB12:2; chance4: MSB14:2
     // ratio1: MSB16:2; ratio1: MSB18:2; ratio1: MSB20:2; ratio1: MSB22:2
     // GiftID: MSB24:8, giftID corresponding to chance1-4 and ratio1-4
-    mapping (uint256 => bytes32)  public domains;
+    mapping (uint256 => bytes32) public domains;
 
-    // boxRedeemed: MSB0:4; 
+    // boxGreened: MSB0:4; 
     // won1: MSB8:3; won2: MSB11:3; won3: MSB14:3; won4: MSB17:3
     // shot1: MSB20:3; shot2: MSB23:3; shot3: MSB26:3; shot4: MSB29:3
     mapping (uint256 => bytes32)  public domainStatus;
@@ -86,7 +87,7 @@ contract GreenBTC2 is
 
     mapping (uint256 => uint256)  public blockHash;     // Mapping from block height to block hash
 
-    event ActionGiftsOpened(address indexed gbtcActor, uint256 actionID, uint256 height, bytes32 hash, uint256[] giftIDs, uint256[] amounts);
+    event ActionGiftsOpened(address gbtcActor, uint256 actionID, uint256 height, bytes32 hash, uint256[] giftIDs, uint256[] amounts);
     event DomainRegistered(uint256 domainID, bytes32 domainInfo);
     event DomainGreenized(address gbtcActor, uint256 actionNumber, uint256 blockHeight, uint256 domainID, uint256 boxStart, uint256 boxNumber);
     event FundDeposit(address fundToken, uint256 fundAmount);
@@ -178,7 +179,7 @@ contract GreenBTC2 is
      *  reserve: B24:8; not used 
      *  domainInfo is saved in converted format
      */
-    function registerDomain (uint256 domainID, bytes32 domainInfo) public {
+    function registerDomain (uint256 domainID, bytes32 domainInfo) public onlyOwner {
         require (uint256(domains[domainID]) == 0, "GBC2: Wrong Domain ID");
 
         uint256 ratioSum;
@@ -201,12 +202,7 @@ contract GreenBTC2 is
         domainInfo = domains[domainID];
     }
 
-    function getDomainBoxTop (uint256 domainID) public view returns (uint256) {
-        uint256 domainInfo = uint256(domains[domainID]);
-        return uint256(domainInfo >> 192) & 0xFFFFFFFF;
-    }
-
-    function getDomainBoxMadeGreen (uint256 domainID) public view returns (uint256) {
+    function getDomainBoxMadeGreen (uint256 domainID) internal view returns (uint256) {
         uint256 status = uint256(domainStatus[domainID]);
         return status >> 224;
     }
@@ -219,7 +215,10 @@ contract GreenBTC2 is
     function makeGreenBox (uint256 domainID, uint256 boxSteps) public {
         require ((domainID < 0x7FFF) && (boxSteps < 0x1000000), "GBC2: Over Limit");
 
-        uint256 boxTop = getDomainBoxTop(domainID);
+        uint256 domainInfo = uint256(domains[domainID]);
+        uint256 boxTop = uint256(domainInfo >> 192) & 0xFFFFFFF;    // BoxTop use 7 nibbles
+        uint8 decimalStep = uint8(domainInfo >> 220) & 0x0F;     // decimal use  4 bits
+
         uint256 boxMadeGreen = getDomainBoxMadeGreen(domainID);
 
         require (boxMadeGreen < boxTop, "GBC2: All Greenized");
@@ -227,9 +226,7 @@ contract GreenBTC2 is
         boxTop = boxTop - boxMadeGreen;
         if (boxTop < boxSteps) boxSteps = boxTop;
 
-        uint256 kWhAmount = boxSteps * 1e8;     // convert to kWh
-
-        //console.log('AAAAAAAAAAAA', boxMadeGreen, boxSteps, kWhAmount);
+        uint256 kWhAmount = boxSteps * DecimalMath.getDecimalPower(decimalStep);     // convert to kWh
 
         IkWhToken(kWhToken).burnFrom(msg.sender, kWhAmount);
 
@@ -245,10 +242,6 @@ contract GreenBTC2 is
         domainActionIDs[domainID] = bytes.concat(domainActionIDs[domainID], bytes4(uint32(actionNumber)));
 
         setDomainBoxMadeGreen(domainID, boxMadeGreen + boxSteps);
-
-        //console.logBytes32(actionValue);
-        //console.logBytes(userActionIDs[msg.sender]);
-        //console.logBytes(domainActionIDs[domainID]);
 
         emit DomainGreenized(msg.sender, actionNumber, block.number, domainID, boxMadeGreen, boxSteps);
     }
@@ -268,9 +261,15 @@ contract GreenBTC2 is
      * @return counters offset of the green box IDs in the wonList, an array with length of 8
      * @return wonList the lucky green box IDs list, whose length is always counters[7]
      */
-    function checkIfShot (address user, uint256 actionID, bytes32 hash) public view 
-            returns (uint256, uint256, uint256, uint24[] memory, uint24[] memory) {
-
+    function checkIfShot (address user, uint256 actionId, bytes32 hash) public view 
+            returns ( uint256 actionID,
+                      uint256 actionResult,
+                      uint256 blockHeight,
+                      uint24[] memory counters,
+                      uint24[] memory wonList
+                    ) {
+                        
+        actionID = actionId;
         if (actionID == 0) {                                            // use last action id if not provided
             bytes storage actionIds = userActionIDs[user];              // assume user is given here
             uint256 index = actionIds.length - 4 ;
@@ -279,12 +278,11 @@ contract GreenBTC2 is
         }
            
         uint256 actionInfo = uint256(greenActions[actionID]);
-        uint256 blockHeight = actionInfo >> 224;                        // block height of the green action
         uint256 domainID = (actionInfo >> 208) & 0xFFFF;
 
-        uint24[] memory wonList;
-        uint24[] memory counters;
-        uint256 actionResult = uint256(ShotStatus.Normal);
+        actionResult = uint256(ShotStatus.Normal);
+        blockHeight = actionInfo >> 224;                        // block height of the green action
+
         if (blockHeight == 0) {
             actionResult = uint256(0xFF);                               // no given green action
         } else if (domainID >= 0x8000) {
@@ -295,7 +293,7 @@ contract GreenBTC2 is
                     counters[index] = uint24(actionInfo >> (144 - (16 * index)));
                 }
             } else {
-                actionInfo = (actionID << 224) + ((actionInfo << 4) >> 4);          // replace blockHeight with actionID
+                actionInfo = (actionID << 224) + ((actionInfo << 32) >> 32);          // replace blockHeight with actionID
                 actionInfo = ((actionInfo >> 160) << 160) + uint256(uint160(user)); // merge user address
                 actionInfo ^= (1 << 223);                                           // clear "Claimed" flag
                 (counters, wonList) = CalculateGifts(actionInfo, hash);             // hash must be correct, otherwise get wrong result
@@ -308,8 +306,9 @@ contract GreenBTC2 is
                 if ((block.number > (blockHeight+256)) && (uint256(hash) == 0)) {
                     actionResult = uint256(ShotStatus.Overtimed);                   // overtimed                    
                 } else {
-                    actionInfo = (actionID << 224) + ((actionInfo << 4) >> 4);      // replace blockHeight with actionID
+                    actionInfo = (actionID << 224) + ((actionInfo << 32) >> 32);      // replace blockHeight with actionID
                     if (block.number <= (blockHeight+256)) hash = blockhash(blockHeight); 
+
                     (counters, wonList) = CalculateGifts(actionInfo, hash);
                 }
             }            
@@ -380,11 +379,19 @@ contract GreenBTC2 is
         return (counters, wonList);
     }
 
+    /**
+     * @dev Open the action, and send the gifts to the actor. This function is open to anyboby only if
+     * the signature is correct. The gifts are always sent the actor on matter who opens this acton.!!
+     * @param actionID the ID of the action to be opened.
+     * @param height the blockheight of the block containing the action.
+     * @param hash the blockhash of the block containing the action.
+     * @param signature signature of the open manager based on the actionID, blockheight and blockhash.
+     */
     function openActionGifts (uint256 actionID, uint256 height,  bytes32 hash, Sig calldata signature) public {
         uint256 actionInfo = uint256(greenActions[actionID]);
 
         {   // Tricky to solve stack too deep problem
-            require (height == (actionInfo >> 224), "GBC2: Wrong Block Height");    // check block height is same
+            require ((height != 0) && (height == (actionInfo >> 224)), "GBC2: Wrong Block Height");    // check block height is same
 
             bytes32 claimHash = keccak256(abi.encode(GREENBTC2_HASH, actionID, height, hash));
             bytes32 digest = keccak256(abi.encodePacked('\x19\x01', DOMAIN_SEPARATOR, claimHash));
@@ -395,43 +402,49 @@ contract GreenBTC2 is
 
         (, uint256 actionResult, , uint24[] memory counters,) = checkIfShot(address(0), actionID, hash);    
 
-        //console.log('HHHHHHHHHHHHHHHHHHHH', actionResult, actionID);
-        //console.logBytes32(hash);
-
         if (actionResult != uint256(ShotStatus.Normal)) {
             if (actionResult == uint256(0xFF)) revert ("GBC2: Wrong Action ID");
-            if (actionResult == uint256(ShotStatus.Claimed)) revert ("GBC2: Action Claimed");
-            if (actionResult == uint256(ShotStatus.NotReady)) revert ("GBC2: Claim Early");
+            if (actionResult == uint256(ShotStatus.Claimed)) revert ("GBC2: Action Opened");
+            if (actionResult == uint256(ShotStatus.NotReady)) revert ("GBC2: Open Early");
         }
 
-        uint256 wonResult = 0;                                                              // Save action wonResult
-        uint24[] memory wontimes = new uint24[](8);
-        uint256 wonCounter = 0;                                                             // won giftID counter
-
-        for (uint256 index = 0; index < 8; index++) { 
-            wontimes[index] = (index == 0) ? counters[index] : (counters[index] - counters[index - 1]);
-            require(wontimes[index] <= 0xFFFF);
-            wonResult = (wonResult << (index * 16)) + wontimes[index];         // !!!! Assuming wontimes less than uint16 here !!!!
-            if (wontimes[index] != 0) wonCounter++;
-        }
-
+        uint256 domainId = (actionInfo >> 208) & 0x7FFF;                                    // Skip "Claimed" flag
         address actionOwner = address(uint160(actionInfo));
-        actionInfo = ((actionInfo >> 160) << 160) + (wonResult << 32) + (1 << 223);         // Merge the wonResult and set "Claimed" flag
-        greenActions[actionID] = bytes32(actionInfo);                                       // Saved on chain as proof
+        
+        uint24[] memory wonCounters = new uint24[](8);
+        uint256 wonCounter = 0;                                                                 // won giftID counter
+
+        {   // Tricky to solve stack too deep problem
+            uint256 wonResult = 0;                                                              // Save action 
+            uint256 counterAdded = 0;
+
+            for (uint256 index = 0; index < 8; index++) { 
+                wonCounters[index] = (index == 0) ? counters[index] : (counters[index] - counters[index - 1]);
+                require(wonCounters[index] <= 0xFFFF);
+                wonResult = (wonResult << 16) + wonCounters[index];         // !!!! Assuming wonCounters less than uint16 here !!!!
+                counterAdded = (counterAdded << 24) + wonCounters[index];
+                if (wonCounters[index] != 0) wonCounter++;
+            }
+
+            actionInfo = ((actionInfo >> 160) << 160) + (wonResult << 32) + (1 << 223);         // Merge the wonResult and set "Claimed" flag
+            greenActions[actionID] = bytes32(actionInfo);                                       // Saved on chain as proof
+
+            domainStatus[domainId] = bytes32(uint256(domainStatus[domainId]) + counterAdded);   // Assuming no overflow here
+        }
 
         uint256[] memory giftIDs;
         uint256[] memory amounts;
 
         if (wonCounter > 0) {
-            uint256 domainInfo = uint256(domains[(actionInfo >> 208) & 0x7FFF]);            // Skip "Claimed" flag
+            uint256 domainInfo = uint256(domains[domainId]);                                
 
             giftIDs = new uint256[](wonCounter);
             amounts = new uint256[](wonCounter);
             uint256 giftIndex;
             for (uint256 index = 0; index < 8; index++) { 
-                if (wontimes[index] != 0) {
+                if (wonCounters[index] != 0) {
                     giftIDs[giftIndex] = uint256(uint8(domainInfo >> ((7-index) * 8)));
-                    amounts[giftIndex] = wontimes[index];
+                    amounts[giftIndex] = wonCounters[index];
                     giftIndex++;
                 }
             }

@@ -6,6 +6,7 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
 
 import "../libraries/TransferHelper.sol";
+import "../libraries/DecimalMath.sol";
 
 // Import this file to use console.log
 import "hardhat/console.sol";
@@ -27,9 +28,9 @@ contract GreenBTCGift is
     // Amount0: MSB28:4, the amount to send. Let (MSB28:3) = n, (MSB31）= m, Amount0 = n * (10**m)
     mapping (uint256 => bytes32) public greenBTCGifts;     
 
-    event GiftBatchMinted(address indexed greener, uint256[] giftIDs, uint256[] amounts);
-    event GiftBatchClaimed(address indexed user, uint256[] giftIDs, uint256[] amounts);
-    event GiftClaimed(address indexed user, uint256 giftID, uint256 amount);
+    event GiftBatchMinted(address greener, uint256[] giftIDs, uint256[] amounts);
+    event GiftBatchClaimed(address user, uint256[] giftIDs, uint256[] amounts);
+    event GiftClaimed(address user, uint256 giftID, uint256 amount);
     event DomainRegistered(uint256 domainID, bytes32 domainInfo);
     event DomainGreenized(address gbtcActor, uint256 actionNumber, uint256 blockHeight, uint256 domainID, uint256 boxStart, uint256 boxNumber);
 
@@ -56,16 +57,10 @@ contract GreenBTCGift is
     {}
 
     function initGift(uint256 giftId, bytes32 giftInfo) public onlyOwner {
-
-        //console.log("GGGGGGGGGGGGGGGGGGGGGGG", giftId);
-        //console.logBytes32(giftInfo);
-        //console.logBytes32(greenBTCGifts[giftId]);
-
         require (uint256(giftInfo) != 0, "GBTC: Wrong Gift Info");
         require (uint256(greenBTCGifts[giftId]) == 0, "GBTC: Gift Repteated");
         greenBTCGifts[giftId] = giftInfo;
     }
-
 
     function mintGifts(address greener, uint256[] memory giftIDs, uint256[] memory amounts) public {
         require (msg.sender == greenBTC, "GBTC: Wrong Caller");
@@ -76,7 +71,6 @@ contract GreenBTCGift is
         uint8 akreAmountDecimal = 0;
         for (uint256 index; index < giftIDs.length; index++) {
             uint256 giftInfo = uint256(greenBTCGifts[giftIDs[index]]);
-            //console.log("XXXXXXXXXX", giftIDs[index], giftInfo);
             require (giftInfo != 0, "GBTC: Wrong Gift ID");
 
             address giftToken = address(uint160(giftInfo >> 96));
@@ -86,14 +80,13 @@ contract GreenBTCGift is
                     akreAmountDecimal = uint8(giftInfo);
                 }
             } else {
-                 uint256 amountToken = uint256(uint32(giftInfo) >> 8) * amounts[index] * getDecimalPower(uint8(giftInfo));
+                 uint256 amountToken = amounts[index] * uint256(uint32(giftInfo) >> 8) * DecimalMath.getDecimalPower(uint8(giftInfo));
                 TransferHelper.safeTransferFrom(giftToken, msg.sender, address(this), amountToken);
             }
         }
 
         if (amountAKRE != 0) {
-            console.log('YYYYYYYYYYYYYYYYYYYY', amountAKRE);
-            TransferHelper.safeTransferFrom(akre, msg.sender, address(this), amountAKRE * getDecimalPower(akreAmountDecimal));
+            TransferHelper.safeTransferFrom(akre, msg.sender, address(this), amountAKRE * DecimalMath.getDecimalPower(akreAmountDecimal));
         }
         _mintBatch(greener, giftIDs, amounts, '');
 
@@ -102,13 +95,13 @@ contract GreenBTCGift is
 
     function claimGift(uint256 giftID, uint256 amount) public {
         uint256 giftInfo = uint256(greenBTCGifts[giftID]);
-        require ( giftInfo != 0, "GBTC: Wrong Gift ID");
-        require ( amount != 0, "GBTC: Zero Amout");
+        require (giftInfo != 0, "GBTC: Wrong Gift ID");
+        require (amount != 0, "GBTC: Zero Amout");
 
         _burn(msg.sender, giftID, amount);
 
         address giftToken = address(uint160(giftInfo >> 96));
-        uint256 amountToken = amount * (uint24(giftInfo >> 8)) * getDecimalPower(uint8(giftInfo));
+        uint256 amountToken = amount * (uint24(giftInfo >> 8)) * DecimalMath.getDecimalPower(uint8(giftInfo));
 
         emit GiftClaimed(msg.sender, giftID, amount);
 
@@ -125,7 +118,7 @@ contract GreenBTCGift is
         address akre = tokenAKRE;
         for (uint256 index; index < giftIDs.length; index++) {
             uint256 giftInfo = uint256(greenBTCGifts[giftIDs[index]]);
-            require ( giftInfo != 0, "GBTC: Wrong Gift ID");
+            require (giftInfo != 0, "GBTC: Wrong Gift ID");
 
             address giftToken = address(uint160(giftInfo >> 96));
             if ((giftToken == akre) || giftToken == address(0)) {
@@ -133,60 +126,16 @@ contract GreenBTCGift is
                 if (akreAmountDecimal == 0) {
                     akreAmountDecimal = uint8(giftInfo);
                 }
-                console.log("QQQQQQQQQQQ", amountAKRE, amounts[index], (uint32(giftInfo) >> 8));
             } else {
-                 uint256 amountToken = amounts[index] * uint256(uint32(giftInfo) >> 8) * getDecimalPower(uint8(giftInfo));
+                 uint256 amountToken = amounts[index] * uint256(uint32(giftInfo) >> 8) * DecimalMath.getDecimalPower(uint8(giftInfo));
                 TransferHelper.safeTransfer(giftToken, msg.sender, amountToken);
             }
         }
 
         if (amountAKRE != 0) {
-            console.log("PPPPPPPPPPPPPPPPPP", amountAKRE);
-            TransferHelper.safeTransfer(akre, msg.sender, amountAKRE * getDecimalPower(akreAmountDecimal));
+            TransferHelper.safeTransfer(akre, msg.sender, amountAKRE * DecimalMath.getDecimalPower(akreAmountDecimal));
         }
 
         emit GiftBatchClaimed(msg.sender, giftIDs, amounts);
-    }
-
-
-    function testDecimalPower() public {
-        uint256 gasBefore = gasleft();
-        uint256 result = getDecimalPower(19);
-        uint256 gasAfter = gasleft();
-
-        address akre = tokenAKRE;
-
-        uint256 gasAfter2 = gasleft();
-
-        console.log('PPPPPPPPPPPPP', gasBefore, gasAfter, gasAfter2);
-
-        gasAfter2 = gasleft();
-
-        //address akre1 = tokenAKRE;
-        //result = uint256(greenBTCGifts[0x123]);
-        uint8[] memory buffer = new uint8[](200);
-        uint256 gasAfter3 = gasleft();
-
-        console.log('QQQQQQQQQ', akre, gasAfter2, gasAfter3);
-        console.log('RRRRRRRRRR', result, buffer[0], gasAfter3);
-
-        tokenAKRE = akre;
-    }
-
-
-    /**
-     * @dev get the given power of ten, gas usage is less than fetching from storage. 
-     * @param power the power of ten
-     */
-    function getDecimalPower(uint8 power) internal pure returns (uint256) {
-        power = power % 20;     // max is 10**19
-        uint256 result = 1;
-        uint256 exp = 10;
-        while (power > 0) {
-          if ((power & 0x01) !=0) result = result * exp;
-          exp = exp * exp;
-          power >>= 1;
-        }
-        return result;
     }
 }
