@@ -147,6 +147,11 @@ contract GreenBTC2 is
         greenBTCGift = gift;
     }
 
+    function setClaimManager(address manager) public onlyOwner {
+        require(manager != address(0), "GBTC: Zero Address");
+        claimManager = manager;                    
+    }
+
     /**
      * @dev Approve the tokens which can be transferred from this GreenBTC contract by arkreenBuilder
      * @param tokens The token list

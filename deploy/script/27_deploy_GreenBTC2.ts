@@ -3,7 +3,7 @@ import { DeployFunction } from "hardhat-deploy/types";
 import { CONTRACTS } from "../constants";
 import { BigNumber } from "ethers";
 
-import { KWhToken__factory } from "../../typechain";
+import { GreenBTC2__factory } from "../../typechain";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
@@ -13,35 +13,29 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(160_000_000_000)
 
-    let tokenART: string = ''
-    let artBank: string = ''
-    let arkreenBuilder: string = ''
-    let offsetManager: string = ''
+    let kWh : string = ''
+    let claimManager: string = ''
     
-    // function initialize(address art, address bank, address builder, address manager)
+    // function initialize(address kWh, address manager)
     if(hre.network.name === 'matic_test')  {
-      // 2024/05/16: AKRE on Amoy testnet                        
-      tokenART = "0x615835Cc22064a17df5A3E8AE22F58e67bCcB778"
-      artBank = "0xf9aAcFf1B292F82b60662e47610C570ef58d3c70"
-      arkreenBuilder = "0x12De6c1FB46B64e3DA5bFDD274E98B9103353dF7"
-      offsetManager = "0x364a71ee7a1c9eb295a4f4850971a1861e9d3c7d"
+      // 2024/06/12: GreenBTCV2 on Amoy testnet                        
+      kWh = "0xB932CDD3c6Ad3f39d50278A76fb952A6077d1950"
+      claimManager = "0x364a71ee7a1c9eb295a4f4850971a1861e9d3c7d"
     } else if(hre.network.name === 'matic')  {
-      tokenART = ""
-      artBank = ""
-      arkreenBuilder = ""
-      offsetManager = ""
+      kWh = ""
+      claimManager = ""
     } 
 
-    console.log("Deploying: ", "KWhToken", deployer);  
-    /*
-    const claimToken = await deploy("KWhToken", {
+    console.log("Deploying: ", "GreenBTC2", deployer);  
+    
+    const greenBTC2 = await deploy("GreenBTC2", {
         from: deployer,
         proxy: {
           proxyContract: "UUPSProxy",
           execute: {
             init: {
               methodName: "initialize",     // Function to call when deployed first time.
-              args: [tokenART, artBank, arkreenBuilder, offsetManager]
+              args: [kWh, claimManager]
             },
           },
         },
@@ -49,8 +43,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         skipIfAlreadyDeployed: false,
         gasPrice: defaultGasPrice
     });
-    */
+    
 
+    /*
     // 2024/06/04
     const IMPLEMENTATION_ADDRESS ="0xd0Bd9950911FdE298a7e4996C7f6D15016177ea0"
     
@@ -62,20 +57,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
             skipIfAlreadyDeployed: false,
             gasPrice: defaultGasPrice
     });
+    */
 
-    console.log("USDT deployed to %s: ", hre.network.name, KWhToken.address);
+    console.log("USDT deployed to %s: ", hre.network.name, greenBTC2.address);
 };
 
-// 2024/05/20
-// yarn deploy:matic_test:WKH    : Amoy testnet (Dev Anv)
-// Proxy:                 0x3B109eA4298870D8dEF8b512444A58Dac909b23f
-// Implementaion:         0xa299B0E5E55988b07DEa7eCCfB23BFdd14B1B2b0
-
 // 2024/06/12
-// yarn deploy:matic_test:WKH    : Amoy testnet (Dev Anv): support burn ABI
-// Proxy:                 0xB932CDD3c6Ad3f39d50278A76fb952A6077d1950 (UUPS)
-// Implementaion:         0xd0Bd9950911FdE298a7e4996C7f6D15016177ea0
+// yarn deploy:matic_test:GreenBTC2    : Amoy testnet (Dev Anv)
+// Proxy:                 0x20E45e53B813788C2D169D3D861A4C0Ae3bDD4eA
+// Implementaion:         0xf05CDd31b95C80D4DA67DFf799F866938A54A2E8
 
-func.tags = ["WKH"];
+func.tags = ["GreenBTC2"];
 
 export default func;

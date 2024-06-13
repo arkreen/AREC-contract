@@ -56,8 +56,7 @@ contract KWhToken is
     }
 
     function postUpdate() external onlyProxy onlyOwner
-    {
-    }
+    {}
 
     function _authorizeUpgrade(address newImplementation) internal virtual override onlyOwner
     {}    
@@ -86,6 +85,12 @@ contract KWhToken is
         }
     }
 
+    /**
+     * @dev Mint kWh token with the give token and amount, only can be called by owner or manager
+     * @param tokenToPay address of the payment token, if not ART, it is the address of the token used to buy ART token. 
+     * It it is ART token, convert ART token to kWh token directly
+     * @param amount amount of the token to pay, either the amount of the ART token or the amount of the payment token to pay.
+     */
     function MintKWh(address tokenToPay, uint256 amount) public nonReentrant onlyOwnerOrManager returns (uint256) {
 
         uint256 amountART = amount;

@@ -39,8 +39,7 @@ contract GreenBTCGift is
         _disableInitializers();
     }
 
-    //initialize
-    //function initialize(address authority, address builder, address cART, address native)
+    //function initialize(address gbtc, address akre)
     function initialize(address gbtc, address akre)
         external
         virtual

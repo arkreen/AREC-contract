@@ -115,7 +115,10 @@
     "deploy:matic_test:AMinerProD": "hardhat --network matic_test deploy --tags AMinerProD",
     "deploy:matic_test:StakingRewardsI": "hardhat --network matic_test deploy --tags StakingRewardsI",
     "deploy:matic_test:StakingRewardsU": "hardhat --network matic_test deploy --tags StakingRewardsU",
-
+    "deploy:matic_test:GreenBTC2": "hardhat --network matic_test deploy --tags GreenBTC2",
+    "deploy:matic_test:GreenBTC2I": "hardhat --network matic_test deploy --tags GreenBTC2I",
+    "deploy:matic_test:greenBTCGift": "hardhat --network matic_test deploy --tags greenBTCGift",
+    
     "deploy:matic:gAKRE": "hardhat --network matic deploy --tags gAKRE",
     "deploy:matic:arkReward": "hardhat --network matic deploy --tags arkReward",
     "deploy:matic:AMiner": "hardhat --network matic deploy --tags AMiner",
