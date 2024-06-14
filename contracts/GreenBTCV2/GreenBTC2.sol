@@ -211,7 +211,7 @@ contract GreenBTC2 is
         require ( domainInfo != 0 , "GBC2: Empty Domain");
 
         uint256 boxTop = uint256(domainInfo >> 192) & 0xFFFFFFF;    // BoxTop use 7 nibbles
-        uint8 decimalStep = uint8(domainInfo >> 220) & 0x0F;     // decimal use  4 bits
+        uint8 decimalStep = uint8(domainInfo >> 220) & 0x0F;        // decimal use  4 bits
 
         uint256 boxMadeGreen = uint256(domainStatus[domainID]) >> 224;
 

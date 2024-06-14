@@ -8,11 +8,6 @@ import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.
 
 contract PlantStaking is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgradeable {
 
-    bytes32 public _DOMAIN_SEPARATOR;
-    IERC20Upgradeable public stakingToken;
-    address public rewarder;
-    address public manager;
-
     // keccak256("stake(uint256 txid,address staker,address cspminer,uint256 amount,uint256 nonce,uint256 deadline)");
     bytes32 public constant STAKE_TYPEHASH = 0xF970E4374212202D8F38B4CD5B1067E6B25AE9F3F76C60C2C45771C286C3F19D;  
 
@@ -37,6 +32,11 @@ contract PlantStaking is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpg
         bytes32     r;
         bytes32     s;              
     }
+
+    bytes32 public _DOMAIN_SEPARATOR;
+    IERC20Upgradeable public stakingToken;
+    address public rewarder;
+    address public manager;
 
     mapping(address => StakeInfo) public stakeInfo;
     mapping(address => MinerStakeInfo) public minerStakeInfo;
