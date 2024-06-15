@@ -118,6 +118,9 @@
     "deploy:matic_test:GreenBTC2": "hardhat --network matic_test deploy --tags GreenBTC2",
     "deploy:matic_test:GreenBTC2I": "hardhat --network matic_test deploy --tags GreenBTC2I",
     "deploy:matic_test:greenBTCGift": "hardhat --network matic_test deploy --tags greenBTCGift",
+    "deploy:matic_test:greenBTCGiftD": "hardhat --network matic_test deploy --tags greenBTCGiftD",
+    "deploy:matic_test:greenBTCGiftU": "hardhat --network matic_test deploy --tags greenBTCGiftU",
+    "deploy:matic_test:greenBTCGiftI": "hardhat --network matic_test deploy --tags greenBTCGiftI",
     
     "deploy:matic:gAKRE": "hardhat --network matic deploy --tags gAKRE",
     "deploy:matic:arkReward": "hardhat --network matic deploy --tags arkReward",

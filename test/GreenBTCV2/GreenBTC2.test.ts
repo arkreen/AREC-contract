@@ -366,6 +366,8 @@ describe("GreenBTC2 Test Campaign", ()=>{
 
         await AKREToken.transfer(greenBTC2.address, expandTo18Decimals(100000000))
 
+        console.log('AAAAAAAAAAAAAAAAAA', domainInfoBigInt.toHexString(), domainInfoBigIntConverted.toHexString())        
+
         const domainID = 1
         await expect( await greenBTC2.registerDomain(domainID, domainInfoBigInt.toHexString()))
                 .to.emit(greenBTC2, 'DomainRegistered')

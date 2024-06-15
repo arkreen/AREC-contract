@@ -28,6 +28,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     console.log("Deploying: ", "GreenBTC2", deployer);  
     
+    /*
     const greenBTC2 = await deploy("GreenBTC2", {
         from: deployer,
         proxy: {
@@ -43,22 +44,21 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         skipIfAlreadyDeployed: false,
         gasPrice: defaultGasPrice
     });
-    
+    */
 
-    /*
-    // 2024/06/04
-    const IMPLEMENTATION_ADDRESS ="0xd0Bd9950911FdE298a7e4996C7f6D15016177ea0"
     
-    const callData = KWhToken__factory.createInterface().encodeFunctionData("initialize", [tokenART, artBank, arkreenBuilder, offsetManager])
-    const KWhToken = await deploy(CONTRACTS.UUPSProxy, {
+    // 2024/06/15
+    const IMPLEMENTATION_ADDRESS ="0xA7b01a0670FE0224bE3265F97823dF4D71764d06"
+    
+    const callData = GreenBTC2__factory.createInterface().encodeFunctionData("initialize", [kWh, claimManager])
+    const greenBTC2 = await deploy(CONTRACTS.UUPSProxy, {
             from: deployer,
             args: [IMPLEMENTATION_ADDRESS, deployer, callData],
             log: true,
             skipIfAlreadyDeployed: false,
             gasPrice: defaultGasPrice
     });
-    */
-
+  
     console.log("USDT deployed to %s: ", hre.network.name, greenBTC2.address);
 };
 
@@ -66,6 +66,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:GreenBTC2    : Amoy testnet (Dev Anv)
 // Proxy:                 0x20E45e53B813788C2D169D3D861A4C0Ae3bDD4eA
 // Implementaion:         0xf05CDd31b95C80D4DA67DFf799F866938A54A2E8
+
+// 2024/06/15
+// yarn deploy:matic_test:GreenBTC2    : Amoy testnet (Dev Anv): Remove data copy from GreenBTC 
+// Proxy:                 0x7670fE3CD59a43082214d070150Fa31D2054cB7a (UUPS)
+// Implementaion:         0xA7b01a0670FE0224bE3265F97823dF4D71764d06
 
 func.tags = ["GreenBTC2"];
 

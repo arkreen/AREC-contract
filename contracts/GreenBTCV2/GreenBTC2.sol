@@ -8,8 +8,8 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155BurnableUpgradeable.sol";
+//import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
+//import "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155BurnableUpgradeable.sol";
 
 import "../libraries/FormattedStrings.sol";
 import "../libraries/TransferHelper.sol";
@@ -23,7 +23,7 @@ import "../interfaces/IkWhToken.sol";
 
 import "../GreenBTCType.sol";
 import "../interfaces/IERC20.sol";
-import "../GreenBTCStorage.sol";
+//import "../GreenBTCStorage.sol";
 import "./GreenBTC2Type.sol";
 import "../interfaces/IGreenBTCGift.sol";
 import "../libraries/DecimalMath.sol";
@@ -34,10 +34,10 @@ import "hardhat/console.sol";
 contract GreenBTC2 is 
     ContextUpgradeable,
     UUPSUpgradeable,
-    OwnableUpgradeable,
-    ERC1155Upgradeable,
-    ERC1155BurnableUpgradeable,
-    GreenBTCStorage
+    OwnableUpgradeable
+//    ERC1155Upgradeable,
+//    ERC1155BurnableUpgradeable,
+//    GreenBTCStorage
 {
 
     using Strings for uint256;
@@ -54,6 +54,7 @@ contract GreenBTC2 is
     // keccak256("GreenBTC2(uint256 height,bytes32 hash)");
     bytes32 public constant GREENBTC2_HASH = 0xC06BCEF3A0C6ADEEA66203210D224C78DCC6461AC236D0B3451FC8707E963A22;  
 
+    bytes32 public  DOMAIN_SEPARATOR;
     address public kWhToken;
     address public greenBTCGift;
     address public claimManager;
@@ -118,8 +119,8 @@ contract GreenBTC2 is
     {
         __UUPSUpgradeable_init();
         __Ownable_init_unchained();
-        __ERC1155_init_unchained("");
-        __ERC1155Burnable_init_unchained();
+//        __ERC1155_init_unchained("");
+//        __ERC1155Burnable_init_unchained();
 
         DOMAIN_SEPARATOR = keccak256(
             abi.encode(

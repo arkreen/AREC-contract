@@ -61,6 +61,11 @@ contract GreenBTCGift is
         greenBTCGifts[giftId] = giftInfo;
     }
 
+    function setGreenBTC(address gbtc) public onlyOwner {
+        require(gbtc != address(0), "GBTC: Zero Address");
+        greenBTC = gbtc;
+    }
+
     function mintGifts(address greener, uint256[] memory giftIDs, uint256[] memory amounts) public {
         require (msg.sender == greenBTC, "GBTC: Wrong Caller");
         require (giftIDs.length == amounts.length, "GBTC: Wrong Length");
