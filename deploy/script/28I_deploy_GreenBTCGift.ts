@@ -21,19 +21,20 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     if(hre.network.name === 'matic_test')  {
       // 2024/06/15: greenBTCGift on Amoy testnet                        
       const GreenBTCGift_PROXY_ADDRESS  = "0x644d45543027E72Ecb653732c1363584710FF609"  // 2024/06/15 
-      const GreenBTCAddress             = "0x7670fE3CD59a43082214d070150Fa31D2054cB7a"  // 2024/06/15
+      // const GreenBTCAddress          = "0x7670fE3CD59a43082214d070150Fa31D2054cB7a"  // 2024/06/15: Remove data copied from GreenBTC
+      const GreenBTCAddress             = "0x488D299fd805b4e8BBBE819986E85c22F8513A0E"  // 2024/06/15: Change claim signature
 
       console.log("setGreenBTC: ", GreenBTCGift_PROXY_ADDRESS, defaultGasPrice.toString());  
 
       const [deployer] = await ethers.getSigners();
       const greenBTCGift = GreenBTCGift__factory.connect(GreenBTCGift_PROXY_ADDRESS, deployer);
-
-      /*
-      // 2024/06/15
+      
+      // 2024/06/15, 2024/06/15B
       const setGreenBTCTx = await greenBTCGift.setGreenBTC(GreenBTCAddress, {gasPrice: defaultGasPrice})
       await setGreenBTCTx.wait()
-      */
 
+/*    
+      // 2024/06/15A
       const AKRETokenAddress = "0xd092e1f47d4e5d1C1A3958D7010005e8e9B48206"
       const USDTAddress = "0xc7767ae828E4830e2f800981E573f333d1E492b5"
 
@@ -60,6 +61,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       await greenBTCGift.initGift(83, giftInfo83, {gasPrice: defaultGasPrice})
       
       console.log("setGreenBTC %s: ", hre.network.name, greenBTCGift.address);
+*/
 
     } else if(hre.network.name === 'matic')  {
       gbtc = ""
@@ -72,9 +74,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:greenBTCGiftI    : Amoy testnet (Dev Anv)
 // Call:    setGreenBTC
 
-// 2024/06/16
+// 2024/06/15A
 // yarn deploy:matic_test:greenBTCGiftI    : Amoy testnet (Dev Anv)
 // Call:  initGift(1), initGift(2), initGift(3), initGift(81), initGift(82), initGift(83)
+
+// 2024/06/15B
+// yarn deploy:matic_test:greenBTCGiftI    : Amoy testnet (Dev Anv)
+// Call:    setGreenBTC
+
 
 func.tags = ["greenBTCGiftI"];
 

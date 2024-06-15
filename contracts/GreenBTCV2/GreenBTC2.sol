@@ -23,7 +23,6 @@ import "../interfaces/IkWhToken.sol";
 
 import "../GreenBTCType.sol";
 import "../interfaces/IERC20.sol";
-//import "../GreenBTCStorage.sol";
 import "./GreenBTC2Type.sol";
 import "../interfaces/IGreenBTCGift.sol";
 import "../libraries/DecimalMath.sol";
@@ -35,9 +34,6 @@ contract GreenBTC2 is
     ContextUpgradeable,
     UUPSUpgradeable,
     OwnableUpgradeable
-//    ERC1155Upgradeable,
-//    ERC1155BurnableUpgradeable,
-//    GreenBTCStorage
 {
 
     using Strings for uint256;
@@ -51,8 +47,8 @@ contract GreenBTC2 is
         NotReady            // 3
     }
 
-    // keccak256("GreenBTC2(uint256 height,bytes32 hash)");
-    bytes32 public constant GREENBTC2_HASH = 0xC06BCEF3A0C6ADEEA66203210D224C78DCC6461AC236D0B3451FC8707E963A22;  
+    // keccak256("GreenBTC2(uint256 actionID,uint256 height,bytes32 hash)");
+    bytes32 public constant GREENBTC2_HASH = 0x41D00AA645EF8AD83D826C2FAD36C1C82793DDBB47D097CF4D59FBD45A50F974;  
 
     bytes32 public  DOMAIN_SEPARATOR;
     address public kWhToken;

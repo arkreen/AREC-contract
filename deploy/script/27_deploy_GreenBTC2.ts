@@ -46,10 +46,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     });
     */
 
-    
     // 2024/06/15
-    const IMPLEMENTATION_ADDRESS ="0xA7b01a0670FE0224bE3265F97823dF4D71764d06"
-    
+    // const IMPLEMENTATION_ADDRESS ="0xA7b01a0670FE0224bE3265F97823dF4D71764d06"
+    const IMPLEMENTATION_ADDRESS ="0x2A1a657335d46226f7296e03444C2fACeF10F535"
+        
     const callData = GreenBTC2__factory.createInterface().encodeFunctionData("initialize", [kWh, claimManager])
     const greenBTC2 = await deploy(CONTRACTS.UUPSProxy, {
             from: deployer,
@@ -71,6 +71,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:GreenBTC2    : Amoy testnet (Dev Anv): Remove data copy from GreenBTC 
 // Proxy:                 0x7670fE3CD59a43082214d070150Fa31D2054cB7a (UUPS)
 // Implementaion:         0xA7b01a0670FE0224bE3265F97823dF4D71764d06
+
+// 2024/06/15A
+// yarn deploy:matic_test:GreenBTC2    : Amoy testnet (Dev Anv): Change Claim Signature
+// Proxy:                 0x488D299fd805b4e8BBBE819986E85c22F8513A0E (UUPS)
+// Implementaion:         0x2A1a657335d46226f7296e03444C2fACeF10F535
 
 func.tags = ["GreenBTC2"];
 

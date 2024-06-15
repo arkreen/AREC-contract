@@ -578,10 +578,10 @@ export function getGreenBitcoinClaimGifts(
 
   const DOMAIN_SEPARATOR = getDomainSeparator(contractName, contractAddress, '2', chainID)
 
-  // keccak256("GreenBTC2(uint256 height,bytes32 hash)");
-  // 0xC06BCEF3A0C6ADEEA66203210D224C78DCC6461AC236D0B3451FC8707E963A22
+  // keccak256("GreenBTC2(uint256 actionID,uint256 height,bytes32 hash)");
+  // 0x41D00AA645EF8AD83D826C2FAD36C1C82793DDBB47D097CF4D59FBD45A50F974
   const GREENBTC2_HASH = utils.keccak256(
-    utils.toUtf8Bytes('GreenBTC2(uint256 height,bytes32 hash)')
+    utils.toUtf8Bytes('GreenBTC2(uint256 actionID,uint256 height,bytes32 hash)')
   )
 
   return utils.keccak256(
