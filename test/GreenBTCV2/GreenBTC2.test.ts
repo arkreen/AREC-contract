@@ -178,6 +178,14 @@ describe("GreenBTC2 Test Campaign", ()=>{
         await greenBTCGift.initGift(82, BigNumber.from(tokenA.address).shl(96).add(value5000).toHexString())
         await greenBTCGift.initGift(83, BigNumber.from(tokenA.address).shl(96).add(value500).toHexString())
 
+        console.log("SSSSSSSSSS", 
+                  BigNumber.from(AKREToken.address).shl(96).add(value10000).toHexString(),
+                  BigNumber.from(AKREToken.address).shl(96).add(value1000).toHexString(),
+                  BigNumber.from(AKREToken.address).shl(96).add(value1000).toHexString(),
+                  BigNumber.from(tokenA.address).shl(96).add(value50000).toHexString(),
+                  BigNumber.from(tokenA.address).shl(96).add(value5000).toHexString(),
+                  BigNumber.from(tokenA.address).shl(96).add(value500).toHexString())
+
         await greenBTC2.setGreenBTCGift(greenBTCGift.address)
 
         await tokenA.transfer(greenBTC2.address, expandTo18Decimals(30000000))
