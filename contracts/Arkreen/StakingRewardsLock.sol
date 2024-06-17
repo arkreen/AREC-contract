@@ -12,7 +12,10 @@ import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.
 import "../interfaces/IArkreenMiner.sol";
 import "../interfaces/IArkreenMinerListener.sol";
 
-contract StakingRewards is IArkreenMinerListener, ReentrancyGuardUpgradeable, OwnableUpgradeable, UUPSUpgradeable {
+// Import this file to use console.log
+import "hardhat/console.sol";
+
+contract StakingRewardsLock is IArkreenMinerListener, ReentrancyGuardUpgradeable, OwnableUpgradeable, UUPSUpgradeable {
     using SafeMathUpgradeable for uint256;
     using SafeERC20Upgradeable for ERC20Upgradeable;
 
@@ -27,6 +30,7 @@ contract StakingRewards is IArkreenMinerListener, ReentrancyGuardUpgradeable, Ow
     uint128 public capMinerPremium;
     uint32  public ratePremium;
     uint32 public lockDuration;
+    uint32 public switchTimestamp;
 
     uint256 public totalStakes;
     uint256 public totalRewardStakes;
@@ -43,6 +47,7 @@ contract StakingRewards is IArkreenMinerListener, ReentrancyGuardUpgradeable, Ow
     mapping(address => uint256) public myStakes;
     mapping(address => uint256) public myRewardStakes;
 
+    uint256 public totalLockedStakes;
     mapping(address => uint256) public lockIndex;   // MSB0:4: start lock index; MSB4:4, end lock index; MSB12:20: total lock amount;
     mapping(uint256 => uint256) public lockInfo;    // Mapping from (address||Index) => lockInfo: MSB0:4 Unstake timestamp, MSB12:20: lock amount
 
@@ -51,6 +56,7 @@ contract StakingRewards is IArkreenMinerListener, ReentrancyGuardUpgradeable, Ow
     event Withdrawn(address indexed user, uint256 amount);
     event RewardPaid(address indexed user, uint256 reward);
     event StakeClaimed(address indexed user, uint256 amount);
+    event Restaked(address indexed user, uint256 index, uint256 amount);
     event SetStakeParameter(uint256 newPremiumCap, uint256 newPremiumRate);
     event RewardStakeUpdated(address indexed user, uint256 totalMiners, uint256 userRewardStakes, uint256 totalRewardStakes);
 
@@ -98,6 +104,11 @@ contract StakingRewards is IArkreenMinerListener, ReentrancyGuardUpgradeable, Ow
             ratePremium = uint32(newPremiumRate);
         }
         emit SetStakeParameter(newPremiumCap, newPremiumRate);
+    }
+
+    function setLockParameter(uint256 timestamp, uint256 duration) public onlyOwner {
+        switchTimestamp = uint32(timestamp);
+        lockDuration = uint32(duration);
     }
 
     function lastTimeRewardApplicable() public view returns (uint256) {
@@ -163,18 +174,21 @@ contract StakingRewards is IArkreenMinerListener, ReentrancyGuardUpgradeable, Ow
         require(amount > 0, "Cannot unstake 0");
         totalStakes = totalStakes.sub(amount);
         myStakes[msg.sender] = myStakes[msg.sender].sub(amount);
-        //stakingToken.safeTransfer(msg.sender, amount);
 
-        uint256 lockIndexValue = lockIndex[msg.sender];    
-        uint256 lockInfoKey = (uint256(uint160(msg.sender)) << 96) + ((lockIndexValue >> 192) & 0xFFFFFFFF);
-        lockInfo[lockInfoKey] = ((block.timestamp) << 224) + amount;
-        lockIndex[msg.sender] = lockIndexValue + amount + (1<<192);           // Add lock amount and lock index
-
+        if (block.timestamp < switchTimestamp) {
+            stakingToken.safeTransfer(msg.sender, amount);
+        } else {
+            uint256 lockIndexValue = lockIndex[msg.sender];    
+            uint256 lockInfoKey = (uint256(uint160(msg.sender)) << 96) + ((lockIndexValue >> 192) & 0xFFFFFFFF);
+            lockInfo[lockInfoKey] = ((block.timestamp) << 224) + uint160(amount);
+            lockIndex[msg.sender] = lockIndexValue + amount + (1<<192);           // Add lock amount and lock index
+            totalLockedStakes += amount;
+        }
         _updateRewardStake(msg.sender);
         emit Withdrawn(msg.sender, amount);
     }
 
-    function claimStake() public nonReentrant {
+    function claimStake() external nonReentrant {
         uint256 lockIndexValue = lockIndex[msg.sender];    
         uint256 indexStart = (lockIndexValue >> 224);
         uint256 indexEnd = ((lockIndexValue >> 192) & 0xFFFFFFFF);
@@ -185,6 +199,7 @@ contract StakingRewards is IArkreenMinerListener, ReentrancyGuardUpgradeable, Ow
         uint256 lockInfoKeyBase = (uint256(uint160(msg.sender)) << 96);
         for (; indexStart < indexEnd; indexStart++) {
             uint256 lockInfoValue = lockInfo[lockInfoKeyBase + indexStart];
+            if (lockInfoValue == 0) continue;
             if (block.timestamp < ((lockInfoValue >> 224) + duration)) break;
             unlockAmount += (lockInfoValue & ((1 << 161) - 1));
             delete lockInfo[lockInfoKeyBase + indexStart];
@@ -195,10 +210,55 @@ contract StakingRewards is IArkreenMinerListener, ReentrancyGuardUpgradeable, Ow
 
         lockIndexValue = (indexStart << 224) + ((lockIndexValue << 4) >> 4) - unlockAmount;  // set new start index, and update the lock amount
 
+        totalLockedStakes -= unlockAmount;
         stakingToken.safeTransfer(msg.sender, unlockAmount);
         emit StakeClaimed(msg.sender, unlockAmount);
     }
 
+    function restake(uint256 unstakeIndex) external nonReentrant updateReward(msg.sender) {
+        uint256 lockInfoKey = (uint256(uint160(msg.sender)) << 96) + unstakeIndex;
+        uint256 lockInfoValue = lockInfo[lockInfoKey];
+        require (lockInfoValue != 0, "Wrong Index");
+
+        delete lockInfo[lockInfoKey];
+
+        uint256 amount = uint160(lockInfoValue);                        // Mask the unlock timestamp
+        totalStakes = totalStakes.add(amount);
+        myStakes[msg.sender] = myStakes[msg.sender].add(amount);
+
+        _updateRewardStake(msg.sender);
+        emit Restaked(msg.sender, unstakeIndex, amount);
+    }
+
+    function unstakeStatus(address user) external view returns (uint256, uint256, uint256[] memory) {
+        uint256 lockIndexValue = lockIndex[user];    
+        uint256 indexStart = (lockIndexValue >> 224);
+        uint256 indexEnd = ((lockIndexValue >> 192) & 0xFFFFFFFF);
+
+        uint256[] memory unstakeList = new uint256[](indexEnd - indexStart);
+
+        uint256 duration = uint256(lockDuration);
+        uint256 unlockAmount = 0;
+        uint256 allAmount = 0;
+        uint256 index = 0;
+
+        uint256 lockInfoKeyBase = (uint256(uint160(user)) << 96);
+        for (; indexStart < indexEnd; indexStart++) {
+            uint256 lockInfoValue = lockInfo[lockInfoKeyBase + indexStart];
+            if (lockInfoValue == 0) continue;
+            uint256 amount = lockInfoValue & ((1 << 161) - 1); 
+            if (block.timestamp < ((lockInfoValue >> 224) + duration)) unlockAmount += amount;
+            allAmount += amount;
+            unstakeList[index++] = lockInfoValue + (index << 192);     // lock timestamp, index and lock amount included.
+        }
+
+        assembly {
+            mstore(unstakeList, index)
+        }
+
+        return (allAmount, unlockAmount, unstakeList);
+    }
+    
     function collectReward() public nonReentrant updateReward(msg.sender) {
         uint256 reward = myRewards[msg.sender];
         if (reward > 0) {

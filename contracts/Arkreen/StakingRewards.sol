@@ -26,6 +26,7 @@ contract StakingRewards is IArkreenMinerListener, ReentrancyGuardUpgradeable, Ow
 
     uint128 public capMinerPremium;
     uint32  public ratePremium;
+    bool    public unstakeLocked;
 
     uint256 public totalStakes;
     uint256 public totalRewardStakes;
@@ -95,6 +96,10 @@ contract StakingRewards is IArkreenMinerListener, ReentrancyGuardUpgradeable, Ow
         emit SetStakeParameter(newPremiumCap, newPremiumRate);
     }
 
+    function changeUnstakeLock(bool lock) public onlyOwner{
+      unstakeLocked = lock;
+    }
+
     function lastTimeRewardApplicable() public view returns (uint256) {
         if (block.timestamp <= periodStart) return periodStart;
         return (block.timestamp < periodEnd) ? block.timestamp : periodEnd;
@@ -156,6 +161,9 @@ contract StakingRewards is IArkreenMinerListener, ReentrancyGuardUpgradeable, Ow
 
     function unstake(uint256 amount) public nonReentrant updateReward(msg.sender) {
         require(amount > 0, "Cannot unstake 0");
+        if (unstakeLocked) {
+          require((block.timestamp < periodStart) || (block.timestamp > periodEnd), "Unstake not opened");
+        } 
         totalStakes = totalStakes.sub(amount);
         myStakes[msg.sender] = myStakes[msg.sender].sub(amount);
         stakingToken.safeTransfer(msg.sender, amount);
