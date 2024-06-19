@@ -210,15 +210,16 @@ describe("PlantStaking test", ()=> {
         await expect(plantStaking.connect(user1).unstakeWithReward(txid, cspminer, amount.add(1), reward, nonce, constants.MaxUint256, signature))
                       .to.be.revertedWith("Wrong Signature")
 
-        await expect(plantStaking.connect(user1).unstakeWithReward(txid, cspminer, amount, reward, nonce, constants.MaxUint256, signature))
-                      .to.be.revertedWith("ERC20: insufficient allowance")
+        // reward is changed to be deposited beforehand, not be transferred from rewarder 
+//       await expect(plantStaking.connect(user1).unstakeWithReward(txid, cspminer, amount, reward, nonce, constants.MaxUint256, signature))
+//                      .to.be.revertedWith("ERC20: insufficient allowance")
 
         await arkreenToken.approve(plantStaking.address, constants.MaxUint256)
 
          // Event
          await expect(plantStaking.connect(user1).unstakeWithReward(txid, cspminer, amount, reward, nonce, constants.MaxUint256, signature))
-                      .to.emit(arkreenToken, 'Transfer')
-                      .withArgs(deployer.address, plantStaking.address, reward)    
+//                      .to.emit(arkreenToken, 'Transfer')
+//                      .withArgs(deployer.address, plantStaking.address, reward)    
                       .to.emit(arkreenToken, 'Transfer')
                       .withArgs(plantStaking.address, user1.address, amount.add(reward))    
                       .to.emit(plantStaking, 'Unstake')

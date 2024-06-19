@@ -187,6 +187,8 @@
     "deploy:matic:StakingRewardsU": "hardhat --network matic deploy --tags StakingRewardsU",
     "deploy:matic:AMinerI": "hardhat --network matic deploy --tags AMinerI",
     "deploy:matic:NotaryU": "hardhat --network matic deploy --tags NotaryU",
+    "deploy:matic:PlantStakingD": "hardhat --network matic deploy --tags PlantStakingD",
+    "deploy:matic:PlantStakingU": "hardhat --network matic deploy --tags PlantStakingU",
 
     "storageExplorerGreenBTC:matic": "hardhat run --network matic ./deploy/storageExplorerGreenBTC.ts",
     "GreenBTCTest:matic": "hardhat run --network matic ./deploy/GreenBTCTest.ts",

@@ -32,6 +32,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     } 
     
     console.log("Deploying: ", "PlantStaking", deployer);  
+
+    /*
     const plantStaking = await deploy("PlantStaking", {
         from: deployer,
         proxy: {
@@ -47,14 +49,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         skipIfAlreadyDeployed: false,
         gasPrice: defaultGasPrice
     });
-
-
-/*    
+    */
+  
     // 2024/05/23
     // const IMPLEMENTATION_ADDRESS ="0xD2c96ACD402e913B5aD2d2C3bCb557d384b5c551"   // Polygon mainnet
-
+   
     // 2024/06/04
-    const IMPLEMENTATION_ADDRESS ="0x444a7eec4b796372102b905d9ecab5a2080dc65b"
+    // const IMPLEMENTATION_ADDRESS ="0x444a7eec4b796372102b905d9ecab5a2080dc65b"
+
+    // 2024/06/19
+    const IMPLEMENTATION_ADDRESS ="0x8fC2B041C40077F881A0096768a1805a162b1aAF"   // Polygon mainnet
     
     const callData = PlantStaking__factory.createInterface().encodeFunctionData("initialize", [tokenAKRE, rewarder, manager])
     const plantStaking = await deploy(CONTRACTS.UUPSProxy, {
@@ -64,7 +68,6 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         skipIfAlreadyDeployed: false,
         gasPrice: defaultGasPrice
     });
-*/   
   
     console.log("PlantStaking deployed to %s: ", hre.network.name, plantStaking.address);
 };
@@ -86,8 +89,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2024/06/13
 // yarn deploy:matic:PlantStaking    : Polygon mainnet
-// Proxy:                  （UUPS）
-// Implementaion:          
+// Proxy:                 0xef3D3Cd3028DDff1fa795CFF8BC42B54a80Ee315   （UUPS）
+// Implementaion:         0x9f46b3303331613e9e957c68f8e1c4659dc95643
+
+// 2024/06/19
+// yarn deploy:matic:PlantStaking    : Polygon mainnet, upgrade to 0x8fC2B041C40077F881A0096768a1805a162b1aAF
+// Implementaion:         0x8fC2B041C40077F881A0096768a1805a162b1aAF
 
 func.tags = ["PlantStaking"];
 

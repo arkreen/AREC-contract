@@ -136,7 +136,7 @@ contract PlantStaking is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpg
         minerStakeInfo[cspminer].amountStake -= uint96(amount); 
         minerStakeInfo[cspminer].rewardStake += uint96(reward); 
 
-        require(IERC20Upgradeable(stakingToken).transferFrom(rewarder, address(this), reward));
+        //require(IERC20Upgradeable(stakingToken).transferFrom(rewarder, address(this), reward));   // reward deposited beforehand 
         require(IERC20Upgradeable(stakingToken).transfer(msg.sender, amount + reward));
         emit Unstake(txid, msg.sender, cspminer, amount, reward);
     }

@@ -70,7 +70,7 @@ contract KWhToken is
         _;
     }
 
-    function setOffsetManager(address manager) public onlyOwner {
+    function setOffsetManager(address manager) external onlyOwner {
         offsetManager = manager;                      // set offsetManager to 0 to disable the offsetManager
     }
 
@@ -78,7 +78,7 @@ contract KWhToken is
      * @dev Approve the tokens which can be transferred from this GreenBTC contract by arkreenBuilder
      * @param tokens The token list
      */
-    function approveBank(address[] calldata tokens) public onlyOwner {
+    function approveBank(address[] calldata tokens) external onlyOwner {
         require(arkreenBuilder != address(0), "kWh: No Owner");
         for(uint256 i = 0; i < tokens.length; i++) {
             TransferHelper.safeApprove(tokens[i], artBank, type(uint256).max);
@@ -91,7 +91,7 @@ contract KWhToken is
      * It it is ART token, convert ART token to kWh token directly
      * @param amount amount of the token to pay, either the amount of the ART token or the amount of the payment token to pay.
      */
-    function MintKWh(address tokenToPay, uint256 amount) public nonReentrant onlyOwnerOrManager returns (uint256) {
+    function MintKWh(address tokenToPay, uint256 amount) external nonReentrant onlyOwnerOrManager returns (uint256) {
 
         uint256 amountART = amount;
         if (tokenToPay != tokenART) {
@@ -118,7 +118,7 @@ contract KWhToken is
      * @param tokenToPay Address of the payment token used to pay for swapping ART
      * @param amountPayment amount of the tokeen to swap out
      */
-    function convertKWh(address tokenToPay, uint256 amountPayment) public nonReentrant returns (uint256) {
+    function convertKWh(address tokenToPay, uint256 amountPayment) external nonReentrant returns (uint256) {
         uint256 price = priceForSwap[tokenToPay];
         require (price != 0, "kWh: Payment Token Not Supported");
 

@@ -58,6 +58,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:StakingRewardsD    : Amoy testnet (Dev Anv)
 // Implementaion:         0x1FAc329c4f9556654e0beCb527977228100F7742
 
+// 2024/06/18: add staking locking feature
+// yarn deploy:matic_test:StakingRewardsD    : Amoy testnet (Dev Anv)
+// Implementaion:         0x7758f24068A5E2c1dea3D1D82Fa933356b35f8c5
+
 func.tags = ["StakingRewardsD"];
 
 export default func;
