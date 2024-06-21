@@ -377,6 +377,84 @@ export function getPlantUnstakingDigest(
   )
 }
 
+export function getGreenPowerStakingDigest(
+  contractName: string,
+  contractAddress: string,
+  approve: {
+    txid:       string
+    staker:     string
+    plugMiner:  string
+    amount:     BigNumber
+    period:     BigNumber
+    nonce:      BigNumber
+  },
+  deadline:     BigNumber
+): string {
+  const DOMAIN_SEPARATOR = getDomainSeparator(contractName, contractAddress)
+
+  // keccak256("stake(uint256 txid,address staker,address plugMiner,uint256 amount,uint256 period,uint256 nonce,uint256 deadline)")
+  // 0xB13D25036831D18DBC6EEF2020BA657F13C7D378CFB74B36EF4C358851961CFA
+  const STAKE_TYPEHASH = utils.keccak256(
+    utils.toUtf8Bytes('stake(uint256 txid,address staker,address plugMiner,uint256 amount,uint256 period,uint256 nonce,uint256 deadline)')
+  )
+
+  return utils.keccak256(
+    utils.solidityPack(
+      ['bytes1', 'bytes1', 'bytes32', 'bytes32'],
+      [
+        '0x19',
+        '0x01',
+        DOMAIN_SEPARATOR,
+        utils.keccak256(
+          utils.defaultAbiCoder.encode(
+            ['bytes32', 'address', 'address', 'address', 'uint256', 'uint256', 'uint256', 'uint256'],
+            [STAKE_TYPEHASH, approve.txid, approve.staker, approve.plugMiner, approve.amount, approve.period, approve.nonce, deadline]
+          )
+        )
+      ]
+    )
+  )
+}
+
+export function getGreenPowerUnstakingDigest(
+  contractName: string,
+  contractAddress: string,
+  approve: {
+    txid:       string
+    staker:     string
+    plugMiner:  string
+    amount:     BigNumber
+    nonce:      BigNumber
+  },
+  deadline:     BigNumber
+): string {
+  const DOMAIN_SEPARATOR = getDomainSeparator(contractName, contractAddress)
+
+  // keccak256("unstake(uint256 txid,address staker,address plugMiner,uint256 amount,uint256 nonce,uint256 deadline)");
+  // 0xEEC4B573720D0248870523A82A8C2F6AEE40054E5D98C0334C41ACCF230D8CFC
+  const UNSTAKE_TYPEHASH = utils.keccak256(
+    utils.toUtf8Bytes('unstake(uint256 txid,address staker,address plugMiner,uint256 amount,uint256 nonce,uint256 deadline)')
+  )
+
+  return utils.keccak256(
+    utils.solidityPack(
+      ['bytes1', 'bytes1', 'bytes32', 'bytes32'],
+      [
+        '0x19',
+        '0x01',
+        DOMAIN_SEPARATOR,
+        utils.keccak256(
+          utils.defaultAbiCoder.encode(
+            ['bytes32', 'address', 'address', 'address', 'uint256', 'uint256', 'uint256'],
+            [UNSTAKE_TYPEHASH, approve.txid, approve.staker, approve.plugMiner, approve.amount, approve.nonce, deadline]
+          )
+        )
+      ]
+    )
+  )
+}
+
+
 export function getOnboardingRemoteMinerDigest(
   contractName: string,
   contractAddress: string,
