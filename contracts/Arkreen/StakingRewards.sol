@@ -165,7 +165,7 @@ contract StakingRewards is IArkreenMinerListener, ReentrancyGuardUpgradeable, Ow
           require((block.timestamp < periodStart) || (block.timestamp > periodEnd), "Unstake not opened");
         } 
         totalStakes = totalStakes.sub(amount);
-        myStakes[msg.sender] = myStakes[msg.sender].sub(amount);
+        myStakes[msg.sender] = myStakes[msg.sender].sub(amount);    //?? UnregisterListener is no stake left
         stakingToken.safeTransfer(msg.sender, amount);
 
         _updateRewardStake(msg.sender);

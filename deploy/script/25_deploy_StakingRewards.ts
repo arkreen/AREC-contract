@@ -3,18 +3,20 @@ import { DeployFunction } from "hardhat-deploy/types";
 import { CONTRACTS } from "../constants";
 import { BigNumber } from "ethers";
 
+import { StakingRewards__factory } from "../../typechain";
+
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     const { deployments, getNamedAccounts } = hre;
     const { deploy } = deployments;
     const { deployer } = await getNamedAccounts();
 
-    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(60_000_000_000)
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(35_000_000_000) : BigNumber.from(60_000_000_000)
 
-    let tokenAKRE
-    let tokenART
-    let minerContract    
-    let rewardsDistributor
+    let tokenAKRE = ''
+    let tokenART = ''
+    let minerContract = ''
+    let rewardsDistributor = ''
     
     if(hre.network.name === 'matic_test')  {
       // 2024/05/16: AKRE on Amoy testnet                        
@@ -30,6 +32,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     } 
 
     console.log("Deploying: ", "StakingRewards", deployer);  
+/*    
     const stakingRewards = await deploy("StakingRewards", {
         from: deployer,
         proxy: {
@@ -45,6 +48,19 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         skipIfAlreadyDeployed: false,
         gasPrice: defaultGasPrice
     });
+*/
+    // 2024/06/21
+    const IMPLEMENTATION_ADDRESS ="0x7758f24068A5E2c1dea3D1D82Fa933356b35f8c5"
+        
+    const callData = StakingRewards__factory.createInterface().encodeFunctionData("initialize", [tokenAKRE, tokenART, minerContract, rewardsDistributor])
+    const stakingRewards = await deploy(CONTRACTS.UUPSProxy, {
+            from: deployer,
+            args: [IMPLEMENTATION_ADDRESS, deployer, callData],
+            log: true,
+            skipIfAlreadyDeployed: false,
+            gasPrice: defaultGasPrice
+    });
+
 
     console.log("USDT deployed to %s: ", hre.network.name, stakingRewards.address);
 };
@@ -63,6 +79,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:StakingRewards    : Polygon mainnet
 // Proxy:                 0xa777d8855456eac0E3f1C64c148dabaf8e8CcC1F
 // Implementaion:         0x7D2Cebe75a5D46cee170A3aAC175453673125A9E
+
+// 2024/06/21
+// yarn deploy:matic_test:StakingRewards: Amoy testnet (Dev Anv), depploy 3 new proxy contract for 3 durations. 
+// Proxy1:                0x1f74d233c159Eb99a81FB067076cf2C86D5a3F06
+// Proxy2:                0x09806c44a1a87A5Db3d3b21839C8eDB6049355B5
+// Proxy3:                0xDfDe48f6A4E57989c8916D9f9f467803D36E6412
+// Implementaion:         0x7758f24068A5E2c1dea3D1D82Fa933356b35f8c5
+
 
 func.tags = ["StakingRewards"];
 
