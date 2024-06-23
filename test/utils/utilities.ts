@@ -50,6 +50,10 @@ const GREENBTC_BATCH_TYPEHASH = utils.keccak256(
   utils.toUtf8Bytes('GreenBitCoinBatch((uint128,uint128,address,uint8,string,string)[])')
 )
 
+export function expandTo6Decimals(n: number): BigNumber {
+  return BigNumber.from(n).mul(BigNumber.from(10).pow(6))
+}
+
 export function expandTo9Decimals(n: number): BigNumber {
   return BigNumber.from(n).mul(BigNumber.from(10).pow(9))
 }
@@ -154,6 +158,19 @@ export interface GreenBTCInfo {
   greenType:  number            // High nibble:  ART type: 0, CART, 1, Arkreen ART; Low nibble: mint type, 1: system, 2: user;  
   blockTime:  string            // For NFT display
   energyStr:  string            // For NTT display
+}
+
+export interface OffsetAction {
+  plugMiner:      string
+  offsetAmount:   BigNumber
+}
+
+export interface OffsetActionBatch {
+  plugMiner:      string
+  owner:          string
+  tokenPayment:   string
+  offsetAmount:   BigNumber
+  nonce:          BigNumber
 }
 
 export function getCreate2Address(
@@ -454,6 +471,43 @@ export function getGreenPowerUnstakingDigest(
   )
 }
 
+export function getGreenPowerOffsetDigest(
+  contractName: string,
+  contractAddress: string,
+  approve: {
+    txid:         string
+    staker:       string
+    offsetAction: OffsetAction[]
+    tokenToPay:   string
+    nonce:        BigNumber
+  },
+  deadline:     BigNumber
+): string {
+  const DOMAIN_SEPARATOR = getDomainSeparator(contractName, contractAddress)
+
+  // keccak256("offset(uint256 txid,address staker,(address plugMiner,uint256 offsetAmount)[],address tokenToPay,uint256 nonce,uint256 deadline)");
+  // 0xAA19A1F9E01266BCE4B0B002C45341A0B67477836193A3457FB9D3F248AECE80
+  const UNSTAKE_TYPEHASH = utils.keccak256(
+    utils.toUtf8Bytes('offset(uint256 txid,address staker,(address plugMiner,uint256 offsetAmount)[],address tokenToPay,uint256 nonce,uint256 deadline)')
+  )
+
+  return utils.keccak256(
+    utils.solidityPack(
+      ['bytes1', 'bytes1', 'bytes32', 'bytes32'],
+      [
+        '0x19',
+        '0x01',
+        DOMAIN_SEPARATOR,
+        utils.keccak256(
+          utils.defaultAbiCoder.encode(
+            ['bytes32', 'address', 'address', '(address plugMiner, uint256 offsetAmount)[]', 'address', 'uint256', 'uint256'],
+            [UNSTAKE_TYPEHASH, approve.txid, approve.staker, approve.offsetAction, approve.tokenToPay, approve.nonce, deadline]
+          )
+        )
+      ]
+    )
+  )
+}
 
 export function getOnboardingRemoteMinerDigest(
   contractName: string,

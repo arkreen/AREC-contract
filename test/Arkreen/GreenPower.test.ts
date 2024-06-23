@@ -4,8 +4,8 @@ import { expect } from "chai";
 const {ethers, upgrades} =  require("hardhat");
 import hre from 'hardhat'
 import { ecsign, fromRpcSig, ecrecover } from 'ethereumjs-util'
-import { getGreenPowerStakingDigest, getApprovalDigest, expandTo18Decimals, randomAddresses, expandTo9Decimals } from '../utils/utilities'
-import { getGreenPowerUnstakingDigest, ActionInfo } from '../utils/utilities'
+import { getGreenPowerStakingDigest, getApprovalDigest, expandTo6Decimals, expandTo18Decimals, randomAddresses, expandTo9Decimals } from '../utils/utilities'
+import { getGreenPowerUnstakingDigest, OffsetAction, OffsetActionBatch, getGreenPowerOffsetDigest } from '../utils/utilities'
 
 import { constants, BigNumber, } from 'ethers'
 import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
@@ -35,6 +35,20 @@ import Decimal from "decimal.js";
 import { deploy } from "@openzeppelin/hardhat-upgrades/dist/utils";
 import { any } from "hardhat/internal/core/params/argumentTypes";
 const constants_MaxDealine = BigNumber.from('0xFFFFFFFF')
+
+interface OffsetServerEvent {
+  txid:               string
+  offsetBaseIndex:    BigNumber
+  totalOffsetAmount:  BigNumber
+  offsetActionBatch:   OffsetActionBatch[]
+}
+
+enum SkipReason {
+  NORMAL,
+  WRONG_OWNER,
+  WRONG_AMOUNT,
+  LESS_DEPOSIT
+}
 
 describe("GreenPower Test Campaign", ()=>{
 
@@ -313,7 +327,7 @@ describe("GreenPower Test Campaign", ()=>{
 
         await greenPower.connect(wallet).unstake(txid, plugMiner, amount, nonce, constants.MaxUint256, signature) 
       }
-      
+
       it("GreenPower Deposit test", async function () {
         await expect(greenPower.deposit(tokenA.address, expandTo18Decimals(12345)))
                   .to.be.revertedWith("TransferHelper: TRANSFER_FROM_FAILED")
@@ -524,472 +538,440 @@ describe("GreenPower Test Campaign", ()=>{
 
       });
 
-/*
-      it("PlantUnstaking Test", async function () {
-        // Prepare
-        await walletStake(user1, expandTo18Decimals(10000))
-        await walletStake(user2, expandTo18Decimals(30000))
-        await walletStake(user3, expandTo18Decimals(50000))
-        await walletStake(user2, expandTo18Decimals(70000))
-        await walletStake(user3, expandTo18Decimals(90000))
-        await walletStake(user2, expandTo18Decimals(110000))
-        await walletStake(user2, expandTo18Decimals(130000))
-        await walletStake(user1, expandTo18Decimals(150000))
-        await walletStake(user3, expandTo18Decimals(170000))
+      it("GreenPower offsetPower Test", async function () {
 
-        // Abnormal
-        const amount= expandTo18Decimals(10000)
-        const reward= expandTo18Decimals(1000)
-        const {nonce}  = await plantStaking.stakeInfo(user1.address)
-        const txid = BigNumber.from(4567)
+        await AKREToken.approve(greenPower.address, constants.MaxUint256)
+        const plugMiners = randomAddresses(4)
 
-        const cspminer = "0x280a7c4E032584F97E84eDd396a00799da8D061A"
+      // stake on first miner
+       {
+          const {nonce}  = await greenPower.getStakerInfo(deployer.address)
+
+          const txid = randomAddresses(1)[0]
+          const plugMiner = plugMiners[0]
+
+          const period = BigNumber.from(60 * 3600 * 24)
+    
+          const digest = getGreenPowerStakingDigest(
+              'Green Power',
+              greenPower.address,
+              { txid, staker: deployer.address, plugMiner: plugMiner, amount: expandTo18Decimals(23456), period: period, nonce: nonce},
+              constants.MaxUint256
+            )
+
+          const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))   
+          const signature: GreenPower.SigStruct = { v, r, s }  
+
+          await greenPower.stake(txid, plugMiner, expandTo18Decimals(23456), period, nonce, constants.MaxUint256, signature) 
+        }
+
+        // Normal convertKWh with token
+        await tokenA.approve(greenPower.address, expandTo18Decimals(30000000))
+        await greenPower.approveConvertkWh([tokenA.address, arkreenRECToken.address])
+        await kWhToken.changeSwapPrice(tokenA.address, expandTo18Decimals(150).div(1000))   // 1kWh = 0.15 TokenA
+
+        const price = expandTo18Decimals(150).div(1000)
+        const payment = price.mul(100)
+
+        let {nonce} = await greenPower.getStakerInfo(deployer.address)
+
+        const offsetAction1: OffsetAction = {
+          plugMiner:      plugMiners[0],
+          offsetAmount:   expandTo6Decimals(100)
+        } 
+
+        const txid = randomAddresses(1)[0]
+        //let amount = expandTo18Decimals(12345)
+        //const plugMiner = "0x280a7c4E032584F97E84eDd396a00799da8D061A"
   
-        const digest = getPlantUnstakingDigest(
-            'Plant Miner Staking',
-            plantStaking.address,
-            {txid, staker: user1.address, cspminer: cspminer, amount, reward, nonce},
+        const digest = getGreenPowerOffsetDigest(
+            'Green Power',
+            greenPower.address,
+            { txid, staker: deployer.address, offsetAction: [offsetAction1], tokenToPay: tokenA.address, nonce},
             constants.MaxUint256
           )
 
         const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))   
-        const signature: PlantStaking.SigStruct = { v, r, s }  
+        const signature: GreenPower.SigStruct = { v, r, s }  
 
-        await expect(plantStaking.connect(user1).unstakeWithReward(txid, cspminer, 0, 0, nonce, constants.MaxUint256, signature))
-                      .to.be.revertedWith("Zero Stake")
-
-        await expect(plantStaking.connect(user1).unstakeWithReward(txid, cspminer, amount, reward, nonce.add(1), constants.MaxUint256, signature))
-                      .to.be.revertedWith("Nonce Not Match")
-
-        await expect(plantStaking.connect(user1).unstakeWithReward(txid, cspminer, expandTo18Decimals(150000+10000).add(1), reward, nonce, constants.MaxUint256, signature))
-                      .to.be.revertedWith("Unstake Overflowed")
-
-        await expect(plantStaking.connect(user1).unstakeWithReward(txid, cspminer, amount.add(1), reward, nonce, constants.MaxUint256, signature))
-                      .to.be.revertedWith("Wrong Signature")
-
-        // reward is changed to be deposited beforehand, not be transferred from rewarder 
-//       await expect(plantStaking.connect(user1).unstakeWithReward(txid, cspminer, amount, reward, nonce, constants.MaxUint256, signature))
-//                      .to.be.revertedWith("ERC20: insufficient allowance")
-
-        await arkreenToken.approve(plantStaking.address, constants.MaxUint256)
-
-         // Event
-         await expect(plantStaking.connect(user1).unstakeWithReward(txid, cspminer, amount, reward, nonce, constants.MaxUint256, signature))
-//                      .to.emit(arkreenToken, 'Transfer')
-//                      .withArgs(deployer.address, plantStaking.address, reward)    
-                      .to.emit(arkreenToken, 'Transfer')
-                      .withArgs(plantStaking.address, user1.address, amount.add(reward))    
-                      .to.emit(plantStaking, 'Unstake')
-                      .withArgs(txid, user1.address, cspminer, amount, reward)   
-
-        const stakeInfo1A = await plantStaking.stakeInfo(user1.address)
-        const stakeInfo2A = await plantStaking.stakeInfo(user2.address)
-        const stakeInfo3A = await plantStaking.stakeInfo(user3.address)
-
-        await walletUnstake(user1, expandTo18Decimals(10000), expandTo18Decimals(1000))
-        await walletUnstake(user2, expandTo18Decimals(50000), expandTo18Decimals(5000))
-        await walletUnstake(user3, expandTo18Decimals(70000), expandTo18Decimals(7000))
-
-        await walletUnstake(user1, expandTo18Decimals(30000), expandTo18Decimals(3000))
-        await walletUnstake(user2, expandTo18Decimals(70000), expandTo18Decimals(7000))
-        await walletUnstake(user3, expandTo18Decimals(90000), expandTo18Decimals(9000))
-
-        expect((await plantStaking.stakeInfo(user1.address)).amountStake).to.eq(stakeInfo1A.amountStake.sub(expandTo18Decimals(10000+30000)))
-        expect((await plantStaking.stakeInfo(user2.address)).amountStake).to.eq(stakeInfo2A.amountStake.sub(expandTo18Decimals(50000+70000)))
-        expect((await plantStaking.stakeInfo(user3.address)).amountStake).to.eq(stakeInfo3A.amountStake.sub(expandTo18Decimals(70000+90000)))
-
-        expect((await plantStaking.stakeInfo(user1.address)).rewardStake).to.eq(expandTo18Decimals(1000+3000 + 1000))  // 1000 comes from the abnormal test
-        expect((await plantStaking.stakeInfo(user2.address)).rewardStake).to.eq(expandTo18Decimals(5000+7000))
-        expect((await plantStaking.stakeInfo(user3.address)).rewardStake).to.eq(expandTo18Decimals(7000+9000))
-
-        expect(await plantStaking.totalStake()).to.equal(stakeInfo1A.amountStake
-                                        .add(stakeInfo2A.amountStake).add(stakeInfo3A.amountStake)
-                                        .sub(expandTo18Decimals(10000+30000+50000+70000+70000+90000)))
-
-        expect(await plantStaking.totalReward()).to.equal(expandTo18Decimals(1000+3000+5000+7000+7000+9000 + 1000))
-
-      });
-*/
-
-/*
-      it("GreenPower makeGreenBox test", async function () {
-
-        await AKREToken.transfer(greenBTC2.address, expandTo18Decimals(100000000))
-
-        const domainID = 1
-        await greenBTC2.registerDomain(domainID, domainInfoBigInt.toHexString())
-
-        await kWhToken.connect(owner1).approve(greenBTC2.address, constants.MaxUint256)
-
-        await expect(greenBTC2.connect(owner1).makeGreenBox(0x8002, 123))
-                  .to.be.revertedWith("GBC2: Over Limit")
-
-        await expect(greenBTC2.connect(owner1).makeGreenBox(1, 0x2000000))
-                  .to.be.revertedWith("GBC2: Over Limit")
-
-        await expect(greenBTC2.connect(owner1).makeGreenBox(10, 123))
-                  .to.be.revertedWith("GBC2: Empty Domain")
-
-        const balancekWh = await kWhToken.balanceOf(owner1.address)                  
-
-        let greenizetx
-        await expect(greenizetx = await  greenBTC2.connect(owner1).makeGreenBox(1,123))
-                .to.emit(greenBTC2, 'DomainGreenized')
-                .withArgs(owner1.address, 1, anyValue, 1, BigNumber.from(0), BigNumber.from(123))
-                
-        const receipt = await greenizetx.wait()
-        console.log('makeGreenBox gas usage:', receipt.gasUsed )
-
-        expect(await kWhToken.balanceOf(owner1.address)).to.eq(balancekWh.sub(expandTo9Decimals(123).div(10)))  
-
-        await greenBTC2.connect(owner1).makeGreenBox(1,234)
-        
-        expect(await greenBTC2.userActionIDs(owner1.address)).to.eq("0x0000000100000002")
-        expect(await greenBTC2.domainActionIDs(1)).to.eq("0x0000000100000002")
-
-        const domainStatus = await greenBTC2.domainStatus(1)
-        expect((BigNumber.from(domainStatus)).shr(224)).to.eq(BigNumber.from(123+234))
-
-        expect(await kWhToken.balanceOf(owner1.address)).to.eq(balancekWh.sub(expandTo9Decimals(123+234).div(10)))
-        
-      });
-
-      it("GreenPower openActionGifts + mintGifts test", async function () {
-
-        // AKRE used for gift
-        await AKREToken.approve(greenBTC2.address, constants.MaxUint256)
-        await greenBTC2.depositFund(AKREToken.address, expandTo18Decimals(100000000))
-
-        await greenBTC2.registerDomain(1, domainInfoBigInt.toHexString())
-        await kWhToken.connect(owner1).approve(greenBTC2.address, constants.MaxUint256)
-
-        const makeGreenBoxTx = await greenBTC2.connect(owner1).makeGreenBox(1,123)
-        const receipt = await makeGreenBoxTx.wait()
-
-        actionInfo.boxAmount = BigNumber.from(123)
-        actionInfo.actor = owner1.address
-        actionInfo.blockHeigh = BigNumber.from(receipt.blockNumber)
-        actionInfo.blockHash = receipt.blockHash
-
-        let allCounters = new Array<number>(8).fill(0)
-        const  { counters: countersCheck, wonList: wonListCheck } = UtilCalculateGifts(actionInfo)
-
-        for (let index=0; index<8; index++ ) {
-          allCounters[index] += (index==0) ? countersCheck[index] :  countersCheck[index] - countersCheck[index-1]
-        }
-
-        const digest = getGreenBitcoinClaimGifts(
-            'Green BTC Club',
-            greenBTC2.address,
-            1,
-            receipt.blockNumber,
-            receipt.blockHash
-          )
-
-        const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))  
-        
-        //await expect(greenBTC2.connect(owner1).openActionGifts(5, 0, receipt.blockHash, {v,r,s}))
-        //                      .to.be.revertedWith("GBC2: Wrong Action ID")
-
-        await expect(greenBTC2.connect(owner1).openActionGifts(1, receipt.blockNumber, receipt.blockHash, {v, r, s}))
-                          .to.be.revertedWith("GBC2: Open Early")
-
-        await mine(5)
-
-        const {counters, wonList} = await greenBTC2.checkIfShot(owner1.address, 1, Bytes32_Zero)
-        expect(counters).to.deep.eq(countersCheck)
-        expect(wonList).to.deep.eq(wonListCheck)
-
-        await expect(greenBTC2.connect(owner1).openActionGifts(1, receipt.blockNumber + 1, receipt.blockHash, {v,r,s}))
-                            .to.be.revertedWith("GBC2: Wrong Block Height")
-
-        const {v:v1, r:r1, s:s1} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyOwner.slice(2), 'hex'))  
-        await expect(greenBTC2.connect(owner1).openActionGifts(1, receipt.blockNumber, receipt.blockHash, {v:v1, r:r1, s:s1}))
-                            .to.be.revertedWith("Wrong Signature")
-
-        let giftCounter = new Array<number>(8).fill(0)
-        let counterBN = BigNumber.from(0)
-        let giftTypeCounter = 0                            
-        for(let index = 0; index < 8; index++) {
-          giftCounter[index] = (index==0) ? countersCheck[index] : countersCheck[index] - countersCheck[index-1]
-          counterBN = counterBN.shl(16).add(giftCounter[index])
-          giftTypeCounter += ( giftCounter[index] == 0 ? 0 : 1)
-        }       
-
-        let giftIDs = new Array<BigNumber>(giftTypeCounter).fill(BigNumber.from(0))
-        let amounts = new Array<BigNumber>(giftTypeCounter).fill(BigNumber.from(0))
-
-        let offset = 0
-        const giftType = [1, 2, 3, 0, 81, 82, 83, 0]
-        let amountAKRE = BigNumber.from(0)
-        let amountTokenA = BigNumber.from(0)
-        for(let index = 0; index < 8; index++) {
-          if(giftCounter[index] != 0) {
-            giftIDs[offset] = BigNumber.from(giftType[index])
-            amounts[offset] = BigNumber.from(giftCounter[index])
-            if(giftType[index] == 1 ) amountAKRE = amountAKRE.add(amounts[offset].mul(expandTo18Decimals(10000)))
-            if(giftType[index] == 2 ) amountAKRE = amountAKRE.add(amounts[offset].mul(expandTo18Decimals(1000)))
-            if(giftType[index] == 3 ) amountAKRE = amountAKRE.add(amounts[offset].mul(expandTo18Decimals(100)))
-            if(giftType[index] == 81 ) amountTokenA = amountTokenA.add(amounts[offset].mul(expandTo18Decimals(50000)))
-            if(giftType[index] == 82) amountTokenA = amountTokenA.add(amounts[offset].mul(expandTo18Decimals(5000)))
-            if(giftType[index] == 83) amountTokenA = amountTokenA.add(amounts[offset].mul(expandTo18Decimals(500)))
-            offset++
-          }
-        }       
+        const balanceBefore = await tokenA.balanceOf(deployer.address)
+        const totalOffsetA = await greenPower.totalOffset()
        
-        const balanceAKREBefore = await AKREToken.balanceOf(greenBTCGift.address)
-        const balanceTokeanABefore = await tokenA.balanceOf(greenBTCGift.address)
+        await expect(greenPower.offsetPower(txid, [offsetAction1], tokenA.address, nonce, constants.MaxUint256, signature))
+                      .to.emit(tokenA, 'Transfer')
+                      .withArgs(deployer.address, greenPower.address, payment)
+                      .to.emit(tokenA, 'Transfer')
+                      .withArgs(greenPower.address, kWhToken.address, payment)
+                      .to.emit(kWhToken, 'Transfer')
+                      .withArgs(kWhToken.address, greenPower.address, expandTo6Decimals(100))
+                      .to.emit(kWhToken, 'ARTConverted')
+                      .withArgs(greenPower.address, tokenA.address, payment, expandTo6Decimals(100))
+                      .to.emit(kWhToken, 'Transfer')
+                      .withArgs(greenPower.address, constants.AddressZero, expandTo6Decimals(100))
+                      .to.emit(greenPower, 'Offset')
+                      .withArgs(txid, deployer.address, anyValue, tokenA.address, expandTo18Decimals(23456), 0, nonce)
+//                    .withArgs(txid, deployer.address, [offsetAction1], tokenA.address, expandTo18Decimals(23456), 0, nonce)   
+        
+        // check minerOffsetInfo
+        expect(await greenPower.getMinerOffsetInfo(plugMiners[0])).to.deep.eq([deployer.address, 1, expandTo6Decimals(100)])
 
-        let openActionGiftsTx
-        await expect(openActionGiftsTx= await greenBTC2.connect(owner1).openActionGifts(1, receipt.blockNumber, receipt.blockHash, {v,r,s}))
-                  .to.emit(greenBTCGift, 'GiftBatchMinted')
-                  .withArgs(owner1.address, giftIDs, amounts)
-                  .to.emit(greenBTC2, 'ActionGiftsOpened')
-                  .withArgs(owner1.address, 1, receipt.blockNumber, receipt.blockHash, giftIDs, amounts)
+        // Check tokenA balance 
+        expect(await tokenA.balanceOf(deployer.address)).to.eq(balanceBefore.sub(payment))
 
-        const openActionGiftReceipt = await openActionGiftsTx.wait()
-        console.log("openActionGifts Gas Usage:", openActionGiftReceipt.gasUsed);
+        // Check totalOffset
+        expect(await greenPower.totalOffset()).to.eq(totalOffsetA.add(expandTo6Decimals(100)))
 
-        const actionInfoBNNew = actionInfo.blockHeigh.shl(224).add(actionInfo.domainID.shl(208))
-                .add(actionInfo.boxStart.shl(184)).add(actionInfo.boxAmount.shl(160))
-                .add(counterBN.shl(32)).add(BigNumber.from(1).shl(223))
-
-        const greenActions = await greenBTC2.greenActions(1)
-        expect(greenActions).to.eq(actionInfoBNNew)
-
-        expect(await AKREToken.balanceOf(greenBTCGift.address)).to.eq(balanceAKREBefore.add(amountAKRE))                  
-        expect(await tokenA.balanceOf(greenBTCGift.address)).to.eq(balanceTokeanABefore.add(amountTokenA))                  
-
-        const amount1 = await greenBTCGift.balanceOf(owner1.address, 1)                           
-        const amount2 = await greenBTCGift.balanceOf(owner1.address, 2)
-        const amount3 = await greenBTCGift.balanceOf(owner1.address, 3)
-        const amount5 = await greenBTCGift.balanceOf(owner1.address, 81)                            
-        const amount6 = await greenBTCGift.balanceOf(owner1.address, 82)
-        expect(amount1).to.eq(giftCounter[0])
-        expect(amount2).to.eq(giftCounter[1])
-        expect(amount3).to.eq(giftCounter[2])
-        expect(amount5).to.eq(giftCounter[4])
-        expect(amount6).to.eq(giftCounter[5])
-
-        await expect(greenBTC2.connect(owner1).openActionGifts(1, receipt.blockNumber, receipt.blockHash, {v,r,s}))
-                            .to.be.revertedWith("GBC2: Action Opened")
-
-        ////////// 2nd openActionGifts //////////////////////////////////
+        /////////////  3 offset actions ///////////////////////////
         {
-          await kWhToken.approve(greenBTC2.address, constants.MaxUint256)
-
-          const makeGreenBoxTx2 = await greenBTC2.makeGreenBox(1,456)
-          const receipt2 = await makeGreenBoxTx2.wait()
-
-          actionInfo.actionID = BigNumber.from(2)
-          actionInfo.boxStart = BigNumber.from(123)
-          actionInfo.boxAmount = BigNumber.from(456)
-          actionInfo.actor = deployer.address
-          actionInfo.blockHeigh = BigNumber.from(receipt2.blockNumber)
-          actionInfo.blockHash = receipt2.blockHash
-
-          const  { counters: countersCheck2, wonList: wonListCheck2 } = UtilCalculateGifts(actionInfo)
-
-          for (let index=0; index<8; index++ ) {
-            allCounters[index] += (index==0) ? countersCheck2[index] :  countersCheck2[index] - countersCheck2[index-1]
-          }
+          const txid = randomAddresses(1)[0]
+          const {nonce} = await greenPower.getStakerInfo(deployer.address)
+          const offsetAction1: OffsetAction = {
+            plugMiner:      plugMiners[0],
+            offsetAmount:   expandTo6Decimals(100)
+          } 
   
-          const digest2 = getGreenBitcoinClaimGifts(
-              'Green BTC Club',
-              greenBTC2.address,
-              2,
-              receipt2.blockNumber,
-              receipt2.blockHash
-            )
+          const offsetAction2: OffsetAction = {
+            plugMiner:      plugMiners[1],
+            offsetAmount:   expandTo6Decimals(300)
+          } 
+  
+          const offsetAction3: OffsetAction = {
+            plugMiner:      plugMiners[2],
+            offsetAmount:   expandTo6Decimals(500)
+          }
 
-          const {v:v2, r:r2, s:s2} = ecsign(Buffer.from(digest2.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))  
+          const digest = getGreenPowerOffsetDigest(
+            'Green Power',
+            greenPower.address,
+            { txid, staker: deployer.address, offsetAction: [offsetAction1, offsetAction2, offsetAction3], tokenToPay: tokenA.address, nonce},
+            constants.MaxUint256
+          )
 
-          await mine(5)
+          const payment = price.mul( 100 + 300 + 500)
 
-          //const {counters: counters2, wonList: wonList2} = await greenBTC2.checkIfShot(owner1.address, 1, Bytes32_Zero)
-          const {counters: counters2, wonList: wonList2} = await greenBTC2.checkIfShot(deployer.address, 2, Bytes32_Zero)
+          const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))   
+          const signature: GreenPower.SigStruct = { v, r, s }  
 
-          const openActionGiftsTx = await greenBTC2.connect(owner1).openActionGifts(2, receipt2.blockNumber, receipt2.blockHash, {v:v2, r:r2, s:s2})
+          const balanceBefore = await tokenA.balanceOf(deployer.address)
+          const totalOffsetA = await greenPower.totalOffset()
 
-          const openActionGiftReceipt = await openActionGiftsTx.wait()
-          console.log("openActionGifts Gas Usage:", openActionGiftReceipt.gasUsed);
+          await expect(greenPower.offsetPower(txid, [offsetAction1, offsetAction2, offsetAction3], tokenA.address, nonce, constants.MaxUint256, signature))
+                      .to.emit(tokenA, 'Transfer')
+                      .withArgs(deployer.address, greenPower.address, payment)
+                      .to.emit(tokenA, 'Transfer')
+                      .withArgs(greenPower.address, kWhToken.address, payment)
+                      .to.emit(kWhToken, 'Transfer')
+                      .withArgs(kWhToken.address, greenPower.address, expandTo6Decimals(100+300+500))
+                      .to.emit(kWhToken, 'ARTConverted')
+                      .withArgs(greenPower.address, tokenA.address, payment, expandTo6Decimals(100+300+500))
+                      .to.emit(kWhToken, 'Transfer')
+                      .withArgs(greenPower.address, constants.AddressZero, expandTo6Decimals(100+300+500))
+                      .to.emit(greenPower, 'Offset')
+                      .withArgs(txid, deployer.address, anyValue, tokenA.address, expandTo18Decimals(23456), 100, nonce)
 
-          expect(counters2).to.deep.eq(countersCheck2)
-          expect(wonList2).to.deep.eq(wonListCheck2)
+          // check minerOffsetInfo
+          expect(await greenPower.getMinerOffsetInfo(plugMiners[0])).to.deep.eq([deployer.address, 2, expandTo6Decimals(100+100)])
+          expect(await greenPower.getMinerOffsetInfo(plugMiners[1])).to.deep.eq([deployer.address, 1, expandTo6Decimals(300)])
+          expect(await greenPower.getMinerOffsetInfo(plugMiners[2])).to.deep.eq([deployer.address, 1, expandTo6Decimals(500)])
+
+          // Check tokenA balance 
+          expect(await tokenA.balanceOf(deployer.address)).to.eq(balanceBefore.sub(payment))
+
+          // Check totalOffset
+          expect(await greenPower.totalOffset()).to.eq(totalOffsetA.add(expandTo6Decimals(100+300+500)))
         }
 
+        /////////////  Abnormal Test ///////////////////////////
         {
-          // await kWhToken.approve(greenBTC2.address, constants.MaxUint256)
+          // Wrong ownner
+          const txid = randomAddresses(1)[0]
+          const {nonce} = await greenPower.getStakerInfo(user1.address)
+          const offsetAction1: OffsetAction = {
+            plugMiner:      plugMiners[0],
+            offsetAmount:   expandTo6Decimals(100)
+          } 
 
-          const makeGreenBoxTx = await greenBTC2.makeGreenBox(1, 234)
-          const receipt = await makeGreenBoxTx.wait()
-  
-          actionInfo.actionID = BigNumber.from(3)
-          actionInfo.boxStart = BigNumber.from(123+456)
-          actionInfo.boxAmount = BigNumber.from(234)
-          actionInfo.actor = deployer.address
-          actionInfo.blockHeigh = BigNumber.from(receipt.blockNumber)
-          actionInfo.blockHash = receipt.blockHash
-  
-          const { counters, wonList } = UtilCalculateGifts(actionInfo)
+          const digest = getGreenPowerOffsetDigest(
+            'Green Power',
+            greenPower.address,
+            { txid, staker: user1.address, offsetAction: [offsetAction1], tokenToPay: tokenA.address, nonce},   // user1
+            constants.MaxUint256
+          )
 
-          for (let index=0; index<8; index++ ) {
-            allCounters[index] += (index==0) ? counters[index] :  counters[index] - counters[index-1]
-          }
- 
-          const digest2 = getGreenBitcoinClaimGifts(
-              'Green BTC Club',
-              greenBTC2.address,
-              3,
-              receipt.blockNumber,
-              receipt.blockHash
-            )
-  
-          const {v, r, s} = ecsign(Buffer.from(digest2.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))  
-  
-          await mine(5)
-  
-          const {counters: counters2, wonList: wonList2} = await greenBTC2.checkIfShot(deployer.address, 3, Bytes32_Zero)
-  
-          const openActionGiftsTx = await greenBTC2.openActionGifts(3, receipt.blockNumber, receipt.blockHash, {v, r, s})
+          const payment = price.mul(100)
 
-          const openActionGiftReceipt = await openActionGiftsTx.wait()
-          console.log("openActionGifts Gas Usage:", openActionGiftReceipt.gasUsed);
+          const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))   
+          const signature: GreenPower.SigStruct = { v, r, s }  
+
+          await expect(greenPower.connect(user1).offsetPower(txid, [offsetAction1], tokenA.address, nonce, constants.MaxUint256, signature))
+                                .to.be.revertedWith("Wrong Owner")
+
+        }
+
+        /////////////  Abnormal Test ///////////////////////////
+        {
+          // Wrong Offset Amount
+          const txid = randomAddresses(1)[0]
+          const {nonce} = await greenPower.getStakerInfo(user1.address)
+          const offsetAction1: OffsetAction = {
+            plugMiner:      plugMiners[3],
+            offsetAmount:   expandTo6Decimals(100).add(1)
+          } 
+
+          const digest = getGreenPowerOffsetDigest(
+            'Green Power',
+            greenPower.address,
+            { txid, staker: user1.address, offsetAction: [offsetAction1], tokenToPay: tokenA.address, nonce},   // user1
+            constants.MaxUint256
+          )
+
+          const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))   
+          const signature: GreenPower.SigStruct = { v, r, s }  
+
+          await expect(greenPower.connect(user1).offsetPower(txid, [offsetAction1], tokenA.address, nonce, constants.MaxUint256, signature))
+                                .to.be.revertedWith("Wrong Offset Amount")
+        }
+
+        /////////////  Normal Transaction ///////////////////////////
+
+        {
+          const txid = randomAddresses(1)[0]
+          const {nonce} = await greenPower.getStakerInfo(user1.address)
+          const offsetAction1: OffsetAction = {
+            plugMiner:      plugMiners[3],
+            offsetAmount:   expandTo6Decimals(100)
+          } 
+
+          const digest = getGreenPowerOffsetDigest(
+            'Green Power',
+            greenPower.address,
+            { txid, staker: user1.address, offsetAction: [offsetAction1], tokenToPay: tokenA.address, nonce},   // user1
+            constants.MaxUint256
+          )
+
+          const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))   
+          const signature: GreenPower.SigStruct = { v, r, s }  
+
+          await tokenA.transfer(user1.address, expandTo18Decimals(1_000_000))
+          await tokenA.connect(user1).approve(greenPower.address, constants.MaxUint256)
+          await greenPower.connect(user1).offsetPower(txid, [offsetAction1], tokenA.address, nonce, constants.MaxUint256, signature)
+        }
+      });
+
+      it("GreenPower offsetPowerServer abonormal Test", async function () {
+
+        await AKREToken.approve(greenPower.address, constants.MaxUint256)
+        const plugMiners = randomAddresses(4)
   
-          expect(counters2).to.deep.eq(counters)
-          expect(wonList2).to.deep.eq(wonList)
+        // Normal convertKWh with token
+        await tokenA.approve(greenPower.address, expandTo18Decimals(30000000))
+        await greenPower.approveConvertkWh([tokenA.address, arkreenRECToken.address])
+        await kWhToken.changeSwapPrice(tokenA.address, expandTo18Decimals(150).div(1000))   // 1kWh = 0.15 TokenA
 
-          const domainStatus = await greenBTC2.domainStatus(1)
+        const price = expandTo18Decimals(150).div(1000)
+        const payment = price.mul(100)
 
-          let domainStatusBN = BigNumber.from(123+456+234).shl(224)
+        const offsetAction1: OffsetActionBatch = {
+          plugMiner:      plugMiners[0],
+          owner:          deployer.address,
+          tokenPayment:   tokenA.address,
+          offsetAmount:   expandTo6Decimals(100),
+          nonce:          BigNumber.from(0)
+        } 
 
-          for (let index=0; index<8; index++ ) {
-            domainStatusBN = domainStatusBN.add(BigNumber.from(allCounters[index]).shl(24*(7-index)))
-          }
+        const txid = randomAddresses(1)[0]
+
+        let offsetPowerServerTx = await greenPower.connect(manager).offsetPowerServer(txid, [offsetAction1])
+        let offsetPowerServerreceipt = await offsetPowerServerTx.wait()
+
+        const eventPos = offsetPowerServerreceipt.events?.length!
+        const offsetServerEvent =  (offsetPowerServerreceipt.events?.[eventPos-1].args! as unknown) as OffsetServerEvent
+
+        // check txid, offsetBaseIndex, totalOffsetAmount
+        const {txid: txidR, offsetBaseIndex, totalOffsetAmount} = offsetServerEvent
+        expect({txid: txidR, offsetBaseIndex, totalOffsetAmount}).to.deep.eq({txid, offsetBaseIndex:BigNumber.from(0), totalOffsetAmount: BigNumber.from(0)})
+    
+        // check LESS_DEPOSIT
+        let offsetAction1E = {...offsetAction1, nonce: BigNumber.from(SkipReason.LESS_DEPOSIT).shl(64)}
+        let {plugMiner, owner, tokenPayment, offsetAmount, nonce} = offsetServerEvent.offsetActionBatch[0]
+        expect({plugMiner, owner, tokenPayment, offsetAmount, nonce}).to.deep.eq(offsetAction1E)
+
+        // check WRONG_AMOUNT
+        {
+          await greenPower.deposit(tokenA.address, expandTo18Decimals(100000))
+
+          offsetAction1.offsetAmount = offsetAction1.offsetAmount.add(1)
+          const offsetPowerServerTx = await greenPower.connect(manager).offsetPowerServer(txid, [offsetAction1])
+          const offsetPowerServerreceipt = await offsetPowerServerTx.wait()
+
+          const eventPos = offsetPowerServerreceipt.events?.length!
+          const offsetServerEvent =  (offsetPowerServerreceipt.events?.[eventPos-1].args! as unknown) as OffsetServerEvent
+    
+          const offsetAction1E = {...offsetAction1, nonce: BigNumber.from(SkipReason.WRONG_AMOUNT).shl(64)}
+          const {plugMiner, owner, tokenPayment, offsetAmount, nonce} = offsetServerEvent.offsetActionBatch[0]
           
-          // Check domainStatus updating
-          expect(BigNumber.from(domainStatus)).to.eq(domainStatusBN)
+          expect({plugMiner, owner, tokenPayment, offsetAmount, nonce}).to.deep.eq(offsetAction1E)
+        }
 
+        // check WRONG_OWNER
+        {
+          await greenPower.deposit(tokenA.address, expandTo18Decimals(100000))
+
+          offsetAction1.offsetAmount = offsetAction1.offsetAmount.sub(1)
+          await greenPower.connect(manager).offsetPowerServer(txid, [offsetAction1])      // Normal offsetPowerServer
+
+          offsetAction1.owner = user1.address
+          const offsetPowerServerTx = await greenPower.connect(manager).offsetPowerServer(txid, [offsetAction1])
+          const offsetPowerServerreceipt = await offsetPowerServerTx.wait()
+
+          const eventPos = offsetPowerServerreceipt.events?.length!
+          const offsetServerEvent =  (offsetPowerServerreceipt.events?.[eventPos-1].args! as unknown) as OffsetServerEvent
+    
+          const offsetAction1E = {...offsetAction1, nonce: BigNumber.from(SkipReason.WRONG_OWNER).shl(64)}
+          const {plugMiner, owner, tokenPayment, offsetAmount, nonce} = offsetServerEvent.offsetActionBatch[0]
+          
+          expect({plugMiner, owner, tokenPayment, offsetAmount, nonce}).to.deep.eq(offsetAction1E)
+        }
+      });
+
+      it("GreenPower offsetPowerServer Normal Test", async function () {
+
+        await AKREToken.approve(greenPower.address, constants.MaxUint256)
+        const plugMiners = randomAddresses(4)
+  
+        // Normal convertKWh with token
+        await tokenA.approve(greenPower.address, constants.MaxUint256)
+        await greenPower.approveConvertkWh([tokenA.address, arkreenRECToken.address])
+        await kWhToken.changeSwapPrice(tokenA.address, expandTo18Decimals(150).div(1000))   // 1kWh = 0.15 TokenA
+
+        await greenPower.deposit(tokenA.address, expandTo18Decimals(100000))
+
+        await tokenA.transfer(user1.address, expandTo18Decimals(100000))
+        await tokenA.connect(user1).approve(greenPower.address, constants.MaxUint256)
+        await greenPower.connect(user1).deposit(tokenA.address, expandTo18Decimals(100000))
+
+        await tokenA.transfer(user2.address, expandTo18Decimals(100000))
+        await tokenA.connect(user2).approve(greenPower.address, constants.MaxUint256)
+        await greenPower.connect(user2).deposit(tokenA.address, expandTo18Decimals(100000))
+
+        const price = expandTo18Decimals(150).div(1000)
+        let payment = price.mul(100)
+
+        const offsetAction1: OffsetActionBatch = {
+          plugMiner:      plugMiners[0],
+          owner:          deployer.address,
+          tokenPayment:   tokenA.address,
+          offsetAmount:   expandTo6Decimals(100),
+          nonce:          BigNumber.from(0)
+        } 
+
+        const depositBefore = await greenPower.depositAmounts(deployer.address, tokenA.address)
+        const tokenABefore = await tokenA.balanceOf(kWhToken.address)
+        const kWhBefore = await kWhToken.balanceOf(kWhToken.address)
+        const totalOffsetBefore = await greenPower.totalOffset()
+        
+        const txid = randomAddresses(1)[0]
+
+        const offsetPowerServerTx = await greenPower.connect(manager).offsetPowerServer(txid, [offsetAction1])
+        const offsetPowerServerreceipt = await offsetPowerServerTx.wait()
+
+        const eventPos = offsetPowerServerreceipt.events?.length!
+        const offsetServerEvent =  (offsetPowerServerreceipt.events?.[eventPos-1].args! as unknown) as OffsetServerEvent
+
+        // check txid, offsetBaseIndex, totalOffsetAmount
+        const {txid: txidR, offsetBaseIndex, totalOffsetAmount} = offsetServerEvent
+        expect({txid: txidR, offsetBaseIndex, totalOffsetAmount}).to.deep.eq({txid, offsetBaseIndex:BigNumber.from(0), totalOffsetAmount: expandTo6Decimals(100)})
+    
+        // check LESS_DEPOSIT
+        const offsetAction1E = {...offsetAction1, nonce: BigNumber.from(SkipReason.NORMAL).shl(64)}
+        let {plugMiner, owner, tokenPayment, offsetAmount, nonce} = offsetServerEvent.offsetActionBatch[0]
+        expect({plugMiner, owner, tokenPayment, offsetAmount, nonce}).to.deep.eq(offsetAction1E)
+
+        expect(await greenPower.depositAmounts(deployer.address, tokenA.address)).to.eq(depositBefore.sub(payment))
+        expect(await tokenA.balanceOf(kWhToken.address)).to.eq(tokenABefore.add(payment))
+        expect(await kWhToken.balanceOf(kWhToken.address)).to.eq(kWhBefore.sub(expandTo6Decimals(100)))
+
+        expect(await greenPower.getMinerOffsetInfo(plugMiners[0])).to.deep.eq([deployer.address, 1, expandTo6Decimals(100)])
+        expect(await greenPower.totalOffset()).to.eq(totalOffsetBefore.add(expandTo6Decimals(100)))
+
+        ///////////// 3 offet actions ////////////////////////////////////
+        {
+          const offsetAction1: OffsetActionBatch = {
+            plugMiner:      plugMiners[0],
+            owner:          deployer.address,
+            tokenPayment:   tokenA.address,
+            offsetAmount:   expandTo6Decimals(100),
+            nonce:          BigNumber.from(1)
+          } 
+
+          const offsetAction2: OffsetActionBatch = {
+            plugMiner:      plugMiners[1],
+            owner:          user1.address,
+            tokenPayment:   tokenA.address,
+            offsetAmount:   expandTo6Decimals(300),
+            nonce:          BigNumber.from(0)
+          } 
+
+          const offsetAction3: OffsetActionBatch = {
+            plugMiner:      plugMiners[2],
+            owner:          user2.address,
+            tokenPayment:   tokenA.address,
+            offsetAmount:   expandTo6Decimals(500),
+            nonce:          BigNumber.from(0)
+          } 
+
+
+          const depositBeforeDeployer = await greenPower.depositAmounts(deployer.address, tokenA.address)
+          const depositBeforeUser1 = await greenPower.depositAmounts(user1.address, tokenA.address)
+          const depositBeforeUser2 = await greenPower.depositAmounts(user2.address, tokenA.address)
+
+          const tokenABefore = await tokenA.balanceOf(kWhToken.address)
+          const kWhBefore = await kWhToken.balanceOf(kWhToken.address)
+          const totalOffsetBefore = await greenPower.totalOffset()
+          
+          const txid = randomAddresses(1)[0]
+
+          const offsetPowerServerTx = await greenPower.connect(manager).offsetPowerServer(txid, [offsetAction1, offsetAction2, offsetAction3])
+          const offsetPowerServerreceipt = await offsetPowerServerTx.wait()
+
+          const eventPos = offsetPowerServerreceipt.events?.length!
+          const offsetServerEvent =  (offsetPowerServerreceipt.events?.[eventPos-1].args! as unknown) as OffsetServerEvent
+
+          // check txid, offsetBaseIndex, totalOffsetAmount
+          const {txid: txidR, offsetBaseIndex, totalOffsetAmount} = offsetServerEvent
+          expect({txid: txidR, offsetBaseIndex, totalOffsetAmount}).to.deep.eq({txid, offsetBaseIndex:BigNumber.from(100), totalOffsetAmount: expandTo6Decimals(100+300+500)})
+      
+          // check LESS_DEPOSIT
+          let {plugMiner, owner, tokenPayment, offsetAmount, nonce} = offsetServerEvent.offsetActionBatch[0]
+          expect({plugMiner, owner, tokenPayment, offsetAmount, nonce}).to.deep.eq({...offsetAction1})
+
+          {
+            let {plugMiner, owner, tokenPayment, offsetAmount, nonce} = offsetServerEvent.offsetActionBatch[1]
+            expect({plugMiner, owner, tokenPayment, offsetAmount, nonce}).to.deep.eq({...offsetAction2})
+          }
+
+          {
+            let {plugMiner, owner, tokenPayment, offsetAmount, nonce} = offsetServerEvent.offsetActionBatch[2]
+            expect({plugMiner, owner, tokenPayment, offsetAmount, nonce}).to.deep.eq({...offsetAction3})
+          }
+
+          let payment = price.mul(100+300+500)
+
+          expect(await greenPower.depositAmounts(deployer.address, tokenA.address)).to.eq(depositBeforeDeployer.sub(price.mul(100)))
+          expect(await greenPower.depositAmounts(user1.address, tokenA.address)).to.eq(depositBeforeUser1.sub(price.mul(300)))
+          expect(await greenPower.depositAmounts(user2.address, tokenA.address)).to.eq(depositBeforeUser2.sub(price.mul(500)))
+
+          expect(await tokenA.balanceOf(kWhToken.address)).to.eq(tokenABefore.add(payment))
+          expect(await kWhToken.balanceOf(kWhToken.address)).to.eq(kWhBefore.sub(expandTo6Decimals(100+300+500)))
+
+          expect(await greenPower.getMinerOffsetInfo(plugMiners[0])).to.deep.eq([deployer.address, 2, expandTo6Decimals(100+100)])
+          expect(await greenPower.getMinerOffsetInfo(plugMiners[1])).to.deep.eq([user1.address, 1, expandTo6Decimals(300)])
+          expect(await greenPower.getMinerOffsetInfo(plugMiners[2])).to.deep.eq([user2.address, 1, expandTo6Decimals(500)])
+
+          expect(await greenPower.totalOffset()).to.eq(totalOffsetBefore.add(expandTo6Decimals(100+300+500)))
         }
 
       });
 
-      it("GreenPower initGift Test", async function () {
-        await expect(greenBTCGift.initGift(5, Bytes32_Zero))
-              .to.be.revertedWith("GBTC: Wrong Gift Info")
-
-        await expect(greenBTCGift.initGift(1, BigNumber.from(AKREToken.address).shl(96).add(value10000).toHexString()))
-              .to.be.revertedWith("GBTC: Gift Repteated")
-      })
-
-      it("GreenPower claimGift Test", async function () {
-
-        // AKRE used for gift
-        await AKREToken.approve(greenBTC2.address, constants.MaxUint256)
-        await greenBTC2.depositFund(AKREToken.address, expandTo18Decimals(100000000))
-
-        await greenBTC2.registerDomain(1, domainInfoBigInt.toHexString())
-
-        await kWhToken.connect(owner1).approve(greenBTC2.address, constants.MaxUint256)
-        const makeGreenBoxTx = await  greenBTC2.connect(owner1).makeGreenBox(1,123)
-        const receipt = await makeGreenBoxTx.wait()
-
-        const digest = getGreenBitcoinClaimGifts(
-            'Green BTC Club',
-            greenBTC2.address,
-            1,
-            receipt.blockNumber,
-            receipt.blockHash
-          )
-
-        const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))   
-
-        await mine(5)
-        await greenBTC2.connect(owner1).openActionGifts(1, receipt.blockNumber, receipt.blockHash, {v,r,s})
-
-        const amount3 = await greenBTCGift.balanceOf(owner1.address, 3)
-        const balanace1 = await AKREToken.balanceOf(owner1.address)
-        const unitGift = expandTo18Decimals(100)
-
-        await expect(greenBTCGift.connect(owner1).claimGift(5, amount3))
-                .to.be.revertedWith("GBTC: Wrong Gift ID")
-
-        expect(await greenBTCGift.connect(owner1).claimGift(3, BigNumber.from(2)))
-                .to.emit(tokenA, 'GiftClaimed')
-                .withArgs(owner1.address, 3, BigNumber.from(2))
-
-        expect(await greenBTCGift.balanceOf(owner1.address, 3)).to.eq(amount3.sub(BigNumber.from(2)))
-        expect(await AKREToken.balanceOf(owner1.address)).to.eq(balanace1.add(unitGift.mul(2)))
-
-        const claimGiftTX = await greenBTCGift.connect(owner1).claimGift(3, amount3.sub(BigNumber.from(2)))
-        const claimGiftReceipt = await claimGiftTX.wait()
-        console.log("claimGift Gas Usage:", claimGiftReceipt.gasUsed);
-
-        expect(await greenBTCGift.balanceOf(owner1.address, 3)).to.eq(0)
-        expect(await AKREToken.balanceOf(owner1.address)).to.eq(balanace1.add(unitGift.mul(amount3)))
-
-        await expect(greenBTCGift.connect(owner1).claimGift(3, 1))
-                .to.be.revertedWith("ERC1155: burn amount exceeds balance")
-
-        await expect(greenBTCGift.connect(owner1).claimGift(3, 0))
-                .to.be.revertedWith("GBTC: Zero Amout")
-
-        const amount1 = await greenBTCGift.balanceOf(owner1.address, 1)
-        const amount2 = await greenBTCGift.balanceOf(owner1.address, 2)
-
-        if(!amount1.isZero()) await greenBTCGift.connect(owner1).claimGift(1, amount1)
-        if(!amount2.isZero()) await greenBTCGift.connect(owner1).claimGift(2, amount2)
-      });
-
-      it("GreenPower claimGiftBatch test", async function () {
-
-        // AKRE used for gift
-        await AKREToken.approve(greenBTC2.address, constants.MaxUint256)
-        await greenBTC2.depositFund(AKREToken.address, expandTo18Decimals(100000000))
-
-        await greenBTC2.registerDomain(1, domainInfoBigInt.toHexString())
-
-        await kWhToken.connect(owner1).approve(greenBTC2.address, constants.MaxUint256)
-        const makeGreenBoxTx = await  greenBTC2.connect(owner1).makeGreenBox(1,123)
-        const receipt = await makeGreenBoxTx.wait()
-
-        const digest = getGreenBitcoinClaimGifts(
-            'Green BTC Club',
-            greenBTC2.address,
-            1,
-            receipt.blockNumber,
-            receipt.blockHash
-          )
-
-        const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))   
-
-        await mine(5)
-        const openActionGiftsTx = await greenBTC2.connect(owner1).openActionGifts(1, receipt.blockNumber, receipt.blockHash, {v,r,s})
-        const openActionGiftReceipt = await openActionGiftsTx.wait()
-        console.log("openActionGifts Gas Usage:", openActionGiftReceipt.gasUsed);
-
-        const amount2 = await greenBTCGift.balanceOf(owner1.address, 2)
-        const amount3 = await greenBTCGift.balanceOf(owner1.address, 3)
-
-        await expect(greenBTCGift.connect(owner1).claimGiftBatch([1, 2,3], [amount2, amount3]))
-                  .to.be.revertedWith("GBTC: Wrong Length")
-
-        await expect(greenBTCGift.connect(owner1).claimGiftBatch([2,5], [amount2, amount3]))
-                  .to.be.revertedWith("ERC1155: burn amount exceeds balance")
-
-        let claimGiftBatchTx
-
-        const balanace1 = await AKREToken.balanceOf(owner1.address)
-        expect(claimGiftBatchTx = await greenBTCGift.connect(owner1).claimGiftBatch([2,3], [amount2, amount3]))
-                  .to.emit(greenBTCGift, 'GiftBatchClaimed')
-                  .withArgs(owner1.address, [2,3], [amount2, amount3])
-
-        expect(await AKREToken.balanceOf(owner1.address))
-                .to.eq(balanace1.add(amount2.mul(expandTo18Decimals(1000))).add(amount3.mul(expandTo18Decimals(100))))
-
-        const claimGiftBatchReceipt = await claimGiftBatchTx.wait()
-        console.log("claimGiftBatch Gas Usage:", claimGiftBatchReceipt.gasUsed);
-      });
-*/
     })
 })
