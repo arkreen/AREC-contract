@@ -35,7 +35,7 @@ contract TestGas
       return (testInfo[1].owner, testInfo[1].dataA, testInfo[1].dataB, testInfo[1].dataC);
     }
 
-    function setInt(address owner, uint16 dataA, uint32 dataB, uint48 dataC) external {   // gas: 23819
+    function setInt(address owner, uint16 dataA, uint32 dataB, uint48 dataC) external {   // gas: 23819/3941(same)/6741(Unsame)
       testInt[1] = (uint256(uint160(owner)) << 96) + (uint256(dataA) << 80) + (uint256(dataB) << 48) + uint256(dataC);
     }
 

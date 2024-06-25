@@ -10,7 +10,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     const [deployer] = await ethers.getSigners();
 
-    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(32_000_000_000) : BigNumber.from(100000000000)
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(32_000_000_000) : BigNumber.from(80_000_000_000)
 
     if(hre.network.name === 'matic_test')  {
       const MINER_PROXY_ADDRESS = "0xF390caaF4FF0d297e0b4C3c1527D707C75541736"       // Miner Contract on Amoy testnet
@@ -41,8 +41,17 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       const arkreenMiner = ArkreenMiner__factory.connect(MINER_PROXY_ADDRESS, deployer);
 
       // 2024/05/28, Call registerListenApps
+      /*      
       const appid = 1
       const stakingRewards = "0xa777d8855456eac0E3f1C64c148dabaf8e8CcC1F"
+
+      // registerListenApps(uint256 appid, address newApp)
+      await arkreenMiner.registerListenApps(appid, stakingRewards, {gasPrice: defaultGasPrice})
+      */
+
+      // 2024/05/28, Call registerListenApps
+      const appid = 2
+      const stakingRewards = "0xc1dCE2f17362C2De4ab4F104f6f88223e0c28B95"
 
       // registerListenApps(uint256 appid, address newApp)
       await arkreenMiner.registerListenApps(appid, stakingRewards, {gasPrice: defaultGasPrice})
@@ -60,6 +69,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // call registerListenApps: (3, 0x1f74d233c159Eb99a81FB067076cf2C86D5a3F06)
 // call registerListenApps: (4, 0x09806c44a1a87A5Db3d3b21839C8eDB6049355B5)
 // call registerListenApps: (5, 0xDfDe48f6A4E57989c8916D9f9f467803D36E6412)
+
+// 2024/06/25
+// yarn deploy:matic:AMinerI    : Polygon mainnet: Register staking Proxy1
+// call registerListenApps: (2, 0xc1dCE2f17362C2De4ab4F104f6f88223e0c28B95)
 
 func.tags = ["AMinerI"];
 

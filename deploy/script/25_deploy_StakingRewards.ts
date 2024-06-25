@@ -32,7 +32,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     } 
 
     console.log("Deploying: ", "StakingRewards", deployer);  
-/*    
+/*
     const stakingRewards = await deploy("StakingRewards", {
         from: deployer,
         proxy: {
@@ -49,8 +49,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         gasPrice: defaultGasPrice
     });
 */
+
     // 2024/06/21
-    const IMPLEMENTATION_ADDRESS ="0x7758f24068A5E2c1dea3D1D82Fa933356b35f8c5"
+    // const IMPLEMENTATION_ADDRESS ="0x7758f24068A5E2c1dea3D1D82Fa933356b35f8c5" // Amoy testnet
+    const IMPLEMENTATION_ADDRESS ="0x38021bD40a92baFED6B54B282013190755c729AE"    // 2024/06/25: Polygon mainnet
         
     const callData = StakingRewards__factory.createInterface().encodeFunctionData("initialize", [tokenAKRE, tokenART, minerContract, rewardsDistributor])
     const stakingRewards = await deploy(CONTRACTS.UUPSProxy, {
@@ -61,8 +63,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
             gasPrice: defaultGasPrice
     });
 
-
-    console.log("USDT deployed to %s: ", hre.network.name, stakingRewards.address);
+    console.log("stakingRewards deployed to %s: ", hre.network.name, stakingRewards.address);
 };
 
 // 2024/05/16
@@ -87,6 +88,15 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // Proxy3:                0xDfDe48f6A4E57989c8916D9f9f467803D36E6412
 // Implementaion:         0x7758f24068A5E2c1dea3D1D82Fa933356b35f8c5
 
+// 2024/06/25
+// yarn deploy:matic:StakingRewards    : Polygon mainnet
+// Proxy:                 0x4C15968df54B276dC06eF11Bcd3b3EfFbC577c59  (XXXXXXXX: no lock feature)
+// Implementaion:         0x7D2Cebe75a5D46cee170A3aAC175453673125A9E
+
+// 2024/06/25A
+// yarn deploy:matic:StakingRewards    : Polygon mainnet with lock feature
+// Proxy:                 0xc1dCE2f17362C2De4ab4F104f6f88223e0c28B95
+// Implementaion:         0x38021bD40a92baFED6B54B282013190755c729AE
 
 func.tags = ["StakingRewards"];
 
