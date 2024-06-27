@@ -5,7 +5,7 @@ const {ethers, upgrades} =  require("hardhat");
 import hre from 'hardhat'
 import { ecsign, fromRpcSig, ecrecover } from 'ethereumjs-util'
 import { getGreenPowerStakingDigest, getApprovalDigest, expandTo6Decimals, expandTo18Decimals, randomAddresses, expandTo9Decimals } from '../utils/utilities'
-import { getGreenPowerUnstakingDigest, OffsetAction, OffsetActionBatch, getGreenPowerOffsetDigest } from '../utils/utilities'
+import { getGreenPowerUnstakingDigest, OffsetAction, OffsetActionBatch, getGreenPowerOffsetDigest, getGreenPowerRewardDigest } from '../utils/utilities'
 
 import { constants, BigNumber, } from 'ethers'
 import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
@@ -286,7 +286,7 @@ describe("GreenPower Test Campaign", ()=>{
       });
 
       async function walletStake(wallet: SignerWithAddress, amount: BigNumber) {
-        const {nonce}  = await greenPower.getStakerInfo(wallet.address)
+        const {nonce}  = await greenPower.getUserInfo(wallet.address)
 
         const txid = randomAddresses(1)[0]
 
@@ -311,7 +311,7 @@ describe("GreenPower Test Campaign", ()=>{
       }
 
       async function walletUnstake(wallet: SignerWithAddress, amount: BigNumber) {
-        const {nonce}  = await greenPower.getStakerInfo(wallet.address)
+        const {nonce}  = await greenPower.getUserInfo(wallet.address)
         const txid = randomAddresses(1)[0]
         const plugMiner = "0x280a7c4E032584F97E84eDd396a00799da8D061A"
   
@@ -376,7 +376,7 @@ describe("GreenPower Test Campaign", ()=>{
 
         await walletStake(user1, expandTo18Decimals(23456))
 
-        const {nonce}  = await greenPower.getStakerInfo(user1.address)
+        const {nonce}  = await greenPower.getUserInfo(user1.address)
 
         const txid = randomAddresses(1)[0]
         const amount = expandTo18Decimals(12345)
@@ -396,7 +396,7 @@ describe("GreenPower Test Campaign", ()=>{
         const totalStake = await greenPower.totalStake()
         const balanceBefore = await AKREToken.balanceOf(greenPower.address)
         const {stakeAmount: stakeAmountA, offsetAmount: offsetAmountA, nonce: nonceA, releaseTime: releaseTimeA} 
-                              = await greenPower.getStakerInfo(user1.address)
+                              = await greenPower.getUserInfo(user1.address)
 
         await expect(greenPower.connect(user1).stake(txid, plugMiner, amount, period, nonce, constants.MaxUint256, signature))
                       .to.emit(greenPower, 'Stake')
@@ -406,7 +406,7 @@ describe("GreenPower Test Campaign", ()=>{
         expect(await greenPower.totalStake()).to.eq(totalStake.add(expandTo18Decimals(12345)))
 
         const {stakeAmount: stakeAmountB, offsetAmount: offsetAmountB, nonce: nonceB, releaseTime: releaseTimeB} 
-                              = await greenPower.getStakerInfo(user1.address)
+                              = await greenPower.getUserInfo(user1.address)
 
         // check stakerInfo
         const lastBlockN = await ethers.provider.getBlock('latest')
@@ -447,13 +447,13 @@ describe("GreenPower Test Campaign", ()=>{
         await walletStake(user1, expandTo18Decimals(150000))
         await walletStake(user3, expandTo18Decimals(170000))
 
-        const stakeInfo1 = [ expandTo18Decimals(23456 + 12345 + 10000 + 150000), 0, 4]
-        const stakeInfo2 = [ expandTo18Decimals(30000 + 70000 + 110000 + 130000), 0 , 4]
-        const stakeInfo3 = [ expandTo18Decimals(50000 + 90000 + 170000), 0, 3]
+        const stakeInfo1 = [ expandTo18Decimals(23456 + 12345 + 10000 + 150000), 0, 0, 4]
+        const stakeInfo2 = [ expandTo18Decimals(30000 + 70000 + 110000 + 130000), 0, 0, 4]
+        const stakeInfo3 = [ expandTo18Decimals(50000 + 90000 + 170000), 0, 0, 3]
 
-        expect((await greenPower.getStakerInfo(user1.address)).slice(0,3)) .to.deep.equal(stakeInfo1)
-        expect((await greenPower.getStakerInfo(user2.address)).slice(0,3)).to.deep.equal(stakeInfo2)
-        expect((await greenPower.getStakerInfo(user3.address)).slice(0,3)).to.deep.equal(stakeInfo3)
+        expect((await greenPower.getUserInfo(user1.address)).slice(0,4)) .to.deep.equal(stakeInfo1) // skip release time
+        expect((await greenPower.getUserInfo(user2.address)).slice(0,4)).to.deep.equal(stakeInfo2)
+        expect((await greenPower.getUserInfo(user3.address)).slice(0,4)).to.deep.equal(stakeInfo3)
       });
 
       it("GreenPower Unstake Test", async function () {
@@ -464,7 +464,7 @@ describe("GreenPower Test Campaign", ()=>{
 
         await walletStake(user1, expandTo18Decimals(23456))
 
-        let {nonce} = await greenPower.getStakerInfo(user1.address)
+        let {nonce} = await greenPower.getUserInfo(user1.address)
 
         const txid = randomAddresses(1)[0]
         let amount = expandTo18Decimals(12345)
@@ -484,7 +484,7 @@ describe("GreenPower Test Campaign", ()=>{
         const balanceBefore = await AKREToken.balanceOf(greenPower.address)
         const userBalanceBefore = await AKREToken.balanceOf(user1.address)
         const {stakeAmount: stakeAmountA, releaseTime: releaseTimeA} 
-                              = await greenPower.getStakerInfo(user1.address)
+                              = await greenPower.getUserInfo(user1.address)
 
         // increase time to unstake                              
         await ethers.provider.send("evm_increaseTime", [60 * 3600 * 24]);
@@ -498,7 +498,7 @@ describe("GreenPower Test Campaign", ()=>{
         expect(await greenPower.totalStake()).to.eq(totalStake.sub(expandTo18Decimals(12345)))
 
         const {stakeAmount: stakeAmountB, offsetAmount: offsetAmountB, nonce: nonceB, releaseTime: releaseTimeB} 
-                              = await greenPower.getStakerInfo(user1.address)
+                              = await greenPower.getUserInfo(user1.address)
 
         // check stakerInfo
         expect(stakeAmountB).to.eq(stakeAmountA.sub(expandTo18Decimals(12345)))
@@ -545,7 +545,7 @@ describe("GreenPower Test Campaign", ()=>{
 
       // stake on first miner
        {
-          const {nonce}  = await greenPower.getStakerInfo(deployer.address)
+          const {nonce}  = await greenPower.getUserInfo(deployer.address)
 
           const txid = randomAddresses(1)[0]
           const plugMiner = plugMiners[0]
@@ -573,7 +573,7 @@ describe("GreenPower Test Campaign", ()=>{
         const price = expandTo18Decimals(150).div(1000)
         const payment = price.mul(100)
 
-        let {nonce} = await greenPower.getStakerInfo(deployer.address)
+        let {nonce, offsetAmount} = await greenPower.getUserInfo(deployer.address)
 
         const offsetAction1: OffsetAction = {
           plugMiner:      plugMiners[0],
@@ -596,7 +596,7 @@ describe("GreenPower Test Campaign", ()=>{
 
         const balanceBefore = await tokenA.balanceOf(deployer.address)
         const totalOffsetA = await greenPower.totalOffset()
-       
+      
         await expect(greenPower.offsetPower(txid, [offsetAction1], tokenA.address, nonce, constants.MaxUint256, signature))
                       .to.emit(tokenA, 'Transfer')
                       .withArgs(deployer.address, greenPower.address, payment)
@@ -621,10 +621,14 @@ describe("GreenPower Test Campaign", ()=>{
         // Check totalOffset
         expect(await greenPower.totalOffset()).to.eq(totalOffsetA.add(expandTo6Decimals(100)))
 
+        let {nonce: nonceN, offsetAmount: offsetAmountN} = await greenPower.getUserInfo(deployer.address)
+        expect(nonceN).to.eq(nonce.add(1))
+        expect(offsetAmountN).to.eq(offsetAmount.add(expandTo6Decimals(100)))
+
         /////////////  3 offset actions ///////////////////////////
         {
           const txid = randomAddresses(1)[0]
-          const {nonce} = await greenPower.getStakerInfo(deployer.address)
+          const {nonce, offsetAmount} = await greenPower.getUserInfo(deployer.address)
           const offsetAction1: OffsetAction = {
             plugMiner:      plugMiners[0],
             offsetAmount:   expandTo6Decimals(100)
@@ -679,13 +683,18 @@ describe("GreenPower Test Campaign", ()=>{
 
           // Check totalOffset
           expect(await greenPower.totalOffset()).to.eq(totalOffsetA.add(expandTo6Decimals(100+300+500)))
+
+          let {nonce: nonceN, offsetAmount: offsetAmountN} = await greenPower.getUserInfo(deployer.address)
+          expect(nonceN).to.eq(nonce.add(1))
+          expect(offsetAmountN).to.eq(offsetAmount.add(expandTo6Decimals(100+300+500)))
+  
         }
 
         /////////////  Abnormal Test ///////////////////////////
         {
           // Wrong ownner
           const txid = randomAddresses(1)[0]
-          const {nonce} = await greenPower.getStakerInfo(user1.address)
+          const {nonce} = await greenPower.getUserInfo(user1.address)
           const offsetAction1: OffsetAction = {
             plugMiner:      plugMiners[0],
             offsetAmount:   expandTo6Decimals(100)
@@ -712,7 +721,7 @@ describe("GreenPower Test Campaign", ()=>{
         {
           // Wrong Offset Amount
           const txid = randomAddresses(1)[0]
-          const {nonce} = await greenPower.getStakerInfo(user1.address)
+          const {nonce} = await greenPower.getUserInfo(user1.address)
           const offsetAction1: OffsetAction = {
             plugMiner:      plugMiners[3],
             offsetAmount:   expandTo6Decimals(100).add(1)
@@ -736,7 +745,7 @@ describe("GreenPower Test Campaign", ()=>{
 
         {
           const txid = randomAddresses(1)[0]
-          const {nonce} = await greenPower.getStakerInfo(user1.address)
+          const {nonce} = await greenPower.getUserInfo(user1.address)
           const offsetAction1: OffsetAction = {
             plugMiner:      plugMiners[3],
             offsetAmount:   expandTo6Decimals(100)
@@ -869,6 +878,8 @@ describe("GreenPower Test Campaign", ()=>{
         const tokenABefore = await tokenA.balanceOf(kWhToken.address)
         const kWhBefore = await kWhToken.balanceOf(kWhToken.address)
         const totalOffsetBefore = await greenPower.totalOffset()
+
+        let {nonce: nonceA, offsetAmount: offsetAmountA} = await greenPower.getUserInfo(deployer.address)
         
         const txid = randomAddresses(1)[0]
 
@@ -893,6 +904,10 @@ describe("GreenPower Test Campaign", ()=>{
 
         expect(await greenPower.getMinerOffsetInfo(plugMiners[0])).to.deep.eq([deployer.address, 1, expandTo6Decimals(100)])
         expect(await greenPower.totalOffset()).to.eq(totalOffsetBefore.add(expandTo6Decimals(100)))
+
+        let {nonce: nonceB, offsetAmount: offsetAmountB} = await greenPower.getUserInfo(deployer.address)
+        expect(nonceB).to.eq(nonceA.add(1))
+        expect(offsetAmountB).to.eq(offsetAmountA.add(expandTo6Decimals(100)))
 
         ///////////// 3 offet actions ////////////////////////////////////
         {
@@ -920,7 +935,6 @@ describe("GreenPower Test Campaign", ()=>{
             nonce:          BigNumber.from(0)
           } 
 
-
           const depositBeforeDeployer = await greenPower.depositAmounts(deployer.address, tokenA.address)
           const depositBeforeUser1 = await greenPower.depositAmounts(user1.address, tokenA.address)
           const depositBeforeUser2 = await greenPower.depositAmounts(user2.address, tokenA.address)
@@ -928,6 +942,10 @@ describe("GreenPower Test Campaign", ()=>{
           const tokenABefore = await tokenA.balanceOf(kWhToken.address)
           const kWhBefore = await kWhToken.balanceOf(kWhToken.address)
           const totalOffsetBefore = await greenPower.totalOffset()
+
+          let {nonce: nonceDeployerA, offsetAmount: offsetAmountDeployerA} = await greenPower.getUserInfo(deployer.address)
+          let {nonce: nonceUser1A, offsetAmount: offsetAmountUser1A} = await greenPower.getUserInfo(user1.address)
+          let {nonce: nonceUser2A, offsetAmount: offsetAmountUser2A} = await greenPower.getUserInfo(user2.address)
           
           const txid = randomAddresses(1)[0]
 
@@ -969,9 +987,71 @@ describe("GreenPower Test Campaign", ()=>{
           expect(await greenPower.getMinerOffsetInfo(plugMiners[2])).to.deep.eq([user2.address, 1, expandTo6Decimals(500)])
 
           expect(await greenPower.totalOffset()).to.eq(totalOffsetBefore.add(expandTo6Decimals(100+300+500)))
+
+          let {nonce: nonceDeployerB, offsetAmount: offsetAmountDeployerB} = await greenPower.getUserInfo(deployer.address)
+          let {nonce: nonceUser1B, offsetAmount: offsetAmountUser1B} = await greenPower.getUserInfo(user1.address)
+          let {nonce: nonceUser2B, offsetAmount: offsetAmountUser2B} = await greenPower.getUserInfo(user2.address)
+
+          expect(nonceDeployerB).to.eq(nonceDeployerA.add(1))
+          expect(nonceUser1B).to.eq(nonceUser1A.add(1))
+          expect(nonceUser2B).to.eq(nonceUser2A.add(1))
+
+          expect(offsetAmountDeployerB).to.eq(offsetAmountDeployerA.add(expandTo6Decimals(100)))
+          expect(offsetAmountUser1B).to.eq(offsetAmountUser1A.add(expandTo6Decimals(300)))
+          expect(offsetAmountUser2B).to.eq(offsetAmountUser2A.add(expandTo6Decimals(500)))
+          
         }
 
       });
 
+      it("GreenPower claimReward Test", async function () {
+        // Normal
+        await AKREToken.transfer(user1.address, expandTo18Decimals(100_000_000))
+        await AKREToken.transfer(user2.address, expandTo18Decimals(100_000_000))
+        await AKREToken.transfer(user3.address, expandTo18Decimals(100_000_000))
+
+        await walletStake(user1, expandTo18Decimals(23456))
+
+        const {nonce}  = await greenPower.getUserInfo(user1.address)
+
+        const txid = randomAddresses(1)[0]
+        const amount = expandTo18Decimals(12345)
+  
+        const digest = getGreenPowerRewardDigest(
+            'Green Power',
+            greenPower.address,
+            { txid, greener: user1.address, amount, nonce},
+            constants.MaxUint256
+          )
+
+        const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))   
+        const signature: GreenPower.SigStruct = { v, r, s }  
+
+        const balanceBefore = await AKREToken.balanceOf(greenPower.address)
+        const {stakeAmount: stakeAmountA, rewardAmount: rewardAmountA, nonce: nonceA} = await greenPower.getUserInfo(user1.address)
+        const totalReward = await greenPower.totalReward()
+        const balanceAKRE = await AKREToken.balanceOf(user1.address)
+
+        await expect(greenPower.connect(user1).claimReward(txid, amount, nonce, constants.MaxUint256, signature))
+                      .to.emit(greenPower, 'Reward')
+                      .withArgs(txid, user1.address, amount,  nonce)
+
+        // Check totalStake
+        expect(await greenPower.totalReward()).to.eq(totalReward.add(expandTo18Decimals(12345)))
+
+        const {rewardAmount: rewardAmountB, nonce: nonceB} = await greenPower.getUserInfo(user1.address)
+        expect(nonceB).to.eq(nonceA.add(1))
+        expect(rewardAmountB).to.eq(rewardAmountA.add(expandTo18Decimals(12345)))
+        expect(await AKREToken.balanceOf(user1.address)).to.eq(balanceAKRE.add(expandTo18Decimals(12345)))
+        expect(await AKREToken.balanceOf(greenPower.address)).to.eq(balanceBefore.sub(expandTo18Decimals(12345)))
+
+        // Abnormal
+        await expect(greenPower.connect(user1).claimReward(txid, amount, nonce.add(2), constants.MaxUint256, signature))
+                    .to.be.revertedWith("Nonce Not Match")
+
+        await expect(greenPower.connect(user1).claimReward(txid, amount, nonce.add(1), constants.MaxUint256, signature))
+                    .to.be.revertedWith("Wrong Signature")
+        
+      });
     })
 })

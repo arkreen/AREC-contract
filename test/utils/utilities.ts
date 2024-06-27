@@ -394,6 +394,43 @@ export function getPlantUnstakingDigest(
   )
 }
 
+export function getGreenPowerRewardDigest(
+  contractName: string,
+  contractAddress: string,
+  approve: {
+    txid:       string
+    greener:    string
+    amount:     BigNumber
+    nonce:      BigNumber
+  },
+  deadline:     BigNumber
+): string {
+  const DOMAIN_SEPARATOR = getDomainSeparator(contractName, contractAddress)
+
+  // keccak256("claimReward(uint256 txid,address greener,uint256 rewardAmount,uint256 nonce,uint256 deadline)")
+  // 0x9A6CE8C7C5EDCB1EAA7313523B253F809B5AC0E3EC4A56F23B411D538FE25B11
+  const STAKE_TYPEHASH = utils.keccak256(
+    utils.toUtf8Bytes('claimReward(uint256 txid,address greener,uint256 rewardAmount,uint256 nonce,uint256 deadline)')
+  )
+
+  return utils.keccak256(
+    utils.solidityPack(
+      ['bytes1', 'bytes1', 'bytes32', 'bytes32'],
+      [
+        '0x19',
+        '0x01',
+        DOMAIN_SEPARATOR,
+        utils.keccak256(
+          utils.defaultAbiCoder.encode(
+            ['bytes32', 'address', 'address', 'uint256', 'uint256', 'uint256'],
+            [STAKE_TYPEHASH, approve.txid, approve.greener, approve.amount, approve.nonce, deadline]
+          )
+        )
+      ]
+    )
+  )
+}
+
 export function getGreenPowerStakingDigest(
   contractName: string,
   contractAddress: string,
@@ -409,10 +446,10 @@ export function getGreenPowerStakingDigest(
 ): string {
   const DOMAIN_SEPARATOR = getDomainSeparator(contractName, contractAddress)
 
-  // keccak256("stake(uint256 txid,address staker,address plugMiner,uint256 amount,uint256 period,uint256 nonce,uint256 deadline)")
+  // keccak256("stake(uint256 txid,address greener,address plugMiner,uint256 amount,uint256 period,uint256 nonce,uint256 deadline)")
   // 0xB13D25036831D18DBC6EEF2020BA657F13C7D378CFB74B36EF4C358851961CFA
   const STAKE_TYPEHASH = utils.keccak256(
-    utils.toUtf8Bytes('stake(uint256 txid,address staker,address plugMiner,uint256 amount,uint256 period,uint256 nonce,uint256 deadline)')
+    utils.toUtf8Bytes('stake(uint256 txid,address greener,address plugMiner,uint256 amount,uint256 period,uint256 nonce,uint256 deadline)')
   )
 
   return utils.keccak256(
@@ -447,10 +484,10 @@ export function getGreenPowerUnstakingDigest(
 ): string {
   const DOMAIN_SEPARATOR = getDomainSeparator(contractName, contractAddress)
 
-  // keccak256("unstake(uint256 txid,address staker,address plugMiner,uint256 amount,uint256 nonce,uint256 deadline)");
+  // keccak256("unstake(uint256 txid,address greener,address plugMiner,uint256 amount,uint256 nonce,uint256 deadline)");
   // 0xEEC4B573720D0248870523A82A8C2F6AEE40054E5D98C0334C41ACCF230D8CFC
   const UNSTAKE_TYPEHASH = utils.keccak256(
-    utils.toUtf8Bytes('unstake(uint256 txid,address staker,address plugMiner,uint256 amount,uint256 nonce,uint256 deadline)')
+    utils.toUtf8Bytes('unstake(uint256 txid,address greener,address plugMiner,uint256 amount,uint256 nonce,uint256 deadline)')
   )
 
   return utils.keccak256(
@@ -485,10 +522,10 @@ export function getGreenPowerOffsetDigest(
 ): string {
   const DOMAIN_SEPARATOR = getDomainSeparator(contractName, contractAddress)
 
-  // keccak256("offset(uint256 txid,address staker,(address plugMiner,uint256 offsetAmount)[],address tokenToPay,uint256 nonce,uint256 deadline)");
+  // keccak256("offset(uint256 txid,address greener,(address plugMiner,uint256 offsetAmount)[],address tokenToPay,uint256 nonce,uint256 deadline)");
   // 0xAA19A1F9E01266BCE4B0B002C45341A0B67477836193A3457FB9D3F248AECE80
   const UNSTAKE_TYPEHASH = utils.keccak256(
-    utils.toUtf8Bytes('offset(uint256 txid,address staker,(address plugMiner,uint256 offsetAmount)[],address tokenToPay,uint256 nonce,uint256 deadline)')
+    utils.toUtf8Bytes('offset(uint256 txid,address greener,(address plugMiner,uint256 offsetAmount)[],address tokenToPay,uint256 nonce,uint256 deadline)')
   )
 
   return utils.keccak256(

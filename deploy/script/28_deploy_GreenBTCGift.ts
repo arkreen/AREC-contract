@@ -28,7 +28,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     console.log("Deploying: ", "GreenBTCGift", deployer);  
     
-    // function initialize(address gbtc, address akre)
+    // function initialize(address akre, address kWh, address _manager)
     const greenBTCGift = await deploy("GreenBTCGift", {
         from: deployer,
         proxy: {

@@ -11,14 +11,17 @@ import "../interfaces/IkWhToken.sol";
 
 contract GreenPower is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgradeable {
 
-    // keccak256("offset(uint256 txid,address staker,(address plugMiner,uint256 offsetAmount)[],address tokenToPay,uint256 nonce,uint256 deadline)");
-    bytes32 public constant  OFFSET_TYPEHASH  = 0xAA19A1F9E01266BCE4B0B002C45341A0B67477836193A3457FB9D3F248AECE80;
+    // keccak256("offset(uint256 txid,address greener,(address plugMiner,uint256 offsetAmount)[],address tokenToPay,uint256 nonce,uint256 deadline)");
+    bytes32 public constant  OFFSET_TYPEHASH  = 0xEC5BFF80AA08BF2051C80F564769C22E13314AB0C7D5E094D08823FF31D4EBEC;
 
-    // keccak256("stake(uint256 txid,address staker,address plugMiner,uint256 amount,uint256 period,uint256 nonce,uint256 deadline)");
-    bytes32 public constant  STAKE_TYPEHASH   = 0xB13D25036831D18DBC6EEF2020BA657F13C7D378CFB74B36EF4C358851961CFA;
+    // keccak256("stake(uint256 txid,address greener,address plugMiner,uint256 amount,uint256 period,uint256 nonce,uint256 deadline)");
+    bytes32 public constant  STAKE_TYPEHASH   = 0x080E8C5714C5A6A7764FF698D728557DA75162AB329E16A9B3A1BC5390F25071;
 
-    // keccak256("unstake(uint256 txid,address staker,address plugMiner,uint256 amount,uint256 nonce,uint256 deadline)");
-    bytes32 public constant UNSTAKE_TYPEHASH  = 0xEEC4B573720D0248870523A82A8C2F6AEE40054E5D98C0334C41ACCF230D8CFC;  
+    // keccak256("unstake(uint256 txid,address greener,address plugMiner,uint256 amount,uint256 nonce,uint256 deadline)");
+    bytes32 public constant UNSTAKE_TYPEHASH  = 0xD31FDEA5515458DA20F18A6739D5E9D9CE5C49340B56F05309D4A0B6FFDBB40E;
+
+    // keccak256("claimReward(uint256 txid,address greener,uint256 rewardAmount,uint256 nonce,uint256 deadline)");
+    bytes32 public constant  REWARD_TYPEHASH  = 0x9A6CE8C7C5EDCB1EAA7313523B253F809B5AC0E3EC4A56F23B411D538FE25B11;
 
     struct StakeInfo {
         uint96  amountStake;   							                // Enough for AKRE: 10**28 
@@ -52,13 +55,16 @@ contract GreenPower is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
 
     uint96 public totalStake;
     uint96 public totalOffset;
+    uint96 public totalReward;
 
-    // MSB0:12: Amount of stake, enough for 10**28 AKRE; MSB12:4: reserved; 
-    // MSB16:8: Total Offset(kWh), MSB24:4: nonce; MSB28:4: stake release time;
-    mapping(address => uint256) private stakerInfo;         // mapping from user address to stake info
+    // MSB0:12: Amount of stake, enough for 10**28 AKRE; MSB12:12: reserved; MSB24:4: nonce; MSB28:4: stake release time;
+    mapping(address => uint256) private stakerInfo;          // mapping from user address to stake info
+    
+    // MSB0:12: Amount of reward, enough for 10**28 AKRE; MSB12:12: reserved; MSB24:8: Total Offset(kWh) of the user 
+    mapping(address => uint256) private userOffsetInfo;     // mapping from user address to offset and reward info
 
     // MSB0:20: Owner address; MSB20:4: offset Counter; MSB24:8: Total Offset (Unit: kWh);
-    mapping(address => uint256) public minerOffsetInfo;   // mapping from plug miner address to offset info
+    mapping(address => uint256) private minerOffsetInfo;   // mapping from plug miner address to offset info
 
     // mapping from user address to deposit token to deposit amount
     mapping(address => mapping(address => uint256)) public depositAmounts;
@@ -69,8 +75,10 @@ contract GreenPower is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
     }
 
     event Offset(address indexed txid, address indexed greener, OffsetAction[] offsetActions, address tokenToPay, uint256 stakeAmount, uint256 offsetBaseIndex, uint256 nonce);
-    event Stake(address indexed txid, address indexed staker, address plugMiner, uint256 amount, uint256 period, uint256 nonce);
-    event Unstake(address indexed txid, address indexed staker, address plugMiner, uint256 amount, uint256 nonce);
+    event Stake(address indexed txid, address indexed greener, address plugMiner, uint256 amount, uint256 period, uint256 nonce);
+    event Unstake(address indexed txid, address indexed greener, address plugMiner, uint256 amount, uint256 nonce);
+    event Reward(address indexed txid, address indexed greener, uint256 amount, uint256 nonce);
+
     event Deposit(address indexed user, address indexed token, uint256 amount);
     event Withdraw(address indexed user, address indexed token, uint256 amount);
     event OffsetServer(address indexed txid, uint256 offsetBaseIndex, uint256 totalOffsetAmount, OffsetActionBatch[] offsetActionBatch);
@@ -142,6 +150,8 @@ contract GreenPower is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
             require(managerAddress == manager, "Wrong Signature");
         }
 
+        require (uint32(stakerInfo[msg.sender] >> 32) == uint32(nonce), "Nonce Not Match");
+
         uint256 totalOffsetAmount = 0;
         for (uint256 index; index < offsetActions.length; index++) {
             address plugMiner = offsetActions[index].plugMiner;
@@ -171,6 +181,8 @@ contract GreenPower is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
             IkWhToken(kWhToken).burn(amountToBurn);
         }
 
+        stakerInfo[msg.sender] += (1 << 32);
+        userOffsetInfo[msg.sender] += uint64(totalOffsetAmount);
         uint256 offsetBaseIndex = totalOffset / (10**6);
         totalOffset += uint96(totalOffsetAmount);
 
@@ -181,7 +193,8 @@ contract GreenPower is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
         NORMAL,
         WRONG_OWNER,
         WRONG_AMOUNT,
-        LESS_DEPOSIT
+        LESS_DEPOSIT,
+        WRONG_NONCE
     }
 
     function offsetPowerServer(
@@ -205,6 +218,11 @@ contract GreenPower is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
                     skipReason = uint256(SkipReason.WRONG_OWNER);
                     continue; 
                 }
+            }
+
+            if (uint32(stakerInfo[owner] >> 32) != uint32(offsetActionBatch[index].nonce)) {
+                skipReason = uint256(SkipReason.WRONG_NONCE);
+                continue; 
             }
 
             uint256 offsetAmount = offsetActionBatch[index].offsetAmount;
@@ -238,6 +256,8 @@ contract GreenPower is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
                 minerOffsetInfo[plugMiner] = (uint256(uint160(owner)) << 96);           // set owner once the first time offseting
             }
 
+            stakerInfo[owner] += (1 << 32);
+            userOffsetInfo[owner] += uint64(offsetAmount);
             minerOffsetInfo[plugMiner] += (1 << 64) + uint64(offsetAmount);
             totalOffsetAmount += offsetAmount;
         }
@@ -322,14 +342,42 @@ contract GreenPower is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
         emit Withdraw(msg.sender, token, amount);
     }
 
-    function getStakerInfo(address staker) external view 
-        returns (uint256 stakeAmount, uint256 offsetAmount, uint256 nonce, uint256 releaseTime) 
+    function claimReward(
+            address txid,
+            uint256 amount,
+            uint256 nonce,
+            uint256 deadline,
+            Sig calldata signature
+        ) external nonReentrant ensure(deadline) 
     {
-        uint256 userStakeInfo = stakerInfo[staker];
+        uint256 userStakeInfo = stakerInfo[msg.sender];
+        require (nonce == uint32(userStakeInfo >> 32), "Nonce Not Match"); 
+
+        bytes32 offsetHash = keccak256(abi.encode(REWARD_TYPEHASH, txid, msg.sender, amount, nonce, deadline));
+        bytes32 digest = keccak256(abi.encodePacked('\x19\x01', _DOMAIN_SEPARATOR, offsetHash));
+        address managerAddress = ECDSAUpgradeable.recover(digest, signature.v, signature.r, signature.s);
+
+        require(managerAddress == manager, "Wrong Signature");
+
+        userOffsetInfo[msg.sender] += (amount << 160);
+        stakerInfo[msg.sender] += (1 << 32);
+        totalReward += uint96(amount);  
+
+        TransferHelper.safeTransfer(akreToken, msg.sender, amount);
+        emit Reward(txid, msg.sender, amount, nonce);
+    }
+
+    function getUserInfo(address greener) external view 
+        returns (uint256 stakeAmount, uint256 offsetAmount, uint256 rewardAmount, uint256 nonce, uint256 releaseTime) 
+    {
+        uint256 userStakeInfo = stakerInfo[greener];
         releaseTime = uint256(uint32(userStakeInfo));
         nonce = uint256(uint32(userStakeInfo >> 32));
-        offsetAmount = uint256(uint64(userStakeInfo >> 64));
         stakeAmount = uint256(uint96(userStakeInfo >> 160));
+
+        uint256 offsetInfo = userOffsetInfo[greener];
+        offsetAmount = uint256(uint64(offsetInfo));
+        rewardAmount = offsetInfo >> 160;
     }
 
     function getMinerOffsetInfo(address plugMiner) external view 
