@@ -818,7 +818,7 @@ export interface ActionInfo {
 
 export function UtilCalculateGifts(actionInfo: ActionInfo) {
     const actionInfoBN = actionInfo.actionID.shl(224).add(actionInfo.domainID.shl(208))
-                        .add(actionInfo.boxStart.shl(184)).add(actionInfo.boxAmount.shl(160))
+                        .add(actionInfo.boxStart.shl(176)).add(actionInfo.boxAmount.shl(160))
                         .add(BigNumber.from(actionInfo.actor))
 
     let luckyNumber =  utils.keccak256(

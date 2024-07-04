@@ -14,5 +14,4 @@ library DecimalMath {
         }
         return result;
     }
-
 }
