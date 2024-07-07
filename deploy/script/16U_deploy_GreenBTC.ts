@@ -61,7 +61,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     // const NEW_IMPLEMENTATION   = "0xbe02b9b4Eb01d81493f4fb211E0D1F90D0CE37b4"    // 2024/03/08: Upgrade to restore the restore OvertimeBox list by updating
     // const NEW_IMPLEMENTATION   = "0x81eaB74123513E30Da96aDf4B41b5Ba51d9E650E"    // 2024/03/10: Upgrade to support revealcap: overtimeRevealCap, normalRevealCap, removeRevealCap
     // const NEW_IMPLEMENTATION   = "0x29819D75AeEe53402AB069DEB3B13AF9F8Db9FAf"    // 2024/04/30: Upgrade to support ART subsidy
-    const NEW_IMPLEMENTATION      = "0xf9e8B934db91A80009e24d3CA0Bf3273CDfA079c"    // 2024/05/09: Upgrade on Polygon mainnet to support using cART whie no subsidy, using ART with subsidy
+    // const NEW_IMPLEMENTATION   = "0xf9e8B934db91A80009e24d3CA0Bf3273CDfA079c"    // 2024/05/09: Upgrade on Polygon mainnet to support using cART whie no subsidy, using ART with subsidy
+    const NEW_IMPLEMENTATION      = "0x12c44FF98a175401202569b6B2D0457997ceA8Cd"    // 2024/07/07: Upgrade on Polygon mainnet: ratioSubsidyCap is allowed to be 99 at maximum.
 
     console.log("Updating GreenBTC: ", GREENBTC_PROXY_ADDRESS, chainID, defaultGasPrice.toString());  
 
@@ -73,11 +74,13 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     console.log("Update Trx:", updateTx)
     console.log("GreenBTC: ", hre.network.name, GreenBTCFactory.address, NEW_IMPLEMENTATION);
 
+/*    
     // 2024/05/09: Upgrade on Polygon testnet to support using cART whie no subsidy, using ART with subsidy
     const ART_TOKEN      = "0x58E4D14ccddD1E993e6368A8c5EAa290C95caFDF"     
     const setARTContractTx = await GreenBTCFactory.setARTContract(ART_TOKEN, {gasPrice: defaultGasPrice})
     await setARTContractTx.wait()
     console.log("GreenBTCContract setARTContract is executed: %s: ", hre.network.name, ART_TOKEN);
+*/
 
 /*
     // 2024/05/06: Update Image contract
@@ -185,6 +188,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/05/09A: Upgrade on polygon mainet to support using cART whie no subsidy, using ART with subsidy
 // And set ART token address
 // yarn deploy:matic:GreenBTCU : 0xf9e8B934db91A80009e24d3CA0Bf3273CDfA079c
+
+// 2024/07/07: Upgrade on Polygon mainnet: ratioSubsidyCap is allowed to be 99 at maximum.
+// yarn deploy:matic:GreenBTCU : 0x12c44FF98a175401202569b6B2D0457997ceA8Cd
 
 export default func;
 func.tags = ["GreenBTCU"];

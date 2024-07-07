@@ -119,7 +119,7 @@ contract GreenBTC is
     }
 
     function setRatioSubsidyCap(uint256 newRatioSubsidyCap) public onlyOwner {
-        require(newRatioSubsidyCap <= 90, "GBTC: Too More Ratio");
+        require(newRatioSubsidyCap <= 99, "GBTC: Too More Ratio");
         ratioSubsidyCap = uint8(newRatioSubsidyCap);
     }
 

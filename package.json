@@ -124,6 +124,8 @@
     "deploy:matic_test:AMinerI": "hardhat --network matic_test deploy --tags AMinerI",
     "deploy:matic_test:GreenPower": "hardhat --network matic_test deploy --tags GreenPower",
     "deploy:matic_test:GreenPowerI": "hardhat --network matic_test deploy --tags GreenPowerI",
+    "deploy:matic_test:GreenBTC2S": "hardhat --network matic_test deploy --tags GreenBTC2S",
+    "deploy:matic_test:GreenBTC2SI": "hardhat --network matic_test deploy --tags GreenBTC2SI",
     
     "deploy:matic:gAKRE": "hardhat --network matic deploy --tags gAKRE",
     "deploy:matic:arkReward": "hardhat --network matic deploy --tags arkReward",

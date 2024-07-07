@@ -9,7 +9,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { deployer } = await getNamedAccounts();
 
   const chainID = await getChainId()
-  const defaultGasPrice = (chainID === '80001') ? BigNumber.from(3_000_000_000) : BigNumber.from(120_000_000_000)
+  const defaultGasPrice = (chainID === '80001') ? BigNumber.from(3_000_000_000) : BigNumber.from(50_000_000_000)
 
   console.log("Deploying: ", CONTRACTS.GreenBTC, deployer, chainID, defaultGasPrice.toString());  
 
@@ -124,6 +124,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:GreenBTCD
 // Implemenation: 0xf9e8B934db91A80009e24d3CA0Bf3273CDfA079c
 
+// 2024/07/07: Deploy on Polygon mainnet: ratioSubsidyCap is allowed to be 99 at maximum.
+// yarn deploy:matic:GreenBTCD
+// Implemenation: 0x12c44FF98a175401202569b6B2D0457997ceA8Cd
 
 func.tags = ["GreenBTCD"];
 
