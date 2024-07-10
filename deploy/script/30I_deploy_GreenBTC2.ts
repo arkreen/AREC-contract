@@ -22,6 +22,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     const GreenBTC2S = GreenBTC2S__factory.connect(GreenBTC2SAddress, deployer);
      
+    /*
     // 2024/07/05: Amoy testnet
     const domainId = 68
     const domainInfo = "0x0303060600000bb8000f00c803e8000001f405dc000000000800000000000000"
@@ -30,7 +31,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     await registerDomainTx.wait()
 
     console.log("GreenBTC2S registerDomain: ", hre.network.name, GreenBTC2SAddress, domainId, domainInfo );
-  
+    */
+
+    console.log('AAAAAAAAA', deployer.address, signer.address)
+    console.log('BBBBBBBBBBB', ethers.utils.id(deployer.address +signer.address))
   }
   if(hre.network.name === 'matic') {
     // 2024/06/13

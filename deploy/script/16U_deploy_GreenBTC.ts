@@ -9,7 +9,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { getChainId } = hre;
 
   const chainID = await getChainId()
-  const defaultGasPrice = (chainID === '80001') ? BigNumber.from(3_000_000_000) : BigNumber.from(50_000_000_000)
+  const defaultGasPrice = (chainID === '80002') ? BigNumber.from(32_000_000_000) : BigNumber.from(50_000_000_000)
 
   if(hre.network.name === 'matic_test') {
     // const GREENBTC_PROXY_ADDRESS  = "0x770cB90378Cb59665BbF623a72b90f427701C825"     // 2023/10/24: Green BTC proxy
@@ -30,8 +30,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     // const NEW_IMPLEMENTATION   = "0x0a9E5889f0bd049583093a31E375Fd15427F8773"     // 2024/04/28: Original
     // const NEW_IMPLEMENTATION   = "0x160c413f125550c89C7D21FA1C8567986411504E"     // 2024/04/28: Upgrade to change the control of setNewCaps from manager to owner
     // const NEW_IMPLEMENTATION   = "0x0635aE3d966FaA129cd0eafc5996bE9a4aB16eD2"     // 2024/04/28: Upgrade on Amoy testnet to support ART subsidy
-    const NEW_IMPLEMENTATION      = "0x6Cb3798C723594cB56BC0a0320BBaBd83756E4FB"     // 2024/05/09: Upgrade on Amoy testnet to support using cART whie no subsidy, using ART with subsidy
-    
+    //  const NEW_IMPLEMENTATION  = "0x6Cb3798C723594cB56BC0a0320BBaBd83756E4FB"     // 2024/05/09: Upgrade on Amoy testnet to support using cART whie no subsidy, using ART with subsidy
+    const NEW_IMPLEMENTATION      = "0x68471882c661BB1A8E8AB32fc1A6bb1A16569fE3"     // 2024/07/08: Upgrade on Amoy testnet: ratioSubsidyCap is allowed to be 99 at maximum.
+
     console.log("Updating GreenBTC: ", GREENBTC_PROXY_ADDRESS, chainID, defaultGasPrice.toString());  
 
     const [deployer] = await ethers.getSigners();
@@ -42,11 +43,13 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     console.log("Update Trx:", updateTx)
     console.log("GreenBTC: ", hre.network.name, GreenBTCFactory.address, NEW_IMPLEMENTATION);
 
+    /*
     // 2024/05/09: Upgrade on Amoy testnet to support using cART whie no subsidy, using ART with subsidy
     const ART_TOKEN      = "0x615835Cc22064a17df5A3E8AE22F58e67bCcB778"     
     const setARTContractTx = await GreenBTCFactory.setARTContract(ART_TOKEN, {gasPrice: defaultGasPrice})
     await setARTContractTx.wait()
     console.log("GreenBTCContract setARTContract is executed: %s: ", hre.network.name, ART_TOKEN);
+    */
 
   } 
 
@@ -191,6 +194,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2024/07/07: Upgrade on Polygon mainnet: ratioSubsidyCap is allowed to be 99 at maximum.
 // yarn deploy:matic:GreenBTCU : 0x12c44FF98a175401202569b6B2D0457997ceA8Cd
+
+// 2024/07/08: Upgrade on Amoy testnet: ratioSubsidyCap is allowed to be 99 at maximum.
+// yarn deploy:matic_test:GreenBTCU : 0x68471882c661BB1A8E8AB32fc1A6bb1A16569fE3
 
 export default func;
 func.tags = ["GreenBTCU"];

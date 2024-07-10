@@ -509,7 +509,51 @@ describe("GreenBTC Test Campaign", () => {
           // Check dataGBTC
           const _dataNFT = [owner1.address, 23456, true, false, false, 40, 0]
           expect(await greenBitcoin.dataNFT(23456)).to.deep.equal(_dataNFT)     
-        }     
+        }   
+
+        ////////////////// 99% discount /////////////
+        {
+          await greenBitcoin.setRatioSubsidyCap(99);
+
+          const constant_Subsidy_X  = BigNumber.from(99).shl(120)
+
+          const greenBTCInfo =  {
+            height: BigNumber.from(23458).add(constant_Subsidy_X),
+            ARTCount: expandTo9Decimals(13),  // 12 HART
+            minter: owner1.address,
+            greenType: 0x12,
+            blockTime: 'Apr 26, 2009 10:25 PM UTC',
+            energyStr: '12.234 MWh'
+          }
+          
+          // const receiver = owner1.address
+          const register_digest = getGreenBitcoinDigest(
+                          'Green BTC Club',
+                          greenBitcoin.address,
+                          { height:       greenBTCInfo.height,
+                            energyStr:    greenBTCInfo.energyStr,
+                            artCount:     greenBTCInfo.ARTCount,
+                            blockTime:    greenBTCInfo.blockTime,
+                            minter:       greenBTCInfo.minter,
+                            greenType:    greenBTCInfo.greenType
+                          }
+                        )
+    
+          const {v,r,s} = ecsign( Buffer.from(register_digest.slice(2), 'hex'), 
+                                                Buffer.from(privateKeyRegister.slice(2), 'hex'))  
+
+          const artTokenESGBefore = await arkreenRECToken.balanceOf(owner1.address) 
+          await arkreenRECToken.connect(owner1).approve(greenBitcoin.address, constants.MaxUint256)  
+          await greenBitcoin.connect(owner1).authMintGreenBTCWithART( greenBTCInfo, {v,r,s}, 
+                                                      badgeInfo, arkreenRECToken.address, constants_MaxDealineAndOpen )     
+
+          expect(await arkreenRECToken.balanceOf(owner1.address)).to.equal(artTokenESGBefore.sub(expandTo9Decimals(13).mul(1).div(100)))    
+          
+          // Check dataGBTC
+          const _dataNFT = [owner1.address, 23458, true, false, false, 99, 0]
+          expect(await greenBitcoin.dataNFT(23458)).to.deep.equal(_dataNFT)     
+        }   
+
       }); 
       
       ///#############################################///
@@ -873,6 +917,51 @@ describe("GreenBTC Test Campaign", () => {
           const _dataNFTX = [owner1.address, 67890+19, true, false, false, 40, 0]
           expect(await greenBitcoin.dataNFT(67890+19)).to.deep.equal(_dataNFTX)       
         } 
+
+        /////////////////////// 99 %///////////////////
+        {
+          await greenBitcoin.setRatioSubsidyCap(99);
+          const constant_Subsidy_X  = BigNumber.from(99).shl(120)
+
+          let greenBTCInfoArray = new Array<GreenBTCInfo>(20)
+          for( let index = 0; index < greenBTCInfoArray.length; index++) {
+            greenBTCInfoArray[index]=  {
+              height:     BigNumber.from(77890).add(index),
+              ARTCount:   expandTo9Decimals(12),  // 12 HART
+              minter:     owner1.address,
+              greenType:  0x12,
+              blockTime:  'Apr 14, 2009 10:25 PM UTC',
+              energyStr:  '45.234 MWh'
+            }
+          }
+
+          greenBTCInfoArray[0].height = greenBTCInfoArray[0].height.add(constant_Subsidy_X)
+
+          // const receiver = owner1.address
+          const register_digest = getGreenBitcoinDigestBatch(
+                          'Green BTC Club',
+                          greenBitcoin.address, greenBTCInfoArray
+                        )
+    
+          const {v,r,s} = ecsign( Buffer.from(register_digest.slice(2), 'hex'), 
+                                                Buffer.from(privateKeyRegister.slice(2), 'hex'))  
+
+          await arkreenRECToken.connect(owner1).approve(greenBitcoin.address, constants.MaxUint256)  
+
+
+          const tx = await greenBitcoin.connect(owner1).authMintGreenBTCWithARTBatch( 
+                            greenBTCInfoArray, {v,r,s}, badgeInfo, arkreenRECToken.address, constants_MaxDealineAndOpen )  
+
+          const receipt = await tx.wait()
+          console.log("Gas used of authMintGreenBTCWithARTBatch(Open) of 20 items", receipt.gasUsed)
+          //        expect(receipt.gasUsed).to.eq("14169028")        // 20: 14193304  14193326    
+
+          const _dataNFT1 = [owner1.address, 77890, true, false, false, 99, 0]
+          expect(await greenBitcoin.dataNFT(77890)).to.deep.equal(_dataNFT1)
+          const _dataNFTX = [owner1.address, 77890+19, true, false, false, 99, 0]
+          expect(await greenBitcoin.dataNFT(77890+19)).to.deep.equal(_dataNFTX)       
+        } 
+        
       });     
 
       it("GreenBTC Test: authMintGreenBTCWithNative", async () => {
