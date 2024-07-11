@@ -327,7 +327,7 @@ describe("GreenPower Test Campaign", ()=>{
 
         await greenPower.connect(wallet).unstake(txid, plugMiner, amount, nonce, constants.MaxUint256, signature) 
       }
-
+/*
       it("GreenPower Deposit test", async function () {
         await expect(greenPower.deposit(tokenA.address, expandTo18Decimals(12345)))
                   .to.be.revertedWith("TransferHelper: TRANSFER_FROM_FAILED")
@@ -366,6 +366,36 @@ describe("GreenPower Test Campaign", ()=>{
 
         expect(await greenPower.depositAmounts(deployer.address, tokenA.address)).to.eq(expandTo18Decimals(56789 - 23456 - 12345))
         expect(await tokenA.balanceOf(deployer.address)).to.eq(balanceBefore.add(expandTo18Decimals(23456 + 12345)))
+      });
+*/
+
+      it("GreenPower getRewardRate Test", async function () {
+        // Normal
+        await AKREToken.transfer(user1.address, expandTo18Decimals(100_000_000))
+        await AKREToken.transfer(user2.address, expandTo18Decimals(100_000_000))
+        await AKREToken.transfer(user3.address, expandTo18Decimals(100_000_000))
+
+        const {nonce}  = await greenPower.getUserInfo(user1.address)
+
+        const txid = randomAddresses(1)[0]
+        const amount = expandTo18Decimals(140000)
+        const plugMiner = "0x280a7c4E032584F97E84eDd396a00799da8D061A"
+        const period = BigNumber.from(180 * 3600 * 24)
+  
+        const digest = getGreenPowerStakingDigest(
+            'Green Power',
+            greenPower.address,
+            { txid, staker: user1.address, plugMiner, amount, period, nonce},
+            constants.MaxUint256
+          )
+
+        const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))   
+        const signature: GreenPower.SigStruct = { v, r, s }  
+
+        await greenPower.connect(user1).stake(txid, plugMiner, amount, period, nonce, constants.MaxUint256, signature)
+        const rewardRate = await greenPower.getRewardRate(user1.address)
+        expect(rewardRate).to.eq(147217538)
+
       });
 
       it("GreenPower stake Test", async function () {
@@ -767,6 +797,7 @@ describe("GreenPower Test Campaign", ()=>{
         }
       });
 
+/*      
       it("GreenPower offsetPowerServer abonormal Test", async function () {
 
         await AKREToken.approve(greenPower.address, constants.MaxUint256)
@@ -1003,7 +1034,7 @@ describe("GreenPower Test Campaign", ()=>{
         }
 
       });
-
+*/
       it("GreenPower claimReward Test", async function () {
         // Normal
         await AKREToken.transfer(user1.address, expandTo18Decimals(100_000_000))
