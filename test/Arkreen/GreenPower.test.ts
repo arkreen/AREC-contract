@@ -396,6 +396,9 @@ describe("GreenPower Test Campaign", ()=>{
         const rewardRate = await greenPower.getRewardRate(user1.address)
         expect(rewardRate).to.eq(147217538)
 
+        const rewardRateA = await greenPower.getRewardRate(AKREToken.address)
+        expect(rewardRateA).to.eq(100000000)
+
       });
 
       it("GreenPower stake Test", async function () {
@@ -703,6 +706,18 @@ describe("GreenPower Test Campaign", ()=>{
                       .to.emit(greenPower, 'Offset')
                       .withArgs(txid, deployer.address, anyValue, tokenA.address, expandTo18Decimals(23456), 100, nonce)
 
+          // checkIfOffsetWon
+          let lastBlock = await ethers.provider.getBlock('latest')
+
+          const offsetWonResult = await greenPower.checkIfOffsetWon(deployer.address, plugMiners[0], 
+                                    lastBlock.hash, 100, 100, 100000000)
+
+          let wonTime = 0                                    
+          for (let index =0; index <= offsetWonResult.length; index++) {
+            if (offsetWonResult[index]) wonTime += 1
+          }
+          console.log("Won Times: ", wonTime)                             
+
           // check minerOffsetInfo
           expect(await greenPower.getMinerOffsetInfo(plugMiners[0])).to.deep.eq([deployer.address, 2, expandTo6Decimals(100+100)])
           expect(await greenPower.getMinerOffsetInfo(plugMiners[1])).to.deep.eq([deployer.address, 1, expandTo6Decimals(300)])
@@ -794,6 +809,8 @@ describe("GreenPower Test Campaign", ()=>{
           await tokenA.transfer(user1.address, expandTo18Decimals(1_000_000))
           await tokenA.connect(user1).approve(greenPower.address, constants.MaxUint256)
           await greenPower.connect(user1).offsetPower(txid, [offsetAction1], tokenA.address, nonce, constants.MaxUint256, signature)
+
+
         }
       });
 

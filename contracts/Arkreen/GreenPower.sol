@@ -308,8 +308,10 @@ contract GreenPower is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
         uint256 period = uint256(uint16(userStakeInfo >> 64));
         uint256 stakingbase = 6 * 16500 * 30 * (10**18);
         uint256 stakingCredit = stakeAmount * period;
-        rate = (stakingbase + 2 * stakingCredit);
-        rate = ((rate + stakingCredit + 5 * (10**17)) * (10**8)) / rate;
+        uint256 denominator = (stakingbase + 2 * stakingCredit);
+        uint256 numerator = (denominator + stakingCredit) *  (10**8);
+        rate = numerator / denominator;
+        if ((numerator - rate * denominator) * 2 >= denominator) rate += 1;
     }
 
     /**
@@ -328,16 +330,18 @@ contract GreenPower is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
         uint256 kWhIndex,
         uint256 kWhSteps,
         uint256 rewardRate) 
-        external pure returns (bool[] memory result) 
+        external view returns (bool[] memory result) 
     {
         if (kWhSteps >= 100) kWhSteps =100;             // Maximum check 100 steps
         result = new bool[](kWhSteps);
       
-        uint256 posibility = ((100000*20*(10**8)) + 5*(10**7)) / rewardRate;      // rewardRate in 8 decimals, round is considered
+        // rewardRate in 8 decimals, round is considered, 20 = 1/(5%)
+        uint256 posibility = (100000 * 20 * (10**8)) / rewardRate;      
+        if ((100000 * 20 * (10**8) - posibility * rewardRate) * 2 >= rewardRate) posibility += 1;
 
         for (uint256 index = 0; index < kWhSteps; index++) {
             bytes32 offsetHash = keccak256(abi.encode(plugMiner, greener, kWhIndex + index, blockHash));
-            result[index] = (uint256(offsetHash) % posibility) < 100000;
+            result[index] = ((uint256(offsetHash) % posibility) < 100000);
         }
     }
 }

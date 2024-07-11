@@ -30,45 +30,26 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     } 
 
     console.log("Deploying: ", "GreenPower", deployer);  
-    
-    const greenPower = await deploy("GreenPower", {
+
+    const greenPower = await deploy('GreenPower', {
         from: deployer,
-        proxy: {
-          proxyContract: "UUPSProxy",
-          execute: {
-            init: {
-              methodName: "initialize",     // Function to call when deployed first time.
-              args: [akre, kWh, manager]
-            },
-          },
-        },
+        args: [],
         log: true,
         skipIfAlreadyDeployed: false,
         gasPrice: defaultGasPrice
     });
-
-/*
-    // 2024/07/11
-    const IMPLEMENTATION_ADDRESS ="0x92B3B82c322BAC3dF00F68B93C61F5B69A8dfBfa"
-        
-    const callData = GreenPower__factory.createInterface().encodeFunctionData("initialize", [akre, kWh, manager])
-    const greenPower = await deploy(CONTRACTS.UUPSProxy, {
-            from: deployer,
-            args: [IMPLEMENTATION_ADDRESS, deployer, callData],
-            log: true,
-            skipIfAlreadyDeployed: false,
-            gasPrice: defaultGasPrice
-    });
-  */
-
-    console.log("USDT deployed to %s: ", hre.network.name, greenPower.address);
+  
+    console.log("greenPower deployed to %s: ", hre.network.name, greenPower.address);
 };
 
-// 2024/06/12
-// yarn deploy:matic_test:GreenPower    : Amoy testnet (Dev Anv)
-// Proxy:                 0x18D14932e9444dCBc920D392cD317f5d2BB319ab
-// Implementaion:         0xb7709B0777c1d52Fc3a941401fa3E5b050bE16Ac
+// 2024/07/11
+// yarn deploy:matic_test:GreenPowerD    : Amoy testnet (Dev Anv): checkIfOffsetWon is added
+// Implementaion:         0x92B3B82c322BAC3dF00F68B93C61F5B69A8dfBfa
 
-func.tags = ["GreenPower"];
+// 2024/07/11A
+// yarn deploy:matic_test:GreenPowerD    : Amoy testnet (Dev Anv): checkIfOffsetWon is fixed
+// Implementaion:         0xD79601e15C761AabcfDE021Bb05e411263825E29
+
+func.tags = ["GreenPowerD"];
 
 export default func;
