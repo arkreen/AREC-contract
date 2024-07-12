@@ -50,6 +50,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:GreenPowerD    : Amoy testnet (Dev Anv): checkIfOffsetWon is fixed
 // Implementaion:         0xD79601e15C761AabcfDE021Bb05e411263825E29
 
+// 2024/07/12
+// yarn deploy:matic_test:GreenPowerD    : Amoy testnet (Dev Anv): checkIfOffsetWon is changed of the return data format
+// Implementaion:         0xc7A014f4b823788812A9Cd08D1c819e882b13b89
+
+// 2024/07/12A
+// yarn deploy:matic_test:GreenPowerD    : Amoy testnet (Dev Anv): checkIfOffsetWon is removed index limitation
+// Implementaion:         0xb60adb684A682835819a8b4Be2dB6163dEaB393C
+
 func.tags = ["GreenPowerD"];
 
 export default func;

@@ -20,7 +20,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       // 2024/06/26: Amoy testnet                        
       greenPowerAddress                 = "0x18D14932e9444dCBc920D392cD317f5d2BB319ab"  // 06/26
       // const NEW_IMPLEMENTATION       = "0x92B3B82c322BAC3dF00F68B93C61F5B69A8dfBfa"  // 2024/07/11: Amoy testnet (Dev Anv): checkIfOffsetWon is added
-      const NEW_IMPLEMENTATION          = "0xD79601e15C761AabcfDE021Bb05e411263825E29"  // 2024/07/11: Amoy testnet (Dev Anv): checkIfOffsetWon is fixed
+      // const NEW_IMPLEMENTATION       = "0xD79601e15C761AabcfDE021Bb05e411263825E29"  // 2024/07/11: Amoy testnet (Dev Anv): checkIfOffsetWon is fixed
+      // const NEW_IMPLEMENTATION       = "0xc7A014f4b823788812A9Cd08D1c819e882b13b89"  // 2024/07/12: Amoy testnet (Dev Anv): checkIfOffsetWon is changed of the return data format
+      const NEW_IMPLEMENTATION          = "0xb60adb684A682835819a8b4Be2dB6163dEaB393C"  // 2024/07/12: Amoy testnet (Dev Anv): checkIfOffsetWon is removed index limitation
 
       console.log("Updating greenPower: ", greenPowerAddress, defaultGasPrice.toString());  
 
@@ -44,6 +46,15 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/07/11A: upgrade: , Amoy testnet (Dev Anv): checkIfOffsetWon is fixed
 // yarn deploy:matic_test:GreenPowerU
 // 0xD79601e15C761AabcfDE021Bb05e411263825E29
+
+// 2024/07/12: upgrade: , Amoy testnet (Dev Anv): checkIfOffsetWon is changed of the return data format
+// and checkIfOffsetWonBytes is added.
+// yarn deploy:matic_test:GreenPowerU
+// 0xc7A014f4b823788812A9Cd08D1c819e882b13b89
+
+// 2024/07/12A: upgrade: , Amoy testnet (Dev Anv): checkIfOffsetWon is removed index limitation
+// yarn deploy:matic_test:GreenPowerU
+// 0xb60adb684A682835819a8b4Be2dB6163dEaB393C
 
 func.tags = ["GreenPowerU"];
 

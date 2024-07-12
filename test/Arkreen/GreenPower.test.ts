@@ -7,7 +7,7 @@ import { ecsign, fromRpcSig, ecrecover } from 'ethereumjs-util'
 import { getGreenPowerStakingDigest, getApprovalDigest, expandTo6Decimals, expandTo18Decimals, randomAddresses, expandTo9Decimals } from '../utils/utilities'
 import { getGreenPowerUnstakingDigest, OffsetAction, OffsetActionBatch, getGreenPowerOffsetDigest, getGreenPowerRewardDigest } from '../utils/utilities'
 
-import { constants, BigNumber, } from 'ethers'
+import { constants, BigNumber, utils} from 'ethers'
 import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 
 import {
@@ -711,12 +711,16 @@ describe("GreenPower Test Campaign", ()=>{
 
           const offsetWonResult = await greenPower.checkIfOffsetWon(deployer.address, plugMiners[0], 
                                     lastBlock.hash, 100, 100, 100000000)
+         
+          const offseInfo = utils.defaultAbiCoder.encode(
+                                ['address', 'address', 'bytes32', 'uint256', 'uint256', 'uint256'],
+                                [deployer.address, plugMiners[0], lastBlock.hash, 100, 100, 100000000]
+                              )
+                              
+          const offsetWonResultA = await greenPower.checkIfOffsetWonBytes(offseInfo)
 
-          let wonTime = 0                                    
-          for (let index =0; index <= offsetWonResult.length; index++) {
-            if (offsetWonResult[index]) wonTime += 1
-          }
-          console.log("Won Times: ", wonTime)                             
+          console.log("Won Result: ", offsetWonResult.length, offsetWonResult, offsetWonResultA)    
+          expect(offsetWonResult).to.deep.eq(offsetWonResultA)
 
           // check minerOffsetInfo
           expect(await greenPower.getMinerOffsetInfo(plugMiners[0])).to.deep.eq([deployer.address, 2, expandTo6Decimals(100+100)])

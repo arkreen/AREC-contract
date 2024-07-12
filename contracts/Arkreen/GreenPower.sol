@@ -311,7 +311,7 @@ contract GreenPower is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
         uint256 denominator = (stakingbase + 2 * stakingCredit);
         uint256 numerator = (denominator + stakingCredit) *  (10**8);
         rate = numerator / denominator;
-        if ((numerator - rate * denominator) * 2 >= denominator) rate += 1;
+        if (2 * (numerator - rate * denominator) >= denominator) rate += 1;
     }
 
     /**
@@ -329,19 +329,35 @@ contract GreenPower is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
         bytes32 blockHash,
         uint256 kWhIndex,
         uint256 kWhSteps,
-        uint256 rewardRate) 
-        external view returns (bool[] memory result) 
+        uint256 rewardRate)
+        public pure returns (uint256[] memory result) 
     {
-        if (kWhSteps >= 100) kWhSteps =100;             // Maximum check 100 steps
-        result = new bool[](kWhSteps);
+        if (kWhSteps >= 2000) kWhSteps = 2000;             // Maximum check 2000 steps
+        result = new uint256[](kWhSteps);
       
         // rewardRate in 8 decimals, round is considered, 20 = 1/(5%)
         uint256 posibility = (100000 * 20 * (10**8)) / rewardRate;      
-        if ((100000 * 20 * (10**8) - posibility * rewardRate) * 2 >= rewardRate) posibility += 1;
+        if ( 2 * (100000 * 20 * (10**8) - posibility * rewardRate) >= rewardRate) posibility += 1;
 
+        uint256 wonIndex = 0 ;
         for (uint256 index = 0; index < kWhSteps; index++) {
             bytes32 offsetHash = keccak256(abi.encode(plugMiner, greener, kWhIndex + index, blockHash));
-            result[index] = ((uint256(offsetHash) % posibility) < 100000);
+            if ((uint256(offsetHash) % posibility) < 100000) {
+              result[wonIndex++] = kWhIndex + index;
+            }
+        }
+        assembly {
+            mstore(result, wonIndex)
         }
     }
+
+    function checkIfOffsetWonBytes (bytes memory offsetInfo)
+        external pure returns (uint256[] memory result) 
+    {
+        ( address greener, address plugMiner, bytes32 blockHash, 
+          uint256 kWhIndex, uint256 kWhSteps, uint256 rewardRate )
+            = abi.decode(offsetInfo, (address, address, bytes32, uint256, uint256, uint256));
+
+        return checkIfOffsetWon(greener, plugMiner, blockHash, kWhIndex, kWhSteps, rewardRate);
+    } 
 }
