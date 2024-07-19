@@ -24,9 +24,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       kWh = "0xB932CDD3c6Ad3f39d50278A76fb952A6077d1950"
       manager = "0xEe0733Aa789F70233b3eD4F7dF95f1a7e0640D7e"
     } else if(hre.network.name === 'matic')  {
-      akre = ""
-      kWh = ""
-      manager = ""
+      akre = "0xE9c21De62C5C5d0cEAcCe2762bF655AfDcEB7ab3"
+      kWh = "0x5740A27990d4AaA4FB83044a6C699D435B9BA6F1"
+      manager = "0x3B3e675412c78C12030ff30b4dDEF48030bf927d"
     } 
 
     console.log("Deploying: ", "GreenPower", deployer);  
@@ -68,6 +68,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:GreenPower    : Amoy testnet (Dev Anv)
 // Proxy:                 0x18D14932e9444dCBc920D392cD317f5d2BB319ab
 // Implementaion:         0xb7709B0777c1d52Fc3a941401fa3E5b050bE16Ac
+
+// 2024/07/14
+// yarn deploy:matic:GreenPower    : Polygon mainnet
+// Proxy:                 0x12202fDD4e3501081b346C81a64b06A689237a47
+// Implementaion:         0x04C904B102475a4da0C2F92213d72e5795A6ed48
+
 
 func.tags = ["GreenPower"];
 

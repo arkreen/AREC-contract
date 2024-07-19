@@ -23,12 +23,14 @@ contract GreenBTC2S is
     }
 
     address public kWhToken;
+    address public domainManager;
+
     uint256 public actionNumber;
 
     // domains struct in bytes32: 
     // x: MSB0:1; y: MSB1:1; w: MSB2:1; h: MSB3:1; boxTop:MSB4:4
-    // chance1: MSB8:2; chance10: MSB10:2; chance3: MSB12:2; chance4: MSB14:2
-    // ratio1: MSB16:2; ratio1: MSB18:2; ratio1: MSB20:2; ratio1: MSB22:2
+    // chance1: MSB8:2; chance2: MSB10:2; chance3: MSB12:2; chance4: MSB14:2
+    // ratio1: MSB16:2; ratio2: MSB18:2; ratio3: MSB20:2; ratio4: MSB22:2
     // decimal:MSB24:1, reserved: MSB25:3, boxGreened: MSB28:4; 
     mapping (uint256 => bytes32) public domains;
 
@@ -46,7 +48,7 @@ contract GreenBTC2S is
         _disableInitializers();
     }
 
-    function initialize(address kWh)
+    function initialize(address kWh, address manager)
         external
         virtual
         initializer
@@ -54,13 +56,20 @@ contract GreenBTC2S is
         __UUPSUpgradeable_init();
         __Ownable_init_unchained();
         kWhToken        = kWh;
+        domainManager   = manager;
     }
 
     function _authorizeUpgrade(address newImplementation) internal virtual override onlyOwner
     {}
 
-    function convertRatio(uint16 chance) internal pure returns (uint16) {
-        return  uint16((65536 * uint256(chance) + 5000) / 10000); 
+    modifier onlyManager() {
+        require((_msgSender() == owner()) || (_msgSender() == domainManager), "GBTC: Not Manager");
+        _;
+    }
+
+    function setDomainManager(address manager) public onlyOwner {
+        require(manager != address(0), "GBTC: Zero Address");
+        domainManager = manager;                    
     }
 
     /**
@@ -74,14 +83,14 @@ contract GreenBTC2S is
      *  decimal:MSB24:1, how much kWh token for 1 box, the exponent of power; reserved: MSB25:7
      *  domainInfo is saved in converted format
      */
-    function registerDomain (uint256 domainID, bytes32 domainInfo) public onlyOwner {
+    function registerDomain (uint256 domainID, bytes32 domainInfo) public onlyManager {
         require (uint256(domains[domainID]) == 0, "GBC2: Wrong Domain ID");
 
         uint256 ratioSum;
         uint256 domainInfoSaved; 
         for (uint256 index = 0; index < 8; index++) {
             uint256 ratioPosition = 176 - (index * 16);
-            uint256 ratio = convertRatio(uint16(uint256(domainInfo) >> ratioPosition));
+            uint256 ratio = uint16(uint256(domainInfo) >> ratioPosition);
             ratioSum += ratio;
             domainInfoSaved += (ratioSum << ratioPosition);
         }
@@ -213,7 +222,7 @@ contract GreenBTC2S is
         uint256 boxAmount = (actionInfo >> 160) & 0xFFFF;
 
         uint256 domainInfo = uint256(domains[domainID]);
-        uint16 ratioSum = uint16(domainInfo >> 64);                 // total lucky rate 
+        uint16 ratioSum = uint16(domainInfo >> 64);                     // total lucky rate 
 
         uint256 luckyTemp = luckyNumber;
 
@@ -221,14 +230,14 @@ contract GreenBTC2S is
         for (uint256 ind = 0; ind < 8; ind++) 
             rateList[ind] = uint16(domainInfo >> (176 - (16 * ind)));
 
-        uint8[] memory result = new uint8[](boxAmount);             // save the gift type of each won box
-        uint16[] memory counters = new uint16[](8);                 // save the won number of 8 gift types
+        uint8[] memory result = new uint8[](boxAmount);                 // save the gift type of each won box
+        uint16[] memory counters = new uint16[](8);                     // save the won number of 8 gift types
         
         for (uint256 index = 0; index < boxAmount; index++) {
             uint16 ration = uint16(luckyTemp);
-            if (ration < ratioSum) {
+            if (ration <= ratioSum) {
                 for (uint256 ind = 0; ind < 8; ind++) {
-                    if (ration < rateList[ind] ) {
+                    if (ration <= rateList[ind] ) {
                         result[index] = uint8(ind + 1); 
                         counters[ind] += 1;
                         break;

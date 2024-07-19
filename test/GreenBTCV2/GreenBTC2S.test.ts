@@ -7,7 +7,7 @@ import { ecsign, fromRpcSig, ecrecover } from 'ethereumjs-util'
 import { getGreenBitcoinClaimGifts, getApprovalDigest, expandTo18Decimals, randomAddresses, expandTo9Decimals } from '../utils/utilities'
 import { UtilCalculateGifts, ActionInfo } from '../utils/utilities'
 
-import { constants, BigNumber, } from 'ethers'
+import { constants, BigNumber, utils} from 'ethers'
 import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 
 import {
@@ -162,7 +162,7 @@ describe("GreenBTC2S Test Campaign", ()=>{
         await kWhToken.approveBank([tokenA.address, WETH.address, AKREToken.address])       
 
         const GreenBTC2Factory = await ethers.getContractFactory("GreenBTC2S")
-        const greenBTC2S = await upgrades.deployProxy(GreenBTC2Factory, [kWhToken.address]) as GreenBTC2S
+        const greenBTC2S = await upgrades.deployProxy(GreenBTC2Factory, [kWhToken.address, manager.address]) as GreenBTC2S
         await greenBTC2S.deployed()
 
         await tokenA.transfer(greenBTC2S.address, expandTo18Decimals(30000000))
@@ -174,7 +174,6 @@ describe("GreenBTC2S Test Campaign", ()=>{
     }
 
     describe('GreenBTC2S test', () => {
-
       const domainInfo = {
                 x: 5,  y: 6, w:  7, h: 8,
                 boxTop: 200000,
@@ -183,6 +182,16 @@ describe("GreenBTC2S Test Campaign", ()=>{
                 decimal: 8,
                 allchance: 0
               }
+/*
+      const domainInfo = {
+                x: 0,  y: 20, w:  4, h: 4,
+                boxTop: 669611,
+                chance1: 1000,   chance2: 1500, chance3: 2500, chance4: 200,
+                ratio1: 200,   ratio2: 1400, ratio3: 2200,     ratio4: 1000,
+                decimal: 7,
+                allchance: 0
+              }
+*/
 
       const ratiosSum = 15 + 200 + 1000 + 500 + 1500
 
@@ -196,14 +205,14 @@ describe("GreenBTC2S Test Campaign", ()=>{
                          .add(BigNumber.from(domainInfo.w).shl(232))
                          .add(BigNumber.from(domainInfo.h).shl(224))
                          .add(BigNumber.from(domainInfo.boxTop).shl(192))
-                         .add(BigNumber.from(domainInfo.chance1).shl(176))
-                         .add(BigNumber.from(domainInfo.chance2).shl(160))
-                         .add(BigNumber.from(domainInfo.chance3).shl(144))
-                         .add(BigNumber.from(domainInfo.chance4).shl(128))
-                         .add(BigNumber.from(domainInfo.ratio1).shl(112))
-                         .add(BigNumber.from(domainInfo.ratio2).shl(96))
-                         .add(BigNumber.from(domainInfo.ratio3).shl(80))
-                         .add(BigNumber.from(domainInfo.ratio4).shl(64))
+                         .add(BigNumber.from(convertRatio(domainInfo.chance1)).shl(176))
+                         .add(BigNumber.from(convertRatio(domainInfo.chance2)).shl(160))
+                         .add(BigNumber.from(convertRatio(domainInfo.chance3)).shl(144))
+                         .add(BigNumber.from(convertRatio(domainInfo.chance4)).shl(128))
+                         .add(BigNumber.from(convertRatio(domainInfo.ratio1)).shl(112))
+                         .add(BigNumber.from(convertRatio(domainInfo.ratio2)).shl(96))
+                         .add(BigNumber.from(convertRatio(domainInfo.ratio3)).shl(80))
+                         .add(BigNumber.from(convertRatio(domainInfo.ratio4)).shl(64))
                          .add(BigNumber.from(domainInfo.decimal).shl(56))
 
       const chance1Converted =  convertRatio(domainInfo.chance1)
@@ -335,9 +344,28 @@ describe("GreenBTC2S Test Campaign", ()=>{
       });
 
       it("GreenBTC2S basics test", async function () {
+/*
+        const domainInfo = BigNumber.from('0x0303060600000bb8006205811f1b1f1b2be8524e524e524e0800000000000065')
+
+        let actionInfoTest: ActionInfo = {
+          actionID:     BigNumber.from(4),
+          domainID:     BigNumber.from(68),
+          boxStart:     BigNumber.from(90),
+          boxAmount:    BigNumber.from(11),
+          actor:        '0x8746c91a1a9dE01c624df517BbD70E9FeEADE7af',
+          blockHash:    '0x890238c78cd76ea2b86f340d7da89f3b02c4ca27436f444ba0de36ef17a4bab6',
+          blockHeigh:   BigNumber.from(954010),
+          domainInfo:   domainInfo,
+        }
+
+        const  { counters: countersCheckTest, wonList: wonListCheckTest } = UtilCalculateGifts(actionInfoTest)
+        console.log("UtilCalculateGifts Test", countersCheckTest, wonListCheckTest, domainInfoBigIntConverted.toHexString())
+*/
+
+        const domainInfoString = utils.defaultAbiCoder.encode(['uint256'], [domainInfoBigInt])
 
         const domainID = 1
-        await expect( await greenBTC2S.registerDomain(domainID, domainInfoBigInt.toHexString()))
+        await expect( await greenBTC2S.registerDomain(domainID, domainInfoString))
                 .to.emit(greenBTC2S, 'DomainRegistered')
                 .withArgs(domainID, domainInfoBigInt.toHexString())
 
@@ -348,7 +376,7 @@ describe("GreenBTC2S Test Campaign", ()=>{
         const greenizetx = await  greenBTC2S.connect(owner1).makeGreenBox(1, 123)
         const receipt = await greenizetx.wait()
 
-        //console.log("AAAAAAAAAAAAAAA", domainInfoBigIntConverted.toHexString(), receipt)
+        // console.log("AAAAAAAAAAAAAAA", domainInfoBigIntConverted.toHexString(), receipt)
 
         await mine(5)
 
@@ -392,7 +420,8 @@ describe("GreenBTC2S Test Campaign", ()=>{
       it("GreenBTC2S makeGreenBox test", async function () {
 
         const domainID = 1
-        await greenBTC2S.registerDomain(domainID, domainInfoBigInt.toHexString())
+        const domainInfoString = utils.defaultAbiCoder.encode(['uint256'], [domainInfoBigInt])
+        await greenBTC2S.connect(manager).registerDomain(domainID, domainInfoString)
 
         await kWhToken.connect(owner1).approve(greenBTC2S.address, constants.MaxUint256)
 
@@ -442,6 +471,8 @@ describe("GreenBTC2S Test Campaign", ()=>{
   
           const  {counters: countersCheck, wonList: wonListCheck} = UtilCalculateGifts(actionInfo)
           const {counters, wonList} = await greenBTC2S.checkIfShot(owner1.address, 3, Bytes32_Zero)
+
+          console.log('counters, wonList:', counters, wonList )
 
           expect(counters).to.deep.eq(countersCheck)
           expect(wonList).to.deep.eq(wonListCheck)

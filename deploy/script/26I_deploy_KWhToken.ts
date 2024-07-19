@@ -10,7 +10,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     const [deployer] = await ethers.getSigners();
 
-    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(160_000_000_000)
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(32_000_000_000) : BigNumber.from(50_000_000_000)
 
     let kWhTokenAddress
     let beneficiary
@@ -89,10 +89,51 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       console.log("Mint KWh with ART", balancekWhAfter.toString())
       
     } else if(hre.network.name === 'matic')  {
-      tokenART = ""
-      artBank = ""
-      arkreenBuilder = ""
-      offsetManager = ""
+      kWhTokenAddress   = "0x5740A27990d4AaA4FB83044a6C699D435B9BA6F1"            // 07/14: Polygon miannet
+
+      tokenART          = "0x58E4D14ccddD1E993e6368A8c5EAa290C95caFDF"            // Polygon testnet
+      USDC_ADDRESS      = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"            // USDC address
+      USDT_ADDRESS      = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F"            // USDT address
+      WNATIVE_ADDRESS   = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"            // WMATIC address
+      AKRE_ADDRESS      = "0xE9c21De62C5C5d0cEAcCe2762bF655AfDcEB7ab3"            // AKRE address
+
+      ART_PRICE       = BigNumber.from(1).mul(BigNumber.from(10).pow(6))          // 1kWh = 0.001ART = 0.001*10**9 = 10**6
+      USDC_PRICE      = BigNumber.from(10).mul(BigNumber.from(10).pow(3))         // 1kWh = 0.001ART = 0.01 USDC = 10**4 (10USDC/ART)
+      USDT_PRICE      = BigNumber.from(10).mul(BigNumber.from(10).pow(3))         // 1kWh = 0.001ART = 0.01 USDT = 10**4 (10USDT/ART)
+
+      beneficiary       = "0xF6f06651fA233247E793689AA710888884FCdebf"            // Polygon miannet
+      
+      const KWhToken = KWhToken__factory.connect(kWhTokenAddress, deployer);
+  
+      /*
+      // 2024/07/14: Polygon mainnet                   
+      const badgeInfo =  {
+        beneficiary:      beneficiary,
+        offsetEntityID:   'Arkreen Network',
+        beneficiaryID:    'Arkreen Community',
+        offsetMessage:    "Offset ART to mint equivalent kWh ERC20 token for all the Arkreen community members and applications"
+      }    
+
+      const setBadgeInfoTx = await KWhToken.setBadgeInfo( badgeInfo, {gasPrice: defaultGasPrice})
+      await setBadgeInfoTx.wait()
+      */
+
+      //console.log("Mint KWh with ART", balanceART.toString(), balancekWh.toString(), badgeInfo)
+      
+      // 2024/07/14
+      const approveBankTx = await KWhToken.approveBank( [tokenART, USDC_ADDRESS, USDT_ADDRESS], {gasPrice: defaultGasPrice})
+      await approveBankTx.wait()
+
+      // 2024/07/14
+      // ************* Must upgrade bank contract first ****************
+      const changeSwapPrice1 = await KWhToken.changeSwapPrice( tokenART, ART_PRICE, {gasPrice: defaultGasPrice})
+      await changeSwapPrice1.wait()
+
+      const changeSwapPrice2 = await KWhToken.changeSwapPrice( USDC_ADDRESS, USDC_PRICE, {gasPrice: defaultGasPrice})
+      await changeSwapPrice2.wait()
+      
+      const changeSwapPrice3 = await KWhToken.changeSwapPrice( USDT_ADDRESS, USDT_PRICE, {gasPrice: defaultGasPrice})  
+      await changeSwapPrice3.wait()    
     } 
 
 };
@@ -117,6 +158,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2024/06/13B: Call MintKWh (ART/USDC/USDT)
 // yarn deploy:matic_test:WKHI    : Amoy testnet (Dev Anv)
+
+// 2024/07/14: Call setBadgeInfo, approveBank, changeSwapPrice (tokenART, USDC_ADDRESS, USDT_ADDRESS)
+// yarn deploy:matic:WKHI     : Ploygon mainnet
 
 func.tags = ["WKHI"];
 

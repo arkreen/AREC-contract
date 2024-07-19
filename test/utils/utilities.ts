@@ -828,6 +828,8 @@ export function UtilCalculateGifts(actionInfo: ActionInfo) {
                           )
                         )
 
+//    console.log("AAAAAAAAAAA", actionInfoBN.toHexString(), actionInfo.blockHash, luckyNumber)                        
+
     const ratio1 =  actionInfo.domainInfo.shr(176).and(65535)
     const ratio2 =  actionInfo.domainInfo.shr(160).and(65535)
     const ratio3 =  actionInfo.domainInfo.shr(144).and(65535)
@@ -844,26 +846,26 @@ export function UtilCalculateGifts(actionInfo: ActionInfo) {
 
     for (let index = 0; index < actionInfo.boxAmount.toNumber(); index++) {
      const ration = luckyTemp.and(65535)
-      if (ration.lt(ratio8)) {
-          if (ration.lt(ratio1)) {
+      if (ration.lte(ratio8)) {
+          if (ration.lte(ratio1)) {
             result[index] = 1
             counters[0] += 1
-          } else if (ration.lt(ratio2)) {
+          } else if (ration.lte(ratio2)) {
             result[index] = 2
             counters[1] += 1
-          } else if (ration.lt(ratio3)) { 
+          } else if (ration.lte(ratio3)) { 
             result[index] = 3
             counters[2] += 1
-          } else if (ration.lt(ratio4)) { 
+          } else if (ration.lte(ratio4)) { 
             result[index] = 4
             counters[3] += 1
-          } else if (ration.lt(ratio5)) {
+          } else if (ration.lte(ratio5)) {
             result[index] = 5
             counters[4] += 1
-          } else if (ration.lt(ratio6)) { 
+          } else if (ration.lte(ratio6)) { 
             result[index] = 6
             counters[5] += 1
-          } else if (ration.lt(ratio7)) { 
+          } else if (ration.lte(ratio7)) { 
             result[index] = 7
             counters[6] += 1
           } else { 

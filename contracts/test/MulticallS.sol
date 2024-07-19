@@ -3,6 +3,8 @@
 pragma solidity >=0.5.0;
 pragma experimental ABIEncoderV2;
 
+import "../interfaces/IGreenBTC.sol";
+
 /// @title Multicall - Aggregate results from multiple read-only function calls
 /// @author Michael Elliot <mike@makerdao.com>
 /// @author Joshua Levine <joshua@makerdao.com>
@@ -77,6 +79,7 @@ contract MulticallS {
     function getCurrentBlockCoinbase() public view returns (address coinbase) {
         coinbase = block.coinbase;
     }
+
     function checkIfContract(address[] calldata list) public view returns (address[] memory) {
         uint256 length = list.length;
         address[] memory returnList = new address[](length);
@@ -94,4 +97,24 @@ contract MulticallS {
         return returnList;
     }
 
+    function listEmptyGreenBTC(uint256 start, uint256 length) public view returns (uint256[] memory) {
+        address greenBTC = address(0xDf51F3DCD849f116948A5B23760B1ca0B5425BdE);
+
+        uint256[] memory returnList = new uint256[](length);
+        uint256 returnLength = 0;
+        for (uint256 index = 0; index < length; index++) {
+          ( , , address minter, , , ) = IGreenBTC(greenBTC).dataGBTC(start + index);
+
+          if (minter == address(0)) {
+            returnList[returnLength] = start + index;
+            returnLength ++;
+          }
+        }
+
+        assembly {
+            mstore(returnList, returnLength)
+        }
+ 
+        return returnList;
+    } 
 }

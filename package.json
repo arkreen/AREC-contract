@@ -196,9 +196,17 @@
     "deploy:matic:NotaryU": "hardhat --network matic deploy --tags NotaryU",
     "deploy:matic:PlantStakingD": "hardhat --network matic deploy --tags PlantStakingD",
     "deploy:matic:PlantStakingU": "hardhat --network matic deploy --tags PlantStakingU",
+    "deploy:matic:WKH": "hardhat --network matic deploy --tags WKH",
+    "deploy:matic:WKHI": "hardhat --network matic deploy --tags WKHI",
+
+    "deploy:matic:GreenPower": "hardhat --network matic deploy --tags GreenPower",
+    "deploy:matic:GreenPowerI": "hardhat --network matic deploy --tags GreenPowerI",
+    "deploy:matic:GreenPowerD": "hardhat --network matic deploy --tags GreenPowerD",
+    "deploy:matic:GreenPowerU": "hardhat --network matic deploy --tags GreenPowerU",
 
     "storageExplorerGreenBTC:matic": "hardhat run --network matic ./deploy/storageExplorerGreenBTC.ts",
     "GreenBTCTest:matic": "hardhat run --network matic ./deploy/GreenBTCTest.ts",
+    "GreenBTCTList:matic": "hardhat run --network matic ./deploy/GreenBTCTList.ts",
 
     "etherscan:matic": "hardhat --network matic etherscan-verify --api-key",
     "deploy:celo_test:gRegistry": "hardhat --network celo_test deploy --tags gRegistry",
@@ -295,9 +303,11 @@
     "typechain": "^8.1.0",
     "typescript": "^4.7.4",
     "source-map": "^0.7.2",
-    "readline-sync": "^1.4.10"
+    "readline-sync": "^1.4.10",
+    "luxon": "^1.25.0"
   },
   "dependencies": {
+    "@types/luxon": "^1.24.4",
     "@nomiclabs/hardhat-waffle": "^2.0.5",
     "@solidstate/contracts": "^0.0.58",
     "base64-sol": "1.0.1",

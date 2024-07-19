@@ -10,4 +10,7 @@ interface IGreenBTC {
         BadgeInfo       calldata badgeInfo,
         uint256                  deadline
     ) external payable;
+
+    function dataGBTC(uint256 height) external view 
+        returns (uint128, uint128, address, uint8, string memory, string memory);
 }

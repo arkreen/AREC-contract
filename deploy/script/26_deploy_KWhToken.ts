@@ -26,15 +26,15 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       arkreenBuilder = "0x12De6c1FB46B64e3DA5bFDD274E98B9103353dF7"
       offsetManager = "0x364a71ee7a1c9eb295a4f4850971a1861e9d3c7d"
     } else if(hre.network.name === 'matic')  {
-      tokenART = ""
-      artBank = ""
-      arkreenBuilder = ""
-      offsetManager = ""
+      tokenART = "0x58E4D14ccddD1E993e6368A8c5EAa290C95caFDF"
+      artBank = "0xab65900A52f1DcB722CaB2e5342bB6b128630A28"
+      arkreenBuilder = "0x7073Ea8C9B0612F3C3FE604425E2af7954c4c92e"
+      offsetManager = "0x1249B1eABcAE642CF3Cb1e512a0075CEe92769BE"
     } 
 
     console.log("Deploying: ", "KWhToken", deployer);  
-    /*
-    const claimToken = await deploy("KWhToken", {
+    
+    const KWhToken = await deploy("KWhToken", {
         from: deployer,
         proxy: {
           proxyContract: "UUPSProxy",
@@ -49,8 +49,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         skipIfAlreadyDeployed: false,
         gasPrice: defaultGasPrice
     });
-    */
 
+
+/*    
     // 2024/06/04
     const IMPLEMENTATION_ADDRESS ="0xd0Bd9950911FdE298a7e4996C7f6D15016177ea0"
     
@@ -62,7 +63,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
             skipIfAlreadyDeployed: false,
             gasPrice: defaultGasPrice
     });
-
+*/
     console.log("USDT deployed to %s: ", hre.network.name, KWhToken.address);
 };
 
@@ -75,6 +76,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:WKH    : Amoy testnet (Dev Anv): support burn ABI
 // Proxy:                 0xB932CDD3c6Ad3f39d50278A76fb952A6077d1950 (UUPS)
 // Implementaion:         0xd0Bd9950911FdE298a7e4996C7f6D15016177ea0
+
+// 2024/07/14
+// yarn deploy:matic:WKH    : Polgon mainnet:
+// Proxy:                 0x5740A27990d4AaA4FB83044a6C699D435B9BA6F1
+// Implementaion:         0xF727b601d8670D1921985f07d44b0913f1944011
 
 func.tags = ["WKH"];
 
