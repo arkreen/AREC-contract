@@ -20,7 +20,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       // 2024/07/05: GreenBTCV2S on Amoy testnet                        
       kWh = "0xB932CDD3c6Ad3f39d50278A76fb952A6077d1950"
     } else if(hre.network.name === 'matic')  {
-      kWh = ""
+      kWh = "0x5740A27990d4AaA4FB83044a6C699D435B9BA6F1"
     } 
 
     console.log("Deploying: ", "GreenBTC2S", deployer);  
@@ -68,6 +68,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:GreenBTC2S    : Amoy testnet (Dev Anv): Change the lucky ratio handling
 // Proxy:                 0x6729b2956e8Cf3d863517E4618C3d8722548D5C4
 // Implementaion:         0x32Dbe18BBc2C752203b6e1bE87EdE5655A091dFa
+
+// 2024/07/25
+// yarn deploy:matic:GreenBTC2S    : Polygon mainnet: Change the lucky ratio handling
+// Proxy:                 0x3221F5818A5CF99e09f5BE0E905d8F145935e3E0
+// Implementaion:         0x08F9993e691Bf56918A5687a420Db7Bc6D982A44
+
 
 func.tags = ["GreenBTC2S"];
 
