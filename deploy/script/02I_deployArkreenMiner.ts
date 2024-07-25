@@ -10,7 +10,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     const [deployer] = await ethers.getSigners();
 
-    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(32_000_000_000) : BigNumber.from(80_000_000_000)
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(32_000_000_000) : BigNumber.from(50_000_000_000)
 
     if(hre.network.name === 'matic_test')  {
       const MINER_PROXY_ADDRESS = "0xF390caaF4FF0d297e0b4C3c1527D707C75541736"       // Miner Contract on Amoy testnet
@@ -49,14 +49,30 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       await arkreenMiner.registerListenApps(appid, stakingRewards, {gasPrice: defaultGasPrice})
       */
 
-      // 2024/05/28, Call registerListenApps
+      /*
+      // 2024/06/25, Call registerListenApps
       const appid = 2
       const stakingRewards = "0xc1dCE2f17362C2De4ab4F104f6f88223e0c28B95"
 
       // registerListenApps(uint256 appid, address newApp)
       await arkreenMiner.registerListenApps(appid, stakingRewards, {gasPrice: defaultGasPrice})
+      */
 
-      console.log("New ArkreenMiner deployed to %s:", hre.network.name, NEW_IMPLEMENTATION, stakingRewards);
+      // 2024/07/25, Call registerListenApps
+      const appid3 = 3
+      const stakingRewards3 = "0x0A0688fc15794035820CaDc23Db7114bAb4dE405"
+
+      // registerListenApps(uint256 appid, address newApp)
+      await arkreenMiner.registerListenApps(appid3, stakingRewards3, {gasPrice: defaultGasPrice})
+
+      // 2024/07/25, Call registerListenApps
+      const appid4 = 4
+      const stakingRewards4 = "0x071Bed72c917859e73f99dDa41Fb6B2Ea4C08d33"
+
+      // registerListenApps(uint256 appid, address newApp)
+      await arkreenMiner.registerListenApps(appid4, stakingRewards4, {gasPrice: defaultGasPrice})
+
+      console.log("New ArkreenMiner deployed to %s:", hre.network.name, NEW_IMPLEMENTATION, stakingRewards3, stakingRewards4);
     }
 };
 
@@ -73,6 +89,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/06/25
 // yarn deploy:matic:AMinerI    : Polygon mainnet: Register staking Proxy1
 // call registerListenApps: (2, 0xc1dCE2f17362C2De4ab4F104f6f88223e0c28B95)
+
+// 2024/07/25
+// yarn deploy:matic:AMinerI    : Polygon mainnet: Register staking Proxy1
+// call registerListenApps: (3, 0x0A0688fc15794035820CaDc23Db7114bAb4dE405)
+// call registerListenApps: (4, 0x071Bed72c917859e73f99dDa41Fb6B2Ea4C08d33)
+
 
 func.tags = ["AMinerI"];
 

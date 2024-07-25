@@ -73,6 +73,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // deploy:matic:MulticallD:  deployed on Polygon mainnet: add listEmptyGreenBTC（Fix listEmptyGreenBTC）
 // 0x19e9BAD19ca2696b509d938476ee4CF823538df4
 
+// 2024/07/19
+// deploy:matic:MulticallD:  deployed on Polygon mainnet: getAllBalance
+// 0xBCCa2cCEab5dB4b04D950ED93DF8B702da08DA43
+
 func.tags = ["MulticallD"];
 
 export default func;

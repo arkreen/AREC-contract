@@ -5,6 +5,13 @@ pragma experimental ABIEncoderV2;
 
 import "../interfaces/IGreenBTC.sol";
 
+interface IERC20 {
+    function transfer(address to, uint256 value) external returns (bool);
+    function transferFrom(address from, address to, uint256 value) external returns (bool);
+    function balanceOf(address account) external view returns (uint256);
+    function allowance(address owner, address spender) external view returns (uint256);
+}
+
 /// @title Multicall - Aggregate results from multiple read-only function calls
 /// @author Michael Elliot <mike@makerdao.com>
 /// @author Joshua Levine <joshua@makerdao.com>
@@ -116,5 +123,13 @@ contract MulticallS {
         }
  
         return returnList;
+    }
+
+    function getAllBalance(address account, address[] memory tokens) public view returns (uint256[] memory balances) {
+        balances = new uint256[](tokens.length + 1);
+        balances[0] = account.balance;
+        for (uint256 index = 0; index < tokens.length; index++) {
+            balances[index + 1] = IERC20(tokens[index]).balanceOf(account);
+        }
     } 
 }

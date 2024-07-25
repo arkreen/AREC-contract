@@ -11,7 +11,7 @@ import { BigNumber } from "ethers";
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const [deployer] = await ethers.getSigners();
 
-  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(35_000_000_000) : BigNumber.from(80_000_000_000)
+  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(35_000_000_000) : BigNumber.from(50_000_000_000)
   
   if(hre.network.name === 'matic_test') {
     // 2024/05/21
@@ -53,19 +53,21 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     // 2024/05/28
     //const stakingRewardsAddress  = "0xa777d8855456eac0E3f1C64c148dabaf8e8CcC1F"         // 2024/05/28: Polygon Mainnet
     //const stakingRewardsAddress  = "0x4C15968df54B276dC06eF11Bcd3b3EfFbC577c59"         // 2024/006/25(XXX): Polygon Mainnet, with lock
-    const stakingRewardsAddress    = "0xc1dCE2f17362C2De4ab4F104f6f88223e0c28B95"         // 2024/006/25: Polygon Mainnet, with lock
+    //const stakingRewardsAddress  = "0xc1dCE2f17362C2De4ab4F104f6f88223e0c28B95"         // 2024/006/25: Polygon Mainnet, with lock
+    //const stakingRewardsAddress  = "0x0A0688fc15794035820CaDc23Db7114bAb4dE405"         // 2024/07/25A: Polygon Mainnet, 60 days lock
+    const stakingRewardsAddress    = "0x071Bed72c917859e73f99dDa41Fb6B2Ea4C08d33"         // 2024/07/25B: Polygon Mainnet, 60 days lock
 
     const stakingRewards = StakingRewards__factory.connect(stakingRewardsAddress, deployer);
 
-    // 2024/06/25: Polygon Mainnet
-    const changeUnstakeLockTx = await stakingRewards.changeUnstakeLock(true, {nonce: 394, gasPrice: defaultGasPrice})
+    // 2024/06/25: Polygon Mainnet， 2024/07/25A、2024/07/25B
+    const changeUnstakeLockTx = await stakingRewards.changeUnstakeLock(true, {gasPrice: defaultGasPrice})
     await changeUnstakeLockTx.wait()
 
-    // 2024/05/28, 2024/06/25: Polygon Mainnet
+    // 2024/05/28, 2024/06/25: Polygon Mainnet, 2024/07/25A、2024/07/25B
     const capMinerPremium = expandTo18Decimals(5000)
     const ratePremium = 200
 
-    const setStakeParameterTx = await stakingRewards.setStakeParameter(capMinerPremium, ratePremium, {nonce: 395, gasPrice: defaultGasPrice})
+    const setStakeParameterTx = await stakingRewards.setStakeParameter(capMinerPremium, ratePremium, {gasPrice: defaultGasPrice})
     await setStakeParameterTx.wait()
 
     console.log("StakingRewards setStakeParameter Tx:", changeUnstakeLockTx, setStakeParameterTx)
@@ -90,6 +92,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // call changeUnstakeLock and setStakeParameter (proxy1)
 
 // 2024/06/25: Call changeUnstakeLock and setStakeParameter (Polygon mainnet)
+// yarn deploy:matic:StakingRewardsI
+// call changeUnstakeLock and setStakeParameter
+
+// 2024/07/25A: Call changeUnstakeLock and setStakeParameter (Polygon mainnet)
 // yarn deploy:matic:StakingRewardsI
 // call changeUnstakeLock and setStakeParameter
 

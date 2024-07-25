@@ -11,7 +11,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const { deploy } = deployments;
     const { deployer } = await getNamedAccounts();
 
-    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(35_000_000_000) : BigNumber.from(60_000_000_000)
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(35_000_000_000) : BigNumber.from(50_000_000_000)
 
     let tokenAKRE = ''
     let tokenART = ''
@@ -59,7 +59,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
             from: deployer,
             args: [IMPLEMENTATION_ADDRESS, deployer, callData],
             log: true,
-            skipIfAlreadyDeployed: false,
+            skipIfAlreadyDeployed: true,
             gasPrice: defaultGasPrice
     });
 
@@ -96,6 +96,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/06/25A
 // yarn deploy:matic:StakingRewards    : Polygon mainnet with lock feature
 // Proxy:                 0xc1dCE2f17362C2De4ab4F104f6f88223e0c28B95
+// Implementaion:         0x38021bD40a92baFED6B54B282013190755c729AE
+
+// 2024/07/25A
+// yarn deploy:matic:StakingRewards    : Polygon mainnet with lock feature
+// Proxy:                 0x0A0688fc15794035820CaDc23Db7114bAb4dE405  (Proxy)
+// Implementaion:         0x38021bD40a92baFED6B54B282013190755c729AE
+
+// 2024/07/25B
+// yarn deploy:matic:StakingRewards    : Polygon mainnet with lock feature
+// Proxy:                 0x071Bed72c917859e73f99dDa41Fb6B2Ea4C08d33  (Proxy)
 // Implementaion:         0x38021bD40a92baFED6B54B282013190755c729AE
 
 func.tags = ["StakingRewards"];
