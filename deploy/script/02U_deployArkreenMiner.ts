@@ -135,7 +135,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //  const NEW_IMPLEMENTATION =  "0x604e10b67736773BD5517fF628e350F443Db85F0"       // 2023/09/12: Upgrade: 1)Socket Miner, 2) Batch sales
 //  const NEW_IMPLEMENTATION =  "0x5C3C5f4a3694B89F48D25964070aB68EF82884d4"       // 2024/02/01: Upgrade to support PlantMiner, and block transferring
 //  const NEW_IMPLEMENTATION =  "0x4bfE8d12b01756A04AB9762D28ebCF4210E9A59B"       // 2024/04/12: Update to correct according audit result and prepare for upgrading on mainnet
-    const NEW_IMPLEMENTATION =  "0xeCAac43Ef76a7c76613986FaaAd26707a3BFF59a"       // 2024/05/28: Upgrade to support StakingRewards (App register/listen)
+//  const NEW_IMPLEMENTATION =  "0xeCAac43Ef76a7c76613986FaaAd26707a3BFF59a"       // 2024/05/28: Upgrade to support StakingRewards (App register/listen)
+    const NEW_IMPLEMENTATION =  "0x0b25c74b5FF36d290320e73b1aFf14ff150C84E8"       // 2024/07/26: Upgrade to fix a small bug that RemoteMinerOnboardNative did not call checkListener
 
     const [deployer] = await ethers.getSigners();
     const ArkreenMinerFactory = ArkreenMiner__factory.connect(MINER_PROXY_ADDRESS, deployer);
@@ -165,14 +166,15 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   
     // const updateTx = await ArkreenMinerFactory.upgradeToAndCall(NEW_IMPLEMENTATION, callData)
 
+    // 2024/07/26
     const updateTx = await ArkreenMinerFactory.upgradeTo(NEW_IMPLEMENTATION)
     await updateTx.wait()
 
-    const arkreenMinerPro = "0xB6701746312304F9f751bEe707fa0ca51Ec6724c"
-    await ArkreenMinerFactory.setArkreenMinerPro(arkreenMinerPro)
+//    const arkreenMinerPro = "0xB6701746312304F9f751bEe707fa0ca51Ec6724c"
+//    await ArkreenMinerFactory.setArkreenMinerPro(arkreenMinerPro)
 
     console.log("Update Trx:", updateTx)
-    console.log("Remote miner Updated: ", hre.network.name, ArkreenMinerFactory.address, NEW_IMPLEMENTATION, arkreenMinerPro);
+    console.log("Remote miner Updated: ", hre.network.name, ArkreenMinerFactory.address, NEW_IMPLEMENTATION);
   } 
 };
 
@@ -276,6 +278,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/05/28: yarn deploy:matic:AMinerUV10: Update on Polygon mainnet to support StakeRewards
 // And Call setArkreenMinerPro: 0xB6701746312304F9f751bEe707fa0ca51Ec6724c
 // immplementaion: 0xeCAac43Ef76a7c76613986FaaAd26707a3BFF59a
+
+// 2024/07/26: yarn deploy:matic:AMinerUV10: Upgrade to fix a small bug that RemoteMinerOnboardNative did not call checkListener
+// immplementaion: 0x0b25c74b5FF36d290320e73b1aFf14ff150C84E8
 
 export default func;
 func.tags = ["AMinerUV10"];

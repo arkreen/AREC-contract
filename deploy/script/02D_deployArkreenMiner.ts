@@ -170,5 +170,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // Deployed on Polygon mainnet to upgrade to support for staking
 // 0xeCAac43Ef76a7c76613986FaaAd26707a3BFF59a
 
+// 2024/07/26: yarn deploy:matic:AMinerV10D 
+// Deployed on Polygon mainnet to fix a small bug that RemoteMinerOnboardNative did not call checkListener
+// 0x0b25c74b5FF36d290320e73b1aFf14ff150C84E8
+
 export default func;
 func.tags = ["AMinerV10D"];

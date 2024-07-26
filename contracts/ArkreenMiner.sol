@@ -121,6 +121,7 @@ contract ArkreenMiner is
 
         // mint new remote miner
         _mintRemoteMiner(owner, miner);
+        checkListener(owner, 1);
         emit MinerOnboarded(owner, miner);
     }    
 
@@ -472,6 +473,7 @@ contract ArkreenMiner is
             // Mint new remote miners one by one
             newMiner.mAddress = miners[index];
             _mintMiner(owners[index], newMiner.mAddress, newMiner);
+            checkListener(owners[index], 1);
         }
 
         // Need to emit? If yes, data may be big 
