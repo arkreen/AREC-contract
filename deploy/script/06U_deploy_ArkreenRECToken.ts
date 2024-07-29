@@ -12,14 +12,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
   const { getChainId } = hre;
   const chainID = await getChainId()
-  const defaultGasPrice = (chainID === '80001') ? BigNumber.from(3_000_000_000) : BigNumber.from(150_000_000_000)
+  const defaultGasPrice = (chainID === '80001') ? BigNumber.from(32_000_000_000) : BigNumber.from(150_000_000_000)
 
   if(hre.network.name === 'matic_test') {
 //    const RECTOKEN_ADDRESS    = "0xb0c9dd915f62d0a37792fd2ce497680e909d8c0f"      // Need to check: Simulation mode
 //    const RECTOKEN_ADDRESS    = "0x0999AFb673944a7B8E1Ef8eb0a7c6FFDc0b43E31"      // Need to check: Simulation: HashKey HART
 //    const RECTOKEN_ADDRESS    = "0xd1348bb43dbf51a2446db6e40de5f6c178cb2d47"      // Need to check: MATIC Testnet      
-//    const RECTOKEN_ADDRESS    = "0x615835Cc22064a17df5A3E8AE22F58e67bCcB778"      // Need to check: MATIC Amoy Testnet 
-      const RECTOKEN_ADDRESS    = "0x78A2620C3fb96100Dc551Db657005eEeF270F0DF"      // Need to check: CART: MATIC Amoy Testnet 
+      const RECTOKEN_ADDRESS    = "0x615835Cc22064a17df5A3E8AE22F58e67bCcB778"      // Need to check: MATIC Amoy Testnet 
+//    const RECTOKEN_ADDRESS    = "0x78A2620C3fb96100Dc551Db657005eEeF270F0DF"      // Need to check: CART: MATIC Amoy Testnet 
 
 //    const NEW_IMPLEMENTATION  = "0x87f36c015a23a9e0f15fcb7f62d566a8f4a16209"      // 1.Old implemenation
 //    const NEW_IMPLEMENTATION  = "0x67b31C71c4E438a04dDA41dBCf5d2F174d43d69B"      // 2. Add Solidify 
@@ -34,7 +34,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //    const NEW_IMPLEMENTATION  = "0x19e9BAD19ca2696b509d938476ee4CF823538df4"      // 7. 2023/03/28: Upgrade for HashKey
 //    const NEW_IMPLEMENTATION  = "0x4F86bfe6D41844008a12e9397971c4C9786FfcC3"      // 7. 2024/01/27: Upgrade for charging offset fee
 //    const NEW_IMPLEMENTATION  = "0xB9a4Bf4F7a31ac163e86369E834eec1009746D25"      // 8. 2024/04/19: Upgrade on Amoy testnet to fix a bug in Bridge REC liquidization loop and Offset status tracking
-      const NEW_IMPLEMENTATION  = "0x2f402E1863A106455d39CEa20874b9CC21eeFf80"      // 9. 2024/04/20: Upgrade on Polygon Amoy testnet to fix the bug regarding bridged REC offset
+//    const NEW_IMPLEMENTATION  = "0x2f402E1863A106455d39CEa20874b9CC21eeFf80"      // 9. 2024/04/20: Upgrade on Polygon Amoy testnet to fix the bug regarding bridged REC offset
+      const NEW_IMPLEMENTATION  = "0xC15de762EB03644ad92d45091E52d840594c6CB2"      // 10. 2024/07/29: Upgrade on Polygon Amoy testnet to adapt for ECC bridge
 
       const ArkreenRECTokenFactory = ArkreenRECToken__factory.connect(RECTOKEN_ADDRESS, deployer);
 
@@ -137,6 +138,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/04/20E: For CART: Upgrade on Polygon mainnet to fix the bug regarding bridged REC offset
 // yarn deploy:matic:RECTokenU
 // 0x87376Ae3940AC7790E4354242883349553D8973d
+
+// 2024/07/29: For ART: Upgrade on Polygon Amoy testnet to adapt for ECC bridge
+// yarn deploy:matic_test:RECTokenU
+// 0xC15de762EB03644ad92d45091E52d840594c6CB2
 
 func.tags = ["RECTokenU"];
 
