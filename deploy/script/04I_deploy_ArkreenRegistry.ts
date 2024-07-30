@@ -10,7 +10,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     console.log("Initialize ArkreenRegistry: ", CONTRACTS.gRegistry );  
 
-    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(160_000_000_000)
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(32_000_000_000) : BigNumber.from(160_000_000_000)
 
     if(hre.network.name === 'matic_test') {
         // Simulation mode 
@@ -80,15 +80,21 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         const tokenREC                    = "0x615835Cc22064a17df5A3E8AE22F58e67bCcB778"
         const tokenPay                    = "0xd092e1f47d4e5d1C1A3958D7010005e8e9B48206"    // 2024/05/16: AKRE Amoy
 
+        /*
         const idAsset =  "Universal Arkreen REC Token"
         const rateToIssue = BigNumber.from(100).mul(BigNumber.from(10).pow(18))
         const rateToLiquidize = 1000
         const description = 	"Universal AREC ERC20 token based on redeemed classic REC assets."                        
+        */
+
+        const idAsset =  "ECC Based AREC Asset"
+        const rateToIssue = BigNumber.from(100).mul(BigNumber.from(10).pow(18))
+        const rateToLiquidize = 1000
+        const description = 	"Bridged AREC Asset based on redeemed ECC (Energy Conservation Certificate)."                        
 
         const [deployer] = await ethers.getSigners();
         const ArkreenRegistryFactory = ArkreenRegistry__factory.connect(ArkreenRegistry_address, deployer);
-
-/*        
+        
 //      function newAssetAREC(string calldata idAsset, address issuer, address tokenREC, address tokenPay,
 //                              uint128 rateToIssue, uint16 rateToLiquidize, string calldata description)
         const newAssetARECTx = await ArkreenRegistryFactory.newAssetAREC(idAsset, issuer, tokenREC,
@@ -99,12 +105,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         console.log("newAssetAREC: ", newAssetARECTx)
         await newAssetARECTx.wait()
         console.log("ArkreenRegistry newAssetAREC is executed: %s: ", hre.network.name, ArkreenRegistry_address);
-*/
+
         const newAsset1 = await ArkreenRegistryFactory.allAssets(1)
         const newAsset2 = await ArkreenRegistryFactory.allAssets(2)
+        const newAsset3 = await ArkreenRegistryFactory.allAssets(3)
+        
         const newAsset1A = await ArkreenRegistryFactory.getAssetInfo(1)
         const newAsset2A = await ArkreenRegistryFactory.getAssetInfo(2)
-        console.log("Asset Info:", newAsset1, newAsset2, newAsset1A, newAsset2A )                                                        
+        const newAsset3A = await ArkreenRegistryFactory.getAssetInfo(3)
+
+        console.log("Asset Info:", newAsset1, newAsset2, newAsset3, newAsset1A, newAsset2A, newAsset3A )                                                        
 
         // 2023/05/05:    Dev Environment
         // const ArkreenRegistry_address     = '0xfEcbD33525d9B869e5f3CaB895cd6D7A666209ee'
@@ -501,6 +511,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:gRegistryI
 
 // 2024/04/15C: call newAssetAREC on Amoy testnet to add a new asset type: UART
+// yarn deploy:matic_test:gRegistryI
+
+// 2024/07/30: call newAssetAREC on Amoy testnet to add a new asset type: EART
 // yarn deploy:matic_test:gRegistryI
 
 func.tags = ["gRegistryI"];

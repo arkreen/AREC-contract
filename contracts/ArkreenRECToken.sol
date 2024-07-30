@@ -339,11 +339,10 @@ contract ArkreenRECToken is
         // Check calling from REC Manager
         require( IArkreenRegistry(arkreenRegistry).getRECIssuance() == msg.sender, "ART: Not From REC Issuance");
 
-        (, uint128 amountREC, uint8 status, ) = IArkreenRECIssuance(msg.sender).getRECDataCore(tokenId);
+        (, uint128 amountREC, uint8 status, uint16 idAsset) = IArkreenRECIssuance(msg.sender).getRECDataCore(tokenId);
         require(status == uint256(RECStatus.Certified), "ART: Wrong Status");
 
-//      if ((idAssetOfBridge != 0 ) && (idAsset == idAssetOfBridge)) {
-        if (idAssetOfBridge != 0) {                                                    // opt for ECC bridge
+        if ((idAssetOfBridge != 0 ) && (idAsset != 0)) {                               // opt for ECC bridge
             if(latestBridgeARECID == 0) {                                              // handle the bridge liquidized loop
                 allBridgeARECLiquidized[tokenId] = tokenId;                            // build the loop list
             } else {
