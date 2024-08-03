@@ -205,6 +205,7 @@
     "deploy:matic:GreenPowerU": "hardhat --network matic deploy --tags GreenPowerU",
     "deploy:matic:GreenBTC2S": "hardhat --network matic deploy --tags GreenBTC2S",
     "deploy:matic:GreenBTC2SI": "hardhat --network matic deploy --tags GreenBTC2SI",
+    "deploy:matic:UniToolD": "hardhat --network matic deploy --tags UniToolD",
 
     "storageExplorerGreenBTC:matic": "hardhat run --network matic ./deploy/storageExplorerGreenBTC.ts",
     "GreenBTCTest:matic": "hardhat run --network matic ./deploy/GreenBTCTest.ts",
