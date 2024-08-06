@@ -133,8 +133,9 @@ contract PlugMinerAction is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuard
 
         sendInfo[actionInfo.tokenGet] += actionInfo.amountGet;
 
-        uint256 action = (actionInfo.action >> 248);                     // get the action type
-        uint256 number = uint256((uint8)(actionInfo.action >> 240));     // get the NFT number
+        uint256 actionData = actionInfo.action;
+        uint256 action = (actionData >> 248);                     // get the action type
+        uint256 number = uint256((uint8)(actionData >> 240));     // get the NFT number
         if (number == 0) number =1;
 
         if (action == 1) {
@@ -146,12 +147,13 @@ contract PlugMinerAction is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuard
                 counter -= 1;
             }
         } else if (action == 2) {
-            uint256 idPlug = actionInfo.action;
+            uint256 idPlug = actionData;
             uint256 counter = number;
             while (counter > 0) {
                 uint32 tokenId = uint32(idPlug);
-                require (tokenId != 0 , "Wrong ID.");
-                require (statusPlugMiner[tokenId] == 0 , "Pay back not allowed." );
+                require (tokenId != 0 , "Wrong ID");
+                require(msg.sender == ownerOf(tokenId), "Not Owner");
+                require (statusPlugMiner[tokenId] == 0 , "Pay back not allowed" );
                 statusPlugMiner[tokenId] = 2;
                 idPlug = (idPlug >> 32);
                 counter -= 1;
