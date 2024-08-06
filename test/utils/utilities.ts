@@ -173,6 +173,15 @@ export interface OffsetActionBatch {
   nonce:          BigNumber
 }
 
+export interface PlugActionInfo {
+  owner:          string
+  tokenPay:       string
+  amountPay:      BigNumber
+  tokenGet:       string
+  amountGet:      BigNumber
+  action:         BigNumber
+}
+
 export function getCreate2Address(
   factoryAddress: string,
   [tokenA, tokenB]: [string, string],
@@ -798,6 +807,42 @@ export function getGreenBitcoinClaimGiftsRaw(
           utils.defaultAbiCoder.encode(
             ['bytes32', 'uint256', 'uint256', 'bytes32'],
             [GREENBTC2_HASH, actionID, blockHeight, blockHash]
+          )
+        )
+      ]
+    )
+}
+
+
+
+
+export function getPlugActionInfoHash(
+  contractName:     string,
+  contractAddress:  string,
+  txid:             string,
+  plugActionInfo:   PlugActionInfo,
+  nonce:            BigNumber,
+  deadline:         BigNumber
+): string {
+
+  const DOMAIN_SEPARATOR = getDomainSeparator(contractName, contractAddress, '1')
+
+  // keccak256("ActionPlugMiner(address txid,(address owner,address tokenPay,uint256 amountPay,address tokenGet,uint256 amountGet,uint256 action),uint256 nonce,uint256 deadline)");
+  // 0x8C1F63E6022B73295566B3EC21F104F6099A29983397FF002493958C93413150
+  const ACTION_PLUG = utils.keccak256(
+    utils.toUtf8Bytes("ActionPlugMiner(address txid,(address owner,address tokenPay,uint256 amountPay,address tokenGet,uint256 amountGet,uint256 action),uint256 nonce,uint256 deadline)")
+  )
+
+  return utils.solidityPack(
+      ['bytes1', 'bytes1', 'bytes32', 'bytes32'],
+      [
+        '0x19',
+        '0x01',
+        DOMAIN_SEPARATOR,
+        utils.keccak256(
+          utils.defaultAbiCoder.encode(
+            ['bytes32', 'address', '(address owner,address tokenPay,uint256 amountPay,address tokenGet,uint256 amountGet,uint256 action)', 'uint256', 'uint256'],
+            [ACTION_PLUG, txid, plugActionInfo, nonce, deadline]
           )
         )
       ]
