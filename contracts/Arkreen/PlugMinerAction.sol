@@ -10,8 +10,8 @@ import "../libraries/TransferHelper.sol";
 
 contract PlugMinerAction is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgradeable, ERC721EnumerableUpgradeable {
 
-    // keccak256("ActionPlugMiner(address txid,(address owner,address tokenPay,uint256 amountPay,address tokenGet,uint256 amountGet,uint256 action),uint256 nonce,uint256 deadline)");
-    bytes32 public constant  ACTION_PLUG = 0x8C1F63E6022B73295566B3EC21F104F6099A29983397FF002493958C93413150;
+    // keccak256("ActionPlugMiner(address txid,(address owner,address tokenPay,uint256 amountPay,address tokenGet,uint256 amountGet,bytes32 actionType,uint256 action),uint256 nonce,uint256 deadline)");
+    bytes32 public constant  ACTION_PLUG = 0x64A18406540DF9EECF4B948EEAA4A0A8B9F9FB7421B7756B9E38A22656D64CEF;
 
     struct ActionInfo {
         address owner; 	
@@ -19,7 +19,8 @@ contract PlugMinerAction is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuard
         uint256 amountPay;
         address tokenGet;
         uint256 amountGet;
-        uint256 action;         // Byte 0: 1, Mint, 2, Burn;  
+        bytes32 actionType;
+        uint256 action;       // Byte 0: 1, Buy, 2, Refund;  Byte1: Buy/Refund Plug quantity; Byte16-Byte31: NFT ID in case of refund, 4 bytes each 
     }  
 
     struct Sig {
@@ -35,24 +36,24 @@ contract PlugMinerAction is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuard
 
     // Mapping from payment token address to the total received amount
     // Bytes 0-15: total received amount; Bytes 16-31: all amount available for withdrawing
-    mapping(address => uint256) receiveInfo;                
+    mapping(address => uint256) internal receiveInfo;                
 
     // Mapping from send-out token address to the total sent amount
     // Bytes 0-15: total deposit amount; Bytes 16-31: total sent amount
-    mapping(address => uint256) sendInfo; 
+    mapping(address => uint256) internal sendInfo; 
 
     // Mapping from plug miner NFT ID to the NFT status: 0, normal, 1, onboarded, 2, burned
-    mapping(uint256 => uint256) statusPlugMiner; 
+    mapping(uint256 => uint256) public statusPlugMiner; 
 
     // Mapping from user address to user's nonce
-    mapping(address => uint256) nonces; 
+    mapping(address => uint256) public nonces; 
     
     modifier ensure(uint256 deadline) {
         require(block.timestamp <= deadline, "Deadline Expired!");
         _;
     }
 
-    event ActionPlugMiner(address indexed txid, address indexed user, uint256 action, uint256 number);
+    event ActionPlugMiner(address indexed txid, address indexed user, bytes32 actionType, uint256 action, uint256 number);
     event Deposit(address indexed token, uint256 amount);
     event Remove(address indexed token, uint256 amount);
     event Withdraw(address indexed token, uint256 amount);
@@ -110,6 +111,7 @@ contract PlugMinerAction is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuard
         require (nonces[msg.sender] == nonce, "Wrong Nonce");
         require (actionInfo.owner == msg.sender, "Wrong Sender");         // Control temporarily in this way
 
+        nonces[msg.sender] += 1;
         if (actionInfo.tokenPay != address(0)) {
             if (actionInfo.tokenPay == nativeToken) {
                 require (actionInfo.amountPay == msg.value, "Pay low!");
@@ -121,7 +123,7 @@ contract PlugMinerAction is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuard
         receiveInfo[actionInfo.tokenPay] += (actionInfo.amountPay << 128) + actionInfo.amountPay;   // add two amounts
 
         if (actionInfo.tokenGet != address(0)) {
-            if (actionInfo.tokenPay == nativeToken) {
+            if (actionInfo.tokenGet == nativeToken) {
                 TransferHelper.safeTransferETH(msg.sender, actionInfo.amountGet);
             }
             else {
@@ -137,26 +139,28 @@ contract PlugMinerAction is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuard
 
         if (action == 1) {
             uint256 tokenId = totalSupply() + 1;
-            while (number > 0) {
+            uint256 counter = number;
+            while (counter > 0) {
                 _safeMint(actionInfo.owner, tokenId);
                 tokenId += 1;
-                number -= 1;
+                counter -= 1;
             }
         } else if (action == 2) {
             uint256 idPlug = actionInfo.action;
-            while (number > 0) {
+            uint256 counter = number;
+            while (counter > 0) {
                 uint32 tokenId = uint32(idPlug);
                 require (tokenId != 0 , "Wrong ID.");
                 require (statusPlugMiner[tokenId] == 0 , "Pay back not allowed." );
                 statusPlugMiner[tokenId] = 2;
                 idPlug = (idPlug >> 32);
-                number -= 1;
+                counter -= 1;
             }
         } else {
           revert("Wrong Action!");
         }
 
-        emit ActionPlugMiner(txid, actionInfo.owner, action, number);
+        emit ActionPlugMiner(txid, actionInfo.owner, actionInfo.actionType, action, number);
     }
 
     /**
@@ -166,7 +170,6 @@ contract PlugMinerAction is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuard
      */
     function depositToken(address token, uint256 amount) external {
         sendInfo[token] += (amount << 128);
-        //require(IERC20Upgradeable(token).transferFrom(msg.sender, address(this), amount));
         TransferHelper.safeTransferFrom(token, msg.sender, address(this), amount);
         emit Deposit(token, amount);
     }
@@ -177,7 +180,6 @@ contract PlugMinerAction is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuard
      * @param amount Amount of the token to deposit.
      */
     function removeDeposit(address token, uint256 amount) external onlyOwner {
-        //require(IERC20Upgradeable(token).transfer(fundReceiver, amount));
         TransferHelper.safeTransfer(token, fundReceiver, amount);
 
         sendInfo[token] -= (amount << 128);
@@ -189,6 +191,8 @@ contract PlugMinerAction is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuard
      * @param token Address of the token to withdraw
      */
     function withdraw(address token, uint256 amount) external onlyOwner {
+        require (uint128(receiveInfo[token]) >= uint128(amount), "Withdraw More");
+
         if (token == nativeToken) {
             TransferHelper.safeTransferETH(fundReceiver, amount);
         }    
@@ -198,4 +202,17 @@ contract PlugMinerAction is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuard
         receiveInfo[token] -= amount;
         emit Withdraw(token, amount);    
     }
+
+    function getIncomeInfo(address token) external view returns (uint256 totalIncome, uint256 newIncome) {
+        uint256 incomeInfo = receiveInfo[token];
+        totalIncome =  uint256 (incomeInfo >> 128);
+        newIncome = uint256(uint128(incomeInfo));
+    }
+
+    function getDepositInfo(address token) external view returns (uint256 totalDeposit, uint256 totalDelivery) {
+        uint256 depositInfo = sendInfo[token];
+        totalDeposit =  uint256(depositInfo >> 128);
+        totalDelivery = uint256(uint128(depositInfo));
+    }
+
 }

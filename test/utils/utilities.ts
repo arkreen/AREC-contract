@@ -179,6 +179,7 @@ export interface PlugActionInfo {
   amountPay:      BigNumber
   tokenGet:       string
   amountGet:      BigNumber
+  actionType:     string
   action:         BigNumber
 }
 
@@ -827,13 +828,14 @@ export function getPlugActionInfoHash(
 
   const DOMAIN_SEPARATOR = getDomainSeparator(contractName, contractAddress, '1')
 
-  // keccak256("ActionPlugMiner(address txid,(address owner,address tokenPay,uint256 amountPay,address tokenGet,uint256 amountGet,uint256 action),uint256 nonce,uint256 deadline)");
-  // 0x8C1F63E6022B73295566B3EC21F104F6099A29983397FF002493958C93413150
+  // keccak256("ActionPlugMiner(address txid,(address owner,address tokenPay,uint256 amountPay,address tokenGet,uint256 amountGet,bytes32 actionType,uint256 action),uint256 nonce,uint256 deadline)");
+  // 0x64A18406540DF9EECF4B948EEAA4A0A8B9F9FB7421B7756B9E38A22656D64CEF
   const ACTION_PLUG = utils.keccak256(
-    utils.toUtf8Bytes("ActionPlugMiner(address txid,(address owner,address tokenPay,uint256 amountPay,address tokenGet,uint256 amountGet,uint256 action),uint256 nonce,uint256 deadline)")
+    utils.toUtf8Bytes("ActionPlugMiner(address txid,(address owner,address tokenPay,uint256 amountPay,address tokenGet,uint256 amountGet,bytes32 actionType,uint256 action),uint256 nonce,uint256 deadline)")
   )
-
-  return utils.solidityPack(
+ 
+  return utils.keccak256( 
+    utils.solidityPack(
       ['bytes1', 'bytes1', 'bytes32', 'bytes32'],
       [
         '0x19',
@@ -841,14 +843,14 @@ export function getPlugActionInfoHash(
         DOMAIN_SEPARATOR,
         utils.keccak256(
           utils.defaultAbiCoder.encode(
-            ['bytes32', 'address', '(address owner,address tokenPay,uint256 amountPay,address tokenGet,uint256 amountGet,uint256 action)', 'uint256', 'uint256'],
+            ['bytes32', 'address', '(address owner,address tokenPay,uint256 amountPay,address tokenGet,uint256 amountGet,bytes32 actionType,uint256 action)', 'uint256', 'uint256'],
             [ACTION_PLUG, txid, plugActionInfo, nonce, deadline]
           )
         )
       ]
     )
+  )
 }
-
 
 export interface ActionInfo {
   actionID:             BigNumber,
