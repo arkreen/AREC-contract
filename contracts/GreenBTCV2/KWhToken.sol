@@ -79,7 +79,6 @@ contract KWhToken is
      * @param tokens The token list
      */
     function approveBank(address[] calldata tokens) external onlyOwner {
-        require(arkreenBuilder != address(0), "kWh: No Owner");
         for(uint256 i = 0; i < tokens.length; i++) {
             TransferHelper.safeApprove(tokens[i], artBank, type(uint256).max);
         }

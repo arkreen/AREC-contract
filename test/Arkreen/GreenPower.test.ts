@@ -3,9 +3,10 @@ import { loadFixture, mine } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 const {ethers, upgrades} =  require("hardhat");
 import hre from 'hardhat'
-import { ecsign, fromRpcSig, ecrecover } from 'ethereumjs-util'
+import { ecsign, fromRpcSig, ecrecover, zeroAddress } from 'ethereumjs-util'
 import { getGreenPowerStakingDigest, getApprovalDigest, expandTo6Decimals, expandTo18Decimals, randomAddresses, expandTo9Decimals } from '../utils/utilities'
-import { getGreenPowerUnstakingDigest, OffsetAction, OffsetActionBatch, getGreenPowerOffsetDigest, getGreenPowerRewardDigest } from '../utils/utilities'
+import { getGreenPowerUnstakingDigest, OffsetAction, OffsetActionAgent, OffsetActionBatch, getGreenPowerOffsetDigest, getGreenPowerRewardDigest } from '../utils/utilities'
+
 
 import { constants, BigNumber, utils} from 'ethers'
 import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
@@ -49,6 +50,8 @@ enum SkipReason {
   WRONG_AMOUNT,
   LESS_DEPOSIT
 }
+
+const TIMESTAMP_NEW_UNIT = 1723449600
 
 describe("GreenPower Test Campaign", ()=>{
 
@@ -178,6 +181,7 @@ describe("GreenPower Test Campaign", ()=>{
         await greenPower.deployed()
 
         await greenPower.approveConvertkWh([tokenA.address, WETH.address])
+        await greenPower.setBankAndART(arkreenRECBank.address, arkreenRECToken.address)
        
         return { AKREToken, arkreenMiner, arkreenRegistry, arkreenRECIssuance, arkreenRECToken, 
           arkreenRetirement, arkreenRECIssuanceExt, arkreenRECBank, kWhToken, WETH, tokenA,
@@ -251,6 +255,7 @@ describe("GreenPower Test Campaign", ()=>{
 
           await arkreenRECBank.addNewART( arkreenRECToken.address,  maker1.address)
           await arkreenRECBank.connect(maker1).depositART( arkreenRECToken.address,  expandTo9Decimals(9000))
+          await arkreenRECBank.connect(maker1).changeSalePrice( arkreenRECToken.address, tokenA.address, expandTo18Decimals(150))
           await arkreenRECToken.setClimateBuilder(arkreenBuilder.address)
   
           const badgeInfo =  {
@@ -327,8 +332,8 @@ describe("GreenPower Test Campaign", ()=>{
 
         await greenPower.connect(wallet).unstake(txid, plugMiner, amount, nonce, constants.MaxUint256, signature) 
       }
-/*
-      it("GreenPower Deposit test", async function () {
+
+      it("GreenPower Deposit and Withdraw test", async function () {
         await expect(greenPower.deposit(tokenA.address, expandTo18Decimals(12345)))
                   .to.be.revertedWith("TransferHelper: TRANSFER_FROM_FAILED")
 
@@ -336,20 +341,147 @@ describe("GreenPower Test Campaign", ()=>{
                   .to.be.revertedWith("Zero Amount")
 
         const balanceBefore = await tokenA.balanceOf(deployer.address)
-
+        await greenPower.approveBank([tokenA.address])
         await tokenA.approve(greenPower.address, constants.MaxUint256)
+
+        let amountART = expandTo18Decimals(12345).mul(expandTo6Decimals(1000)).div(expandTo18Decimals(150))
+
         await expect(greenPower.deposit(tokenA.address, expandTo18Decimals(12345)))
                   .to.emit(greenPower, 'Deposit')
-                  .withArgs(deployer.address, tokenA.address, expandTo18Decimals(12345))
+                  .withArgs(deployer.address, tokenA.address, expandTo18Decimals(12345), amountART)
 
-        expect(await greenPower.depositAmounts(deployer.address, tokenA.address)).to.eq(expandTo18Decimals(12345))
+        expect(await greenPower.depositAmounts(deployer.address)).to.eq(amountART)
 
         await greenPower.deposit(tokenA.address, expandTo18Decimals(23456))
-        expect(await greenPower.depositAmounts(deployer.address, tokenA.address)).to.eq(expandTo18Decimals(12345 + 23456))
 
-        expect(await tokenA.balanceOf(deployer.address)).to.eq(balanceBefore.sub(expandTo18Decimals(12345 + 23456)))
+        amountART = expandTo18Decimals(12345+23456).mul(expandTo6Decimals(1000)).div(expandTo18Decimals(150))
+        expect(await greenPower.depositAmounts(deployer.address)).to.eq(amountART)
+        expect(await tokenA.balanceOf(deployer.address)).to.eq(balanceBefore.sub(expandTo18Decimals(12345+23456)))
+        expect(await arkreenRECToken.balanceOf(greenPower.address)).to.eq(amountART)
+
+        // Deposit ART
+        await arkreenRECToken.connect(owner1).transfer(user1.address, expandTo9Decimals(1000))
+        await arkreenRECToken.connect(user1).approve(greenPower.address, constants.MaxUint256)
+        await greenPower.connect(user1).deposit(arkreenRECToken.address, expandTo9Decimals(1000))
+        expect(await greenPower.depositAmounts(user1.address)).to.eq(expandTo9Decimals(1000))
+        expect(await arkreenRECToken.balanceOf(greenPower.address)).to.eq(amountART.add(expandTo9Decimals(1000)))
+
+        // Withdraw 
+        await greenPower.withdraw(expandTo9Decimals(50))
+        expect(await greenPower.depositAmounts(deployer.address)).to.eq(amountART.sub(expandTo9Decimals(50)))
+
+        await expect(greenPower.withdraw(expandTo9Decimals(0)))
+                .to.be.revertedWith("Zero Amount")
+
+        await greenPower.changeAutoOffet(true)
+        await expect(greenPower.withdraw(expandTo9Decimals(20)))
+                .to.be.revertedWith("Auto Offset On")
+
+        await greenPower.changeAutoOffet(false)
+        await expect(greenPower.withdraw(expandTo9Decimals(200)))
+                .to.be.revertedWith("Low deposit")
       });
 
+      it("GreenPower offsetPower Agent Test", async function () {
+
+        await greenPower.approveBank([tokenA.address])
+        await tokenA.approve(greenPower.address, constants.MaxUint256)
+        await greenPower.deposit(tokenA.address, expandTo18Decimals(1500))  // 10ART
+
+        await tokenA.transfer(user1.address, expandTo18Decimals(1500))
+        await tokenA.connect(user1).approve(greenPower.address, constants.MaxUint256)
+        await greenPower.connect(user1).deposit(tokenA.address, expandTo18Decimals(1500)) //10ART
+
+        const plugMiners = randomAddresses(4)
+
+        const offsetAction1: OffsetActionAgent = {
+          greener:        deployer.address, 
+          plugMiner:      plugMiners[0],
+          offsetAmount:   expandTo6Decimals(15),
+        } 
+
+        const offsetAction2: OffsetActionAgent = {
+          greener:        user1.address, 
+          plugMiner:      plugMiners[1],
+          offsetAmount:   expandTo6Decimals(50),
+        } 
+
+        await greenPower.changeAutoOffet(true)
+
+        await greenPower.approveConvertkWh([arkreenRECToken.address])
+        await kWhToken.changeSwapPrice(arkreenRECToken.address, expandTo6Decimals(1))   // 1kWh = 0.001ART
+
+        await expect(greenPower.offsetPowerAgent(plugMiners[3], [offsetAction1, offsetAction2]))
+                .to.be.revertedWith("Not Allowed")
+
+        await expect(greenPower.connect(manager).offsetPowerAgent(plugMiners[3], [offsetAction1, offsetAction2]))
+                .to.be.revertedWith("Not ready")
+        
+        const lastBlock = await ethers.provider.getBlock('latest')
+        await ethers.provider.send("evm_increaseTime", [ TIMESTAMP_NEW_UNIT - lastBlock.timestamp + 1])
+
+        await expect(greenPower.connect(manager).offsetPowerAgent(plugMiners[3], [offsetAction1, offsetAction2]))
+                .to.be.revertedWith("Auto Offset Off")
+
+        await greenPower.connect(user1).changeAutoOffet(true)
+
+        await expect(greenPower.connect(manager).offsetPowerAgent(plugMiners[3], [offsetAction1, offsetAction2]))
+                .to.emit(kWhToken, 'Transfer')
+                .withArgs(greenPower.address, zeroAddress, expandTo6Decimals(15+50)) 
+                .to.emit(greenPower, 'OffsetAgent')
+                .withArgs(plugMiners[3], 0, (15+50)*10)         // 0.1kWh/step
+
+        expect(await greenPower.getMinerOffsetInfo(plugMiners[0])).to.deep.eq([deployer.address, BigNumber.from(1), expandTo6Decimals(15)])
+        expect(await greenPower.getMinerOffsetInfo(plugMiners[1])).to.deep.eq([user1.address, BigNumber.from(1), expandTo6Decimals(50)])
+
+        expect((await greenPower.depositAmounts(deployer.address)).xor(BigNumber.from(1).shl(248)))
+                .to.deep.eq(expandTo9Decimals(10).sub( expandTo6Decimals(15)))
+        expect((await greenPower.depositAmounts(user1.address)).xor(BigNumber.from(1).shl(248)))
+                .to.deep.eq(expandTo9Decimals(10).sub(expandTo6Decimals(50)))
+
+        const {offsetAmount: offsetAmount1}  = await greenPower.getUserInfo(deployer.address)
+        expect(offsetAmount1).to.eq(expandTo6Decimals(15))
+
+        const {offsetAmount: offsetAmount2}  = await greenPower.getUserInfo(user1.address)
+        expect(offsetAmount2).to.eq(expandTo6Decimals(50))
+
+        await expect(greenPower.connect(manager).offsetPowerAgent(plugMiners[3], [offsetAction1, offsetAction2]))
+                .to.emit(kWhToken, 'Transfer')
+                .withArgs(greenPower.address, zeroAddress, expandTo6Decimals(15+50)) 
+                .to.emit(greenPower, 'OffsetAgent')
+                .withArgs(plugMiners[3], (15+50)*10, (15+50)*10)         // 0.1kWh/step
+
+        // Abnormal test 
+        const offsetAction3: OffsetActionAgent = {
+          greener:        deployer.address, 
+          plugMiner:      plugMiners[1],
+          offsetAmount:   expandTo6Decimals(50),
+        } 
+
+        await expect(greenPower.connect(manager).offsetPowerAgent(plugMiners[3], [offsetAction3]))
+                .to.be.revertedWith("Wrong Owner")
+
+        const offsetAction4: OffsetActionAgent = {
+          greener:        deployer.address, 
+          plugMiner:      plugMiners[2],
+          offsetAmount:   expandTo6Decimals(5055).div(100),     // 50.55 kWh
+        } 
+        await expect(greenPower.connect(manager).offsetPowerAgent(plugMiners[3], [offsetAction4]))
+                .to.be.revertedWith("Wrong Offset Amount")
+
+        const offsetAction5: OffsetActionAgent = {
+          greener:        user2.address, 
+          plugMiner:      plugMiners[2],
+          offsetAmount:   expandTo6Decimals(30) 
+        } 
+
+        await greenPower.connect(user2).changeAutoOffet(true)
+        await expect(greenPower.connect(manager).offsetPowerAgent(plugMiners[3], [offsetAction5]))
+                .to.be.revertedWith("Low deposit")
+
+      });
+
+/*
       it("GreenPower Withdraw test", async function () {
         await tokenA.approve(greenPower.address, constants.MaxUint256)
         await greenPower.deposit(tokenA.address, expandTo18Decimals(56789))
@@ -711,7 +843,10 @@ describe("GreenPower Test Campaign", ()=>{
 
           const offsetWonResult = await greenPower.checkIfOffsetWon(deployer.address, plugMiners[0], 
                                     lastBlock.hash, 100, 100, 100000000)
-         
+
+          await greenPower.checkIfOffsetWon(deployer.address, plugMiners[0], 
+                                    lastBlock.hash, 100, 20000, 100000000)
+
           const offseInfo = utils.defaultAbiCoder.encode(
                                 ['address', 'address', 'bytes32', 'uint256', 'uint256', 'uint256'],
                                 [deployer.address, plugMiners[0], lastBlock.hash, 100, 100, 100000000]
@@ -817,6 +952,7 @@ describe("GreenPower Test Campaign", ()=>{
 
         }
       });
+
 
 /*      
       it("GreenPower offsetPowerServer abonormal Test", async function () {

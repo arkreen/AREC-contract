@@ -18,8 +18,9 @@ contract UniTool {
     }
 
     function getPriceAtSqrtRatio(uint160 sqrtPriceX96) public pure returns (uint256 price) {
-      price = (1 << 192) * 1e18 / sqrtPriceX96;
+      price = (1 << 128) * 1e18 / sqrtPriceX96;
       price = price * 1e12 / sqrtPriceX96;
+      price = price * ((1 << 64));
     }
 }
 

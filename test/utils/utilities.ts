@@ -173,6 +173,12 @@ export interface OffsetActionBatch {
   nonce:          BigNumber
 }
 
+export interface  OffsetActionAgent {
+  greener:  string
+  plugMiner: string
+  offsetAmount: BigNumber
+}  
+
 export interface PlugActionInfo {
   owner:          string
   tokenPay:       string

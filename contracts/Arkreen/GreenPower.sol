@@ -8,6 +8,7 @@ import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.
 
 import "../libraries/TransferHelper.sol";
 import "../interfaces/IkWhToken.sol";
+import "../interfaces/IArkreenRECBank.sol";
 
 contract GreenPower is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgradeable {
 
@@ -23,6 +24,9 @@ contract GreenPower is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
     // keccak256("claimReward(uint256 txid,address greener,uint256 rewardAmount,uint256 nonce,uint256 deadline)");
     bytes32 public constant  REWARD_TYPEHASH  = 0x9A6CE8C7C5EDCB1EAA7313523B253F809B5AC0E3EC4A56F23B411D538FE25B11;
 
+    uint256 public constant OFFSET_UNIT = 10**5;                    // 0.1 kWh 
+    uint256 public constant TIMESTAMP_NEW_UNIT = 1723449600;        // 2024/08/12 08:00:00 UTC
+
     struct StakeInfo {
         uint96  amountStake;   							                // Enough for AKRE: 10**28 
         uint32  releaseTime;                                // Timestamp the stake can be released  
@@ -36,6 +40,12 @@ contract GreenPower is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
     }
 
     struct OffsetAction {
+        address   plugMiner;
+        uint256   offsetAmount;
+    }  
+
+    struct OffsetActionAgent {
+        address   greener;
         address   plugMiner;
         uint256   offsetAmount;
     }  
@@ -58,21 +68,28 @@ contract GreenPower is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
     // MSB0:20: Owner address; MSB20:4: offset Counter; MSB24:8: Total Offset (Unit: kWh);
     mapping(address => uint256) private minerOffsetInfo;   // mapping from plug miner address to offset info
 
-    // mapping from user address to deposit token to deposit amount
-    mapping(address => mapping(address => uint256)) public depositAmounts;
+    // Mapping from user address to the auto-offset flag and deposited ART token amount.
+    // If deposit token is not ART, convert to ART first
+    // Byte 0: auto-offset flag, 0x00, self-Offset, 0x01, auto-offset, Byte 16-31: Deposited ART amount.
+    mapping(address => uint256) public depositAmounts;
+
+    address public tokenART;
+    address public artBank;
+    uint96 public offsetBaseIndex;
 
     modifier ensure(uint256 deadline) {
         require(block.timestamp <= deadline, "Deadline Expired!");
         _;
     }
 
+    event OffsetAgent(address indexed txid, uint256 baseIndex, uint256 steps);
     event Offset(address indexed txid, address indexed greener, OffsetAction[] offsetActions, address tokenToPay, uint256 stakeAmount, uint256 offsetBaseIndex, uint256 nonce);
     event Stake(address indexed txid, address indexed greener, address plugMiner, uint256 amount, uint256 period, uint256 nonce);
     event Unstake(address indexed txid, address indexed greener, address plugMiner, uint256 amount, uint256 nonce);
     event Reward(address indexed txid, address indexed greener, uint256 amount, uint256 nonce);
-
-    event Deposit(address indexed user, address indexed token, uint256 amount);
-    event Withdraw(address indexed user, address indexed token, uint256 amount);
+    event Deposit(address indexed user, address tokenToPay, uint256 amount, uint256 amountART);
+    event Withdraw(address indexed user, uint256 amountART);
+    event AutoOffsetChanged(bool ifAuto);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -113,6 +130,11 @@ contract GreenPower is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
         if (newManager != address(0))  manager = newManager;
     }
 
+    function setBankAndART(address bank, address art) external onlyOwner {
+        if (bank != address(0)) artBank = bank;
+        if (art != address(0)) tokenART = art;
+    }
+
     /**
      * @dev Approve the tokens which can be transferred to kWhContract from kWh converting.
      * @param tokens The token list
@@ -124,6 +146,19 @@ contract GreenPower is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
         }
     }
 
+    /**
+     * @dev Change the auto-offset setting
+     */
+    function changeAutoOffet(bool offsetAuto) public {
+      uint256 depositInfo = depositAmounts[msg.sender];
+      if (offsetAuto) {
+        depositAmounts[msg.sender] = depositInfo | uint256(1 << 248);
+      } else {
+        depositAmounts[msg.sender] = depositInfo & uint256((1 << 248) -1);
+      }
+      emit AutoOffsetChanged(offsetAuto);
+    }
+
     function offsetPower(
             address txid,
             OffsetAction[] calldata offsetActions,
@@ -133,6 +168,8 @@ contract GreenPower is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
             Sig calldata signature
         ) external nonReentrant ensure(deadline) 
     {
+        require ((depositAmounts[msg.sender] >> 248) == 0, "Auto Offset On");
+
         {
             bytes32 offsetHash = keccak256(abi.encode(OFFSET_TYPEHASH, txid, msg.sender, offsetActions, tokenToPay, nonce, deadline));
             bytes32 digest = keccak256(abi.encodePacked('\x19\x01', _DOMAIN_SEPARATOR, offsetHash));
@@ -153,7 +190,7 @@ contract GreenPower is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
             }
 
             uint256 offsetAmount = offsetActions[index].offsetAmount;
-            require ((offsetAmount >= (10**6)) && ((offsetAmount % (10**6)) == 0), "Wrong Offset Amount");
+            require ((offsetAmount >= OFFSET_UNIT) && ((offsetAmount % OFFSET_UNIT) == 0), "Wrong Offset Amount");
             
             // Total Offset Counter, 4 Bytes; Total Offset Amount: 8 Bytes, ~1.8 * (10**19) kWh; Assuming never overflow;
             minerOffsetInfo[plugMiner] += (1 << 64) + uint64(offsetAmount);
@@ -163,8 +200,9 @@ contract GreenPower is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
         {
             //function convertKWh(address tokenToPay, uint256 amountPayment)
             uint256 price = IkWhToken(kWhToken).priceForSwap(tokenToPay);
-            uint256 amountPayment = totalOffsetAmount * price / (10**6);
-            require(IERC20Upgradeable(tokenToPay).transferFrom(msg.sender, address(this), amountPayment));
+            uint256 amountPayment = totalOffsetAmount * price / (10**6);        // demical of kWh is 6
+            //require(IERC20Upgradeable(tokenToPay).transferFrom(msg.sender, address(this), amountPayment));
+            TransferHelper.safeTransferFrom(tokenToPay, msg.sender, address(this), amountPayment);
             
             uint256 amountToBurn = IkWhToken(kWhToken).convertKWh(tokenToPay, amountPayment);
             require (totalOffsetAmount == amountToBurn);
@@ -174,10 +212,118 @@ contract GreenPower is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
 
         stakerInfo[msg.sender] += (1 << 32);
         userOffsetInfo[msg.sender] += uint64(totalOffsetAmount);
-        uint256 offsetBaseIndex = totalOffset / (10**6);
+
+        uint256 baseIndex;
+        if (block.timestamp >= TIMESTAMP_NEW_UNIT ) {
+            baseIndex = offsetBaseIndex;
+            if (baseIndex == 0) {
+              baseIndex  = totalOffset / ((10**6));
+            }
+            offsetBaseIndex = uint96(baseIndex + totalOffsetAmount / OFFSET_UNIT);
+        } else {
+            baseIndex = totalOffset / (10**6); 
+        }
+
         totalOffset += uint96(totalOffsetAmount);
 
-        emit Offset(txid, msg.sender, offsetActions, tokenToPay, (stakerInfo[msg.sender]>>160), offsetBaseIndex, nonce);
+        emit Offset(txid, msg.sender, offsetActions, tokenToPay, (stakerInfo[msg.sender]>>160), baseIndex, nonce);
+    }
+
+    /**
+     * @dev Approve the tokens which can be transferred from this GreenPower contract by bank contract
+     * @param tokens The token list
+     */
+    function approveBank(address[] calldata tokens) external onlyOwner {
+        for(uint256 i = 0; i < tokens.length; i++) {
+            TransferHelper.safeApprove(tokens[i], artBank, type(uint256).max);
+        }
+    }
+
+    /**
+     * @dev Deposit to pay for offset. The paid token will be swapped to ART token.
+     * @param tokenToPay the token to deposit
+     * @param amount amount of the token to deposit
+     */
+    function deposit(address tokenToPay, uint256 amount) external nonReentrant returns (uint256 amountART) {
+        require (amount !=0, "Zero Amount");
+        TransferHelper.safeTransferFrom(tokenToPay, msg.sender, address(this), amount);
+
+        amountART = amount;
+        if (tokenToPay != tokenART) {
+            // buyART(address tokenPay,address tokenART,uint256 amountPay,uint256 amountART,bool isExactPay)
+            amountART = IArkreenRECBank(artBank).buyART(tokenToPay, tokenART, amount, 0, true);
+        } 
+        
+        depositAmounts[msg.sender] += amountART;
+        emit Deposit(msg.sender, tokenToPay, amount, amountART);
+    }
+
+    /**
+     * @dev Withdraw ART token. Only allowed while in self-offset mode.
+     * @param amount amount of the ART token to withdraw
+     */
+    function withdraw(uint256 amount) external {
+        require ((depositAmounts[msg.sender] >> 248) == 0, "Auto Offset On");
+        require (amount !=0, "Zero Amount");
+        require (depositAmounts[msg.sender] >= amount, "Low deposit");
+        depositAmounts[msg.sender] -= amount;
+        emit Withdraw(msg.sender, amount);
+        TransferHelper.safeTransfer(tokenART, msg.sender, amount);
+    }
+
+    function offsetPowerAgent(address txid, OffsetActionAgent[] calldata offsetActions) external {
+
+        require (msg.sender == manager, "Not Allowed");
+        require (block.timestamp >= TIMESTAMP_NEW_UNIT, "Not ready");
+
+        uint256 totalOffsetAmount = 0;
+        for (uint256 index; index < offsetActions.length; index++) {
+            address greener = offsetActions[index].greener;
+            address plugMiner = offsetActions[index].plugMiner;
+            if (minerOffsetInfo[plugMiner] == 0) {
+                minerOffsetInfo[plugMiner] = (uint256(uint160(greener)) << 96);          // set owner once the first time offseting
+            } else {
+                require (greener == address(uint160(minerOffsetInfo[plugMiner] >> 96)), "Wrong Owner");
+            }
+
+            uint256 offsetAmount = offsetActions[index].offsetAmount;
+            require ((offsetAmount >= OFFSET_UNIT) && ((offsetAmount % OFFSET_UNIT) == 0), "Wrong Offset Amount");
+            
+            // Total Offset Counter, 4 Bytes; Total Offset Amount: 8 Bytes, ~1.8 * (10**19) kWh; Assuming never overflow;
+            minerOffsetInfo[plugMiner] += (1 << 64) + uint64(offsetAmount);
+            totalOffsetAmount += offsetAmount;
+
+            uint256 depositART = depositAmounts[greener];
+            require (depositART >= (1 << 248), "Auto Offset Off");    // Check the auto-offset flag
+            require (uint128(depositART) >= offsetAmount, "Low deposit");             // Mask the auto-offset flag
+
+            depositAmounts[greener] = depositART - offsetAmount;
+            userOffsetInfo[greener] += uint64(offsetAmount);
+        }
+       
+        {
+            //function convertKWh(address tokenART, uint256 amountPayment)
+            uint256 price = IkWhToken(kWhToken).priceForSwap(tokenART);
+            uint256 amountPayment = totalOffsetAmount * price / (10**6);        // demical of kWh is 6
+            
+            uint256 amountToBurn = IkWhToken(kWhToken).convertKWh(tokenART, amountPayment);
+            require (totalOffsetAmount == amountToBurn, "Not Same");
+
+            IkWhToken(kWhToken).burn(amountToBurn);
+        }
+
+
+        uint256 baseIndex = offsetBaseIndex;                
+        if (baseIndex == 0) {                               // This part is added as upgrading, so may be not intialized
+            baseIndex  = totalOffset / ((10**6));
+        }
+
+        uint256 steps = totalOffsetAmount / OFFSET_UNIT;
+        offsetBaseIndex = uint96(baseIndex + steps);
+
+        totalOffset += uint96(totalOffsetAmount);
+
+        emit OffsetAgent(txid, baseIndex, steps);
     }
 
     function stake(address txid, address plugMiner, uint256 amount, uint256 period, uint256 nonce, uint256 deadline, Sig calldata signature) external nonReentrant ensure(deadline) {
@@ -309,9 +455,9 @@ contract GreenPower is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
         uint256 stakingbase = 6 * 16500 * 30 * (10**18);
         uint256 stakingCredit = stakeAmount * period;
         uint256 denominator = (stakingbase + 2 * stakingCredit);
-        uint256 numerator = (denominator + stakingCredit) *  (10**8);
+        uint256 numerator = (denominator + stakingCredit) * (10**8);              // accuracy is 8 decimal
         rate = numerator / denominator;
-        if (2 * (numerator - rate * denominator) >= denominator) rate += 1;
+        if (2 * (numerator - rate * denominator) >= denominator) rate += 1;       // round-up
     }
 
     /**
@@ -332,10 +478,10 @@ contract GreenPower is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
         uint256 rewardRate)
         public pure returns (uint256[] memory result) 
     {
-        if (kWhSteps >= 2000) kWhSteps = 2000;             // Maximum check 2000 steps
+        if (kWhSteps >= 10000) kWhSteps = 10000;             // Maximum check 10000 steps
         result = new uint256[](kWhSteps);
       
-        // rewardRate in 8 decimals, round is considered, 20 = 1/(5%)
+        // rewardRate in 8 decimals, round is considered, 20 = 1/(5%), Lucky rate is 5% 
         uint256 posibility = (100000 * 20 * (10**8)) / rewardRate;      
         if ( 2 * (100000 * 20 * (10**8) - posibility * rewardRate) >= rewardRate) posibility += 1;
 

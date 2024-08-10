@@ -8,7 +8,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721Enumer
 
 import "../libraries/TransferHelper.sol";
 
-contract PlugMinerAction is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgradeable, ERC721EnumerableUpgradeable {
+contract PlugMinerSales is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgradeable, ERC721EnumerableUpgradeable {
 
     // keccak256("ActionPlugMiner(address txid,(address owner,address tokenPay,uint256 amountPay,address tokenGet,uint256 amountGet,bytes32 actionType,uint256 action),uint256 nonce,uint256 deadline)");
     bytes32 public constant  ACTION_PLUG = 0x64A18406540DF9EECF4B948EEAA4A0A8B9F9FB7421B7756B9E38A22656D64CEF;

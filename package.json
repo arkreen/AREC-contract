@@ -80,7 +80,6 @@
     "confirmAuto:matic_test": "hardhat run --network matic_test ./deploy/confirmIssuance.ts",
     "storageExplorer:matic_test": "hardhat run --network matic_test ./deploy/storageExplorer.ts",
     "storageMiner:matic_test": "hardhat run --network matic_test ./deploy/storageMiner.ts",
-
     "claim:matic_test": "hardhat run --network matic_test ./deploy/matic-gatherer-v2.ts",
     "deploy:matic_test:all": "hardhat --network matic_test deploy",
     "etherscan:matic_test": "hardhat --network matic_test etherscan-verify --api-key",
@@ -102,7 +101,6 @@
     "deploy:matic_test:ArkreenRECIssuanceImageD": "hardhat --network matic_test deploy --tags ArkreenRECIssuanceImageD",
     "deploy:matic_test:ArkreenRECIssuanceImageLogoD": "hardhat --network matic_test deploy --tags ArkreenRECIssuanceImageLogoD",
     "deploy:matic_test:ArkreenRECIssuanceImageI": "hardhat --network matic_test deploy --tags ArkreenRECIssuanceImageI",
-
     "deploy:matic_test:AirdropD": "hardhat --network matic_test deploy --tags AirdropD",
     "deploy:matic_test:USDT": "hardhat --network matic_test deploy --tags USDT",
     "deploy:matic_test:USDTI": "hardhat --network matic_test deploy --tags USDTI",
@@ -128,7 +126,9 @@
     "deploy:matic_test:GreenBTC2SI": "hardhat --network matic_test deploy --tags GreenBTC2SI",
     "deploy:matic_test:GreenPowerD": "hardhat --network matic_test deploy --tags GreenPowerD",
     "deploy:matic_test:GreenPowerU": "hardhat --network matic_test deploy --tags GreenPowerU",
-    
+    "deploy:matic_test:PlugMinerSales": "hardhat --network matic_test deploy --tags PlugMinerSales",
+    "deploy:matic_test:UniToolD": "hardhat --network matic_test deploy --tags UniToolD",
+
     "deploy:matic:gAKRE": "hardhat --network matic deploy --tags gAKRE",
     "deploy:matic:arkReward": "hardhat --network matic deploy --tags arkReward",
     "deploy:matic:AMiner": "hardhat --network matic deploy --tags AMiner",
@@ -155,7 +155,6 @@
     "deploy:matic:RECIssueExtD": "hardhat --network matic deploy --tags RECIssueExtD --reset",
     "deploy:matic:RECIssueI": "hardhat --network matic deploy --tags RECIssueI",
     "deploy:matic:RECBadgeI": "hardhat --network matic deploy --tags RECBadgeI",
-    
     "deploy:matic:RECTokenR": "hardhat --network matic deploy --tags RECTokenR",
     "deploy:matic:ARKE": "hardhat --network matic deploy --tags ARKE --reset",
     "deploy:matic:gRegistryD": "hardhat --network matic deploy --tags gRegistryD --reset",
@@ -198,7 +197,6 @@
     "deploy:matic:PlantStakingU": "hardhat --network matic deploy --tags PlantStakingU",
     "deploy:matic:WKH": "hardhat --network matic deploy --tags WKH",
     "deploy:matic:WKHI": "hardhat --network matic deploy --tags WKHI",
-
     "deploy:matic:GreenPower": "hardhat --network matic deploy --tags GreenPower",
     "deploy:matic:GreenPowerI": "hardhat --network matic deploy --tags GreenPowerI",
     "deploy:matic:GreenPowerD": "hardhat --network matic deploy --tags GreenPowerD",
@@ -206,11 +204,9 @@
     "deploy:matic:GreenBTC2S": "hardhat --network matic deploy --tags GreenBTC2S",
     "deploy:matic:GreenBTC2SI": "hardhat --network matic deploy --tags GreenBTC2SI",
     "deploy:matic:UniToolD": "hardhat --network matic deploy --tags UniToolD",
-
     "storageExplorerGreenBTC:matic": "hardhat run --network matic ./deploy/storageExplorerGreenBTC.ts",
     "GreenBTCTest:matic": "hardhat run --network matic ./deploy/GreenBTCTest.ts",
     "GreenBTCTList:matic": "hardhat run --network matic ./deploy/GreenBTCTList.ts",
-
     "etherscan:matic": "hardhat --network matic etherscan-verify --api-key",
     "deploy:celo_test:gRegistry": "hardhat --network celo_test deploy --tags gRegistry",
     "deploy:celo_test:RECIssueExtD": "hardhat --network celo_test deploy --tags RECIssueExtD --reset",
@@ -227,12 +223,9 @@
     "deploy:celo_test:RECTokenI": "hardhat --network celo_test deploy --tags RECTokenI",
     "deploy:celo_test:gRegistryD": "hardhat --network celo_test deploy --tags gRegistryD",
     "deploy:celo_test:gRegistryU": "hardhat --network celo_test deploy --tags gRegistryU",
-
     "deploy:celo_test:ARKE": "hardhat --network celo_test deploy --tags ARKE --reset",
-
     "allowance:celo_test": "hardhat run --network celo_test ./deploy/allowance_manager.ts",
     "confirmAuto:celo_test": "hardhat run --network celo_test ./deploy/confirmIssuance_celo.ts",
-    
     "etherscan:celo_test": "hardhat --network celo_test etherscan-verify --api-url https://api-alfajores.celoscan.io --api-key",
     "deploy:celo:gRegistry": "hardhat --network celo deploy --tags gRegistry",
     "deploy:celo:RECIssueExtD": "hardhat --network celo deploy --tags RECIssueExtD",
@@ -248,7 +241,6 @@
     "deploy:celo:ArtBankI": "hardhat --network celo deploy --tags ArtBankI",
     "deploy:celo:MulticallD": "hardhat --network celo deploy --tags MulticallD",
     "gnosis_wallet:celo": "hardhat run --network celo ./deploy/gnosis_celo.ts",
-
     "etherscan:celo": "hardhat --network celo etherscan-verify --api-url https://api.celoscan.io --api-key",
     "test": "hardhat test",
     "gas": "set REPORT_GAS=true && hardhat test",
@@ -286,10 +278,10 @@
     "@types/chai": "^4.3.3",
     "@types/mocha": "^9.1.1",
     "@types/node": "^18.7.8",
+    "@types/readline-sync": "^1.4.8",
     "@uniswap/lib": "4.0.1-alpha",
     "@uniswap/v2-core": "1.0.1",
     "@uniswap/v3-core": "1.0.0",
-    "@types/readline-sync": "^1.4.8",
     "chai": "^4.3.6",
     "decimal.js": "^10.2.1",
     "dotenv": "^16.0.2",
@@ -300,19 +292,20 @@
     "hardhat-deploy": "^0.11.15",
     "hardhat-gas-reporter": "^1.0.8",
     "hardhat-storage-layout": "^0.1.7",
+    "jsbi": "^4.3.0",
+    "luxon": "^1.25.0",
     "mocha-chai-jest-snapshot": "^1.1.0",
+    "readline-sync": "^1.4.10",
     "solidity-coverage": "^0.7.21",
+    "source-map": "^0.7.2",
     "ts-node": "^10.9.1",
     "typechain": "^8.1.0",
-    "typescript": "^4.7.4",
-    "source-map": "^0.7.2",
-    "readline-sync": "^1.4.10",
-    "luxon": "^1.25.0"
+    "typescript": "^4.7.4"
   },
   "dependencies": {
-    "@types/luxon": "^1.24.4",
     "@nomiclabs/hardhat-waffle": "^2.0.5",
     "@solidstate/contracts": "^0.0.58",
+    "@types/luxon": "^1.24.4",
     "base64-sol": "1.0.1",
     "openzeppelin342": "npm:@openzeppelin/contracts@3.4.2-solc-0.7",
     "solady": "^0.0.145"
