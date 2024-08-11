@@ -58,6 +58,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:GreenPowerD    : Amoy testnet (Dev Anv): checkIfOffsetWon is removed index limitation
 // Implementaion:         0xb60adb684A682835819a8b4Be2dB6163dEaB393C
 
+// 2024/08/11
+// yarn deploy:matic:GreenPowerD    : Polygon mainnet: offsetPowerAgent/deposit/withdraw are added
+// Implementaion:         0x325218927993688a3A423A97Dc2808C09C0D658F
+
+
 func.tags = ["GreenPowerD"];
 
 export default func;

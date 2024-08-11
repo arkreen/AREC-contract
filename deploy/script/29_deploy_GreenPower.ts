@@ -64,7 +64,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     console.log("USDT deployed to %s: ", hre.network.name, greenPower.address);
 };
 
-// 2024/06/12
+// 2024/06/26
 // yarn deploy:matic_test:GreenPower    : Amoy testnet (Dev Anv)
 // Proxy:                 0x18D14932e9444dCBc920D392cD317f5d2BB319ab
 // Implementaion:         0xb7709B0777c1d52Fc3a941401fa3E5b050bE16Ac

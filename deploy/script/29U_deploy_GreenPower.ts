@@ -32,10 +32,17 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   
       console.log("greenPower is upgraded to %s: ", hre.network.name, greenPowerFactory.address, NEW_IMPLEMENTATION);
     } else if(hre.network.name === 'matic')  {
-      greenPowerAddress   = ""
-      tokenART            = ""                
-      USDC_ADDRESS        = ""                  
-      USDT_ADDRESS        = ""                  
+      // 2024/08/11: Polygon mainnet
+      greenPowerAddress                 = "0x12202fDD4e3501081b346C81a64b06A689237a47"  // 08/11
+      const NEW_IMPLEMENTATION          = "0x325218927993688a3A423A97Dc2808C09C0D658F"  // 2024/08/11: offsetPowerAgent/deposit/withdraw are added
+
+      console.log("Updating greenPower: ", greenPowerAddress, defaultGasPrice.toString());  
+
+      const greenPowerFactory = GreenPower__factory.connect(greenPowerAddress, deployer);
+      const updateTx = await greenPowerFactory.upgradeTo(NEW_IMPLEMENTATION, {gasPrice: defaultGasPrice})
+      await updateTx.wait()
+  
+      console.log("greenPower is upgraded to %s: ", hre.network.name, greenPowerFactory.address, NEW_IMPLEMENTATION);
     } 
 
 };
@@ -55,6 +62,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/07/12A: upgrade: , Amoy testnet (Dev Anv): checkIfOffsetWon is removed index limitation
 // yarn deploy:matic_test:GreenPowerU
 // 0xb60adb684A682835819a8b4Be2dB6163dEaB393C
+
+// 2024/08/11: upgrade:  Polygon mainnet: offsetPowerAgent/deposit/withdraw are added
+// yarn deploy:matic:GreenPowerU
+// 0x325218927993688a3A423A97Dc2808C09C0D658F
+
 
 func.tags = ["GreenPowerU"];
 
