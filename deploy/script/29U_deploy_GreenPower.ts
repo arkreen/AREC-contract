@@ -22,7 +22,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       // const NEW_IMPLEMENTATION       = "0x92B3B82c322BAC3dF00F68B93C61F5B69A8dfBfa"  // 2024/07/11: Amoy testnet (Dev Anv): checkIfOffsetWon is added
       // const NEW_IMPLEMENTATION       = "0xD79601e15C761AabcfDE021Bb05e411263825E29"  // 2024/07/11: Amoy testnet (Dev Anv): checkIfOffsetWon is fixed
       // const NEW_IMPLEMENTATION       = "0xc7A014f4b823788812A9Cd08D1c819e882b13b89"  // 2024/07/12: Amoy testnet (Dev Anv): checkIfOffsetWon is changed of the return data format
-      const NEW_IMPLEMENTATION          = "0xb60adb684A682835819a8b4Be2dB6163dEaB393C"  // 2024/07/12: Amoy testnet (Dev Anv): checkIfOffsetWon is removed index limitation
+      // const NEW_IMPLEMENTATION       = "0xb60adb684A682835819a8b4Be2dB6163dEaB393C"  // 2024/07/12: Amoy testnet (Dev Anv): checkIfOffsetWon is removed index limitation
+      const NEW_IMPLEMENTATION          = "0x0b647B26264F9e11F9f3186A6ef0c296205Aa452"  // 2024/08/12: Amoy testnet (Dev Anv): offsetPowerAgent/deposit/withdraw are added
 
       console.log("Updating greenPower: ", greenPowerAddress, defaultGasPrice.toString());  
 
@@ -34,7 +35,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     } else if(hre.network.name === 'matic')  {
       // 2024/08/11: Polygon mainnet
       greenPowerAddress                 = "0x12202fDD4e3501081b346C81a64b06A689237a47"  // 08/11
-      const NEW_IMPLEMENTATION          = "0x325218927993688a3A423A97Dc2808C09C0D658F"  // 2024/08/11: offsetPowerAgent/deposit/withdraw are added
+      // const NEW_IMPLEMENTATION       = "0x325218927993688a3A423A97Dc2808C09C0D658F"  // 2024/08/11: offsetPowerAgent/deposit/withdraw are added
+      const NEW_IMPLEMENTATION          = "0x5EaEa14E04e6AAB4Ee590B2808d0DaFECf8317A5"  // 2024/08/12: Change Effective date
 
       console.log("Updating greenPower: ", greenPowerAddress, defaultGasPrice.toString());  
 
@@ -67,6 +69,13 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:GreenPowerU
 // 0x325218927993688a3A423A97Dc2808C09C0D658F
 
+// 2024/08/12: upgrade:  Amoy testnet: offsetPowerAgent/deposit/withdraw are added
+// yarn deploy:matic_test:GreenPowerU
+// 0x0b647B26264F9e11F9f3186A6ef0c296205Aa452
+
+// 2024/08/12: upgrade:  Polygon mainnet: change effective date
+// yarn deploy:matic:GreenPowerU
+// 0x5EaEa14E04e6AAB4Ee590B2808d0DaFECf8317A5
 
 func.tags = ["GreenPowerU"];
 

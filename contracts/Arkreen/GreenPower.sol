@@ -25,7 +25,8 @@ contract GreenPower is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
     bytes32 public constant  REWARD_TYPEHASH  = 0x9A6CE8C7C5EDCB1EAA7313523B253F809B5AC0E3EC4A56F23B411D538FE25B11;
 
     uint256 public constant OFFSET_UNIT = 10**5;                    // 0.1 kWh 
-    uint256 public constant TIMESTAMP_NEW_UNIT = 1723449600;        // 2024/08/12 08:00:00 UTC
+    // (Mainnet)2024/08/16 08:00:00 UTC, 1723795200
+    uint256 public constant TIMESTAMP_NEW_UNIT = 1723795200;        
 
     struct StakeInfo {
         uint96  amountStake;   							                // Enough for AKRE: 10**28 

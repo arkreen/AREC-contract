@@ -51,6 +51,7 @@ contract PlantStaking is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpg
 
     event Stake(uint256 indexed txid, address indexed staker, address cspminer, uint256 amount);
     event Unstake(uint256 indexed txid, address indexed staker, address cspminer, uint256 amount, uint256 reward);
+    event StakeSlash(uint256 indexed txid, address cspminer, address owner, uint256 amount);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -136,8 +137,17 @@ contract PlantStaking is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpg
         minerStakeInfo[cspminer].amountStake -= uint96(amount); 
         minerStakeInfo[cspminer].rewardStake += uint96(reward); 
 
-        //require(IERC20Upgradeable(stakingToken).transferFrom(rewarder, address(this), reward));   // reward deposited beforehand
         require(IERC20Upgradeable(stakingToken).transfer(msg.sender, amount + reward));
         emit Unstake(txid, msg.sender, cspminer, amount, reward);
+    }
+
+    function stakeSlash(uint256 txid, address cspminer, address owner, uint256 amount) external {
+        require(msg.sender == manager, "Not Allowed");
+        uint96 stakeAmount = stakeInfo[owner].amountStake;
+        require(stakeAmount >= uint96(amount), "Low stake");
+        stakeInfo[msg.sender].amountStake = stakeAmount - uint96(amount);
+        minerStakeInfo[cspminer].amountStake -= uint96(amount); 
+        totalStake = totalStake - uint96(amount);
+        emit StakeSlash(txid, cspminer, owner, amount);
     }
 }

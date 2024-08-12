@@ -24,11 +24,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       tokenART          = "0x615835Cc22064a17df5A3E8AE22F58e67bCcB778"                // Amoy testnet
       USDC_ADDRESS      = "0x41e94eb019c0762f9bfcf9fb1e58725bfb0e7582"                // USDC address
       USDT_ADDRESS      = "0xc7767ae828E4830e2f800981E573f333d1E492b5"                // USDT address
-     
+
+      bankContractAddress = "0xf9aAcFf1B292F82b60662e47610C570ef58d3c70"
+
       const greenPower = GreenPower__factory.connect(greenPowerAddress, deployer);
     
       // 2024/06/26: Amoy testnet                        
-      await greenPower.approveConvertkWh( [tokenART, USDC_ADDRESS, USDT_ADDRESS], {gasPrice: defaultGasPrice})
+      // await greenPower.approveConvertkWh( [tokenART, USDC_ADDRESS, USDT_ADDRESS], {gasPrice: defaultGasPrice})
+
+      // 2024/08/12: Polygon mainnet
+      await greenPower.setBankAndART(bankContractAddress, tokenART, {gasPrice: defaultGasPrice})
 
       console.log("approve ConvertkWh", greenPower.address)
       
@@ -51,13 +56,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 };
 
 // 2024/06/26: Call approveConvertkWh
-// yarn deploy:matic_test:GreenPowerI    : Amoy testnet (Dev Anv)
+// yarn deploy:matic_test:GreenPowerI     : Amoy testnet (Dev Anv)
 
 // 2024/07/14: Call approveConvertkWh
-// yarn deploy:matic:GreenPowerI    : Polygon mainnet
+// yarn deploy:matic:GreenPowerI          : Polygon mainnet
 
 // 2024/08/11: Call setBankAndART
-// yarn deploy:matic:GreenPowerI    : Polygon mainnet
+// yarn deploy:matic:GreenPowerI          : Polygon mainnet
+
+// 2024/08/12: Call setBankAndART
+// yarn deploy:matic_test:GreenPowerI     : Amoy testnet (Dev Anv)
 
 func.tags = ["GreenPowerI"];
 

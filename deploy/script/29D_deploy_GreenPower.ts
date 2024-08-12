@@ -62,6 +62,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:GreenPowerD    : Polygon mainnet: offsetPowerAgent/deposit/withdraw are added
 // Implementaion:         0x325218927993688a3A423A97Dc2808C09C0D658F
 
+// 2024/08/12
+// yarn deploy:matic_test:GreenPowerD    : Amoy testnet (Dev Anv): offsetPowerAgent/deposit/withdraw are added
+// Implementaion:         0x0b647B26264F9e11F9f3186A6ef0c296205Aa452
+
+// 2024/08/12
+// yarn deploy:matic:GreenPowerD    : Polygon mainnet: change effective date
+// Implementaion:         0x5EaEa14E04e6AAB4Ee590B2808d0DaFECf8317A5
+
 
 func.tags = ["GreenPowerD"];
 
