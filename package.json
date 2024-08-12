@@ -128,6 +128,8 @@
     "deploy:matic_test:GreenPowerU": "hardhat --network matic_test deploy --tags GreenPowerU",
     "deploy:matic_test:PlugMinerSales": "hardhat --network matic_test deploy --tags PlugMinerSales",
     "deploy:matic_test:UniToolD": "hardhat --network matic_test deploy --tags UniToolD",
+    "deploy:matic_test:PlantStakingD": "hardhat --network matic_test deploy --tags PlantStakingD",
+    "deploy:matic_test:PlantStakingU": "hardhat --network matic_test deploy --tags PlantStakingU",
 
     "deploy:matic:gAKRE": "hardhat --network matic deploy --tags gAKRE",
     "deploy:matic:arkReward": "hardhat --network matic deploy --tags arkReward",

@@ -145,7 +145,7 @@ contract PlantStaking is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpg
         require(msg.sender == manager, "Not Allowed");
         uint96 stakeAmount = stakeInfo[owner].amountStake;
         require(stakeAmount >= uint96(amount), "Low stake");
-        stakeInfo[msg.sender].amountStake = stakeAmount - uint96(amount);
+        stakeInfo[owner].amountStake = stakeAmount - uint96(amount);
         minerStakeInfo[cspminer].amountStake -= uint96(amount); 
         totalStake = totalStake - uint96(amount);
         emit StakeSlash(txid, cspminer, owner, amount);

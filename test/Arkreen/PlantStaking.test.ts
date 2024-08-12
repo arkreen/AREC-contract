@@ -164,7 +164,44 @@ describe("PlantStaking test", ()=> {
                       .withArgs(user1.address, plantStaking.address, amount)    
                       .to.emit(plantStaking, 'Stake')
                       .withArgs(txid, user1.address, cspminer[0], amount)    
-    
+      });
+
+      it("PlantStaking stakeSlash Test", async function () {
+        // Normal
+        await walletStake(user1, expandTo18Decimals(10000))
+        await walletStake(user2, expandTo18Decimals(30000))
+        await walletStake(user3, expandTo18Decimals(50000))
+
+        const amount= expandTo18Decimals(10000)
+        const txid = BigNumber.from(3456)
+        //const cspminer = randomAddresses(1)
+        const cspminer = "0x280a7c4E032584F97E84eDd396a00799da8D061A"     // Must use this address
+
+        const {amountStake: amountStakeBefore} = await plantStaking.stakeInfo(user1.address)
+        const {amountStake: amountStakeCSPBefore} = await plantStaking.minerStakeInfo(cspminer)
+        const totalStakeBefore = await plantStaking.totalStake()
+
+        // stakeSlash
+        await expect(plantStaking.connect(manager).stakeSlash(txid, cspminer, user1.address, amount.div(2)))
+                      .to.emit(plantStaking, 'StakeSlash')
+                      .withArgs(txid, cspminer, user1.address, amount.div(2))    
+             
+        const {amountStake: amountStakeAfter} = await plantStaking.stakeInfo(user1.address)                      
+        expect(amountStakeAfter).to.eq(amountStakeBefore.sub(amount.div(2)))    
+
+        const {amountStake: amountStakeCSPAfter} = await plantStaking.minerStakeInfo(cspminer)
+        expect(amountStakeCSPAfter).to.eq(amountStakeCSPBefore.sub(amount.div(2)))     
+
+        const totalStakeAfter = await plantStaking.totalStake()
+        expect(totalStakeAfter).to.eq(totalStakeBefore.sub(amount.div(2)))           
+
+        // Abnormal 
+        await expect(plantStaking.stakeSlash(txid, cspminer, user1.address, amount.div(2)))                    
+                .to.be.revertedWith("Not Allowed")
+
+        await expect(plantStaking.connect(manager).stakeSlash(txid, cspminer, user1.address, amount.add(1)))                    
+                .to.be.revertedWith("Low stake")
+
       });
 
 
