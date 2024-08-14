@@ -8,7 +8,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     const [deployer] = await ethers.getSigners();
 
-    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(32_000_000_000) : BigNumber.from(160_000_000_000)
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(32_000_000_000) : BigNumber.from(50_000_000_000)
 
     let greenPowerAddress
     let tokenART
@@ -23,7 +23,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       // const NEW_IMPLEMENTATION       = "0xD79601e15C761AabcfDE021Bb05e411263825E29"  // 2024/07/11: Amoy testnet (Dev Anv): checkIfOffsetWon is fixed
       // const NEW_IMPLEMENTATION       = "0xc7A014f4b823788812A9Cd08D1c819e882b13b89"  // 2024/07/12: Amoy testnet (Dev Anv): checkIfOffsetWon is changed of the return data format
       // const NEW_IMPLEMENTATION       = "0xb60adb684A682835819a8b4Be2dB6163dEaB393C"  // 2024/07/12: Amoy testnet (Dev Anv): checkIfOffsetWon is removed index limitation
-      const NEW_IMPLEMENTATION          = "0x0b647B26264F9e11F9f3186A6ef0c296205Aa452"  // 2024/08/12: Amoy testnet (Dev Anv): offsetPowerAgent/deposit/withdraw are added
+      // const NEW_IMPLEMENTATION       = "0x0b647B26264F9e11F9f3186A6ef0c296205Aa452"  // 2024/08/12: Amoy testnet (Dev Anv): offsetPowerAgent/deposit/withdraw are added
+      const NEW_IMPLEMENTATION          = "0x1664A0dD344c00df424fe42382222948B6f0b27d"  // 2024/08/14: Amoy testnet (Dev Anv): change AutoOffsetChanged event
 
       console.log("Updating greenPower: ", greenPowerAddress, defaultGasPrice.toString());  
 
@@ -36,7 +37,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       // 2024/08/11: Polygon mainnet
       greenPowerAddress                 = "0x12202fDD4e3501081b346C81a64b06A689237a47"  // 08/11
       // const NEW_IMPLEMENTATION       = "0x325218927993688a3A423A97Dc2808C09C0D658F"  // 2024/08/11: offsetPowerAgent/deposit/withdraw are added
-      const NEW_IMPLEMENTATION          = "0x5EaEa14E04e6AAB4Ee590B2808d0DaFECf8317A5"  // 2024/08/12: Change Effective date
+      // const NEW_IMPLEMENTATION       = "0x5EaEa14E04e6AAB4Ee590B2808d0DaFECf8317A5"  // 2024/08/12: Change Effective date
+      const NEW_IMPLEMENTATION          = "0xF935F32058B3d38794C72ac31c117CF9E126e096"  // 2024/08/14: change AutoOffsetChanged event
 
       console.log("Updating greenPower: ", greenPowerAddress, defaultGasPrice.toString());  
 
@@ -76,6 +78,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/08/12: upgrade:  Polygon mainnet: change effective date
 // yarn deploy:matic:GreenPowerU
 // 0x5EaEa14E04e6AAB4Ee590B2808d0DaFECf8317A5
+
+// 2024/08/14: upgrade:  Amoy testnet: change AutoOffsetChanged event
+// yarn deploy:matic_test:GreenPowerU
+// 0x1664A0dD344c00df424fe42382222948B6f0b27d
+
+// 2024/08/12: upgrade:  Polygon mainnet: change AutoOffsetChanged event
+// yarn deploy:matic:GreenPowerU
+// 0xF935F32058B3d38794C72ac31c117CF9E126e096
 
 func.tags = ["GreenPowerU"];
 

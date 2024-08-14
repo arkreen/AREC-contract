@@ -90,7 +90,7 @@ contract GreenPower is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
     event Reward(address indexed txid, address indexed greener, uint256 amount, uint256 nonce);
     event Deposit(address indexed user, address tokenToPay, uint256 amount, uint256 amountART);
     event Withdraw(address indexed user, uint256 amountART);
-    event AutoOffsetChanged(bool ifAuto);
+    event AutoOffsetChanged(address indexed user, bool ifAuto);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -157,7 +157,7 @@ contract GreenPower is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
       } else {
         depositAmounts[msg.sender] = depositInfo & uint256((1 << 248) -1);
       }
-      emit AutoOffsetChanged(offsetAuto);
+      emit AutoOffsetChanged(msg.sender, offsetAuto);
     }
 
     function offsetPower(
