@@ -75,9 +75,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // Implementaion:         0x1664A0dD344c00df424fe42382222948B6f0b27d
 
 // 2024/08/14
-// yarn deploy:matic:GreenPowerD    : Polygon mainnet: change AutoOffsetChanged event
+// yarn deploy:matic:GreenPowerD          : Polygon mainnet: change AutoOffsetChanged event
 // Implementaion:         0xF935F32058B3d38794C72ac31c117CF9E126e096
 
+// 2024/08/15
+// yarn deploy:matic:GreenPowerD          : Polygon mainnet: add deadline for offsetPowerAgent
+// Implementaion:         0xC98C91b52D8F8b42B6895c32458578b4877a2a38
+
+// 2024/08/15
+// yarn deploy:matic_test:GreenPowerD     : Amoy testnet (Dev Anv): add deadline for offsetPowerAgent
+// Implementaion:         0x70A7981b5c9ca1a4250A0C9BBDC2141752deBeeb
 
 func.tags = ["GreenPowerD"];
 

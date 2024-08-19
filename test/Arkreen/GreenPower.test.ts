@@ -51,7 +51,7 @@ enum SkipReason {
   LESS_DEPOSIT
 }
 
-const TIMESTAMP_NEW_UNIT = 1723449600
+const TIMESTAMP_NEW_UNIT = 1723795200     // 1723449600
 
 describe("GreenPower Test Campaign", ()=>{
 
@@ -378,6 +378,15 @@ describe("GreenPower Test Campaign", ()=>{
                 .to.be.revertedWith("Auto Offset On")
 
         await greenPower.changeAutoOffet(false)
+
+        const lastBlock = await ethers.provider.getBlock('latest')
+        await ethers.provider.send("evm_increaseTime", [3600*8])
+
+        await expect(greenPower.withdraw(expandTo9Decimals(200)))
+                .to.be.revertedWith("Not ready")
+
+        await ethers.provider.send("evm_increaseTime", [3600*16 + 2])
+
         await expect(greenPower.withdraw(expandTo9Decimals(200)))
                 .to.be.revertedWith("Low deposit")
       });
@@ -411,21 +420,22 @@ describe("GreenPower Test Campaign", ()=>{
         await greenPower.approveConvertkWh([arkreenRECToken.address])
         await kWhToken.changeSwapPrice(arkreenRECToken.address, expandTo6Decimals(1))   // 1kWh = 0.001ART
 
-        await expect(greenPower.offsetPowerAgent(plugMiners[3], [offsetAction1, offsetAction2]))
+        await expect(greenPower.offsetPowerAgent(plugMiners[3], [offsetAction1, offsetAction2], constants.MaxUint256))
                 .to.be.revertedWith("Not Allowed")
 
-        await expect(greenPower.connect(manager).offsetPowerAgent(plugMiners[3], [offsetAction1, offsetAction2]))
+        await expect(greenPower.connect(manager).offsetPowerAgent(plugMiners[3], [offsetAction1, offsetAction2], constants.MaxUint256))
                 .to.be.revertedWith("Not ready")
         
         const lastBlock = await ethers.provider.getBlock('latest')
         await ethers.provider.send("evm_increaseTime", [ TIMESTAMP_NEW_UNIT - lastBlock.timestamp + 1])
+        await mine(1)
 
-        await expect(greenPower.connect(manager).offsetPowerAgent(plugMiners[3], [offsetAction1, offsetAction2]))
+        await expect(greenPower.connect(manager).offsetPowerAgent(plugMiners[3], [offsetAction1, offsetAction2], constants.MaxUint256))
                 .to.be.revertedWith("Auto Offset Off")
 
         await greenPower.connect(user1).changeAutoOffet(true)
 
-        await expect(greenPower.connect(manager).offsetPowerAgent(plugMiners[3], [offsetAction1, offsetAction2]))
+        await expect(greenPower.connect(manager).offsetPowerAgent(plugMiners[3], [offsetAction1, offsetAction2], constants.MaxUint256))
                 .to.emit(kWhToken, 'Transfer')
                 .withArgs(greenPower.address, zeroAddress, expandTo6Decimals(15+50)) 
                 .to.emit(greenPower, 'OffsetAgent')
@@ -434,9 +444,9 @@ describe("GreenPower Test Campaign", ()=>{
         expect(await greenPower.getMinerOffsetInfo(plugMiners[0])).to.deep.eq([deployer.address, BigNumber.from(1), expandTo6Decimals(15)])
         expect(await greenPower.getMinerOffsetInfo(plugMiners[1])).to.deep.eq([user1.address, BigNumber.from(1), expandTo6Decimals(50)])
 
-        expect((await greenPower.depositAmounts(deployer.address)).xor(BigNumber.from(1).shl(248)))
+        expect((await greenPower.depositAmounts(deployer.address)).and(BigNumber.from(1).shl(128).sub(1)))
                 .to.deep.eq(expandTo9Decimals(10).sub( expandTo6Decimals(15)))
-        expect((await greenPower.depositAmounts(user1.address)).xor(BigNumber.from(1).shl(248)))
+        expect((await greenPower.depositAmounts(user1.address)).and(BigNumber.from(1).shl(128).sub(1)))
                 .to.deep.eq(expandTo9Decimals(10).sub(expandTo6Decimals(50)))
 
         const {offsetAmount: offsetAmount1}  = await greenPower.getUserInfo(deployer.address)
@@ -445,7 +455,7 @@ describe("GreenPower Test Campaign", ()=>{
         const {offsetAmount: offsetAmount2}  = await greenPower.getUserInfo(user1.address)
         expect(offsetAmount2).to.eq(expandTo6Decimals(50))
 
-        await expect(greenPower.connect(manager).offsetPowerAgent(plugMiners[3], [offsetAction1, offsetAction2]))
+        await expect(greenPower.connect(manager).offsetPowerAgent(plugMiners[3], [offsetAction1, offsetAction2], constants.MaxUint256))
                 .to.emit(kWhToken, 'Transfer')
                 .withArgs(greenPower.address, zeroAddress, expandTo6Decimals(15+50)) 
                 .to.emit(greenPower, 'OffsetAgent')
@@ -458,7 +468,7 @@ describe("GreenPower Test Campaign", ()=>{
           offsetAmount:   expandTo6Decimals(50),
         } 
 
-        await expect(greenPower.connect(manager).offsetPowerAgent(plugMiners[3], [offsetAction3]))
+        await expect(greenPower.connect(manager).offsetPowerAgent(plugMiners[3], [offsetAction3], constants.MaxUint256))
                 .to.be.revertedWith("Wrong Owner")
 
         const offsetAction4: OffsetActionAgent = {
@@ -466,7 +476,7 @@ describe("GreenPower Test Campaign", ()=>{
           plugMiner:      plugMiners[2],
           offsetAmount:   expandTo6Decimals(5055).div(100),     // 50.55 kWh
         } 
-        await expect(greenPower.connect(manager).offsetPowerAgent(plugMiners[3], [offsetAction4]))
+        await expect(greenPower.connect(manager).offsetPowerAgent(plugMiners[3], [offsetAction4], constants.MaxUint256))
                 .to.be.revertedWith("Wrong Offset Amount")
 
         const offsetAction5: OffsetActionAgent = {
@@ -476,7 +486,7 @@ describe("GreenPower Test Campaign", ()=>{
         } 
 
         await greenPower.connect(user2).changeAutoOffet(true)
-        await expect(greenPower.connect(manager).offsetPowerAgent(plugMiners[3], [offsetAction5]))
+        await expect(greenPower.connect(manager).offsetPowerAgent(plugMiners[3], [offsetAction5], constants.MaxUint256))
                 .to.be.revertedWith("Low deposit")
 
       });
@@ -702,6 +712,30 @@ describe("GreenPower Test Campaign", ()=>{
                       .to.be.revertedWith("Wrong Signature")
 
       });
+
+      it("GreenPower offsetPower Test", async function () {
+        const greener = "0x71368B7eD926F9c3f36Edcfc5D23e992102528c7"
+        const plugMiner  = "0x7b863ff48a02F3C76E00b2e3e879fe6Ba8dDF133"
+        const blockHash  = "0x62115d167924f5d9c4e23e4cd0e5395172dba799ce4b8a3cdc2fea7c4e76c29b"
+        const kWhIndex  = 0
+        const kWhSteps = 1000
+        const rewardRate = 100000000
+
+        const offsetWonResult = await greenPower.checkIfOffsetWon(greener, plugMiner, 
+          blockHash, kWhIndex, kWhSteps, rewardRate)
+
+        console.log('AAAAAAAAAAA', offsetWonResult)
+
+        const offseInfo = utils.defaultAbiCoder.encode(
+          ['address', 'address', 'bytes32', 'uint256', 'uint256', 'uint256'],
+          [greener, plugMiner, blockHash, kWhIndex, kWhSteps, rewardRate]
+        )
+
+        const offsetWonResultA = await greenPower.checkIfOffsetWonBytes(offseInfo)
+
+        console.log('BBBBBBBBBBBBBBB', offseInfo, offsetWonResultA)
+
+      })
 
       it("GreenPower offsetPower Test", async function () {
 
@@ -953,6 +987,7 @@ describe("GreenPower Test Campaign", ()=>{
         }
       });
 
+      
 
 /*      
       it("GreenPower offsetPowerServer abonormal Test", async function () {

@@ -26,7 +26,8 @@ contract GreenPower is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
 
     uint256 public constant OFFSET_UNIT = 10**5;                    // 0.1 kWh 
     // (Mainnet)2024/08/16 08:00:00 UTC, 1723795200
-    uint256 public constant TIMESTAMP_NEW_UNIT = 1723795200;        
+    // (Amoy)   2024/08/14 08:00:00 UTC, 1723622400
+    uint256 public constant TIMESTAMP_NEW_UNIT = 1723622400;        
 
     struct StakeInfo {
         uint96  amountStake;   							                // Enough for AKRE: 10**28 
@@ -71,7 +72,7 @@ contract GreenPower is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
 
     // Mapping from user address to the auto-offset flag and deposited ART token amount.
     // If deposit token is not ART, convert to ART first
-    // Byte 0: auto-offset flag, 0x00, self-Offset, 0x01, auto-offset, Byte 16-31: Deposited ART amount.
+    // Byte 0: auto-offset flag, 0x00, self-Offset, 0x01, auto-offset, Byte 1-4: switch timestamp, Byte 16-31: Deposited ART amount.
     mapping(address => uint256) public depositAmounts;
 
     address public tokenART;
@@ -152,11 +153,16 @@ contract GreenPower is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
      */
     function changeAutoOffet(bool offsetAuto) public {
       uint256 depositInfo = depositAmounts[msg.sender];
+      bool curAuto = ((depositInfo >> 248) == 0x01);
+      if (curAuto == offsetAuto) return;
+
+      depositInfo = uint256(uint128(depositInfo)) + uint256((block.timestamp) << 216);
+
       if (offsetAuto) {
-        depositAmounts[msg.sender] = depositInfo | uint256(1 << 248);
-      } else {
-        depositAmounts[msg.sender] = depositInfo & uint256((1 << 248) -1);
-      }
+        depositInfo |= uint256(1 << 248);
+      } 
+
+      depositAmounts[msg.sender] = depositInfo;
       emit AutoOffsetChanged(msg.sender, offsetAuto);
     }
 
@@ -170,6 +176,8 @@ contract GreenPower is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
         ) external nonReentrant ensure(deadline) 
     {
         require ((depositAmounts[msg.sender] >> 248) == 0, "Auto Offset On");
+        uint256 timeSwitch = uint32(depositAmounts[msg.sender] >> 216);
+        require (block.timestamp >= (timeSwitch + 3600 *24), "Not ready");      // if timeSwitch is 0, check always passed. 
 
         {
             bytes32 offsetHash = keccak256(abi.encode(OFFSET_TYPEHASH, txid, msg.sender, offsetActions, tokenToPay, nonce, deadline));
@@ -265,14 +273,17 @@ contract GreenPower is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
      */
     function withdraw(uint256 amount) external {
         require ((depositAmounts[msg.sender] >> 248) == 0, "Auto Offset On");
+        uint256 timeSwitch = uint32(depositAmounts[msg.sender] >> 216);
+        require (block.timestamp >= (timeSwitch + 3600 *24), "Not ready");      // if timeSwitch is 0, check always passed. 
+
         require (amount !=0, "Zero Amount");
-        require (depositAmounts[msg.sender] >= amount, "Low deposit");
+        require (uint128(depositAmounts[msg.sender]) >= amount, "Low deposit");
         depositAmounts[msg.sender] -= amount;
         emit Withdraw(msg.sender, amount);
         TransferHelper.safeTransfer(tokenART, msg.sender, amount);
     }
 
-    function offsetPowerAgent(address txid, OffsetActionAgent[] calldata offsetActions) external {
+    function offsetPowerAgent(address txid, OffsetActionAgent[] calldata offsetActions, uint256 deadline) external ensure(deadline) {
 
         require (msg.sender == manager, "Not Allowed");
         require (block.timestamp >= TIMESTAMP_NEW_UNIT, "Not ready");
