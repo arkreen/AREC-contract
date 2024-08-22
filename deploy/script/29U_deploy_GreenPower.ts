@@ -25,7 +25,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       // const NEW_IMPLEMENTATION       = "0xb60adb684A682835819a8b4Be2dB6163dEaB393C"  // 2024/07/12: Amoy testnet (Dev Anv): checkIfOffsetWon is removed index limitation
       // const NEW_IMPLEMENTATION       = "0x0b647B26264F9e11F9f3186A6ef0c296205Aa452"  // 2024/08/12: Amoy testnet (Dev Anv): offsetPowerAgent/deposit/withdraw are added
       // const NEW_IMPLEMENTATION       = "0x1664A0dD344c00df424fe42382222948B6f0b27d"  // 2024/08/14: Amoy testnet (Dev Anv): change AutoOffsetChanged event
-      const NEW_IMPLEMENTATION          = "0x70A7981b5c9ca1a4250A0C9BBDC2141752deBeeb"  // 2024/08/14: Amoy testnet (Dev Anv): add deadline for offsetPowerAgent
+      // const NEW_IMPLEMENTATION       = "0x70A7981b5c9ca1a4250A0C9BBDC2141752deBeeb"  // 2024/08/14: Amoy testnet (Dev Anv): add deadline for offsetPowerAgent
+      const NEW_IMPLEMENTATION          = "0x3EB5789Ef5EAcC0dD4Bd314A88CBF34E14A23407"  // 2024/08/15: Amoy testnet (Dev Anv): add deposit amount
 
       console.log("Updating greenPower: ", greenPowerAddress, defaultGasPrice.toString());  
 
@@ -40,7 +41,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       // const NEW_IMPLEMENTATION       = "0x325218927993688a3A423A97Dc2808C09C0D658F"  // 2024/08/11: offsetPowerAgent/deposit/withdraw are added
       // const NEW_IMPLEMENTATION       = "0x5EaEa14E04e6AAB4Ee590B2808d0DaFECf8317A5"  // 2024/08/12: Change Effective date
       // const NEW_IMPLEMENTATION       = "0xF935F32058B3d38794C72ac31c117CF9E126e096"  // 2024/08/14: change AutoOffsetChanged event
-      const NEW_IMPLEMENTATION          = "0xC98C91b52D8F8b42B6895c32458578b4877a2a38"  // 2024/08/15: add deadline for offsetPowerAgent
+      // const NEW_IMPLEMENTATION       = "0xC98C91b52D8F8b42B6895c32458578b4877a2a38"  // 2024/08/15: add deadline for offsetPowerAgent
+      const NEW_IMPLEMENTATION          = "0x1b05Bb1183323e91DF6D5a7D70097d8F736243cD"  // 2024/08/22: add deposit amount
 
       console.log("Updating greenPower: ", greenPowerAddress, defaultGasPrice.toString());  
 
@@ -97,6 +99,13 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:GreenPowerU
 // 0x70A7981b5c9ca1a4250A0C9BBDC2141752deBeeb
 
+// 2024/08/22: upgrade:  Amoy testnet: add deposit amount
+// yarn deploy:matic_test:GreenPowerU
+// 0x3EB5789Ef5EAcC0dD4Bd314A88CBF34E14A23407
+
+// 2024/08/22: upgrade:  Polygon mainnet: add deposit amount
+// yarn deploy:matic:GreenPowerU
+// 0x1b05Bb1183323e91DF6D5a7D70097d8F736243cD
 
 func.tags = ["GreenPowerU"];
 

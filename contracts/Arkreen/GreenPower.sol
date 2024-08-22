@@ -429,7 +429,9 @@ contract GreenPower is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
     }
 
     function getUserInfo(address greener) external view 
-        returns (uint256 stakeAmount, uint256 offsetAmount, uint256 rewardAmount, uint256 nonce, uint256 period, uint256 releaseTime) 
+        returns (uint256 stakeAmount, uint256 offsetAmount, uint256 rewardAmount, 
+        uint256 nonce, uint256 period, uint256 releaseTime, 
+        uint256 depositAmount, bool autoOffset, uint256 switchTime) 
     {
         uint256 userStakeInfo = stakerInfo[greener];
         releaseTime = uint256(uint32(userStakeInfo));
@@ -440,6 +442,9 @@ contract GreenPower is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
         uint256 offsetInfo = userOffsetInfo[greener];
         offsetAmount = uint256(uint64(offsetInfo));
         rewardAmount = offsetInfo >> 160;
+        depositAmount = uint256(uint128(depositAmounts[greener]));
+        autoOffset = ((depositAmounts[msg.sender] >> 248) != 0);
+        switchTime = uint32(depositAmounts[msg.sender] >> 216);
     }
 
     function getMinerOffsetInfo(address plugMiner) external view 
