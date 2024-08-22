@@ -94,6 +94,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:GreenPowerD          : Polygon mainnet: add deposit amount
 // Implementaion:        0x1b05Bb1183323e91DF6D5a7D70097d8F736243cD
 
+// 2024/08/22
+// yarn deploy:matic_test:GreenPowerD     : Amoy testnet (Dev Anv): Remove upgrade timestamp
+// Implementaion:        0x6c066d8Df405c5409f9264c56afDc19f355e4ec7
+
+// 2024/08/22
+// yarn deploy:matic:GreenPowerD          : Polygon mainnet: Remove upgrade timestamp
+// Implementaion:        0x76A55079fAdDe2D78207A7A592D2A4BeDaD0B03c
+
 func.tags = ["GreenPowerD"];
 
 export default func;

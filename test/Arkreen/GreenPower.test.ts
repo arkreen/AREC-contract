@@ -423,8 +423,8 @@ describe("GreenPower Test Campaign", ()=>{
         await expect(greenPower.offsetPowerAgent(plugMiners[3], [offsetAction1, offsetAction2], constants.MaxUint256))
                 .to.be.revertedWith("Not Allowed")
 
-        await expect(greenPower.connect(manager).offsetPowerAgent(plugMiners[3], [offsetAction1, offsetAction2], constants.MaxUint256))
-                .to.be.revertedWith("Not ready")
+//        await expect(greenPower.connect(manager).offsetPowerAgent(plugMiners[3], [offsetAction1, offsetAction2], constants.MaxUint256))
+//                .to.be.revertedWith("Not ready")
         
         const lastBlock = await ethers.provider.getBlock('latest')
         await ethers.provider.send("evm_increaseTime", [ TIMESTAMP_NEW_UNIT - lastBlock.timestamp + 1])
@@ -870,7 +870,7 @@ describe("GreenPower Test Campaign", ()=>{
                       .to.emit(kWhToken, 'Transfer')
                       .withArgs(greenPower.address, constants.AddressZero, expandTo6Decimals(100+300+500))
                       .to.emit(greenPower, 'Offset')
-                      .withArgs(txid, deployer.address, anyValue, tokenA.address, expandTo18Decimals(23456), 100, nonce)
+                      .withArgs(txid, deployer.address, anyValue, tokenA.address, expandTo18Decimals(23456), 100 * 10, nonce)  // 0.1 kWh
 
           // checkIfOffsetWon
           let lastBlock = await ethers.provider.getBlock('latest')
@@ -935,6 +935,7 @@ describe("GreenPower Test Campaign", ()=>{
 
         }
 
+
         /////////////  Abnormal Test ///////////////////////////
         {
           // Wrong Offset Amount
@@ -982,12 +983,9 @@ describe("GreenPower Test Campaign", ()=>{
           await tokenA.transfer(user1.address, expandTo18Decimals(1_000_000))
           await tokenA.connect(user1).approve(greenPower.address, constants.MaxUint256)
           await greenPower.connect(user1).offsetPower(txid, [offsetAction1], tokenA.address, nonce, constants.MaxUint256, signature)
-
-
         }
       });
-
-      
+     
 
 /*      
       it("GreenPower offsetPowerServer abonormal Test", async function () {

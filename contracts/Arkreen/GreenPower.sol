@@ -25,9 +25,6 @@ contract GreenPower is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
     bytes32 public constant  REWARD_TYPEHASH  = 0x9A6CE8C7C5EDCB1EAA7313523B253F809B5AC0E3EC4A56F23B411D538FE25B11;
 
     uint256 public constant OFFSET_UNIT = 10**5;                    // 0.1 kWh 
-    // (Mainnet)2024/08/16 08:00:00 UTC, 1723795200
-    // (Amoy)   2024/08/14 08:00:00 UTC, 1723622400
-    uint256 public constant TIMESTAMP_NEW_UNIT = 1723622400;        
 
     struct StakeInfo {
         uint96  amountStake;   							                // Enough for AKRE: 10**28 
@@ -223,15 +220,11 @@ contract GreenPower is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
         userOffsetInfo[msg.sender] += uint64(totalOffsetAmount);
 
         uint256 baseIndex;
-        if (block.timestamp >= TIMESTAMP_NEW_UNIT ) {
-            baseIndex = offsetBaseIndex;
-            if (baseIndex == 0) {
-              baseIndex  = totalOffset / ((10**6));
-            }
-            offsetBaseIndex = uint96(baseIndex + totalOffsetAmount / OFFSET_UNIT);
-        } else {
-            baseIndex = totalOffset / (10**6); 
+        baseIndex = offsetBaseIndex;
+        if (baseIndex == 0) {
+            baseIndex  = totalOffset / ((10**6));
         }
+        offsetBaseIndex = uint96(baseIndex + totalOffsetAmount / OFFSET_UNIT);
 
         totalOffset += uint96(totalOffsetAmount);
 
@@ -286,7 +279,6 @@ contract GreenPower is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
     function offsetPowerAgent(address txid, OffsetActionAgent[] calldata offsetActions, uint256 deadline) external ensure(deadline) {
 
         require (msg.sender == manager, "Not Allowed");
-        require (block.timestamp >= TIMESTAMP_NEW_UNIT, "Not ready");
 
         uint256 totalOffsetAmount = 0;
         for (uint256 index; index < offsetActions.length; index++) {
