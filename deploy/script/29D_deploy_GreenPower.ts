@@ -102,6 +102,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:GreenPowerD          : Polygon mainnet: Remove upgrade timestamp
 // Implementaion:        0x76A55079fAdDe2D78207A7A592D2A4BeDaD0B03c
 
+// 2024/08/23
+// yarn deploy:matic_test:GreenPowerD     : Amoy testnet (Dev Anv): fix bug in getUserInfo
+// Implementaion:        0x9AfF9c1EC4EC62ac0463DdEea75A216C5c7Af708
+
+// 2024/08/23
+// yarn deploy:matic:GreenPowerD          : Polygon mainnet: fix bug in getUserInfo
+// Implementaion:        0xD34C6E48A9eF73f6170Eb0939c9620d174622462
+
 func.tags = ["GreenPowerD"];
 
 export default func;

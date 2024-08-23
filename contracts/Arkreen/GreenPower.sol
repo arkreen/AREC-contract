@@ -435,8 +435,8 @@ contract GreenPower is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
         offsetAmount = uint256(uint64(offsetInfo));
         rewardAmount = offsetInfo >> 160;
         depositAmount = uint256(uint128(depositAmounts[greener]));
-        autoOffset = ((depositAmounts[msg.sender] >> 248) != 0);
-        switchTime = uint32(depositAmounts[msg.sender] >> 216);
+        autoOffset = ((depositAmounts[greener] >> 248) != 0);
+        switchTime = uint32(depositAmounts[greener] >> 216);
     }
 
     function getMinerOffsetInfo(address plugMiner) external view 

@@ -27,7 +27,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       // const NEW_IMPLEMENTATION       = "0x1664A0dD344c00df424fe42382222948B6f0b27d"  // 2024/08/14: Amoy testnet (Dev Anv): change AutoOffsetChanged event
       // const NEW_IMPLEMENTATION       = "0x70A7981b5c9ca1a4250A0C9BBDC2141752deBeeb"  // 2024/08/14: Amoy testnet (Dev Anv): add deadline for offsetPowerAgent
       // const NEW_IMPLEMENTATION       = "0x3EB5789Ef5EAcC0dD4Bd314A88CBF34E14A23407"  // 2024/08/22: Amoy testnet (Dev Anv): add deposit amount
-      const NEW_IMPLEMENTATION          = "0x6c066d8Df405c5409f9264c56afDc19f355e4ec7"  // 2024/08/22: Amoy testnet (Dev Anv): remove upgrade timestamp
+      // const NEW_IMPLEMENTATION       = "0x6c066d8Df405c5409f9264c56afDc19f355e4ec7"  // 2024/08/22: Amoy testnet (Dev Anv): remove upgrade timestamp
+      const NEW_IMPLEMENTATION          = "0x9AfF9c1EC4EC62ac0463DdEea75A216C5c7Af708"  // 2024/08/23: Amoy testnet (Dev Anv): fix bug in getUserInfo
 
       console.log("Updating greenPower: ", greenPowerAddress, defaultGasPrice.toString());  
 
@@ -44,7 +45,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       // const NEW_IMPLEMENTATION       = "0xF935F32058B3d38794C72ac31c117CF9E126e096"  // 2024/08/14: change AutoOffsetChanged event
       // const NEW_IMPLEMENTATION       = "0xC98C91b52D8F8b42B6895c32458578b4877a2a38"  // 2024/08/15: add deadline for offsetPowerAgent
       // const NEW_IMPLEMENTATION       = "0x1b05Bb1183323e91DF6D5a7D70097d8F736243cD"  // 2024/08/22: add deposit amount
-      const NEW_IMPLEMENTATION          = "0x76A55079fAdDe2D78207A7A592D2A4BeDaD0B03c"  // 2024/08/22: remove upgrade timestamp
+      // const NEW_IMPLEMENTATION       = "0x76A55079fAdDe2D78207A7A592D2A4BeDaD0B03c"  // 2024/08/22: remove upgrade timestamp
+      const NEW_IMPLEMENTATION          = "0xD34C6E48A9eF73f6170Eb0939c9620d174622462"  // 2024/08/23: bug in getUserInfo
 
       console.log("Updating greenPower: ", greenPowerAddress, defaultGasPrice.toString());  
 
@@ -117,6 +119,13 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:GreenPowerU
 // 0x76A55079fAdDe2D78207A7A592D2A4BeDaD0B03c
 
+// 2024/08/23: upgrade:  Amoy testnet: fix bug in getUserInfo
+// yarn deploy:matic_test:GreenPowerU
+// 0x9AfF9c1EC4EC62ac0463DdEea75A216C5c7Af708
+
+// 2024/08/23: upgrade:  Polygon mainnet: fix bug in getUserInfo
+// yarn deploy:matic:GreenPowerU
+// 0xD34C6E48A9eF73f6170Eb0939c9620d174622462
 
 func.tags = ["GreenPowerU"];
 
