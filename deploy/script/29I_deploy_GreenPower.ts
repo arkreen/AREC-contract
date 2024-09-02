@@ -32,8 +32,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       // 2024/06/26: Amoy testnet                        
       // await greenPower.approveConvertkWh( [tokenART, USDC_ADDRESS, USDT_ADDRESS], {gasPrice: defaultGasPrice})
 
-      // 2024/08/12: Polygon mainnet
-      await greenPower.setBankAndART(bankContractAddress, tokenART, {gasPrice: defaultGasPrice})
+      // 2024/08/12: Amoy testnet 
+      //await greenPower.setBankAndART(bankContractAddress, tokenART, {gasPrice: defaultGasPrice})
+
+      // 2024/09/2: Amoy testnet
+      await greenPower.approveBank([USDC_ADDRESS, USDT_ADDRESS], {gasPrice: defaultGasPrice})
 
       console.log("approve ConvertkWh", greenPower.address)
       
@@ -41,6 +44,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       greenPowerAddress   = "0x12202fDD4e3501081b346C81a64b06A689237a47"
       bankContractAddress = "0xab65900A52f1DcB722CaB2e5342bB6b128630A28"
       tokenART            = "0x58E4D14ccddD1E993e6368A8c5EAa290C95caFDF"            // Polygon testnet
+      USDC_ADDRESS        = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"            // USDC address
+      USDT_ADDRESS        = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F"            // USDT address
 
       const greenPower = GreenPower__factory.connect(greenPowerAddress, deployer);
     
@@ -48,7 +53,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       //await greenPower.approveConvertkWh( [tokenART, USDC_ADDRESS, USDT_ADDRESS], {gasPrice: defaultGasPrice})
 
       // 2024/08/11: Polygon mainnet
-      await greenPower.setBankAndART(bankContractAddress, tokenART, {gasPrice: defaultGasPrice})
+      // await greenPower.setBankAndART(bankContractAddress, tokenART, {gasPrice: defaultGasPrice})
+
+      // 2024/09/2: Polygon mainnet
+      await greenPower.approveBank([USDC_ADDRESS, USDT_ADDRESS], {gasPrice: defaultGasPrice})
 
       console.log("approve ConvertkWh", greenPower.address)
     } 
@@ -66,6 +74,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2024/08/12: Call setBankAndART
 // yarn deploy:matic_test:GreenPowerI     : Amoy testnet (Dev Anv)
+
+// 2024/09/02: Call approveBank
+// yarn deploy:matic:GreenPowerI          : Polygon mainnet
+
+// 2024/09/02: Call approveBank
+// yarn deploy:matic_test:GreenPowerI      : Amoy testnet (Dev Anv)
 
 func.tags = ["GreenPowerI"];
 

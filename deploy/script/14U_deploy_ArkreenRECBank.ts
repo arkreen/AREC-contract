@@ -31,7 +31,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   else if(hre.network.name === 'matic') {
     const RECBANK_PROXY_ADDRESS   = "0xab65900A52f1DcB722CaB2e5342bB6b128630A28"    // 2023/04/05: Arkreen REC bank proxy
     // const NEW_IMPLEMENTATION = "0xF845c843DaEa0cE08d2184CC1eDfe2b998B2d565"      // 2024/01/11: Upgrade to add new event
-    const NEW_IMPLEMENTATION = "0xED673Af2CD4eAEb2687DcB34e013335437463A31"         // 2024/04/03: Fix the withdraw bug
+    // const NEW_IMPLEMENTATION = "0xED673Af2CD4eAEb2687DcB34e013335437463A31"      // 2024/04/03: Fix the withdraw bug
+    const NEW_IMPLEMENTATION = "0x5DbF34752CeBAeA2386337f5ea23c1dCaD48EE6A"         // 2024/04/03: support return value while buying ART
 
     console.log("Updating Arkreen REC Bank: ", RECBANK_PROXY_ADDRESS);  
 
@@ -56,6 +57,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2024/05/20: Upgrade to support return value while buying ART
 // yarn deploy:matic_test:ArtBankU
+
+// 2024/09/02: Upgrade to support return value while buying ART
+// yarn deploy:matic:ArtBankU
 
 export default func;
 func.tags = ["ArtBankU"];
