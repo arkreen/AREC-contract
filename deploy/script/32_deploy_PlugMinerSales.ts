@@ -69,6 +69,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // Proxy:                 0x1C326496695cFE4Dde70dd188F87Dc6c069778Af
 // Implementaion:         0x25253a36CE26F004Ba941A1e12aa0c33D0574Ff4
 
+// 2024/09/18
+// yarn deploy:matic:PlugMinerSales    : Polygon mainnet
+// Proxy:                 0x8E0b81E8400FF35B7A1af36A2031AeaD166D1594
+// Implementaion:         0x1113deE6c5e969ecfcA4b5549CF3bBAC48f26290
+
 func.tags = ["PlugMinerSales"];
 
 export default func;
