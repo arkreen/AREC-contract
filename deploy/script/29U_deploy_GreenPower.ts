@@ -28,7 +28,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       // const NEW_IMPLEMENTATION       = "0x70A7981b5c9ca1a4250A0C9BBDC2141752deBeeb"  // 2024/08/14: Amoy testnet (Dev Anv): add deadline for offsetPowerAgent
       // const NEW_IMPLEMENTATION       = "0x3EB5789Ef5EAcC0dD4Bd314A88CBF34E14A23407"  // 2024/08/22: Amoy testnet (Dev Anv): add deposit amount
       // const NEW_IMPLEMENTATION       = "0x6c066d8Df405c5409f9264c56afDc19f355e4ec7"  // 2024/08/22: Amoy testnet (Dev Anv): remove upgrade timestamp
-      const NEW_IMPLEMENTATION          = "0x9AfF9c1EC4EC62ac0463DdEea75A216C5c7Af708"  // 2024/08/23: Amoy testnet (Dev Anv): fix bug in getUserInfo
+      // const NEW_IMPLEMENTATION       = "0x9AfF9c1EC4EC62ac0463DdEea75A216C5c7Af708"  // 2024/08/23: Amoy testnet (Dev Anv): fix bug in getUserInfo
+      const NEW_IMPLEMENTATION          = "0x54B055F9F398C99064A1276c68962426D7ccE546"  // 2024/09/24: Amoy testnet (Dev Anv): Allow auto-offset within 24 hours even if it is closed.
 
       console.log("Updating greenPower: ", greenPowerAddress, defaultGasPrice.toString());  
 
@@ -46,7 +47,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       // const NEW_IMPLEMENTATION       = "0xC98C91b52D8F8b42B6895c32458578b4877a2a38"  // 2024/08/15: add deadline for offsetPowerAgent
       // const NEW_IMPLEMENTATION       = "0x1b05Bb1183323e91DF6D5a7D70097d8F736243cD"  // 2024/08/22: add deposit amount
       // const NEW_IMPLEMENTATION       = "0x76A55079fAdDe2D78207A7A592D2A4BeDaD0B03c"  // 2024/08/22: remove upgrade timestamp
-      const NEW_IMPLEMENTATION          = "0xD34C6E48A9eF73f6170Eb0939c9620d174622462"  // 2024/08/23: bug in getUserInfo
+      // const NEW_IMPLEMENTATION       = "0xD34C6E48A9eF73f6170Eb0939c9620d174622462"  // 2024/08/23: bug in getUserInfo
+      const NEW_IMPLEMENTATION          = "0xEaa11898B68b868579c1d6883EcDCD95cD523F3c"  // 2024/08/23: Allow auto-offset within 24 hours even if it is closed.
 
       console.log("Updating greenPower: ", greenPowerAddress, defaultGasPrice.toString());  
 
@@ -126,6 +128,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/08/23: upgrade:  Polygon mainnet: fix bug in getUserInfo
 // yarn deploy:matic:GreenPowerU
 // 0xD34C6E48A9eF73f6170Eb0939c9620d174622462
+
+// 2024/09/24: upgrade:  Allow auto-offset within 24 hours even if it is closed.
+// yarn deploy:matic_test:GreenPowerU
+// 0x54B055F9F398C99064A1276c68962426D7ccE546
+
+// 2024/09/24: upgrade:  Allow auto-offset within 24 hours even if it is closed.
+// yarn deploy:matic:GreenPowerU
+// 0xEaa11898B68b868579c1d6883EcDCD95cD523F3c
 
 func.tags = ["GreenPowerU"];
 

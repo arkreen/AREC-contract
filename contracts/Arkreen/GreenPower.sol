@@ -298,7 +298,11 @@ contract GreenPower is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
             totalOffsetAmount += offsetAmount;
 
             uint256 depositART = depositAmounts[greener];
-            require (depositART >= (1 << 248), "Auto Offset Off");    // Check the auto-offset flag
+            uint256 timeSwitch = uint32(depositART >> 216);
+            
+            // Check the auto-offset flag, or the still in the allowance duration of closing auto-offset
+            require ((depositART >= (1 << 248)) || (block.timestamp < (timeSwitch + 3600 *24)) , "Auto Offset Off"); 
+
             require (uint128(depositART) >= offsetAmount, "Low deposit");             // Mask the auto-offset flag
 
             depositAmounts[greener] = depositART - offsetAmount;

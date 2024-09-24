@@ -110,6 +110,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:GreenPowerD          : Polygon mainnet: fix bug in getUserInfo
 // Implementaion:        0xD34C6E48A9eF73f6170Eb0939c9620d174622462
 
+// 2024/09/24
+// yarn deploy:matic:GreenPowerD          : Polygon mainnet: Allow auto-offset within 24 hours even if it is closed.
+// Implementaion:        0xEaa11898B68b868579c1d6883EcDCD95cD523F3c
+
+// 2024/09/24
+// yarn deploy:matic_test:GreenPowerD     : Amoy testnet (Dev Anv): Allow auto-offset within 24 hours even if it is closed.
+// Implementaion:        0x54B055F9F398C99064A1276c68962426D7ccE546
+
 func.tags = ["GreenPowerD"];
 
 export default func;
