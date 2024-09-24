@@ -43,14 +43,31 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     //const capMinerPremium = expandTo18Decimals(6000)
     //const ratePremium = 200
 
+    /*
     await stakingRewards.changeUnstakeLock(true, {gasPrice: defaultGasPrice})            // with Lock
 
     const setStakeParameterTx = await stakingRewards.setStakeParameter(capMinerPremium, ratePremium, {gasPrice: defaultGasPrice})
     await setStakeParameterTx.wait()
-
     console.log("StakingRewards setStakeParameter Tx:", setStakeParameterTx)
     console.log("Set StakeParameter: ", hre.network.name, 
                     stakingRewardsAddress, capMinerPremium.toString(), ratePremium);
+    */
+
+/*                    
+    // 2024/09/24, Amoy testnet
+    const start = 1727164800
+    const end = 1727424000
+    const rewardTotal = expandTo18Decimals(10000)
+*/
+    // 2024/09/24, Amoy testnet
+    const start = 1727251200
+    const end = 1727769600
+    const rewardTotal = expandTo18Decimals(25000)
+
+    // Need to approve first
+    const depolyRewardsTx = await stakingRewards.depolyRewards(start, end, rewardTotal, {gasPrice: defaultGasPrice})
+    console.log("Depoly Rewards: ", hre.network.name, depolyRewardsTx);
+
   }
   if(hre.network.name === 'matic') {
     // 2024/05/28
@@ -102,9 +119,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:StakingRewardsI
 // call changeUnstakeLock and setStakeParameter
 
-// 2024/09/24: Call changeUnstakeLock and setStakeParameter (Amoy testnet)
+// 2024/09/24A: Call changeUnstakeLock and setStakeParameter (Amoy testnet)
 // yarn deploy:matic_test:StakingRewardsI
 // call changeUnstakeLock and setStakeParameter
+// 0x83A53493180677DBF298b5C9f454DED4f73FD0F1
+// 0xa2c7FD9d6F9fCD50000DAaC552d931E0185D3Be6
+
+// 2024/09/24A: Call depolyRewards (Amoy testnet)
+// yarn deploy:matic_test:StakingRewardsI
 // 0x83A53493180677DBF298b5C9f454DED4f73FD0F1
 // 0xa2c7FD9d6F9fCD50000DAaC552d931E0185D3Be6
 
