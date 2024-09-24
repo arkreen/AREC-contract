@@ -20,18 +20,21 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const stakingRewardsAddress1  = "0x1f74d233c159Eb99a81FB067076cf2C86D5a3F06"          // 2024/06/21: Amoy testnet, Proxy1
     const stakingRewardsAddress2  = "0x09806c44a1a87A5Db3d3b21839C8eDB6049355B5"          // 2024/06/21: Amoy testnet, Proxy2
     const stakingRewardsAddress3  = "0xDfDe48f6A4E57989c8916D9f9f467803D36E6412"          // 2024/06/21: Amoy testnet, Proxy3
+    const stakingRewardsAddress4  = "0x83A53493180677DBF298b5C9f454DED4f73FD0F1"          // 2024/06/21: Amoy testnet, Proxy3
+    const stakingRewardsAddress5  = "0xa2c7FD9d6F9fCD50000DAaC552d931E0185D3Be6"          // 2024/06/21: Amoy testnet, Proxy3
 
-    let stakingRewardsAddress = stakingRewardsAddress0
+    let stakingRewardsAddress = stakingRewardsAddress5
 
     const stakingRewards = StakingRewards__factory.connect(stakingRewardsAddress, deployer);
 
     // 2024/05/21, Amoy testnet
     // 2024/06/21, Amoy testnet
-    const capMinerPremium = expandTo18Decimals(5000)    // proxy 0, proxy 1, 2024/06/21
-    const ratePremium = 200                             // proxy 0, proxy 1, 2024/06/21
+    // 2024/09/24, Amoy testnet
+    const capMinerPremium = expandTo18Decimals(5000)      // proxy 0, proxy 1, 2024/06/21
+    const ratePremium = 200                               // proxy 0, proxy 1, 2024/06/21
 
-    //const capMinerPremium = expandTo18Decimals(6000)      // proxy 2, 2024/06/21
-    //const ratePremium = 250                               // proxy 2, 2024/06/21
+    //const capMinerPremium = expandTo18Decimals(6000)    // proxy 2, 2024/06/21
+    //const ratePremium = 250                             // proxy 2, 2024/06/21
 
     //const capMinerPremium = expandTo18Decimals(8000)    // proxy 3, 2024/06/21
     //const ratePremium = 300                             // proxy 3, 2024/06/21
@@ -40,7 +43,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     //const capMinerPremium = expandTo18Decimals(6000)
     //const ratePremium = 200
 
-    await stakingRewards.changeUnstakeLock(false, {gasPrice: defaultGasPrice})            // with Lock
+    await stakingRewards.changeUnstakeLock(true, {gasPrice: defaultGasPrice})            // with Lock
 
     const setStakeParameterTx = await stakingRewards.setStakeParameter(capMinerPremium, ratePremium, {gasPrice: defaultGasPrice})
     await setStakeParameterTx.wait()
@@ -98,6 +101,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/07/25A: Call changeUnstakeLock and setStakeParameter (Polygon mainnet)
 // yarn deploy:matic:StakingRewardsI
 // call changeUnstakeLock and setStakeParameter
+
+// 2024/09/24: Call changeUnstakeLock and setStakeParameter (Amoy testnet)
+// yarn deploy:matic_test:StakingRewardsI
+// call changeUnstakeLock and setStakeParameter
+// 0x83A53493180677DBF298b5C9f454DED4f73FD0F1
+// 0xa2c7FD9d6F9fCD50000DAaC552d931E0185D3Be6
 
 func.tags = ["StakingRewardsI"];
 

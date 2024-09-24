@@ -20,15 +20,19 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     
     if(hre.network.name === 'matic_test')  {
       // 2024/05/16: AKRE on Amoy testnet                        
-      tokenAKRE = "0xd092e1f47d4e5d1C1A3958D7010005e8e9B48206"
-      tokenART = "0x615835Cc22064a17df5A3E8AE22F58e67bCcB778"
-      minerContract = "0xF390caaF4FF0d297e0b4C3c1527D707C75541736"
-      rewardsDistributor = "0x576Ab950B8B3B18b7B53F7edd8A47986a44AE6F4"
+      tokenAKRE             = "0xd092e1f47d4e5d1C1A3958D7010005e8e9B48206"
+      minerContract         = "0xF390caaF4FF0d297e0b4C3c1527D707C75541736"
+      // tokenART           = "0x615835Cc22064a17df5A3E8AE22F58e67bCcB778"
+      // rewardsDistributor = "0x576Ab950B8B3B18b7B53F7edd8A47986a44AE6F4"
+      tokenART              = "0xd092e1f47d4e5d1C1A3958D7010005e8e9B48206"
+      rewardsDistributor    = "0xB53B96e1eF29cB14313c18Fa6374AB87df59BcD9"
     } else if(hre.network.name === 'matic')  {
-      tokenAKRE           = "0xE9c21De62C5C5d0cEAcCe2762bF655AfDcEB7ab3"
-      tokenART            = "0x58E4D14ccddD1E993e6368A8c5EAa290C95caFDF"
-      minerContract       = "0xbf8eF5D950F78eF8edBB8674a48cDACa675831Ae"
-      rewardsDistributor  = "0x1249B1eABcAE642CF3Cb1e512a0075CEe92769BE"
+      tokenAKRE             = "0xE9c21De62C5C5d0cEAcCe2762bF655AfDcEB7ab3"
+      minerContract         = "0xbf8eF5D950F78eF8edBB8674a48cDACa675831Ae"
+      // tokenART           = "0x58E4D14ccddD1E993e6368A8c5EAa290C95caFDF"
+      // rewardsDistributor = "0x1249B1eABcAE642CF3Cb1e512a0075CEe92769BE"
+      tokenART              = "0xE9c21De62C5C5d0cEAcCe2762bF655AfDcEB7ab3"  // Reward token is AKRE
+      rewardsDistributor    = "0x05D1e64fc523105CECEd7c5Ca70993CD69b8e808"  // Distribute is also the deployer
     } 
 
     console.log("Deploying: ", "StakingRewards", deployer);  
@@ -50,16 +54,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     });
 */
 
-    // 2024/06/21
-    // const IMPLEMENTATION_ADDRESS ="0x7758f24068A5E2c1dea3D1D82Fa933356b35f8c5" // Amoy testnet
-    const IMPLEMENTATION_ADDRESS ="0x38021bD40a92baFED6B54B282013190755c729AE"    // 2024/06/25: Polygon mainnet
+    // 2024/06/21, 2024/09/24 
+    const IMPLEMENTATION_ADDRESS ="0x7758f24068A5E2c1dea3D1D82Fa933356b35f8c5" // Amoy testnet
+    //const IMPLEMENTATION_ADDRESS ="0x38021bD40a92baFED6B54B282013190755c729AE"    // 2024/06/25: Polygon mainnet
         
     const callData = StakingRewards__factory.createInterface().encodeFunctionData("initialize", [tokenAKRE, tokenART, minerContract, rewardsDistributor])
     const stakingRewards = await deploy(CONTRACTS.UUPSProxy, {
             from: deployer,
             args: [IMPLEMENTATION_ADDRESS, deployer, callData],
             log: true,
-            skipIfAlreadyDeployed: true,
+            skipIfAlreadyDeployed: false,
             gasPrice: defaultGasPrice
     });
 
@@ -107,6 +111,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:StakingRewards    : Polygon mainnet with lock feature
 // Proxy:                 0x071Bed72c917859e73f99dDa41Fb6B2Ea4C08d33  (Proxy)
 // Implementaion:         0x38021bD40a92baFED6B54B282013190755c729AE
+
+// 2024/06/21
+// yarn deploy:matic_test:StakingRewards: Amoy testnet (Dev Anv), depploy 2 new proxy contract for AKRE rewards
+// Proxy5:                0x83A53493180677DBF298b5C9f454DED4f73FD0F1
+// Proxy6:                0xa2c7FD9d6F9fCD50000DAaC552d931E0185D3Be6
+// Implementaion:         0x7758f24068A5E2c1dea3D1D82Fa933356b35f8c5
 
 func.tags = ["StakingRewards"];
 
