@@ -75,15 +75,17 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     //const stakingRewardsAddress  = "0x4C15968df54B276dC06eF11Bcd3b3EfFbC577c59"         // 2024/006/25(XXX): Polygon Mainnet, with lock
     //const stakingRewardsAddress  = "0xc1dCE2f17362C2De4ab4F104f6f88223e0c28B95"         // 2024/006/25: Polygon Mainnet, with lock
     //const stakingRewardsAddress  = "0x0A0688fc15794035820CaDc23Db7114bAb4dE405"         // 2024/07/25A: Polygon Mainnet, 60 days lock
-    const stakingRewardsAddress    = "0x071Bed72c917859e73f99dDa41Fb6B2Ea4C08d33"         // 2024/07/25B: Polygon Mainnet, 60 days lock
+    //const stakingRewardsAddress  = "0x071Bed72c917859e73f99dDa41Fb6B2Ea4C08d33"         // 2024/07/25B: Polygon Mainnet, 60 days lock
+    //const stakingRewardsAddress  = "0x39c518133a60a7517eed15EA21E8A0Cf1AB66D46"         // 2024/09/29: Polygon Mainnet, 30 days lock
+    const stakingRewardsAddress    = "0xDA6E63C0be2DE7FAA29a4E8a7ca0d14F280636e5"         // 2024/09/29: Polygon Mainnet, 60 days lock
 
     const stakingRewards = StakingRewards__factory.connect(stakingRewardsAddress, deployer);
 
-    // 2024/06/25: Polygon Mainnet， 2024/07/25A、2024/07/25B
+    // 2024/06/25: Polygon Mainnet， 2024/07/25A、2024/07/25B, 2024/09/29A
     const changeUnstakeLockTx = await stakingRewards.changeUnstakeLock(true, {gasPrice: defaultGasPrice})
     await changeUnstakeLockTx.wait()
 
-    // 2024/05/28, 2024/06/25: Polygon Mainnet, 2024/07/25A、2024/07/25B
+    // 2024/05/28, 2024/06/25: Polygon Mainnet, 2024/07/25A、2024/07/25B, 2024/09/29A
     const capMinerPremium = expandTo18Decimals(5000)
     const ratePremium = 200
 
@@ -129,6 +131,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:StakingRewardsI
 // 0x83A53493180677DBF298b5C9f454DED4f73FD0F1
 // 0xa2c7FD9d6F9fCD50000DAaC552d931E0185D3Be6
+
+// 2024/09/29A: Call changeUnstakeLock and setStakeParameter (Polygon mainnet)
+// yarn deploy:matic:StakingRewardsI  （30D: 0x39c518133a60a7517eed15EA21E8A0Cf1AB66D46）
+// call changeUnstakeLock and setStakeParameter
+
+// 2024/09/29B: Call changeUnstakeLock and setStakeParameter (Polygon mainnet)
+// yarn deploy:matic:StakingRewardsI  （60D: 0xDA6E63C0be2DE7FAA29a4E8a7ca0d14F280636e5
+// call changeUnstakeLock and setStakeParameter
 
 func.tags = ["StakingRewardsI"];
 

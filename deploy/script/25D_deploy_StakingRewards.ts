@@ -9,7 +9,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const { deploy } = deployments;
     const { deployer } = await getNamedAccounts();
 
-    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(160_000_000_000)
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(35_000_000_000) : BigNumber.from(160_000_000_000)
 
     const stakingRewards = await deploy('StakingRewards', {
         from: deployer,
@@ -61,6 +61,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/06/18: add staking locking feature
 // yarn deploy:matic_test:StakingRewardsD    : Amoy testnet (Dev Anv)
 // Implementaion:         0x7758f24068A5E2c1dea3D1D82Fa933356b35f8c5
+
+// 2024/09/25: Removing boost feature
+// yarn deploy:matic_test:StakingRewardsD    : Amoy testnet (Dev Anv)
+// Implementaion:         0x8653e707071f45A25e348187F8236C9e71eF33d4
 
 func.tags = ["StakingRewardsD"];
 

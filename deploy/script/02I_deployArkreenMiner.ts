@@ -4,7 +4,7 @@ import { CONTRACTS } from "../constants";
 import { BigNumber } from "ethers";
 import { ArkreenMiner__factory } from "../../typechain";
 import { ethers } from "hardhat";
-import { utils } from 'ethers'
+import { utils, constants } from 'ethers'
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
@@ -33,12 +33,24 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       const stakingRewards3 = "0xDfDe48f6A4E57989c8916D9f9f467803D36E6412"
       await arkreenMiner.registerListenApps(appid3, stakingRewards3, {gasPrice: defaultGasPrice})
 */
+
+/*
+      // 2024/09/24
       const appid4 = 6
       const stakingRewards4 = "0x83A53493180677DBF298b5C9f454DED4f73FD0F1"
       await arkreenMiner.registerListenApps(appid4, stakingRewards4, {gasPrice: defaultGasPrice})
 
       const appid5 = 7
       const stakingRewards5 = "0xa2c7FD9d6F9fCD50000DAaC552d931E0185D3Be6"
+      await arkreenMiner.registerListenApps(appid5, stakingRewards5, {gasPrice: defaultGasPrice})
+*/
+      // 2024/09/25
+      const appid4 = 6
+      const stakingRewards4 = constants.AddressZero
+      await arkreenMiner.registerListenApps(appid4, stakingRewards4, {gasPrice: defaultGasPrice})
+
+      const appid5 = 7
+      const stakingRewards5 = constants.AddressZero
       await arkreenMiner.registerListenApps(appid5, stakingRewards5, {gasPrice: defaultGasPrice})
 
       console.log("New ArkreenMiner deployed to %s:", hre.network.name, MINER_PROXY_ADDRESS, 
@@ -107,6 +119,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2024/09/24
 // yarn deploy:matic_test:AMinerI    : Amoy testnet: Register Proxy4, Proxy5
+// call registerListenApps: (6, 0x83A53493180677DBF298b5C9f454DED4f73FD0F1)
+// call registerListenApps: (7, 0xa2c7FD9d6F9fCD50000DAaC552d931E0185D3Be6)
+
+// 2024/09/25
+// yarn deploy:matic_test:AMinerI    : Amoy testnet: Removing Proxy4, Proxy5
 // call registerListenApps: (6, 0x83A53493180677DBF298b5C9f454DED4f73FD0F1)
 // call registerListenApps: (7, 0xa2c7FD9d6F9fCD50000DAaC552d931E0185D3Be6)
 

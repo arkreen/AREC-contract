@@ -27,6 +27,7 @@ contract StakingRewards is IArkreenMinerListener, ReentrancyGuardUpgradeable, Ow
     uint128 public capMinerPremium;
     uint32  public ratePremium;
     bool    public unstakeLocked;
+    bool    public boostActivated;
 
     uint256 public totalStakes;
     uint256 public totalRewardStakes;
@@ -82,7 +83,7 @@ contract StakingRewards is IArkreenMinerListener, ReentrancyGuardUpgradeable, Ow
     }
 
     modifier onlyArkreenMiner() {
-        require(msg.sender == address(arkreenMiner), "Caller Not Allowed");
+        require( boostActivated && (msg.sender == address(arkreenMiner)), "Caller Not Allowed");
         _;
     }
 
@@ -138,6 +139,13 @@ contract StakingRewards is IArkreenMinerListener, ReentrancyGuardUpgradeable, Ow
     }
 
     function _updateRewardStake(address staker) internal {
+        if (!boostActivated) {
+            myRewardStakes[staker] = myStakes[staker];
+            totalRewardStakes = totalStakes;
+            emit RewardStakeUpdated(staker, 0, myRewardStakes[staker], totalRewardStakes);
+            return;
+        } 
+
         uint256 totalMiners = arkreenMiner.balanceOf(staker);
         uint256 premium = totalMiners * capMinerPremium;
 
@@ -204,9 +212,9 @@ contract StakingRewards is IArkreenMinerListener, ReentrancyGuardUpgradeable, Ow
                 ) {
       startTime = periodStart;
       endTime = periodEnd;
-      allMiners = arkreenMiner.totalSupply();
+      allMiners = (!boostActivated) ? 0 : arkreenMiner.totalSupply();
       allStakes = totalStakes;
-      allBoostStakes = (totalRewardStakes - allStakes) * 100 / (ratePremium - 100);
+      allBoostStakes = (!boostActivated) ? 0 : (totalRewardStakes - allStakes) * 100 / (ratePremium - 100);
       allNormalStakes = allStakes - allBoostStakes;
       capMinerBoost = capMinerPremium;
       rateBoost = ratePremium;
@@ -222,7 +230,7 @@ contract StakingRewards is IArkreenMinerListener, ReentrancyGuardUpgradeable, Ow
                   uint256 userRewards,
                   uint256 blockTime
                   ) {
-      userMiners = arkreenMiner.balanceOf(owner);
+      userMiners = (!boostActivated) ? 0 : arkreenMiner.balanceOf(owner);
       userStakes = myStakes[owner];
       userBoostStakes = capMinerPremium * userMiners;
       if(userStakes < userBoostStakes)  userBoostStakes = userStakes;
@@ -251,10 +259,11 @@ contract StakingRewards is IArkreenMinerListener, ReentrancyGuardUpgradeable, Ow
         lastUpdateTime = uint32(lastTimeRewardApplicable());
 
         if (account != address(0)) {
-            if ((myRewardsPerStakePaid[account] == 0) && (myStakes[account] == 0)) {
-              	IArkreenMiner(arkreenMiner).registerListener(account);
+            if (boostActivated) {
+              if ((myRewardsPerStakePaid[account] == 0) && (myStakes[account] == 0)) {
+                  IArkreenMiner(arkreenMiner).registerListener(account);
+              }
             }
-
             myRewards[account] = earned(account);
             myRewardsPerStakePaid[account] = rewardPerStakeLast;
         }

@@ -13,8 +13,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   
   if(hre.network.name === 'matic_test') {
 
-    // const STAKE_REWARD_PROXY_ADDRESS  = "0x691938a6e88a85E66Aab05ECf84Fe84ECE8351C9"  // 2024/05/16: StakingRewards on Amoy testnet
-    const STAKE_REWARD_PROXY_ADDRESS  = "0xe233f1aC801eD919A774295503eCFE359A647B8B"  // 2024/05/22: StakingRewards Re-deploy on Amoy testnet
+    // const STAKE_REWARD_PROXY_ADDRESS  = "0x691938a6e88a85E66Aab05ECf84Fe84ECE8351C9"   // 2024/05/16: StakingRewards on Amoy testnet
+    // const STAKE_REWARD_PROXY_ADDRESS  = "0xe233f1aC801eD919A774295503eCFE359A647B8B"   // 2024/05/22: StakingRewards Re-deploy on Amoy testnet
+    // const STAKE_REWARD_PROXY_ADDRESS  = "0x83A53493180677DBF298b5C9f454DED4f73FD0F1"      // 2024/09/25: StakingRewards: 30D, AKRE
+    const STAKE_REWARD_PROXY_ADDRESS  = "0xa2c7FD9d6F9fCD50000DAaC552d931E0185D3Be6"   // 2024/09/25: StakingRewards: 60D, AKRE
     
     // const NEW_IMPLEMENTATION       = "0x4A1276c15821c1ebf76542724E5b81EDe37C7b24"  // 2024/05/21: Change RewardAdded event
     // const NEW_IMPLEMENTATION       = "0x61A914363Ef99AabCa69504cee5ccfd5523C845d"  // 2024/05/22: Add getBasicStakeStatus and getUserStakeStatus
@@ -25,7 +27,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     // const NEW_IMPLEMENTATION       = "0xfFdD75c441a50cBf9aAEA3984Dc174D2352C309F"  // 2024/05/23C: Correct getBasicStakeStatus
     // const NEW_IMPLEMENTATION       = "0x2e50A76D8C334315583617Df5c02420Ff166b6B0"  // 2024/05/23D: Correct getBasicStakeStatus
     // const NEW_IMPLEMENTATION       = "0x1FAc329c4f9556654e0beCb527977228100F7742"  // 2024/05/23E: Correct getBasicStakeStatus
-    const NEW_IMPLEMENTATION          = "0x7758f24068A5E2c1dea3D1D82Fa933356b35f8c5"  // 2024/06/18: Add staking locking feature
+    // const NEW_IMPLEMENTATION       = "0x7758f24068A5E2c1dea3D1D82Fa933356b35f8c5"  // 2024/06/18: Add staking locking feature
+    const NEW_IMPLEMENTATION          = "0x8653e707071f45A25e348187F8236C9e71eF33d4"  // 2024/09/25: Removing boost feature
 
     console.log("Updating StakingRewards: ", STAKE_REWARD_PROXY_ADDRESS, chainID, defaultGasPrice.toString());  
 
@@ -75,6 +78,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2024/06/18: Add staking locking feature for 0xe233f1aC801eD919A774295503eCFE359A647B8B
 // yarn deploy:matic_test:StakingRewardsU: 0x7758f24068A5E2c1dea3D1D82Fa933356b35f8c5
+
+// 2024/09/25A: Removing boost feature for 0x83A53493180677DBF298b5C9f454DED4f73FD0F1
+// yarn deploy:matic_test:StakingRewardsU: 0x8653e707071f45A25e348187F8236C9e71eF33d4
+
+// 2024/09/25B: Removing boost feature for 0xa2c7FD9d6F9fCD50000DAaC552d931E0185D3Be6
+// yarn deploy:matic_test:StakingRewardsU: 0x8653e707071f45A25e348187F8236C9e71eF33d4
 
 export default func;
 func.tags = ["StakingRewardsU"];
