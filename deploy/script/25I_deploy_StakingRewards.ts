@@ -81,6 +81,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     const stakingRewards = StakingRewards__factory.connect(stakingRewardsAddress, deployer);
 
+/*    
     // 2024/06/25: Polygon Mainnet， 2024/07/25A、2024/07/25B, 2024/09/29A
     const changeUnstakeLockTx = await stakingRewards.changeUnstakeLock(true, {gasPrice: defaultGasPrice})
     await changeUnstakeLockTx.wait()
@@ -95,6 +96,23 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     console.log("StakingRewards setStakeParameter Tx:", changeUnstakeLockTx, setStakeParameterTx)
     console.log("Set StakeParameter: ", hre.network.name, 
                     stakingRewardsAddress, capMinerPremium.toString(), ratePremium);
+*/
+
+/*
+    // 2024/09/30A, Polygon mainnet
+    const start = 1727683200    // 2024/09/30
+    const end = 1730275200      // 2024/10/30
+    const rewardTotal = expandTo18Decimals(80000)
+*/
+    // 2024/09/30B, Polygon mainnet
+    const start = 1727683200    // 2024/09/30
+    const end = 1732867200      // 2024/11/29
+    const rewardTotal = expandTo18Decimals(250000)
+
+    // Need to approve first
+    const depolyRewardsTx = await stakingRewards.depolyRewards(start, end, rewardTotal, {gasPrice: defaultGasPrice})
+    console.log("Depoly Rewards: ", hre.network.name, depolyRewardsTx);
+
   }
 
 };
@@ -139,6 +157,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/09/29B: Call changeUnstakeLock and setStakeParameter (Polygon mainnet)
 // yarn deploy:matic:StakingRewardsI  （60D: 0xDA6E63C0be2DE7FAA29a4E8a7ca0d14F280636e5
 // call changeUnstakeLock and setStakeParameter
+
+// 2024/09/30A: Call depolyRewards (Polygon mainnet)
+// yarn deploy:matic:StakingRewardsI
+// 0x39c518133a60a7517eed15EA21E8A0Cf1AB66D46
+
+// 2024/09/30B: Call depolyRewards (Polygon mainnet)
+// yarn deploy:matic:StakingRewardsI
+// 0xDA6E63C0be2DE7FAA29a4E8a7ca0d14F280636e5
 
 func.tags = ["StakingRewardsI"];
 

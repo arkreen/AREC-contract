@@ -11,7 +11,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const [deployer, controller] = await ethers.getSigners();
     console.log("Updating ArkreenRECIssuance: ", CONTRACTS.RECIssuance, deployer.address);  
 
-    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(150_000_000_000)
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(50_000_000_000)
 
 //    Cannot be verified in this way    
 //    const ArkreenRECIssuanceFactory = await ethers.getContractFactory("ArkreenRECIssuance");
@@ -131,7 +131,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //    const AKREToken_ADDRESS         = "0x21B101f5d61A66037634f7e1BeB5a733d9987D57"        // 2023/05/22: tAKRE
       const AKREToken_ADDRESS         = "0xE9c21De62C5C5d0cEAcCe2762bF655AfDcEB7ab3"        // 2024/02/27: AKRE
 
-      const AKREToken_PRICE           = BigNumber.from(100000000000)                        // 2023/03/22: 10**11, 2024/02/27
+//    const AKREToken_PRICE           = BigNumber.from(100000000000)                        // 2023/03/22: 10**11, 2024/02/27
+      const AKREToken_PRICE           = BigNumber.from(1000000000000)                       // 2024/10/01: 10**12, 1 AREC = 1000 AKRE
+
 /*
       // 2023/03/22
       // function updateARECMintPrice(address token, uint256 price)
@@ -171,15 +173,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         const updateTx = await ArkreenRECIssuanceFactory.setTokenAKRE(AKREToken_ADDRESS, {gasPrice: defaultGasPrice} )
         await updateTx.wait()        
       }
-
+*/
       {
-        // 2024/02/27
+        // 2024/02/27, 2024/10/01
         // function updateARECMintPrice(address token, uint256 price)
         console.log("ArkreenRECIssuance Update Mint Price:", hre.network.name, AKREToken_ADDRESS, AKREToken_PRICE);
         const updateTx = await ArkreenRECIssuanceFactory.updateARECMintPrice(AKREToken_ADDRESS, AKREToken_PRICE, {gasPrice: defaultGasPrice} )
         await updateTx.wait()      
       }
-*/
+
+/*
       {
         // 2024/03/30
 
@@ -201,6 +204,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         
         console.log("ArkreenRECIssuance Update Mint Price:", hre.network.name, tokenID, issuer, region, url, memo, callData);
       }
+*/        
 
 /*
       //////////////////////////////////////////////////////
@@ -446,6 +450,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2024/04/16C： Called manageMVPAddress: Add Issuer address for Amoy testnet
 // yarn deploy:matic_test:RECIssueI
+
+// 2024/10/01： Called updateARECMintPrice to change the issuance price to 1 AREC = 1000 AKRE
+// yarn deploy:matic:RECIssueI
 
 func.tags = ["RECIssueI"];
 
