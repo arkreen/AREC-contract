@@ -128,8 +128,8 @@ contract GreenBTC2S is
                             + (uint256(uint16(boxSteps)) << 160) + uint256(uint160(msg.sender)));
         greenActions[actionID] = actionValue;
 
-        userActionIDs[msg.sender] = bytes.concat(userActionIDs[msg.sender], bytes4(uint32(actionID)));
-        domainActionIDs[domainID] = bytes.concat(domainActionIDs[domainID], bytes4(uint32(actionID)));
+        userActionIDs[msg.sender].concatStorage(abi.encodePacked(bytes4(uint32(actionID))));
+        domainActionIDs[domainID].concatStorage(abi.encodePacked(bytes4(uint32(actionID))));
 
         domains[domainID] = bytes32(((domainInfo >> 32) << 32) + (boxMadeGreen + boxSteps));
 
@@ -301,18 +301,15 @@ contract GreenBTC2S is
     /**
      * @dev Get the actionIDs of from the storage actionID list
     */
-    function geActionIDs (bytes storage actionIDs, uint256 offset, uint256 length) internal pure 
+    function geActionIDs (bytes storage actionIDs, uint256 offset, uint256 length) internal view 
             returns (uint256, bytes memory) 
     {
-        bytes memory actions = actionIDs;                 // Need to optimized here, gas may be much high
-        uint256 totalOfActions = actions.length / 4;
+        uint256 lengthActionIDs = actionIDs.length;
+        offset = 4 * offset;
+        length = 4 * length;
 
-        if (offset > totalOfActions) offset = totalOfActions;
-        if (length == 0) length = totalOfActions - offset;
-        uint256 start = offset * 4;
-        uint256 end = (offset + length) * 4;
-        if (end > actions.length) end = actions.length;
-        return (totalOfActions, actions.slice(start, end - start));
+        if (offset > lengthActionIDs) offset = lengthActionIDs;
+        if ((length == 0)  || ((offset + length) > lengthActionIDs)) length = lengthActionIDs - offset;
+        return (lengthActionIDs/4, actionIDs.getStorage(offset, length));
     }
-
 }

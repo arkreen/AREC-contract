@@ -211,6 +211,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:GreenBTC2SI
 // call: registerDomain
 
+// 2024/10/13: Call registerDomain (Polygon Mainnet): 
+// yarn deploy:matic:GreenBTC2SI
+// call: registerDomain
+
+
 func.tags = ["GreenBTC2SI"];
 
 export default func;

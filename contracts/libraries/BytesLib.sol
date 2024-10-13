@@ -87,6 +87,83 @@ library BytesLib {
         return tempBytes;
     }
 
+    // Not fully tested, must be cautious if used
+    function getStorage(bytes storage storageBytes, uint256 offset, uint256 length)         
+        internal
+        view
+        returns (bytes memory)
+    {
+        bytes memory tempBytes;
+
+        assembly {
+            // Get a location of some free memory and store it in tempBytes as
+            // Solidity does for memory variables.
+            tempBytes := mload(0x40)
+
+            // Read the first 32 bytes of storageBytes storage, which is the length
+            // of the array. (We don't need to use the offset into the slot
+            // because arrays use the entire slot.)
+            let fslot := sload(storageBytes.slot)
+
+            // Arrays of 31 bytes or less have an even value in their slot,
+            // while longer arrays have an odd value. The actual length is
+            // the slot divided by two for odd values, and the lowest order
+            // byte divided by two for even values.
+            // If the slot is even, bitwise and the slot with 255 and divide by
+            // two to get the length. If the slot is odd, bitwise and the slot
+            // with -1 and divide by two.
+            let slength := div(and(fslot, sub(mul(0x100, iszero(and(fslot, 1))), 1)), 2)
+
+            // if offset is overflowed
+            if gt(offset, slength) { revert (tempBytes, 0) }
+
+            // if length is overflowed
+            if gt(add(offset, length), slength) { revert (tempBytes, 0) }
+
+            // set the return length
+            mstore(tempBytes, length)
+            let mc := add(tempBytes, 0x20)
+
+            // Update the free-memory pointer 
+            mstore(0x40, add(mc, mul(div(add(length, 31), 32), 32)))
+
+            switch lt(slength, 31) 
+            case 1 {
+                mstore(mc,  mul(fslot, exp(0x100, offset)))
+            }             
+            default {
+                mstore(0x0, storageBytes.slot)
+                let start := keccak256(0x0, 0x20)
+                let sc := add(start, div(offset, 32))
+
+                mstore(mc, mul(sload(sc), exp(0x100, mod(offset, 32))))
+                let end := add(start, div(add(add(offset, length), 31), 32))
+
+                for {
+                    sc := add(sc, 1)
+                    mc := add(mc, sub(32, mod(offset, 32)))
+
+                } lt(sc, end) {
+                    // Increase both counters by 32 bytes each iteration.
+                    sc := add(sc, 1)
+                    mc := add(mc, 0x20)
+                } {
+                    // Write the storageBytes data into the tempBytes memory 32 bytes
+                    // at a time.
+                    mstore(mc, sload(sc))
+                }
+                mc := sub(mc, 0x20)
+            }
+
+            let clearlength := mod(add(offset, length), 32)
+            if gt(clearlength, 0) {
+                clearlength := exp(0x100, sub(32, clearlength))
+                mstore(mc, mul(div(mload(mc), clearlength), clearlength))
+            }
+        }
+        return tempBytes;
+    }
+
     function concatStorage(bytes storage _preBytes, bytes memory _postBytes) internal {
         assembly {
             // Read the first 32 bytes of _preBytes storage, which is the length

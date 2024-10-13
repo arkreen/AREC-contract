@@ -374,6 +374,8 @@ describe("GreenBTC2S Test Campaign", ()=>{
         await kWhToken.connect(owner1).approve(greenBTC2S.address, constants.MaxUint256)
 
         const greenizetx = await  greenBTC2S.connect(owner1).makeGreenBox(1, 123)
+//        await  greenBTC2S.connect(owner1).makeGreenBox(1, 123)
+
         const receipt = await greenizetx.wait()
 
         // console.log("AAAAAAAAAAAAAAA", domainInfoBigIntConverted.toHexString(), receipt)
@@ -417,7 +419,74 @@ describe("GreenBTC2S Test Campaign", ()=>{
       
       });
 
-      it("GreenBTC2S makeGreenBox test", async function () {
+      it("GreenBTC2S basics test: Check: getDomainActionIDs ", async function () {
+        const domainInfoString = utils.defaultAbiCoder.encode(['uint256'], [domainInfoBigInt])
+
+        const domainID = 1
+        await greenBTC2S.registerDomain(domainID, domainInfoString)
+
+        await kWhToken.connect(owner1).approve(greenBTC2S.address, constants.MaxUint256)
+
+        let idString = ''
+        {
+          for (let index = 0; index < 5; index++) {
+            const greenizetx = await  greenBTC2S.connect(owner1).makeGreenBox(1, 123)
+            const receipt = await greenizetx.wait()
+            idString = idString + (index+1).toString(16).padStart(8,'0')
+            console.log("Gas fee:",  receipt.gasUsed, index)
+          }
+          
+          for (let index = 0; index < 5; index++) {
+            const [actionNumber, actionIDs] = await greenBTC2S.getDomainActionIDs(1, index, 5)
+            expect(actionNumber.toNumber()).to.eq(5)
+            expect(actionIDs).to.eq("0x" + idString.slice(8*index))
+          }
+
+          for (let index = 0; index < 5; index++) {
+            const [actionNumber, actionIDs] = await greenBTC2S.getDomainActionIDs(1, 0, index)
+            expect(actionNumber.toNumber()).to.eq(5)
+            if(index ==0) expect(actionIDs).to.eq("0x" + idString)
+            else expect(actionIDs).to.eq("0x" + idString.slice(0, 8*index))
+          }
+        }
+
+        for (let index = 0; index <300; index++) {
+          await  greenBTC2S.connect(owner1).makeGreenBox(1, 123)
+          idString = idString + (index+6).toString(16).padStart(8,'0')
+        }
+        
+        for (let index = 0; index < 100; index++) {
+          const [actionNumber, actionIDs] = await greenBTC2S.getDomainActionIDs(1, index, 305)
+          expect(actionNumber.toNumber()).to.eq(305)
+          expect(actionIDs).to.eq("0x" + idString.slice(8*index))
+        }
+
+        for (let index = 0; index < 100; index++) {
+          const [actionNumber, actionIDs] = await greenBTC2S.getDomainActionIDs(1, 0, index)
+          expect(actionNumber.toNumber()).to.eq(305)
+          if (index==0) expect(actionIDs).to.eq('0x' + idString)
+          else expect(actionIDs).to.eq("0x" + idString.slice(0, 8*index))
+        }
+
+        for (let index = 0; index < 100; index++) {
+          const [actionNumber, actionIDs] = await greenBTC2S.getUserActionIDs(owner1.address, index, 305)
+          expect(actionNumber.toNumber()).to.eq(305)
+          expect(actionIDs).to.eq("0x" + idString.slice(8*index))
+        }
+
+        for (let index = 0; index < 100; index++) {
+          const [actionNumber, actionIDs] = await greenBTC2S.getUserActionIDs(owner1.address, 0, index)
+          expect(actionNumber.toNumber()).to.eq(305)
+          if (index==0) expect(actionIDs).to.eq('0x' + idString)
+          else expect(actionIDs).to.eq("0x" + idString.slice(0, 8*index))
+        }
+
+        const [actionNumber, actionIDs] = await greenBTC2S.getDomainActionIDs(1, 0, 305)
+        expect(actionIDs).to.eq('0x' +idString)
+        expect(actionNumber.toNumber()).to.eq(305)
+      });
+
+      it("GreenBTC2S makeGryareenBox test", async function () {
 
         const domainID = 1
         const domainInfoString = utils.defaultAbiCoder.encode(['uint256'], [domainInfoBigInt])
