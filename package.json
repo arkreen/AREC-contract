@@ -125,6 +125,9 @@
     "deploy:matic_test:GreenPowerI": "hardhat --network matic_test deploy --tags GreenPowerI",
     "deploy:matic_test:GreenBTC2S": "hardhat --network matic_test deploy --tags GreenBTC2S",
     "deploy:matic_test:GreenBTC2SI": "hardhat --network matic_test deploy --tags GreenBTC2SI",
+    "deploy:matic_test:GreenBTC2SD": "hardhat --network matic_test deploy --tags GreenBTC2SD",
+    "deploy:matic_test:GreenBTC2SU": "hardhat --network matic_test deploy --tags GreenBTC2SU",
+
     "deploy:matic_test:GreenPowerD": "hardhat --network matic_test deploy --tags GreenPowerD",
     "deploy:matic_test:GreenPowerU": "hardhat --network matic_test deploy --tags GreenPowerU",
     "deploy:matic_test:PlugMinerSales": "hardhat --network matic_test deploy --tags PlugMinerSales",

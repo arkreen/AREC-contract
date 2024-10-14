@@ -32,6 +32,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:GreenBTC2SD     : Polygon mainnet: fix the huge gas problem.
 // Implementaion:        0x7ea0fE45cA251EB7aFe633D70361F7D5548475aB
 
+// 2024/10/14
+// yarn deploy:matic_test:GreenBTC2SD   : Amoy testnet: fix the huge gas problem and makeGreenBoxLucky is added.
+// Implementaion:        0xA649E9B886d2A1A1713268Ef6BC05E89A22a5436
+
 func.tags = ["GreenBTC2SD"];
 
 export default func;

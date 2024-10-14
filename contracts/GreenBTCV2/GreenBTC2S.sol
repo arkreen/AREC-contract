@@ -7,6 +7,7 @@ import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.
 import "../interfaces/IkWhToken.sol";
 import "../libraries/DecimalMath.sol";
 import "../libraries/BytesLib.sol";
+import "../libraries/TransferHelper.sol";
 
 contract GreenBTC2S is 
     ContextUpgradeable,
@@ -62,6 +63,7 @@ contract GreenBTC2S is
 
     event DomainRegistered(uint256 domainID, bytes32 domainInfo);
     event DomainGreenized(address gbtcActor, uint256 actionNumber, uint256 blockHeight, uint256 domainID, uint256 boxStart, uint256 boxNumber);
+    event KWhDeposit(uint256 amount);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -109,6 +111,16 @@ contract GreenBTC2S is
         require(manager != address(0), "GBTC: Zero Address");
         luckyManager = manager;                    
     }
+
+    /**
+     * @dev Deposit kWh token to green BTC club 2
+     * @param amount Amount of kWh token to deposit.
+     */
+    function depositkWh(uint256 amount) external {
+        TransferHelper.safeTransferFrom(kWhToken, msg.sender, address(this), amount);
+        luckyFundInfo.amountDeposit += uint96(amount);
+        emit KWhDeposit(amount);
+    }  
 
     /**
      * @dev Register a new domain
@@ -212,6 +224,8 @@ contract GreenBTC2S is
         emit DomainGreenized(greener, actionID, block.number, domainID, boxMadeGreen, boxSteps);
 
         uint256 kWhAmount = boxSteps * DecimalMath.getDecimalPower(uint8(domainInfo >> 56) & 0x0F);     // convert to kWh
+        luckyFundInfo.amountDroped += uint96(kWhAmount);
+
         IkWhToken(kWhToken).burn(kWhAmount);
     }
 

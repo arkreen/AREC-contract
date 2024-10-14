@@ -19,19 +19,24 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     
     //function initialize(address gbtc, address akre)
     if(hre.network.name === 'matic_test')  {
-      // 2024/06/15: GreenBTCV2 on Amoy testnet                        
-      const greenPowerAddress = "0x3221F5818A5CF99e09f5BE0E905d8F145935e3E0"
-      const NEW_IMPLEMENTATION ="0xFaCb924cd91EA15CaD4524f52C68b91530288c4d"
+      // 2024/10/14: fix the huge gas problem and makeGreenBoxLucky is added.
+      const greenPowerAddress = "0x6729b2956e8Cf3d863517E4618C3d8722548D5C4"
+      const NEW_IMPLEMENTATION ="0xA649E9B886d2A1A1713268Ef6BC05E89A22a5436"
 
       console.log("Updating GreenBTC2S: ", greenPowerAddress, defaultGasPrice.toString());  
 
       const [deployer] = await ethers.getSigners();
  
       const GreenBTC2SFactory = GreenBTC2S__factory.connect(greenPowerAddress, deployer);
-      const updateTx = await GreenBTC2SFactory.upgradeTo(NEW_IMPLEMENTATION, {gasPrice: defaultGasPrice})
+
+      const callData = GreenBTC2SFactory.interface.encodeFunctionData("postUpdate")
+      const updateTx = await GreenBTC2SFactory.upgradeToAndCall(NEW_IMPLEMENTATION, callData)
       await updateTx.wait()
+
+      //  const updateTx = await GreenBTC2SFactory.upgradeTo(NEW_IMPLEMENTATION, {gasPrice: defaultGasPrice})
+      //  await updateTx.wait()
   
-      console.log("USDT deployed to %s: ", hre.network.name, GreenBTC2SFactory.address);
+      console.log("GreenBTC2S Upgraded: ", hre.network.name, GreenBTC2SFactory.address);
 
     } else if(hre.network.name === 'matic')  {
       // 2024/10/13: GreenBTC2S on Polygon mainnet
@@ -60,6 +65,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:GreenBTC2SU:  Polygon mainnet
 // Proxy:                 0x3221F5818A5CF99e09f5BE0E905d8F145935e3E0
 // Implementaion:         0x7ea0fE45cA251EB7aFe633D70361F7D5548475aB
+
+// 2024/10/14
+// yarn deploy:matic_test:GreenBTC2SU:  Amoy testnet
+// Proxy:                 0x6729b2956e8Cf3d863517E4618C3d8722548D5C4
+// Implementaion:         0xA649E9B886d2A1A1713268Ef6BC05E89A22a5436
 
 func.tags = ["GreenBTC2SU"];
 

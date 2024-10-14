@@ -424,12 +424,12 @@ describe("GreenBTC2S Test Campaign", ()=>{
         const GreenBTC2Factory = await ethers.getContractFactory("GreenBTC2S")
         const _IMPLEMENTATION_SLOT = "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc";
         const implementation  = await ethers.provider.getStorageAt(greenBTC2S.address, _IMPLEMENTATION_SLOT) 
-        console.log("whiteListMinerBatch in index:",  implementation, '0x'+ implementation.slice(26)  )
+        //console.log("whiteListMinerBatch in index:",  implementation, '0x'+ implementation.slice(26)  )
 
         // 0x84ea74d481ee0a5332c457a4d796187f6ba67feb
         const callData = GreenBTC2Factory.interface.encodeFunctionData("postUpdate")
-        const updateTx = await greenBTC2S.upgradeToAndCall('0x'+ implementation.slice(26), callData)
-        console.log("postUpdate tx:",  updateTx  )
+        await greenBTC2S.upgradeToAndCall('0x'+ implementation.slice(26), callData)
+        //console.log("postUpdate tx:",  updateTx  )
 
         await greenBTC2S.setLuckyManager(manager.address)
 
@@ -451,10 +451,10 @@ describe("GreenBTC2S Test Campaign", ()=>{
         const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))   
         const signature: GreenBTC2S.SigStruct = { v, r, s }  
 
-        await kWhToken.connect(owner1).transfer(greenBTC2S.address, expandTo9Decimals(10000))
+        //await kWhToken.connect(owner1).transfer(greenBTC2S.address, expandTo9Decimals(10000))
+        await greenBTC2S.connect(owner1).depositkWh(expandTo9Decimals(10000))
 
         const greenizetx = await  greenBTC2S.makeGreenBoxLucky(1, 123, owner1.address, nonce, constants.MaxUint256, signature)
-
 
         const receipt = await greenizetx.wait()
 
@@ -516,6 +516,10 @@ describe("GreenBTC2S Test Campaign", ()=>{
           expect(balanceAfter).to.eq(balanceBefore.sub(BigNumber.from(123).mul(expandTo6Decimals(100))))
 
         }
+        const luckyFundInfo = await greenBTC2S.luckyFundInfo()
+        expect(luckyFundInfo.amountDeposit).to.eq(expandTo9Decimals(10000))
+        expect(luckyFundInfo.amountDroped).to.eq(BigNumber.from(123).mul(expandTo6Decimals(100).mul(2)))
+
       });
       
 /*      
