@@ -333,6 +333,42 @@ export function getOnboardingStandardMinerDigest(
   )
 }
 
+export function getGreenBTC2SLuckyDigest(
+  contractName: string,
+  contractAddress: string,
+  domainID:   BigNumber,
+  boxSteps:   BigNumber,
+  greener:    string,
+  nonce:      BigNumber,
+  deadline:   BigNumber,
+): string {
+  const version = "2"
+  const DOMAIN_SEPARATOR = getDomainSeparator(contractName, contractAddress, version)
+
+  // keccak256("makeGreenBoxLucky(uint256 domainID,uint256 boxSteps,address greener,uint256 nonce,uint256 deadline)");
+  // 0x6A10D25EB5A7B84EB21D26AF2DB8C23A1FB80647769A40DA523EDDCFFC172A10
+  const LUCKY_TYPEHASH = utils.keccak256(
+    utils.toUtf8Bytes('makeGreenBoxLucky(uint256 domainID,uint256 boxSteps,address greener,uint256 nonce,uint256 deadline)')
+  )
+
+  return utils.keccak256(
+    utils.solidityPack(
+      ['bytes1', 'bytes1', 'bytes32', 'bytes32'],
+      [
+        '0x19',
+        '0x01',
+        DOMAIN_SEPARATOR,
+        utils.keccak256(
+          utils.defaultAbiCoder.encode(
+            ['bytes32', 'uint256', 'uint256', 'address', 'uint256', 'uint256'],
+            [LUCKY_TYPEHASH, domainID, boxSteps, greener, nonce, deadline]
+          )
+        )
+      ]
+    )
+  )
+}
+
 export function getPlantStakingDigest(
   contractName: string,
   contractAddress: string,
