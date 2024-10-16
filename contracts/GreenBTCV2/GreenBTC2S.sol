@@ -153,6 +153,9 @@ contract GreenBTC2S is
     }
 
     function makeGreenBox (uint256 domainID, uint256 boxSteps) public {
+        uint256 boxStepsSaved = boxSteps;
+        boxSteps = (boxSteps<<16) >> 16;                            // Remove Flag
+
         // boxSteps cannot be too big, boxSteps = 10000 will use more than 10,000,000 GWei for checkIfShot
         require ((domainID < 0x10000) && (boxSteps <= 10000), "GBC2: Over Limit");   
 
@@ -179,13 +182,16 @@ contract GreenBTC2S is
         domainActionIDs[domainID].concatStorage(abi.encodePacked(bytes4(uint32(actionID))));
         domains[domainID] = bytes32(((domainInfo >> 32) << 32) + (boxMadeGreen + boxSteps));
 
-        emit DomainGreenized(msg.sender, actionID, block.number, domainID, boxMadeGreen, boxSteps);
+        emit DomainGreenized(msg.sender, actionID, block.number, domainID, boxMadeGreen, boxStepsSaved);
 
         uint256 kWhAmount = boxSteps * DecimalMath.getDecimalPower(uint8(domainInfo >> 56) & 0x0F);     // convert to kWh
         IkWhToken(kWhToken).burnFrom(msg.sender, kWhAmount);
     }
 
     function makeGreenBoxLucky (uint256 domainID, uint256 boxSteps, address greener, uint256 nonce, uint256 deadline, Sig calldata signature) public {
+        uint256 boxStepsSaved = boxSteps;
+        boxSteps = (boxSteps<<16) >> 16;                            // Remove Flag
+
         // boxSteps cannot be too big, boxSteps = 10000 will use more than 10,000,000 GWei for checkIfShot
         require ((domainID < 0x10000) && (boxSteps <= 10000), "GBC2: Over Limit");   
 
@@ -221,7 +227,7 @@ contract GreenBTC2S is
         domainActionIDs[domainID].concatStorage(abi.encodePacked(bytes4(uint32(actionID))));
 
         domains[domainID] = bytes32(((domainInfo >> 32) << 32) + (boxMadeGreen + boxSteps));
-        emit DomainGreenized(greener, actionID, block.number, domainID, boxMadeGreen, boxSteps);
+        emit DomainGreenized(greener, actionID, block.number, domainID, boxMadeGreen, boxStepsSaved);
 
         uint256 kWhAmount = boxSteps * DecimalMath.getDecimalPower(uint8(domainInfo >> 56) & 0x0F);     // convert to kWh
         luckyFundInfo.amountDroped += uint96(kWhAmount);

@@ -36,6 +36,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:GreenBTC2SD   : Amoy testnet: fix the huge gas problem and makeGreenBoxLucky is added.
 // Implementaion:        0xA649E9B886d2A1A1713268Ef6BC05E89A22a5436
 
+// 2024/10/16
+// yarn deploy:matic_test:GreenBTC2SD   : Amoy testnet: support multiple seed mode
+// Implementaion:        0x9ab6a15F421FA92eE8111cD096dc37C7859Cb4c9
+
 func.tags = ["GreenBTC2SD"];
 
 export default func;

@@ -407,6 +407,7 @@ describe("GreenBTC2S Test Campaign", ()=>{
         for (let index=0; index<8; index++ ) {
           allCounters[index] += (index==0) ? countersCheck[index] :  countersCheck[index] - countersCheck[index-1]
         }
+
 /*
         const {actionID, actionResult, blockHeight, domainID: domainId, counters, wonList} = await greenBTC2S.checkIfShot(owner1.address, 1, Bytes32_Zero)
 
@@ -591,7 +592,7 @@ describe("GreenBTC2S Test Campaign", ()=>{
       });
 */
 
-/*
+
       it("GreenBTC2S makeGreenBox test", async function () {
 
         const domainID = 1
@@ -631,6 +632,16 @@ describe("GreenBTC2S Test Campaign", ()=>{
 
         expect(await kWhToken.balanceOf(owner1.address)).to.eq(balancekWh.sub(expandTo9Decimals(123+234).div(10)))
 
+
+        // Seed mode:
+        const amountWithMode = BigNumber.from(456).add(BigNumber.from(1).shl(255))
+        await expect( greenBTC2S.connect(owner1).makeGreenBox(1, amountWithMode))
+                .to.emit(greenBTC2S, 'DomainGreenized')
+                .withArgs(owner1.address, 3, anyValue, 1, BigNumber.from(123+234), amountWithMode)
+                .to.emit(kWhToken, 'Transfer')
+                .withArgs(owner1.address, constants.AddressZero, expandTo9Decimals(456).div(10))
+
+        /*
         {
           const  makeGreenBoxTx = await greenBTC2S.connect(owner1).makeGreenBox(1, 10000)
           const receipt = await makeGreenBoxTx.wait()
@@ -654,7 +665,8 @@ describe("GreenBTC2S Test Campaign", ()=>{
 
           console.log('makeGreenBox gas usage of 10000 box:', receipt.gasUsed )
         }
+        */
       });
-*/      
+ 
     })
 })
