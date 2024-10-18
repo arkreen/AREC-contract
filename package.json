@@ -135,6 +135,8 @@
     "deploy:matic_test:PlantStakingD": "hardhat --network matic_test deploy --tags PlantStakingD",
     "deploy:matic_test:PlantStakingU": "hardhat --network matic_test deploy --tags PlantStakingU",
     "deploy:matic_test:MinerStaking": "hardhat --network matic_test deploy --tags MinerStaking",
+    "deploy:matic_test:MinerStakingD": "hardhat --network matic_test deploy --tags MinerStakingD",
+    "deploy:matic_test:MinerStakingU": "hardhat --network matic_test deploy --tags MinerStakingU",
 
     "deploy:matic:gAKRE": "hardhat --network matic deploy --tags gAKRE",
     "deploy:matic:arkReward": "hardhat --network matic deploy --tags arkReward",
