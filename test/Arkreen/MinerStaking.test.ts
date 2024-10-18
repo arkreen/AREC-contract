@@ -386,17 +386,17 @@ describe("MinerStaking test", ()=> {
         //////// Slash ////////////////////////
         const amountWithdraw1 = expandTo18Decimals(100)
         for (let index = 1; index <= 3; index++) {
-          await minerStaking.slash(cspminer[0], cspminer[index], user1.address, amountWithdraw1.mul(index))
+          await minerStaking.slash(cspminer[0], cspminer[index], user1.address, amountWithdraw1.mul(index), constants.MaxUint256)
         }
 
         const amountWithdraw2 = expandTo18Decimals(200)
         for (let index = 1; index <= 4; index++) {
-          await minerStaking.slash(cspminer[0], cspminer[index], user2.address, amountWithdraw2.mul(index))
+          await minerStaking.slash(cspminer[0], cspminer[index], user2.address, amountWithdraw2.mul(index), constants.MaxUint256)
         }
 
         const amountWithdraw3 = expandTo18Decimals(300)
         for (let index = 1; index <= 5; index++) {
-          await minerStaking.slash(cspminer[0], cspminer[index], user3.address, amountWithdraw3.mul(index))
+          await minerStaking.slash(cspminer[0], cspminer[index], user3.address, amountWithdraw3.mul(index), constants.MaxUint256)
         }
 
         /////////// Slash Check ////////////////
@@ -514,14 +514,14 @@ describe("MinerStaking test", ()=> {
                 .to.be.revertedWith("Zero Stake")
 
         const balanceBefore = await arkreenToken.balanceOf(manager.address)
-        await expect(minerStaking.slash(cspminer[0], cspminer[1], user1.address, expandTo18Decimals(50)))
+        await expect(minerStaking.slash(cspminer[0], cspminer[1], user1.address, expandTo18Decimals(50), constants.MaxUint256))
                 .to.emit(minerStaking, 'Slash')
                 .withArgs(cspminer[0], cspminer[1], user1.address, expandTo18Decimals(50), expandTo18Decimals(50))    
 
         expect(await arkreenToken.balanceOf(manager.address)).to.eq(balanceBefore.add(expandTo18Decimals(50)))
 
         // All stake are slashed
-        await expect(minerStaking.slash(cspminer[0], cspminer[1], user1.address, expandTo18Decimals(150)))
+        await expect(minerStaking.slash(cspminer[0], cspminer[1], user1.address, expandTo18Decimals(150), constants.MaxUint256))
                 .to.emit(minerStaking, 'Slash')
                 .withArgs(cspminer[0], cspminer[1], user1.address, expandTo18Decimals(150), expandTo18Decimals(50))    
 
@@ -535,7 +535,7 @@ describe("MinerStaking test", ()=> {
         expect(userStakeInfo.amountStake).to.eq(expandTo18Decimals(100-50-50))
         expect(userStakeInfo.amountSlash).to.eq(expandTo18Decimals(100+50+50))
 
-        const slashTx = await minerStaking.slash(cspminer[0], cspminer[2], user1.address, expandTo18Decimals(100))
+        const slashTx = await minerStaking.slash(cspminer[0], cspminer[2], user1.address, expandTo18Decimals(100), constants.MaxUint256)
         const receipt = await slashTx.wait()
         console.log("receipt",  receipt.gasUsed)
 

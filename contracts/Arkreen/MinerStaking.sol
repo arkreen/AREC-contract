@@ -105,8 +105,9 @@ contract MinerStaking is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpg
         emit Withdraw(msg.sender, cspminer, amountWithdraw);
     }
 
-    function slash(uint256 txid, address cspminer, address owner, uint256 amount) external onlyManager {
+    function slash(uint256 txid, address cspminer, address owner, uint256 amount, uint256 deadline) external onlyManager {
         require (amount > 0, "Zero Stake"); 
+        require(block.timestamp <= deadline, "Deadline Expired!");
 
         uint96 amountSlash = userStakeInfo[owner][cspminer].amountStake;
         if (amount <= amountSlash) amountSlash = uint96(amount);

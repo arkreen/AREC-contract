@@ -209,15 +209,19 @@ contract ArkreenMinerPro is
      
     function RemoveMinerFromWhiteList(uint256 remoteType, address addressMiner) external onlyMinerManager {
         // pool id is located at the MSB of index 
+        uint256 remoteTypeTag = remoteType << 248;   
+        uint256 stationId = (remoteType >> 8) << 232 ;   
+        remoteTypeTag += stationId;
+
         uint256 indexHead = whiteListBatchPoolIndexHead[remoteType];
         uint256 indexTail = whiteListBatchPoolIndexTail[remoteType];
 
         for(uint256 index = indexHead; index < indexTail; index++) {
-            if(whiteListMinerBatch[index] == addressMiner) {
+            if(whiteListMinerBatch[remoteTypeTag + index] == addressMiner) {
                 if(index != (indexTail-1)) {
-                    whiteListMinerBatch[index] = whiteListMinerBatch[indexTail-1];
+                    whiteListMinerBatch[remoteTypeTag + index] = whiteListMinerBatch[remoteTypeTag + indexTail-1];
                 }
-                whiteListMinerBatch[indexTail-1] = address(0);
+                whiteListMinerBatch[remoteTypeTag + indexTail-1] = address(0);
                 whiteListBatchPoolIndexTail[remoteType] = indexTail - 1;
                 break;   
             }
@@ -230,13 +234,15 @@ contract ArkreenMinerPro is
      * @param addressMiners List of the miners
      */
     function UpdateMinerWhiteListBatchClaim(uint256 remoteType, address[] calldata addressMiners) public onlyMinerManager {
-        require(remoteType <= type(uint8).max, "Arkreen Miner: Wrong Pool ID");
+        require(remoteType <= type(uint24).max, "Arkreen Miner: Wrong Pool ID");
         _UpdatePoolMinerWhiteList(remoteType, addressMiners);
     }
 
     function _UpdatePoolMinerWhiteList(uint256 remoteType, address[] calldata addressMiners) internal  {
         // pool id is located at the MSB of index 
-        uint256 remoteTypeTag = remoteType << 248;                                                 
+        uint256 remoteTypeTag = remoteType << 248;   
+        uint256 stationId = (remoteType >> 8) << 232 ;   
+        remoteTypeTag += stationId;
 
         uint256 indexStart = whiteListBatchPoolIndexTail[remoteType];
         uint256 length = addressMiners.length;

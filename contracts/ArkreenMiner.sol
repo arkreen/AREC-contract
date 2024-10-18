@@ -254,7 +254,8 @@ contract ArkreenMiner is
     ) view internal {
 
         // Check miner is white listed  
-        require(whiteListMiner[miner] == uint8(MinerType.RemoteMiner), "Arkreen Miner: Wrong Miner");
+        require((whiteListMiner[miner] == uint8(MinerType.RemoteMiner)) ||
+                (whiteListMiner[miner] == uint8(MinerType.LiteMiner)), "Arkreen Miner: Wrong Miner");
         require(AllMinersToken[miner] == 0, "Arkreen Miner: Miner Repeated");
 
         // Check signature
@@ -287,7 +288,11 @@ contract ArkreenMiner is
 
         // Check signature
         // keccak256("RemoteMinerOnboardBatch(address owner,uint256 quantity,address token,uint256 value,uint256 deadline)");
-        uint256 typeAndQuantity = (remoteType << 248) + uint256(quantity);
+        uint256 remoteTypeTag = remoteType << 248;   
+        uint256 stationId = (remoteType >> 8) << 232 ;   
+        remoteTypeTag += stationId;
+
+        uint256 typeAndQuantity = remoteTypeTag + uint256(quantity);
 
         bytes32 hashRegister = keccak256(abi.encode(REMOTE_MINER_BATCH_TYPEHASH, owner, typeAndQuantity,
                                           permitMiner.token, permitMiner.value, permitMiner.deadline));
@@ -308,7 +313,7 @@ contract ArkreenMiner is
         // Prepare to mint new remote miner
         Miner memory newMiner;
         newMiner.mAddress = miner;
-        newMiner.mType = MinerType.RemoteMiner;
+        newMiner.mType = MinerType(whiteListMiner[miner]);
         newMiner.mStatus = MinerStatus.Normal;
         newMiner.timestamp = uint32(block.timestamp);    
 
@@ -336,13 +341,18 @@ contract ArkreenMiner is
         Miner memory newMiner;
         minerList = new address[](numMiners);
 
-        newMiner.mType = MinerType.RemoteMiner;
+        if (remoteType == 0) newMiner.mType = MinerType.RemoteMiner;
+        else newMiner.mType = MinerType(uint8(remoteType));
+
         newMiner.mStatus = MinerStatus.Normal;
         newMiner.timestamp = uint32(block.timestamp);   
 
         uint256 listHead = whiteListBatchPoolIndexHead[remoteType];
 
-        uint256 remoteTypeTag = remoteType << 248;
+        uint256 remoteTypeTag = remoteType << 248;   
+        uint256 stationId = (remoteType >> 8) << 232 ;   
+        remoteTypeTag += stationId;
+
         for(uint8 index; index < numMiners; index++) {
             address miner = whiteListMinerBatch[remoteTypeTag + listHead + index];
             minerList[index] = miner;
@@ -549,6 +559,7 @@ contract ArkreenMiner is
      * @dev Update the miner white list, add/remove the miners to/from the white list.
      *      Only miners in the white list are allowed to onboard as an NFT.
      * @param typeMiner Type of the miners to add, MinerType.Empty(=0) means to remove the miners
+              = 1, LiteMiner; = 2, StandardMiner; = 3, RemoteMiner; = 5, SocketMiner
      * @param addressMiners List of the miners
      */
     function UpdateMinerWhiteList(uint8 typeMiner, address[] calldata addressMiners) external onlyMinerManager {
