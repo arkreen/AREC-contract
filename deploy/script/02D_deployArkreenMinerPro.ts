@@ -10,7 +10,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(50_000_000_000)
+  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(30_000_000_000) : BigNumber.from(50_000_000_000)
   
   console.log("Deploying ArkreenMinerPro: ", deployer);  
   
@@ -33,6 +33,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/05/28: yarn deploy:matic:AMinerProD 
 // Deployed on Polygon main to upgrade to support for staking
 // 0xB6701746312304F9f751bEe707fa0ca51Ec6724c
+
+// 2024/10/21: yarn deploy:matic_test:AMinerProD 
+// Deployed on Polygon Amoy testnet to upgrade to support for Miner Pro
+// 0xB17Bf7c2ccDe7604C8885AFCe18fE9f8805FE0e6
 
 export default func;
 func.tags = ["AMinerProD"];

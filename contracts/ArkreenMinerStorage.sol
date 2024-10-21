@@ -49,8 +49,8 @@ abstract contract ArkreenMinerStorage
     uint256 internal whiteListBatchIndexHead;                // Not used after upgrading remoteType support, but need to keep
     uint256 internal whiteListBatchIndexTail;                // Not used after upgrading remoteType support, but need to keep
 
-    mapping(uint256 => uint256) internal whiteListBatchPoolIndexHead;
-    mapping(uint256 => uint256) internal whiteListBatchPoolIndexTail;
+    mapping(uint256 => uint256) public whiteListBatchPoolIndexHead;
+    mapping(uint256 => uint256) public whiteListBatchPoolIndexTail;
     mapping(address => uint256) internal claimTimestamp;   // protect againt replay 
 
     uint256 public totalPlantMiner;                       // Total amount of plant miner

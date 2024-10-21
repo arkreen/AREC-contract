@@ -95,9 +95,9 @@ contract ArkreenMinerPro is
 
         Miner memory newMiner;
         newMiner.mAddress = miner;
-        newMiner.mType = minerType;
+        newMiner.mType = uint8(minerType);
         newMiner.mStatus = MinerStatus.Normal;
-        newMiner.timestamp = uint32(block.timestamp);        
+        newMiner.timestamp = uint32(block.timestamp);     
 
         // Mint a new standard miner
         _mintMiner(owner, miner, newMiner);
@@ -173,27 +173,6 @@ contract ArkreenMinerPro is
     }
 
     /**
-     * @dev Update the miner white list, add/remove the miners to/from the white list.
-     *      Only miners in the white list are allowed to onboard as an NFT.
-     * @param typeMiner Type of the miners to add, MinerType.Empty(=0) means to remove the miners
-     * @param addressMiners List of the miners
-     */
-    function UpdateMinerWhiteList(uint8 typeMiner, address[] calldata addressMiners) external onlyMinerManager {
-        address tempAddress;
-        for(uint256 index; index < addressMiners.length; index++) {
-            tempAddress = addressMiners[index];
-            if(typeMiner == 0xFF) {
-                delete whiteListMiner[tempAddress];
-                continue;
-            }
-            // Checked for non-existence
-            require( tempAddress != address(0) && !tempAddress.isContract(), "Arkreen Miner: Wrong Address");     
-            require( whiteListMiner[tempAddress] == 0, "Arkreen Miner: Miners Repeated");      
-            whiteListMiner[tempAddress] = uint8(typeMiner);
-        }
-    }
-
-    /**
      * @dev Update the miner white list for batch sales. Only miners in the white list are allowed to onboard as an NFT.
      * All the miners in this list is located in the default pool.
      * @param addressMiners List of the miners
@@ -210,7 +189,7 @@ contract ArkreenMinerPro is
     function RemoveMinerFromWhiteList(uint256 remoteType, address addressMiner) external onlyMinerManager {
         // pool id is located at the MSB of index 
         uint256 remoteTypeTag = remoteType << 248;   
-        uint256 stationId = (remoteType >> 8) << 232 ;   
+        uint256 stationId = uint256((uint16)(remoteType >> 8)) << 232;   
         remoteTypeTag += stationId;
 
         uint256 indexHead = whiteListBatchPoolIndexHead[remoteType];
@@ -241,7 +220,7 @@ contract ArkreenMinerPro is
     function _UpdatePoolMinerWhiteList(uint256 remoteType, address[] calldata addressMiners) internal  {
         // pool id is located at the MSB of index 
         uint256 remoteTypeTag = remoteType << 248;   
-        uint256 stationId = (remoteType >> 8) << 232 ;   
+        uint256 stationId = uint256((uint16)(remoteType >> 8)) << 232;   
         remoteTypeTag += stationId;
 
         uint256 indexStart = whiteListBatchPoolIndexTail[remoteType];

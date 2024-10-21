@@ -241,6 +241,30 @@ contract ArkreenMiner is
         emit MinerOnboardedBatch(owner, minersBatch);
     }
 
+    function RemoteMinerOnboardNativeBatchClaim(
+        address     owner,
+        uint256     remoteType,
+        uint8       numMiners,
+        Signature   memory  permitMiner
+    ) external payable ensure(permitMiner.deadline) {
+
+        // Check for minting remote miner  
+        require(permitMiner.deadline > claimTimestamp[owner], "Arkreen Miner: Not Allowed");
+        claimTimestamp[owner] = permitMiner.deadline;
+
+        // Check payment value
+        require( (tokenNative != address(0)) && (tokenNative == permitMiner.token) && 
+                  (msg.value == permitMiner.value), "Arkreen Miner: Payment error");
+
+        _mintBatchCheckPrice(remoteType, owner, numMiners, permitMiner);
+
+        // mint new remote miner
+        address[] memory minersBatch = _mintRemoteMinerBatch(remoteType, owner, numMiners);
+
+        checkListener(owner, numMiners);
+        emit MinerOnboardedBatch(owner, minersBatch);
+    }
+
     /**
      * @dev Check for minting a remote Miner
      * @param owner address receiving the remote miner
@@ -289,7 +313,7 @@ contract ArkreenMiner is
         // Check signature
         // keccak256("RemoteMinerOnboardBatch(address owner,uint256 quantity,address token,uint256 value,uint256 deadline)");
         uint256 remoteTypeTag = remoteType << 248;   
-        uint256 stationId = (remoteType >> 8) << 232 ;   
+        uint256 stationId = uint256((uint16)(remoteType >> 8)) << 232;   
         remoteTypeTag += stationId;
 
         uint256 typeAndQuantity = remoteTypeTag + uint256(quantity);
@@ -313,7 +337,7 @@ contract ArkreenMiner is
         // Prepare to mint new remote miner
         Miner memory newMiner;
         newMiner.mAddress = miner;
-        newMiner.mType = MinerType(whiteListMiner[miner]);
+        newMiner.mType = whiteListMiner[miner];
         newMiner.mStatus = MinerStatus.Normal;
         newMiner.timestamp = uint32(block.timestamp);    
 
@@ -341,8 +365,13 @@ contract ArkreenMiner is
         Miner memory newMiner;
         minerList = new address[](numMiners);
 
-        if (remoteType == 0) newMiner.mType = MinerType.RemoteMiner;
-        else newMiner.mType = MinerType(uint8(remoteType));
+        if (remoteType == 0) {
+            newMiner.mType = uint8(MinerType.RemoteMiner);
+        } else if (remoteType == 1) {
+            newMiner.mType = uint8(MinerType.LiteMiner);
+        } else {
+            newMiner.mType = (uint8(remoteType) << 4) + uint8(MinerType.RemoteMiner);
+        }
 
         newMiner.mStatus = MinerStatus.Normal;
         newMiner.timestamp = uint32(block.timestamp);   
@@ -350,7 +379,7 @@ contract ArkreenMiner is
         uint256 listHead = whiteListBatchPoolIndexHead[remoteType];
 
         uint256 remoteTypeTag = remoteType << 248;   
-        uint256 stationId = (remoteType >> 8) << 232 ;   
+        uint256 stationId = uint256((uint16)(remoteType >> 8)) << 232;   
         remoteTypeTag += stationId;
 
         for(uint8 index; index < numMiners; index++) {
@@ -475,7 +504,7 @@ contract ArkreenMiner is
 
         // Prepare to mint new remote miners, only remote miners
         Miner memory newMiner;
-        newMiner.mType = MinerType.RemoteMiner;
+        newMiner.mType = uint8(MinerType.RemoteMiner);
         newMiner.mStatus = MinerStatus.Normal;
         newMiner.timestamp = uint32(block.timestamp);
 

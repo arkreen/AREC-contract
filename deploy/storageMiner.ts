@@ -3,7 +3,8 @@ import { utils } from 'ethers'
 import { BigNumber } from "ethers";
 
 async function main() {
-  const contract_address = '0xF390caaF4FF0d297e0b4C3c1527D707C75541736'        // Miner on Amoy
+  const contract_address = '0xbf8eF5D950F78eF8edBB8674a48cDACa675831Ae'        // Miner on Ploygon
+  // const contract_address = '0xF390caaF4FF0d297e0b4C3c1527D707C75541736'        // Miner on Amoy
   // const contract_address = '0x1e5132495cdaBac628aB9F5c306722e33f69aa24'           // Badge on Polygon
 
   for(let index = 0 ; index < 30; index ++) {

@@ -10,7 +10,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   let MANAGER_ADDRESS
   let REGISTER_ADDRESS
 
-  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(50_000_000_000)
+  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(32_000_000_000) : BigNumber.from(50_000_000_000)
 
   if(hre.network.name === 'localhost') {
     AKREToken_ADDRESS = "0xa0cE9DC3d93F4c84aAACd8DA3f66Cd6dA9D5b1F8"
@@ -173,6 +173,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/07/26: yarn deploy:matic:AMinerV10D 
 // Deployed on Polygon mainnet to fix a small bug that RemoteMinerOnboardNative did not call checkListener
 // 0x0b25c74b5FF36d290320e73b1aFf14ff150C84E8
+
+// 2024/10/21: yarn deploy:matic_test:AMinerV10D 
+// Deployed on Polygon Amoy testnet to Support Miner Pro
+// 0x6Aca9D31e467a1DdA381aBaA250Fcb1388618F42
 
 export default func;
 func.tags = ["AMinerV10D"];

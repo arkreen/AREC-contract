@@ -11,7 +11,7 @@ enum MinerType {
     SKIP_6,                   // 6
     SKIP_7,                   // 7
     SKIP_8,                   // 8
-    PlantMiner                // 9
+    PlantMiner               // 9
 }
 
 enum MinerStatus {
@@ -23,7 +23,8 @@ enum MinerStatus {
 
 struct Miner {
     address         mAddress;
-    MinerType       mType;
+//  MinerType       mType;
+    uint8           mType;
     MinerStatus     mStatus;
     uint32          timestamp;
 }    

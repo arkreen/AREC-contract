@@ -36,7 +36,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
   console.log("Deploying Updated ArkreenMiner: ", CONTRACTS.AMiner);  
 
-  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(300_000_000_000)
+  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(32_000_000_000) : BigNumber.from(300_000_000_000)
   
 /*  
   const ArkreenMiner_Upgrade = await deploy(CONTRACTS.AMiner, {
@@ -71,7 +71,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //  const NEW_IMPLEMENTATION =  "0x926B113e8fb52EfCeDe65981Fa9ef2731Ab66324"        // 2024/02/02A: Upgrade to correct overlapped parameters
 //  const NEW_IMPLEMENTATION =  "0x0463729B34a867B3fD155943E0AAe9790cb7bfeF"        // 2024/05/11: Upgrade to support removing miner from white list
 //  const NEW_IMPLEMENTATION =  "0x3b4BAf0aE0D209c3F774d4f4592948450f80293b"        // 2024/05/11: Miner is splitted to upgrade to support staking feature
-    const NEW_IMPLEMENTATION =  "0xd1348Bb43DbF51a2446DB6e40DE5F6c178cb2D47"        // 2024/05/22: registerListenApps is changed
+//  const NEW_IMPLEMENTATION =  "0xd1348Bb43DbF51a2446DB6e40DE5F6c178cb2D47"        // 2024/05/22: registerListenApps is changed
+    const NEW_IMPLEMENTATION =  "0x6Aca9D31e467a1DdA381aBaA250Fcb1388618F42"        // 2024/10/21: Upgrade to support MinerPro
 
     const [deployer] = await ethers.getSigners();
     const ArkreenMinerFactory = ArkreenMiner__factory.connect(MINER_PROXY_ADDRESS, deployer);
@@ -98,14 +99,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     await updateTx.wait()
     console.log("ArkreenMiner Updated to: ", hre.network.name, ArkreenMinerFactory.address, NEW_IMPLEMENTATION);
 
-/*   
     // 204/05/21
-    const arkreenMinerPro = "0xCf427e3E8B3717DE2d0d08Cc09F1A3c5853Dd90C"
-    const newAssetARECTx = await ArkreenMinerFactory.setArkreenMinerPro(arkreenMinerPro, {gasPrice: defaultGasPrice})
-    await newAssetARECTx.wait()
+    // const arkreenMinerPro = "0xCf427e3E8B3717DE2d0d08Cc09F1A3c5853Dd90C"
+    const arkreenMinerPro = "0xB17Bf7c2ccDe7604C8885AFCe18fE9f8805FE0e6"                  // 2024/10/21
+
+    const setArkreenMinerProTx = await ArkreenMinerFactory.setArkreenMinerPro(arkreenMinerPro, {gasPrice: defaultGasPrice})
+    await setArkreenMinerProTx.wait()
     
     console.log("ArkreenMinerPro is Updated: ", hre.network.name, ArkreenMinerFactory.address, NEW_IMPLEMENTATION, arkreenMinerPro);
-*/
 
 /*
     // 204/05/21
@@ -115,13 +116,15 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     
     console.log("ArkreenMinerPro is Updated: ", hre.network.name, ArkreenMinerFactory.address, stakingRewards);
 */
+
+/*
     // 204/05/22
     const stakingRewards = "0xe233f1aC801eD919A774295503eCFE359A647B8B"
     const newAssetARECTx = await ArkreenMinerFactory.registerListenApps(2, stakingRewards, {gasPrice: defaultGasPrice})
     await newAssetARECTx.wait()
     
     console.log("ArkreenMinerPro is Updated: ", hre.network.name, ArkreenMinerFactory.address, stakingRewards);
-
+*/
  } 
 
   if(hre.network.name === 'matic') {
@@ -281,6 +284,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2024/07/26: yarn deploy:matic:AMinerUV10: Upgrade to fix a small bug that RemoteMinerOnboardNative did not call checkListener
 // immplementaion: 0x0b25c74b5FF36d290320e73b1aFf14ff150C84E8
+
+// 2024/10/21: yarn deploy:matic_test:AMinerUV10: For Amoy Dev Env, Upgrade to support Miner Pro
+// And Call setArkreenMinerPro to update to 0xB17Bf7c2ccDe7604C8885AFCe18fE9f8805FE0e6
+// immplementaion: 0x691938a6e88a85E66Aab05ECf84Fe84ECE8351C9
 
 export default func;
 func.tags = ["AMinerUV10"];
