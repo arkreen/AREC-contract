@@ -40,6 +40,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:GreenBTC2SD   : Amoy testnet: support multiple seed mode
 // Implementaion:        0x9ab6a15F421FA92eE8111cD096dc37C7859Cb4c9
 
+// 2024/10/23
+// yarn deploy:matic:GreenBTC2SD     : Polygon mainnet: support multiple seed mode
+// Implementaion:        0xa7181d53d4451973Adf130eB5a56DdA7C41B4b3D
+
 func.tags = ["GreenBTC2SD"];
 
 export default func;

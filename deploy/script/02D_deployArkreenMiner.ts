@@ -10,7 +10,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   let MANAGER_ADDRESS
   let REGISTER_ADDRESS
 
-  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(32_000_000_000) : BigNumber.from(50_000_000_000)
+  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(32_000_000_000) : BigNumber.from(100_000_000_000)
 
   if(hre.network.name === 'localhost') {
     AKREToken_ADDRESS = "0xa0cE9DC3d93F4c84aAACd8DA3f66Cd6dA9D5b1F8"
@@ -86,7 +86,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       from: deployer,
       args: [],
       log: true,
-      skipIfAlreadyDeployed: false,
+      skipIfAlreadyDeployed: true,
       gasPrice: defaultGasPrice
   });
 
@@ -177,6 +177,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/10/21: yarn deploy:matic_test:AMinerV10D 
 // Deployed on Polygon Amoy testnet to Support Miner Pro
 // 0x6Aca9D31e467a1DdA381aBaA250Fcb1388618F42
+
+// 2024/10/21: yarn deploy:matic:AMinerV10D 
+// Deployed on Polygon mainnet to Support Miner Pro
+// 0x7E2c63928392a7C928A442eefb488D17b1c5Fc4d
 
 export default func;
 func.tags = ["AMinerV10D"];

@@ -10,7 +10,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     console.log("Initialize ArkreenRegistry: ", CONTRACTS.gRegistry );  
 
-    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(32_000_000_000) : BigNumber.from(160_000_000_000)
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(32_000_000_000) : BigNumber.from(130_000_000_000)
 
     if(hre.network.name === 'matic_test') {
         // Simulation mode 
@@ -292,6 +292,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         console.log("ArkreenRegistry newAssetAREC is executed: %s: ", hre.network.name, ArkreenRegistry_address);
 */
 
+/*
         // 2023/04/04:  Matic Mainnet Normal release, 2024/02/27
         //function manageAssetARECExt( uint256 idxAsset, uint256 flag, string calldata idAsset, address issuer, 
         //  address tokenREC, address tokenPay)
@@ -316,6 +317,44 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         console.log("manageAssetARECExt", manageAssetARECExtTx)
         await manageAssetARECExtTx.wait()
         console.log("ArkreenRegistry newAssetAREC is executed: %s: ", hre.network.name, ArkreenRegistry_address);
+*/
+
+        // 2024/10/24:  Matic mainnet Normal release, new asset: Universal Arkreen REC Token
+        const issuer                      = "0xFedD52848Cb44dcDBA95df4cf2BCBD71D58df879"
+        const tokenREC                    = "0x58E4D14ccddD1E993e6368A8c5EAa290C95caFDF"
+        const tokenPay                    = "0xE9c21De62C5C5d0cEAcCe2762bF655AfDcEB7ab3"    // AKRE
+
+        // 2024/10/24: ECC Asset
+        const idAsset =  "ECC Based AREC Asset"
+        const rateToIssue = BigNumber.from(1000).mul(BigNumber.from(10).pow(18))
+        const rateToLiquidize = 1000
+        const description = 	"Bridged AREC Asset based on redeemed ECC (Energy Conservation Certificate)."                        
+
+        const [deployer] = await ethers.getSigners();
+        const ArkreenRegistryFactory = ArkreenRegistry__factory.connect(ArkreenRegistry_address, deployer);
+        
+//      function newAssetAREC(string calldata idAsset, address issuer, address tokenREC, address tokenPay,
+//                              uint128 rateToIssue, uint16 rateToLiquidize, string calldata description)
+        const newAssetARECTx = await ArkreenRegistryFactory.newAssetAREC(idAsset, issuer, tokenREC,
+                                                        tokenPay, rateToIssue, rateToLiquidize, description, 
+                                                        {gasPrice: defaultGasPrice}
+                                                        )
+                                                        
+        console.log("newAssetAREC: ", newAssetARECTx)
+        await newAssetARECTx.wait()
+        console.log("ArkreenRegistry newAssetAREC is executed: %s: ", hre.network.name, ArkreenRegistry_address);
+
+        const newAsset1 = await ArkreenRegistryFactory.allAssets(1)
+        const newAsset2 = await ArkreenRegistryFactory.allAssets(2)
+        const newAsset3 = await ArkreenRegistryFactory.allAssets(3)
+        const newAsset4 = await ArkreenRegistryFactory.allAssets(4)
+        
+        const newAsset1A = await ArkreenRegistryFactory.getAssetInfo(1)
+        const newAsset2A = await ArkreenRegistryFactory.getAssetInfo(2)
+        const newAsset3A = await ArkreenRegistryFactory.getAssetInfo(3)
+        const newAsset34 = await ArkreenRegistryFactory.getAssetInfo(4)
+
+        console.log("Asset Info:", newAsset1, newAsset2, newAsset3, newAsset4, newAsset1A, newAsset2A, newAsset3A, newAsset34 )                                                        
 
     } 
 
@@ -515,6 +554,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2024/07/30: call newAssetAREC on Amoy testnet to add a new asset type: EART
 // yarn deploy:matic_test:gRegistryI
+
+// 2024/10/24: call newAssetAREC on Arkreen mainnet to add a new asset type: ECC Based AREC Asset
+// yarn deploy:matic:gRegistryI
 
 func.tags = ["gRegistryI"];
 
