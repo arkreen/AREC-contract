@@ -13,18 +13,18 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(32_000_000_000) : BigNumber.from(50_000_000_000)
 
-    let native : string = ''
+    let stakingToken : string = ''
     let manager: string = ''
     let reward: string = ''
     
     // function initialize(address kWh, address manager)
     if(hre.network.name === 'matic_test')  {
       // 2024/08/6: PlugMinerSales on Amoy testnet                        
-      native = "0x0ae690aad8663aab12a671a6a0d74242332de85f"
+      stakingToken = "0x0ae690aad8663aab12a671a6a0d74242332de85f"
       manager = "0xEe0733Aa789F70233b3eD4F7dF95f1a7e0640D7e"
       reward = "0x78F018BF6af8C9A366735CFf0689486A0855bF89"
     } else if(hre.network.name === 'matic')  {
-      native = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"
+      stakingToken = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"
       manager = "0x3B3e675412c78C12030ff30b4dDEF48030bf927d"
       reward = "0xDcF10d429c0422Af80790bC810A33189771D643d"
     } 
@@ -38,7 +38,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
           execute: {
             init: {
               methodName: "initialize",     // Function to call when deployed first time.
-              args: [native, manager, reward]
+              args: [stakingToken, manager, reward]
             },
           },
         },

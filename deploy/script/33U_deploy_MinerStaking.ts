@@ -17,8 +17,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     if(hre.network.name === 'matic_test')  {
       // 2024/10/18: Add deadline in slash
       const minerStaking = "0x8FCa4A8fB8a14Fb1F4BC64F48f36c528Dd724C13"
-      const NEW_IMPLEMENTATION ="0x4400813481fDcd24578f25780b0057326dD47879"
-
+      //const NEW_IMPLEMENTATION ="0x4400813481fDcd24578f25780b0057326dD47879"
+      //const NEW_IMPLEMENTATION ="0xE528D9359e2B853a5963B0DD614499c12A83b2Ae"      // 2024/11/05,  Change AKRE token
+      const NEW_IMPLEMENTATION ="0x93055D0c3c43561D7889C9dE196f7EE6f1cd0e77"        // 2024/11/05B,  Change AKRE token controlled by Owner
+     
       console.log("Updating MinerStaking: ", minerStaking, defaultGasPrice.toString());  
 
       const [deployer] = await ethers.getSigners();
@@ -50,6 +52,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:MinerStakingU:  Amoy testnet, Add dealine in Slash method
 // Proxy:                 0x8FCa4A8fB8a14Fb1F4BC64F48f36c528Dd724C13
 // Implementaion:         0x4400813481fDcd24578f25780b0057326dD47879
+
+// 2024/11/5
+// yarn deploy:matic_test:MinerStakingU:  Amoy testnet, Add dealine in Slash method
+// Proxy:                 0x8FCa4A8fB8a14Fb1F4BC64F48f36c528Dd724C13
+// Implementaion:         0xE528D9359e2B853a5963B0DD614499c12A83b2Ae
+
+// 2024/11/5B
+// yarn deploy:matic_test:MinerStakingU:  Amoy testnet, Add dealine in Slash method
+// Proxy:                 0x8FCa4A8fB8a14Fb1F4BC64F48f36c528Dd724C13
+// Implementaion:         0x93055D0c3c43561D7889C9dE196f7EE6f1cd0e77
 
 func.tags = ["MinerStakingU"];
 

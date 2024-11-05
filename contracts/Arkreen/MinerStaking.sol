@@ -54,8 +54,12 @@ contract MinerStaking is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpg
         _;
     }
 
-    function changeManager(address newManager) external onlyManager {
+    function changeManager(address newManager) external onlyOwner {
         if (newManager != address(0)) slashManager = newManager;
+    }
+
+    function changeStakingToken(address stakingToken) external onlyOwner {
+        if (stakingToken != address(0)) akreToken = IERC20Upgradeable(stakingToken);
     }
 
     function deposit(address cspminer, uint256 amount) external nonReentrant {

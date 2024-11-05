@@ -29,6 +29,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:MinerStakingD   : Amoy testnet: add deadline in slash
 // Implementaion:        0x4400813481fDcd24578f25780b0057326dD47879
 
+// 2024/11/5
+// yarn deploy:matic_test:MinerStakingD   : Amoy testnet: change stakingToken
+// Implementaion:        0xE528D9359e2B853a5963B0DD614499c12A83b2Ae
+
+// 2024/11/5B
+// yarn deploy:matic_test:MinerStakingD   : Amoy testnet: change stakingToken to be Owner controlled
+// Implementaion:        0x93055D0c3c43561D7889C9dE196f7EE6f1cd0e77
+
 func.tags = ["MinerStakingD"];
 
 export default func;
