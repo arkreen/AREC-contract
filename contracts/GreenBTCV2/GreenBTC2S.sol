@@ -63,6 +63,7 @@ contract GreenBTC2S is
 
     event DomainRegistered(uint256 domainID, bytes32 domainInfo);
     event DomainGreenized(address gbtcActor, uint256 actionNumber, uint256 blockHeight, uint256 domainID, uint256 boxStart, uint256 boxNumber);
+    event DomainGreenizedLucky(address gbtcActor, uint256 actionNumber, uint256 blockHeight, uint256 domainID, uint256 boxStart, uint256 boxNumber, uint256 nonce);
     event KWhDeposit(uint256 amount);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -152,6 +153,11 @@ contract GreenBTC2S is
         emit DomainRegistered(domainID, domainInfo);
     }
 
+    /**
+     * @dev Green the specified domain in specified steps
+     * @param domainID the domain to be greened
+     *        boxSteps steps that will green. The 2 MSB specify the lucky draw mode: msb=0, single mode, msb = 1, multiple mode  
+     */
     function makeGreenBox (uint256 domainID, uint256 boxSteps) public {
         uint256 boxStepsSaved = boxSteps;
         boxSteps = (boxSteps<<16) >> 16;                            // Remove Flag
@@ -188,6 +194,14 @@ contract GreenBTC2S is
         IkWhToken(kWhToken).burnFrom(msg.sender, kWhAmount);
     }
 
+    /**
+     * @dev Green the specified domain in specified steps paid by Arkreen for user
+     * @param domainID the domain to be greened
+     *        boxSteps steps that will green. The 2 MSB specify the lucky draw mode: msb=0, single mode, msb = 1, multiple mode  
+     *        greener the user for whom the boxes are greened
+     *        nonce nonce of the user
+     *        signature signature of the akreen green manager
+     */
     function makeGreenBoxLucky (uint256 domainID, uint256 boxSteps, address greener, uint256 nonce, uint256 deadline, Sig calldata signature) public {
         uint256 boxStepsSaved = boxSteps;
         boxSteps = (boxSteps<<16) >> 16;                            // Remove Flag
@@ -227,7 +241,7 @@ contract GreenBTC2S is
         domainActionIDs[domainID].concatStorage(abi.encodePacked(bytes4(uint32(actionID))));
 
         domains[domainID] = bytes32(((domainInfo >> 32) << 32) + (boxMadeGreen + boxSteps));
-        emit DomainGreenized(greener, actionID, block.number, domainID, boxMadeGreen, boxStepsSaved);
+        emit DomainGreenizedLucky(greener, actionID, block.number, domainID, boxMadeGreen, boxStepsSaved, nonce);
 
         uint256 kWhAmount = boxSteps * DecimalMath.getDecimalPower(uint8(domainInfo >> 56) & 0x0F);     // convert to kWh
         luckyFundInfo.amountDroped += uint96(kWhAmount);

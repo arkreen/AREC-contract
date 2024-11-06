@@ -22,7 +22,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       // 2024/10/14: fix the huge gas problem and makeGreenBoxLucky is added.
       const greenPowerAddress = "0x6729b2956e8Cf3d863517E4618C3d8722548D5C4"
       //const NEW_IMPLEMENTATION ="0xA649E9B886d2A1A1713268Ef6BC05E89A22a5436"
-      const NEW_IMPLEMENTATION ="0x9ab6a15F421FA92eE8111cD096dc37C7859Cb4c9"
+      //const NEW_IMPLEMENTATION ="0x9ab6a15F421FA92eE8111cD096dc37C7859Cb4c9"
+      const NEW_IMPLEMENTATION ="0xb6505E881680a45eCb0469dd8BB4b39a85105a3a"    // 2024/11/06: DomainGreenizedLucky changed
 
       console.log("Updating GreenBTC2S: ", greenPowerAddress, defaultGasPrice.toString());  
 
@@ -86,6 +87,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:GreenBTC2SU:  Polygon mainnet, Support multiple seed mode 
 // Proxy:                 0x3221F5818A5CF99e09f5BE0E905d8F145935e3E0
 // Implementaion:         0xa7181d53d4451973Adf130eB5a56DdA7C41B4b3D
+
+// 2024/11/06
+// yarn deploy:matic_test:GreenBTC2SU:  Amoy testnet, DomainGreenizedLucky changed 
+// Proxy:                 0x6729b2956e8Cf3d863517E4618C3d8722548D5C4
+// Implementaion:         0xb6505E881680a45eCb0469dd8BB4b39a85105a3a
 
 func.tags = ["GreenBTC2SU"];
 

@@ -510,8 +510,8 @@ describe("GreenBTC2S Test Campaign", ()=>{
 
           const balanceBefore = await kWhToken.balanceOf(greenBTC2S.address)
           await expect(greenBTC2S.makeGreenBoxLucky(1, 123, owner1.address, nonce, constants.MaxUint256, signature))
-                .to.emit(greenBTC2S, 'DomainGreenized')
-                .withArgs(owner1.address, 2, anyValue, 1, BigNumber.from(123), BigNumber.from(123))
+                .to.emit(greenBTC2S, 'DomainGreenizedLucky')
+                .withArgs(owner1.address, 2, anyValue, 1, BigNumber.from(123), BigNumber.from(123), nonce)
 
           const balanceAfter = await kWhToken.balanceOf(greenBTC2S.address)
           expect(balanceAfter).to.eq(balanceBefore.sub(BigNumber.from(123).mul(expandTo6Decimals(100))))
