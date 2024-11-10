@@ -136,11 +136,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2024/10/25
 // yarn deploy:matic:StakingRewards    : Polygon mainnet with AKRE rewards
-// Proxy:                 0x1ea66a305b763ef50a16842be27Cd68Ec7F69e68  (Proxy)
-// Implementaion7:        0xbD7A19cb00dCc449c1e190d36826103955962997
-// Implementaion8:        0xDfD05Fcd3d330E17151F362AB551D89CAEb40916
-// Implementaion9:        0xe188cf00b2835834512D48cf738BF8471FF837aa
-// Implementaion10:       0xaD7b9240934720d2D29F6AAd877c5278d80704bc
+// Proxy7:                0xbD7A19cb00dCc449c1e190d36826103955962997  (180D AKER)
+// Proxy8:                0xDfD05Fcd3d330E17151F362AB551D89CAEb40916
+// Proxy9:                0xe188cf00b2835834512D48cf738BF8471FF837aa
+// Proxy10:               0xaD7b9240934720d2D29F6AAd877c5278d80704bc
+// Implementaion:         0x6e7f1aC9C4c2Cc4A267e7158295FD3a042A86355
 
 func.tags = ["StakingRewards"];
 
