@@ -12,7 +12,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const { deploy } = deployments;
     const { deployer } = await getNamedAccounts();
 
-    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(32_000_000_000) : BigNumber.from(50_000_000_000)
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(32_000_000_000) : BigNumber.from(80_000_000_000)
 
     let gbtc : string = ''
     let akre: string = ''
@@ -45,19 +45,21 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       const greenBTC2S = "0x3221F5818A5CF99e09f5BE0E905d8F145935e3E0"
       //const NEW_IMPLEMENTATION ="0xFaCb924cd91EA15CaD4524f52C68b91530288c4d"
       //const NEW_IMPLEMENTATION ="0x7ea0fE45cA251EB7aFe633D70361F7D5548475aB"
-      const NEW_IMPLEMENTATION ="0xa7181d53d4451973Adf130eB5a56DdA7C41B4b3D"                    // 2024/10/23
+      //const NEW_IMPLEMENTATION ="0xa7181d53d4451973Adf130eB5a56DdA7C41B4b3D"                  // 2024/10/23
+      const NEW_IMPLEMENTATION ="0xC1C64F4e9627221deefab278107f8Ddea3B25Ab2"                    // 2024/11/13
 
       console.log("Updating GreenBTC2S: ", greenBTC2S, defaultGasPrice.toString());  
 
       const [deployer] = await ethers.getSigners();
  
       const GreenBTC2SFactory = GreenBTC2S__factory.connect(greenBTC2S, deployer);
-      const callData = GreenBTC2SFactory.interface.encodeFunctionData("postUpdate")
-      const updateTx = await GreenBTC2SFactory.upgradeToAndCall(NEW_IMPLEMENTATION, callData)
-      await updateTx.wait()
 
-      //const updateTx = await GreenBTC2SFactory.upgradeTo(NEW_IMPLEMENTATION, {gasPrice: defaultGasPrice})
+      //const callData = GreenBTC2SFactory.interface.encodeFunctionData("postUpdate")
+      //const updateTx = await GreenBTC2SFactory.upgradeToAndCall(NEW_IMPLEMENTATION, callData)
       //await updateTx.wait()
+
+      const updateTx = await GreenBTC2SFactory.upgradeTo(NEW_IMPLEMENTATION, {gasPrice: defaultGasPrice})
+      await updateTx.wait()
   
       console.log("greenBTC2S is upgraded: ", hre.network.name, GreenBTC2SFactory.address);
     } 
@@ -92,6 +94,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:GreenBTC2SU:  Amoy testnet, DomainGreenizedLucky changed 
 // Proxy:                 0x6729b2956e8Cf3d863517E4618C3d8722548D5C4
 // Implementaion:         0xb6505E881680a45eCb0469dd8BB4b39a85105a3a
+
+// 2024/11/06
+// yarn deploy:matic:GreenBTC2SU:   Polygon mainnet, DomainGreenizedLucky changed 
+// Proxy:                 0x3221F5818A5CF99e09f5BE0E905d8F145935e3E0
+// Implementaion:         0xC1C64F4e9627221deefab278107f8Ddea3B25Ab2
 
 func.tags = ["GreenBTC2SU"];
 

@@ -1,0 +1,367 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.9;
+
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+
+import "../libraries/TransferHelper.sol";
+import "../interfaces/IERC20.sol";
+import "../interfaces/IERC20Permit.sol";
+import "../interfaces/IArkreenMinerListener.sol";
+import "../ArkreenMinerTypes.sol";
+import "../ArkreenMinerStorage.sol";
+
+contract BatteryTreasury is 
+    OwnableUpgradeable,
+    UUPSUpgradeable,
+    ERC721EnumerableUpgradeable,
+    ArkreenMinerStorage
+{
+    using AddressUpgradeable for address;
+/*
+    struct BatteryType {
+        typeBattery         uint16;     // battery type
+        tenure              uint16;     // battery contract effective duration in days
+        remoteQuota         uint16;     // the number of remote battery linke to one battery
+        investQuota         uint16;     // the quota of the fixed-gain investment
+        amountRepayMonth    uint48      // the amount in USDC/USDT needed to repay monthly to this contract
+        amountGainPerQuota  uint32      // the amount in USDC/USDT repaid to the investers per investing quota
+        amountStake         uint32;     // amount of AKRE to deposit, in unit of 10**18 
+        soldNumBattery      uint16      // Number of batteries that have been sold
+    }
+
+    struct GlobalStatus {
+        typeNumberBattery   uint16;     // Number of the battery type 
+    }
+
+    struct BatteryStatus {
+        typeID              uint16;     // type number of the battery
+        remoteBatSold       uint16;
+        remoteBatSold       uint32;
+
+    }
+*/
+    // Events
+    event MinerOnboarded(address indexed owner, address indexed miner);
+    event MinerOnboardedBatch(address indexed owner, address[] minersBatch);
+    event StandardMinerOnboarded(address indexed owner, address indexed miner);
+    event RemoteMinersInBatch(address[] owners, address[] miners);
+    event SocketMinerOnboarded(address indexed owner, address indexed miner);
+    event PlantMinerOnboarded(address indexed owner, address indexed miner);
+
+    modifier ensure(uint256 deadline) {
+        require(block.timestamp <= deadline, "Arkreen Miner: EXPIRED");
+        _;
+    }
+
+    modifier onlyMinerManager() {
+        require(_msgSender() == AllManagers[uint256(MinerManagerType.Miner_Manager)], "Arkreen Miner: Not Miner Manager");
+        _;
+    }    
+
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(address _tokenAKRE, address _tokenNative, address _minerManager, address _minerAuthority)
+        external
+        virtual
+        initializer
+    {
+        __Ownable_init_unchained();
+        __UUPSUpgradeable_init();
+        __ERC721_init_unchained(NAME, SYMBOL);
+        tokenAKRE = _tokenAKRE;
+        tokenNative = _tokenNative;
+        AllManagers[uint256(MinerManagerType.Miner_Manager)] = _minerManager;
+        AllManagers[uint256(MinerManagerType.Register_Authority)] = _minerAuthority;
+        baseURI = "https://www.arkreen.com/miners/";
+
+        DOMAIN_SEPARATOR = keccak256(
+            abi.encode(
+                keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
+                keccak256(bytes("Arkreen Miner")),
+                keccak256(bytes("1")),
+                block.chainid,
+                address(this)
+            )
+        );  
+    }
+
+    function postUpdate() external onlyProxy onlyOwner 
+    {}
+
+    function _authorizeUpgrade(address newImplementation)
+        internal
+        virtual
+        override
+        onlyOwner
+    {}
+
+
+    /*
+     * @dev Onboarding a remote Miner paid with Native token (MATIC)
+     * @param permitMiner owner address receiving the remote miner
+     */
+/*
+    function NewBatteryType(
+        BatteryType   memory  permitMiner
+    ) external onlyOwner {
+
+
+    }
+*/    
+
+
+    /**
+     * @dev mint a remote Miner
+     * @param owner address receiving the remote miner
+     * @param miner address of the remote miner onboarding
+     */
+    function _mintRemoteMiner( address owner, address miner) internal {
+
+        // Prepare to mint new remote miner
+        Miner memory newMiner;
+        newMiner.mAddress = miner;
+        newMiner.mType = whiteListMiner[miner];
+        newMiner.mStatus = MinerStatus.Normal;
+        newMiner.timestamp = uint32(block.timestamp);    
+
+        // mint new remote miner
+        delete whiteListMiner[miner];
+        _mintMiner(owner, miner, newMiner);
+    }
+
+    function _mintMiner( address owner, address miner, Miner memory newMiner) internal {
+        uint256 realMinerID = totalSupply() + 1;
+        AllMinersToken[miner] = realMinerID;
+        AllMinerInfo[realMinerID] = newMiner;
+        _safeMint(owner, realMinerID);
+    }
+
+    /**
+     * @dev mint a remote Miner
+     * @param remoteType type of the different remote miners, id=0, the default 100Wh remote miner 
+     * @param owner address receiving the remote miner
+     * @param numMiners number of remote miners needed to mint
+     */
+    function _mintRemoteMinerBatch(uint256 remoteType, address owner, uint8 numMiners) internal returns (address[] memory minerList) {
+
+        // Prepare to mint new remote miners
+        Miner memory newMiner;
+        minerList = new address[](numMiners);
+
+        if (remoteType == 0) {
+            newMiner.mType = uint8(MinerType.RemoteMiner);
+        } else if (remoteType == 1) {
+            newMiner.mType = uint8(MinerType.LiteMiner);
+        } else {
+            newMiner.mType = (uint8(remoteType) << 4) + uint8(MinerType.RemoteMiner);
+        }
+
+        newMiner.mStatus = MinerStatus.Normal;
+        newMiner.timestamp = uint32(block.timestamp);   
+
+        uint256 listHead = whiteListBatchPoolIndexHead[remoteType];
+
+        uint256 remoteTypeTag = remoteType << 248;   
+        uint256 stationId = uint256((uint16)(remoteType >> 8)) << 232;   
+        remoteTypeTag += stationId;
+
+        for(uint8 index; index < numMiners; index++) {
+            address miner = whiteListMinerBatch[remoteTypeTag + listHead + index];
+            minerList[index] = miner;
+
+            // Check miner is not repeated
+            require(AllMinersToken[miner] == 0, "Arkreen Miner: Miner Repeated");
+
+            // mint new remote miner
+            newMiner.mAddress = miner;
+            _mintMiner(owner, miner, newMiner);
+            delete whiteListMinerBatch[remoteTypeTag + listHead +index];
+        }
+        whiteListBatchPoolIndexHead[remoteType] += numMiners;
+    }
+
+
+
+    function _StandardMinerOnboardMute(address owner, address miner, uint256 deadline, Sig calldata permitMiner) internal {}  
+
+    /**
+     * @dev Onboarding remote miners in batch
+     * @param owners addresses receiving the remote miners
+     * @param miners addresses of the remote miners onboarding
+     */
+    function RemoteMinerOnboardInBatch(
+        address[]  calldata   owners,
+        address[]  calldata   miners
+    ) external onlyMinerManager {
+
+        require(owners.length == miners.length, "Arkreen Miner: Wrong Address List");
+
+        // Prepare to mint new remote miners, only remote miners
+        Miner memory newMiner;
+        newMiner.mType = uint8(MinerType.RemoteMiner);
+        newMiner.mStatus = MinerStatus.Normal;
+        newMiner.timestamp = uint32(block.timestamp);
+
+        for(uint256 index; index < owners.length; index++) {
+            // Mint new remote miners one by one
+            newMiner.mAddress = miners[index];
+            _mintMiner(owners[index], newMiner.mAddress, newMiner);
+            checkListener(owners[index], 1);
+        }
+
+        // Need to emit? If yes, data may be big 
+        emit RemoteMinersInBatch(owners, miners);
+    }
+
+    function checkListener(address owner, uint256 quantity) internal {
+        uint256 allListenApps = listenUsers[owner]; 
+        if (allListenApps == 0) return;
+        while (allListenApps != 0) {
+            address appToCall = listenApps[uint8(allListenApps)];
+            if(appToCall != address(0)) IArkreenMinerListener(appToCall).minerOnboarded(owner, quantity);
+            allListenApps = allListenApps >> 8;
+        }
+    }
+
+    function registerListener(address owner) external {
+        uint256 appId = listenAppIds[msg.sender];
+        require( appId != 0, "Arkreen Miner: App Not Registered");
+
+        uint256 allListenApps = listenUsers[owner]; 
+        require( (allListenApps >> 248) == 0, "Arkreen Miner: More Registered");
+
+        allListenApps = (allListenApps << 8) + uint8(appId);
+        listenUsers[owner] = allListenApps;
+    }
+
+    /**
+     * @dev Get all the miner info of the specified miner
+     * @param addrMiner miner address
+     */
+    function GetMinerInfo(address addrMiner) external view returns (address owner, Miner memory miner) {
+        uint256 minerID = AllMinersToken[addrMiner];
+        owner = ownerOf(minerID);
+        miner = AllMinerInfo[minerID];
+    }
+
+    /**
+     * @dev Get all the miner address of the owner
+     * @param owner owner address
+     */
+    function GetMinersAddr(address owner) external view returns (address[] memory minersAddr) {
+        uint256 totalMiners = balanceOf(owner);
+        minersAddr = new address[](totalMiners);
+        for(uint256 index;  index < totalMiners; index++) {     
+            uint256 minerID = tokenOfOwnerByIndex(owner, index);
+            minersAddr[index] = AllMinerInfo[minerID].mAddress;
+        }
+    }
+
+    /**
+     * @dev Register or unregister miner manufactures
+     * @param manufactures manufactures to be registered or unregistered
+     * @param yesOrNo = true, to register manufactures, = false, to unregister manufactures
+     */
+    function ManageManufactures(address[] calldata manufactures, bool yesOrNo) external onlyOwner {
+      for(uint256 index;  index < manufactures.length; index++) {
+        AllManufactures[manufactures[index]] = yesOrNo;
+      }
+    }
+
+    /**
+     * @dev Update the miner status
+     * @param minerID miner ID of any type of miners
+     * @param minerStatus new status
+     */
+    function SetMinersStatus(uint256 minerID, MinerStatus minerStatus) external onlyOwner {
+        require(minerStatus != MinerStatus.Pending, "Arkreen Miner: Wrong Input");      
+        AllMinerInfo[minerID].mStatus = minerStatus;
+    }
+
+
+    /**
+     * @dev Set the Arkreen managing accounts 
+     * @param managerType type of the managing account
+     * @param managerAddress address of the managing account     
+     */
+    function setManager(uint256 managerType, address managerAddress) external onlyOwner {
+      AllManagers[managerType] = managerAddress;
+    }
+
+    function setArkreenMinerPro(address minerPro) external onlyOwner {
+        arkreenMinerPro = minerPro;
+    }
+
+    function registerListenApps(uint256 appid, address newApp) external onlyOwner {
+        require ((appid != 0) && (appid <= 255), "Arkreen Miner: Wrong App ID");
+
+        address oldApp = listenApps[appid];
+        if ((oldApp != address(0)) && (newApp == address(0))) {
+            listenApps[appid] = address(0);
+            listenAppIds[oldApp] = 0;
+            return;
+        }
+
+        if ((oldApp == address(0)) && (newApp != address(0))) {
+            listenApps[appid] = newApp;
+            listenAppIds[newApp] = appid;
+            return;
+        }
+        revert("Arkreen Miner: Wrong App Data");
+    }
+
+    /**
+     * @dev Set the native token address
+     * @param native address, not checked againt zero address to disable payment by native token    
+     */
+    function setNativeToken(address native) external onlyOwner {
+      tokenNative = native;
+    }    
+
+    /**
+     * @dev Enable miner transferring
+     */
+    function enableTransfer() external onlyOwner {
+        bTransferAllowed = true;
+    }
+
+
+    function _withdrawMute(address token) internal {}  
+
+    /**
+     * @dev Hook that is called before any token transfer.
+     */
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal virtual override (ERC721EnumerableUpgradeable) {
+        require(bTransferAllowed || (from == address(0)), "Arkreen Miner: Transfer Not Allowed");
+        super._beforeTokenTransfer(from, to, tokenId);
+    }
+
+    function tokenURI(uint256 tokenId) public view override returns (string memory){
+        return super.tokenURI(tokenId);
+    }
+
+    function supportsInterface(bytes4 interfaceId)
+        public view override( ERC721EnumerableUpgradeable) returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
+    }
+
+    function setBaseURI(string memory newBaseURI) external virtual onlyOwner {
+        baseURI = newBaseURI;
+    }
+
+    function _baseURI() internal view virtual override returns (string memory) {
+        return baseURI;
+    }
+
+}
