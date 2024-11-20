@@ -44,6 +44,7 @@ contract ArkreenRECBank is
     event ARTSold(address indexed artToken, address indexed payToken, uint256 artAmount, uint256 payAmount);
     event ARTPriceChanged(address indexed artToken, address indexed payToken, uint256 newPrice);   
     event Deposit(address indexed artToken, uint256 amountDeposit);    
+    event RemoveART(address indexed artToken, uint256 amountRemove);    
     event Withdraw(address indexed artToken, address indexed payToken, uint256 balance);   
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -238,6 +239,19 @@ contract ArkreenRECBank is
     }  
 
     /**
+     * @dev Remove deposited ART token from the bank, only callable by the controller.
+     * @param artToken Token address of the ART to remove. 
+     * @param amountRemove Amount of the ART to remove.
+     */
+    function removeART(address artToken, uint256 amountRemove) external {
+        require (msg.sender == artSaleInfo[artToken].controller, "ARBK: Not allowed");
+        uint128 amount = artSaleInfo[artToken].amountDeposited - uint128(amountRemove);
+        TransferHelper.safeTransfer(artToken, msg.sender, amountRemove);
+        artSaleInfo[artToken].amountDeposited = uint128(amount);
+        emit RemoveART(artToken, amountRemove);
+    }  
+
+    /**
      * @dev Withdraw all the sales income
      * @param artToken Address of the ART token to withdraw
      * @param payToken Address of the payment token to withdraw
@@ -251,18 +265,10 @@ contract ArkreenRECBank is
         uint256 amountReceived = saleIncome[artToken][payToken].amountReceived;
         saleIncome[artToken][payToken].amountReceived = 0;
 
-        if (payToken == tokenNative) {
-             uint256 amountNative=  IERC20(tokenNative).balanceOf(address(this));
-            if (amountNative > 0) {
-              IWETH(tokenNative).withdraw(amountNative);
-            }
-            TransferHelper.safeTransferETH(receiver, amountReceived);
-        }    
-        else {
-            uint256 balance = IERC20(payToken).balanceOf(address(this));
-            if (amountReceived > balance) amountReceived = balance;
-            TransferHelper.safeTransfer(payToken, receiver, amountReceived);
-        }
+        uint256 balance = IERC20(payToken).balanceOf(address(this));
+        if (amountReceived > balance) amountReceived = balance;
+        TransferHelper.safeTransfer(payToken, receiver, amountReceived);
+
         emit Withdraw(artToken, payToken, amountReceived);    
     }
 

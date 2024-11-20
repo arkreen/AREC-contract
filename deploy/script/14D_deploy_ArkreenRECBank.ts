@@ -9,7 +9,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { deployer } = await getNamedAccounts();
 
   console.log("Deploying: ", CONTRACTS.ArtBank, deployer);  
-  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(50_000_000_000)
+  const defaultGasPrice = (hre.network.name === 'matic_test') 
+                          ? BigNumber.from(3_000_000_000) 
+                          : (hre.network.name === 'celo')
+                          ? BigNumber.from(6_000_000_000) 
+                          : BigNumber.from(50_000_000_000)
 
   const arkreenRECBank = await deploy(CONTRACTS.ArtBank, {
       from: deployer,
@@ -45,6 +49,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/09/02: Deployed on Polygon mainnet, support return value while buying ART
 // yarn deploy:matic:ArtBankD 
 // 0x5DbF34752CeBAeA2386337f5ea23c1dCaD48EE6A
+
+// 2024/11/20: Deployed on Celo mainnet, support removing deposited cART from bank
+// yarn deploy:celo:ArtBankD 
+// 0x92131f116dC4653e1fCF9E3FdC543827105101fE
+
 
 func.tags = ["ArtBankD"];
 

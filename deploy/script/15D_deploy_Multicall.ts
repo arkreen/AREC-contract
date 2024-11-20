@@ -77,6 +77,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // deploy:matic:MulticallD:  deployed on Polygon mainnet: getAllBalance
 // 0xBCCa2cCEab5dB4b04D950ED93DF8B702da08DA43
 
+// 2024/11/19
+// yarn deploy:matic:MulticallD:  deployed on Polygon mainnet: getAllAccountBalance
+// 0x424047Addb78f2E5F93c417D8874387702ca0EdA
+
 func.tags = ["MulticallD"];
 
 export default func;

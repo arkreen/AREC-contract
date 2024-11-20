@@ -131,5 +131,14 @@ contract MulticallS {
         for (uint256 index = 0; index < tokens.length; index++) {
             balances[index + 1] = IERC20(tokens[index]).balanceOf(account);
         }
-    } 
+    }
+
+    function getAllAccountBalance(address token, address[] memory accounts) public view returns (uint256[] memory balances) {
+        balances = new uint256[](accounts.length);
+        for (uint256 index = 0; index < accounts.length; index++) {
+            balances[index] = IERC20(token).balanceOf(accounts[index]);
+        }
+    }
+
+
 }

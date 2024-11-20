@@ -252,6 +252,9 @@
     "deploy:celo:ABuilderI": "hardhat --network celo deploy --tags ABuilderI",
     "deploy:celo:ArtBankI": "hardhat --network celo deploy --tags ArtBankI",
     "deploy:celo:MulticallD": "hardhat --network celo deploy --tags MulticallD",
+    "deploy:celo:ArtBankD": "hardhat --network celo deploy --tags ArtBankD",
+    "deploy:celo:ArtBankU": "hardhat --network celo deploy --tags ArtBankU",
+
     "gnosis_wallet:celo": "hardhat run --network celo ./deploy/gnosis_celo.ts",
     "etherscan:celo": "hardhat --network celo etherscan-verify --api-url https://api.celoscan.io --api-key",
     "test": "hardhat test",

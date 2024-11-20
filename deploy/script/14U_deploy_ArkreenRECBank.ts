@@ -44,6 +44,21 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     console.log("Update Trx:", updateTx)
     console.log("Arkreen REC Bank: ", hre.network.name, ArkreenBankFactory.address, NEW_IMPLEMENTATION);
   } 
+  else if(hre.network.name === 'celo') {
+    const RECBANK_PROXY_ADDRESS   = "0x815bFE3aaCF765c9E0A4DdEb98Ad710a4Fb860d3"    // 2023/11/01: Arkreen REC bank proxy
+    const NEW_IMPLEMENTATION = "0x92131f116dC4653e1fCF9E3FdC543827105101fE"         // 2024/11/20: support removing ART deposit
+
+    console.log("Updating Arkreen REC Bank: ", RECBANK_PROXY_ADDRESS);  
+
+    const [deployer] = await ethers.getSigners();
+    const ArkreenBankFactory = ArkreenRECBank__factory.connect(RECBANK_PROXY_ADDRESS, deployer);
+    const updateTx = await ArkreenBankFactory.upgradeTo(NEW_IMPLEMENTATION)
+    await updateTx.wait()
+
+    console.log("Update Trx:", updateTx)
+    console.log("Arkreen REC Bank: ", hre.network.name, ArkreenBankFactory.address, NEW_IMPLEMENTATION);
+  }
+
 };
 
 // 2023/07/26: Upgrade to add new events for subgraph and 3rd API
@@ -60,6 +75,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2024/09/02: Upgrade to support return value while buying ART
 // yarn deploy:matic:ArtBankU
+
+// 2024/11/20: Upgrade to support return value while buying ART
+// yarn deploy:celo:ArtBankU  (0x92131f116dC4653e1fCF9E3FdC543827105101fE)
+
 
 export default func;
 func.tags = ["ArtBankU"];

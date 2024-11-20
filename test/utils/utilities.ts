@@ -1057,7 +1057,7 @@ export function getPermitDigest(
   )
 }
 
-export function getWithdrawDigest(
+export function getWithdrawDigest( 
   //sender: string,
   receiver: string,
   value: BigNumber,
@@ -1085,6 +1085,41 @@ export function getWithdrawDigest(
     )
   )
 }
+
+export function getWithdrawDepositDigest(
+  contractAddr: string,
+  domainName: string,
+  orderID:  number,
+  owner: string,
+  amount: BigNumber,
+  deadline: BigNumber,
+): string {
+
+  const DOMAIN_SEPARATOR = getDomainSeparator(domainName, contractAddr)
+
+  // keccak256("WithdrawDeposit(uint256 orderId,address owner,uint256 amount,uint256 deadline)");
+  const WITHDRAW_DEPOSIT_TYPEHASH = utils.keccak256(
+    utils.toUtf8Bytes('WithdrawDeposit(uint256 orderId,address owner,uint256 amount,uint256 deadline)')
+  )
+  
+  return utils.keccak256(
+    utils.solidityPack(
+      ['bytes1', 'bytes1', 'bytes32', 'bytes32'],
+      [
+        '0x19',
+        '0x01',
+        DOMAIN_SEPARATOR,
+        utils.keccak256(
+          utils.defaultAbiCoder.encode(
+            ['bytes32', 'uint256', 'address', 'uint256', 'uint256'],
+            [WITHDRAW_DEPOSIT_TYPEHASH , orderID, owner, amount, deadline]
+          )
+        )
+      ]
+    )
+  )
+}
+
 
 export async function mineBlock(provider: providers.Web3Provider, timestamp: number): Promise<void> {
   return provider.send('evm_mine', [timestamp])
