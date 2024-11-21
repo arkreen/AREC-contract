@@ -25,7 +25,19 @@ export interface AssetType {
   amountGainPerInvest:  number
   amountDeposit:        number
   numSoldAssets:        number
-  investTokenList:      number
+  investTokenType:      number
+  maxInvestOverdue:     number
+  minInvestExit:        number
+}
+
+export interface GlobalStatus {
+  numAssetType:         number
+  numAssets:            number
+  numCancelled:         number
+  numDelivered:         number
+  numOnboarded:         number
+  numTokenAdded:         number
+  numInvest:            number
 }
 
 describe("GreenPower Test Campaign", ()=>{
@@ -54,6 +66,8 @@ describe("GreenPower Test Campaign", ()=>{
 
     let rwAsset:                RWAsset
     let assetType:              AssetType 
+
+    let tokenType = 1
  
     const Bytes32_Zero = "0x0000000000000000000000000000000000000000000000000000000000000000"
 
@@ -120,35 +134,37 @@ describe("GreenPower Test Campaign", ()=>{
           amountGainPerInvest:  75_000_000,
           amountDeposit:        1_500_000,
           numSoldAssets:        0,
-          investTokenList:      1 + (2<<8)
+          investTokenType:      1,
+          maxInvestOverdue:     15,
+          minInvestExit:        7,
         }
-    
       });
 
+
       it("RWAsset Test: addNewInvestToken", async function () {
-        await expect(rwAsset.addNewInvestToken([usdc.address, usdt.address, usdp.address, dai.address]))
+        await expect(rwAsset.addNewInvestToken(tokenType, [usdc.address, usdt.address, usdp.address, dai.address]))
                 .to.be.revertedWith("RWA: Not manager")
 
-        await expect(rwAsset.connect(manager).addNewInvestToken([usdc.address, usdt.address, usdp.address, dai.address]))
+        await expect(rwAsset.connect(manager).addNewInvestToken(tokenType, [usdc.address, usdt.address, usdp.address, dai.address]))
                 .to.emit(rwAsset, 'AddNewInvestToken')
-                .withArgs([usdc.address, usdt.address, usdp.address, dai.address])
+                .withArgs(tokenType, [usdc.address, usdt.address, usdp.address, dai.address])
 
-        expect(await rwAsset.globalStatus()).to.deep.eq([0, 0, 0, 0, 0, 4]);
-        expect(await rwAsset.allInvestTokens(1)).to.deep.eq(usdc.address);
-        expect(await rwAsset.allInvestTokens(2)).to.deep.eq(usdt.address);
-        expect(await rwAsset.allInvestTokens(3)).to.deep.eq(usdp.address);
-        expect(await rwAsset.allInvestTokens(4)).to.deep.eq(dai.address);
+        expect(await rwAsset.globalStatus()).to.deep.eq([0, 0, 0, 0, 0, 4, 0]);
+        expect(await rwAsset.allInvestTokens(1)).to.deep.eq([1, usdc.address]);
+        expect(await rwAsset.allInvestTokens(2)).to.deep.eq([1, usdt.address]);
+        expect(await rwAsset.allInvestTokens(3)).to.deep.eq([1, usdp.address]);
+        expect(await rwAsset.allInvestTokens(4)).to.deep.eq([1, dai.address]);
       })
 
       it("RWAsset Test: addNewAssetType", async function () {
 
-        await rwAsset.connect(manager).addNewInvestToken([usdc.address, usdt.address, usdp.address, dai.address])
+        await rwAsset.connect(manager).addNewInvestToken(tokenType, [usdc.address, usdt.address, usdp.address, dai.address])
         await expect(rwAsset.connect(manager).addNewAssetType(assetType))
                 .to.emit(rwAsset, 'AddNewAssetType')
                 .withArgs(Object.values(assetType))
 
         expect(await rwAsset.assetTypes(1)).to.deep.eq(Object.values(assetType));
-        expect(await rwAsset.globalStatus()).to.deep.eq([1, 0, 0, 0, 0, 4]);
+        expect(await rwAsset.globalStatus()).to.deep.eq([1, 0, 0, 0, 0, 4, 0]);
 
         await expect(rwAsset.addNewAssetType(assetType))
                 .to.be.revertedWith("RWA: Not manager")
@@ -160,41 +176,42 @@ describe("GreenPower Test Campaign", ()=>{
 
       it("RWAsset Test: depositForAsset", async function () {
 
-        await rwAsset.connect(manager).addNewInvestToken([usdc.address, usdt.address, usdp.address, dai.address])
+        await rwAsset.connect(manager).addNewInvestToken(tokenType, [usdc.address, usdt.address, usdp.address, dai.address])
         await rwAsset.connect(manager).addNewAssetType(assetType)
 
         const amountDeposit = expandTo18Decimals(assetType.amountDeposit)
         const balanceBefore = await AKREToken.balanceOf(user1.address)
  
-        await expect(rwAsset.connect(user1).depositForAsset(1))
+        await expect(rwAsset.connect(user1).depositForAsset(1, 1))
           .to.emit(rwAsset, 'DepositForAsset')
-          .withArgs(user1.address, 1, amountDeposit)
+          .withArgs(user1.address, 1, 1, 1, amountDeposit)
 
         expect(await AKREToken.balanceOf(user1.address)).to.eq(balanceBefore.sub(amountDeposit))
 
-        let assetOrder =  {
+        let assetDetails =  {
           assetOwner:       user1.address,
           status:           1,
+          tokenId:          1,
           typeAsset:        1,
-          numInvesters:     0,
-          amountQuota:      0,
+          numInvestings:    0,
+          numQuotaTotal:    0,
           amountDeposit:    assetType.amountDeposit,
           deliverProofId:   0,
           onboardTimestamp: 0
         }
-        expect(await rwAsset.assetList(1)).to.deep.eq(Object.values(assetOrder));
-        expect(await rwAsset.globalStatus()).to.deep.eq([1, 1, 0, 0, 0, 4]);
+        expect(await rwAsset.assetList(1)).to.deep.eq(Object.values(assetDetails));
+        expect(await rwAsset.globalStatus()).to.deep.eq([1, 1, 0, 0, 0, 4, 0]);
         expect(await rwAsset.userOrderList(user1.address, 0)).to.deep.eq(1);
 
-        await expect(rwAsset.connect(user1).depositForAsset(3))
+        await expect(rwAsset.connect(user1).depositForAsset(3, 1))
             .to.be.revertedWith("RWA: Asset type not defined")
       })
 
       it("RWAsset Test: withdrawDeposit", async function () {
 
-        await rwAsset.connect(manager).addNewInvestToken([usdc.address, usdt.address, usdp.address, dai.address])
+        await rwAsset.connect(manager).addNewInvestToken(tokenType, [usdc.address, usdt.address, usdp.address, dai.address])
         await rwAsset.connect(manager).addNewAssetType(assetType)
-        await rwAsset.connect(user1).depositForAsset(1)
+        await rwAsset.connect(user1).depositForAsset(1, 1)
 
         const digest = getWithdrawDepositDigest(
                   rwAsset.address,
@@ -217,17 +234,18 @@ describe("GreenPower Test Campaign", ()=>{
                 .to.emit(rwAsset, 'WithdrawDeposit')
                 .withArgs(user1.address, 1, amountDeposit)
 
-        let assetOrder =  {
+        let assetDetails =  {
           assetOwner:       user1.address,
           status:           2,
+          tokenId:          1,
           typeAsset:        1,
-          numInvesters:     0,
-          amountQuota:      0,
+          numInvestings:    0,
+          numQuotaTotal:    0,
           amountDeposit:    assetType.amountDeposit,
           deliverProofId:   0,
           onboardTimestamp: 0
         }
-        expect(await rwAsset.assetList(1)).to.deep.eq(Object.values(assetOrder));
+        expect(await rwAsset.assetList(1)).to.deep.eq(Object.values(assetDetails));
         expect(await AKREToken.balanceOf(user1.address)).to.eq(balanceBefore.add(amountDeposit))
 
         await expect(rwAsset.connect(user1).withdrawDeposit(1, constants.MaxUint256, signature))
@@ -237,9 +255,9 @@ describe("GreenPower Test Campaign", ()=>{
 
       it("RWAsset Test: deliverAsset", async function () {
 
-        await rwAsset.connect(manager).addNewInvestToken([usdc.address, usdt.address, usdp.address, dai.address])
+        await rwAsset.connect(manager).addNewInvestToken(tokenType, [usdc.address, usdt.address, usdp.address, dai.address])
         await rwAsset.connect(manager).addNewAssetType(assetType)
-        await rwAsset.connect(user1).depositForAsset(1)
+        await rwAsset.connect(user1).depositForAsset(1, 1)
 
         const deliveryProof = "0x7120dcbcda0d9da55bc291bf4aaee8f691a0dcfbd4ad634017bb6f5686d92d74"     // Just for test
 
@@ -250,20 +268,21 @@ describe("GreenPower Test Campaign", ()=>{
                 .to.emit(rwAsset, 'DeliverAsset')
                 .withArgs(1, deliveryProof)
 
-        let assetOrder =  {
+        let assetDetails =  {
           assetOwner:       user1.address,
           status:           3,
+          tokenId:          1,
           typeAsset:        1,
-          numInvesters:     0,
-          amountQuota:      0,
+          numInvestings:     0,
+          numQuotaTotal:      0,
           amountDeposit:    assetType.amountDeposit,
           deliverProofId:   1,
           onboardTimestamp: 0
         }
 
-        expect(await rwAsset.assetList(1)).to.deep.eq(Object.values(assetOrder));
+        expect(await rwAsset.assetList(1)).to.deep.eq(Object.values(assetDetails));
         expect(await rwAsset.deliveryProofList(1)).to.deep.eq(deliveryProof);
-        expect(await rwAsset.globalStatus()).to.deep.eq([1, 1, 0, 1, 0, 4]);
+        expect(await rwAsset.globalStatus()).to.deep.eq([1, 1, 0, 1, 0, 4, 0]);
        
         await expect(rwAsset.connect(manager).deliverAsset(1, deliveryProof))
                 .to.be.revertedWith("RWA: Not allowed")
@@ -272,9 +291,9 @@ describe("GreenPower Test Campaign", ()=>{
 
       it("RWAsset Test: onboardAsset", async function () {
 
-        await rwAsset.connect(manager).addNewInvestToken([usdc.address, usdt.address, usdp.address, dai.address])
+        await rwAsset.connect(manager).addNewInvestToken(tokenType, [usdc.address, usdt.address, usdp.address, dai.address])
         await rwAsset.connect(manager).addNewAssetType(assetType)
-        await rwAsset.connect(user1).depositForAsset(1)
+        await rwAsset.connect(user1).depositForAsset(1, 1)
 
         const deliveryProof = "0x7120dcbcda0d9da55bc291bf4aaee8f691a0dcfbd4ad634017bb6f5686d92d74"     // Just for test
         await rwAsset.connect(manager).deliverAsset(1, deliveryProof)
@@ -288,26 +307,210 @@ describe("GreenPower Test Campaign", ()=>{
 
         const lastBlock = await ethers.provider.getBlock('latest')
 
-        let assetOrder =  {
+        let assetDetails =  {
           assetOwner:       user1.address,
           status:           4,
+          tokenId:          1,
           typeAsset:        1,
-          numInvesters:     0,
-          amountQuota:      0,
+          numInvestings:     0,
+          numQuotaTotal:      0,
           amountDeposit:    assetType.amountDeposit,
           deliverProofId:   1,
           onboardTimestamp: lastBlock.timestamp
         }
 
-        expect(await rwAsset.assetList(1)).to.deep.eq(Object.values(assetOrder));
+        expect(await rwAsset.assetList(1)).to.deep.eq(Object.values(assetDetails));
         expect(await rwAsset.deliveryProofList(1)).to.deep.eq(deliveryProof);
-        expect(await rwAsset.globalStatus()).to.deep.eq([1, 1, 0, 1, 1, 4]);
+        expect(await rwAsset.globalStatus()).to.deep.eq([1, 1, 0, 1, 1, 4, 0]);
        
         await expect(rwAsset.connect(manager).onboardAsset(1))
                 .to.be.revertedWith("RWA: Not allowed")
 
       })
 
+      it("RWAsset Test: investAsset", async function () {
+
+        await rwAsset.connect(manager).addNewInvestToken(tokenType, [usdc.address, usdt.address, usdp.address, dai.address])
+        await rwAsset.connect(manager).addNewAssetType(assetType)
+        await rwAsset.connect(user1).depositForAsset(1, 1)
+
+        // Test case 1:  revert "RWA: Status not allowed" before "Delivered" state
+        await expect(rwAsset.investAsset(1, 5))
+                .to.be.revertedWith("RWA: Status not allowed")
+
+        const deliveryProof = "0x7120dcbcda0d9da55bc291bf4aaee8f691a0dcfbd4ad634017bb6f5686d92d74"     // Just for test
+        await rwAsset.connect(manager).deliverAsset(1, deliveryProof)
+
+        await usdc.approve(rwAsset.address, constants.MaxUint256)
+
+        // Test case: Normal investing
+        const amountToken = 150 * (assetType.valuePerInvest)
+        const usdcBalanceBefore = await usdc.balanceOf(deployer.address)
+
+        await expect(rwAsset.investAsset(1, 150))
+                .to.emit(usdc, 'Transfer')
+                .withArgs(deployer.address, rwAsset.address, amountToken)
+                .to.emit(rwAsset, 'InvestAsset')
+                .withArgs(deployer.address, 1, usdc.address, amountToken)
+
+        expect(await usdc.balanceOf(deployer.address)).to.eq(usdcBalanceBefore.sub(amountToken))
+
+        let assetDetails =  {
+          assetOwner:       user1.address,
+          status:           3,  //Delivered,
+          tokenId:          1,
+          typeAsset:        1,
+          numInvestings:     1,
+          numQuotaTotal:      150,
+          amountDeposit:    assetType.amountDeposit,
+          deliverProofId:   1,
+          onboardTimestamp: 0
+        }
+        expect(await rwAsset.assetList(1)).to.deep.eq(Object.values(assetDetails));
+
+        let lastBlock = await ethers.provider.getBlock('latest')
+        let investing = {
+          invester: deployer.address,
+          assetId: 1,
+          timestamp: lastBlock.timestamp,
+          status: 1,
+          numQuota: 150
+        }
+
+        let indexInvesting = (1<<16) +1
+        expect(await rwAsset.investList(indexInvesting)).to.deep.eq(Object.values(investing));
+        
+        // test case：second normal investing by owner1 
+        await usdc.transfer(owner1.address, 1000 * 1000_000)
+        await usdc.connect(owner1).approve(rwAsset.address, constants.MaxUint256)
+        await rwAsset.connect(owner1).investAsset(1, 550)
+        assetDetails.numInvestings = 2
+        assetDetails.numQuotaTotal = 150 + 550
+        expect(await rwAsset.assetList(1)).to.deep.eq(Object.values(assetDetails));
+
+        lastBlock = await ethers.provider.getBlock('latest')
+
+        investing = {
+          invester: owner1.address,
+          assetId: 1,
+          timestamp: lastBlock.timestamp,
+          status: 1,
+          numQuota: 550
+        }
+
+        indexInvesting = (1<<16) + 2
+        expect(await rwAsset.investList(indexInvesting)).to.deep.eq(Object.values(investing));
+
+        expect(await rwAsset.globalStatus()).to.deep.eq([1, 1, 0, 1, 0, 4, 2]);
+
+        // test case： RWA: Invest overflowed
+        await expect(rwAsset.investAsset(1, 150))
+                .to.be.revertedWith("RWA: Invest overflowed")
+
+        // test case: Investing is still on-goling after asset is onboarded.
+        await rwAsset.connect(manager).onboardAsset(1)
+        lastBlock = await ethers.provider.getBlock('latest')
+
+        await rwAsset.investAsset(1, 15)
+        
+        assetDetails.status = 4
+        assetDetails.numInvestings = 3
+        assetDetails.numQuotaTotal = 150 + 550 + 15
+        assetDetails.onboardTimestamp = lastBlock.timestamp
+        expect(await rwAsset.assetList(1)).to.deep.eq(Object.values(assetDetails));
+
+        await ethers.provider.send("evm_increaseTime", [assetType.maxInvestOverdue * 3600 * 24])
+        await expect(rwAsset.investAsset(1, 15))
+                .to.be.revertedWith("RWA: Invest overdued")
+
+/*                
+        // test case: All quotas are invested.
+        await rwAsset.investAsset(1, 85)
+
+        assetDetails.numInvestings = 4
+        assetDetails.numQuotaTotal = 150 + 550 + 15 + 85
+        expect(await rwAsset.assetList(1)).to.deep.eq(Object.values(assetDetails));
+*/
+      })
+
+      it("RWAsset Test: investExit", async function () {
+
+        await rwAsset.connect(manager).addNewInvestToken(tokenType, [usdc.address, usdt.address, usdp.address, dai.address])
+        await rwAsset.connect(manager).addNewAssetType(assetType)
+        await rwAsset.connect(user1).depositForAsset(1, 1)
+
+        const deliveryProof = "0x7120dcbcda0d9da55bc291bf4aaee8f691a0dcfbd4ad634017bb6f5686d92d74"     // Just for test
+        await rwAsset.connect(manager).deliverAsset(1, deliveryProof)
+
+        await usdc.approve(rwAsset.address, constants.MaxUint256)
+
+        const amountToken = 150 * (assetType.valuePerInvest)
+        await rwAsset.investAsset(1, 150)
+
+        let lastBlock = await ethers.provider.getBlock('latest')
+
+        let indexInvesting = (1<<16) + 1
+
+        // Abnormal Test case: Not owner
+        await expect(rwAsset.connect(owner1).investExit(indexInvesting))
+                .to.be.revertedWith("RWA: Not owner")
+
+        // Abnormal test case: need to stay required days
+        await expect(rwAsset.investExit(indexInvesting))
+                .to.be.revertedWith("RWA: Need to stay")
+       
+        // Test case: Normal case
+        await ethers.provider.send("evm_increaseTime", [assetType.minInvestExit * 3600 * 24])
+        const usdcBalanceBefore = await usdc.balanceOf(deployer.address)
+
+        await expect(rwAsset.investExit(indexInvesting))
+                .to.emit(usdc, 'Transfer')
+                .withArgs(rwAsset.address, deployer.address, amountToken)
+                .to.emit(rwAsset, 'InvestExit')
+                .withArgs(deployer.address, indexInvesting, usdc.address, amountToken)
+
+        expect(await usdc.balanceOf(deployer.address)).to.eq(usdcBalanceBefore.add(amountToken))
+
+        let assetDetails =  {
+          assetOwner:       user1.address,
+          status:           3,  //Delivered,
+          tokenId:          1,
+          typeAsset:        1,
+          numInvestings:    1,
+          numQuotaTotal:    150 - 150,            // Aborted
+          amountDeposit:    assetType.amountDeposit,
+          deliverProofId:   1,
+          onboardTimestamp: 0
+        }
+        expect(await rwAsset.assetList(1)).to.deep.eq(Object.values(assetDetails));                
+
+        let investing = {
+          invester: deployer.address,
+          assetId: 1,
+          timestamp: lastBlock.timestamp,
+          status: 2,                      // InvestAborted
+          numQuota: 150
+        }
+
+        expect(await rwAsset.investList(indexInvesting)).to.deep.eq(Object.values(investing));   
+                
+        // Abnormal test case: Exit twice
+        await expect(rwAsset.investExit(indexInvesting))
+                .to.be.revertedWith("RWA: Wrong status")
+
+        // Abnormal test case: Exit not allowed while onboarded
+        await usdc.transfer(owner1.address, 1000 * 1000_000)
+        await usdc.connect(owner1).approve(rwAsset.address, constants.MaxUint256)
+        await rwAsset.connect(owner1).investAsset(1, 550)
+        
+        await rwAsset.connect(manager).onboardAsset(1)
+        lastBlock = await ethers.provider.getBlock('latest')
+
+        indexInvesting = (1<<16) + 2
+        await expect(rwAsset.connect(owner1).investExit(indexInvesting))
+                .to.be.revertedWith("RWA: Status not allowed")
+
+      })
 
   })
 })
