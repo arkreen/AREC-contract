@@ -1,16 +1,15 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { CONTRACTS } from "../constants";
-import { BigNumber } from "ethers";
+import { BigNumber, constants } from "ethers";
 import { ArkreenMiner__factory } from "../../typechain";
 import { ethers } from "hardhat";
-import { utils, constants } from 'ethers'
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     const [deployer] = await ethers.getSigners();
 
-    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(32_000_000_000) : BigNumber.from(50_000_000_000)
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(32_000_000_000) : BigNumber.from(150_000_000_000)
 
     if(hre.network.name === 'matic_test')  {
       const MINER_PROXY_ADDRESS = "0xF390caaF4FF0d297e0b4C3c1527D707C75541736"       // Miner Contract on Amoy testnet
@@ -80,21 +79,31 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       await arkreenMiner.registerListenApps(appid, stakingRewards, {gasPrice: defaultGasPrice})
       */
 
+      /*
       // 2024/07/25, Call registerListenApps
       const appid3 = 3
       const stakingRewards3 = "0x0A0688fc15794035820CaDc23Db7114bAb4dE405"
 
       // registerListenApps(uint256 appid, address newApp)
       await arkreenMiner.registerListenApps(appid3, stakingRewards3, {gasPrice: defaultGasPrice})
+      */
 
+      /*
       // 2024/07/25, Call registerListenApps
       const appid4 = 4
       const stakingRewards4 = "0x071Bed72c917859e73f99dDa41Fb6B2Ea4C08d33"
 
       // registerListenApps(uint256 appid, address newApp)
       await arkreenMiner.registerListenApps(appid4, stakingRewards4, {gasPrice: defaultGasPrice})
+      */
 
-      console.log("New ArkreenMiner deployed to %s:", hre.network.name, NEW_IMPLEMENTATION, stakingRewards3, stakingRewards4);
+      // 2024/11/26, Delete ListenApps
+//      await arkreenMiner.registerListenApps(1, constants.AddressZero, {gasPrice: defaultGasPrice})
+      await arkreenMiner.registerListenApps(2, constants.AddressZero, {gasPrice: defaultGasPrice})
+//      await arkreenMiner.registerListenApps(3, constants.AddressZero, {gasPrice: defaultGasPrice})
+//      await arkreenMiner.registerListenApps(4, constants.AddressZero, {gasPrice: defaultGasPrice})
+
+      console.log("New ArkreenMiner deployed to %s:", hre.network.name, NEW_IMPLEMENTATION);
     }
 };
 
@@ -126,6 +135,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:AMinerI    : Amoy testnet: Removing Proxy4, Proxy5
 // call registerListenApps: (6, 0x83A53493180677DBF298b5C9f454DED4f73FD0F1)
 // call registerListenApps: (7, 0xa2c7FD9d6F9fCD50000DAaC552d931E0185D3Be6)
+
+// 2024/11/26
+// yarn deploy:matic:AMinerI    : Polygon mainnet: Removing appid 1/2/3/4
+// call registerListenApps: Remove APPID 1/2/3/4
 
 func.tags = ["AMinerI"];
 

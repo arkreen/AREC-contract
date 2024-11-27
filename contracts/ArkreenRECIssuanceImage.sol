@@ -277,10 +277,15 @@ contract ArkreenRECIssuanceImage is Ownable{
         }
 
         {
-            DateTimeLib.DateTime memory startTime = DateTimeLib.parseTimestamp(uint256(recData.startTime));
-            DateTimeLib.DateTime memory endTime = DateTimeLib.parseTimestamp(uint256(recData.endTime));
-            string memory startString = toStringDayMonth(startTime.year, startTime.month, startTime.day);
-            string memory endString = toStringDayMonth(endTime.year, endTime.month, endTime.day);
+            uint256 year;
+            uint256 month;
+            uint256 day;
+
+            (year, month, day) = DateTime.timestampToDate(uint256(recData.startTime));
+            string memory startString = toStringDayMonth(uint16(year), uint8(month), uint8(day));
+
+            (year, month, day) = DateTime.timestampToDate(uint256(recData.endTime));
+            string memory endString = toStringDayMonth(uint16(year), uint8(month), uint8(day));
 
             imgBytes = abi.encodePacked(imgBytes,     
 
