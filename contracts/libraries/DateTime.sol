@@ -254,6 +254,19 @@ library DateTime {
         require(newTimestamp >= timestamp);
     }
 
+    function addMonthsEnd(uint256 timestamp, uint256 _months) internal pure returns (uint256 newTimestamp) {
+        (uint256 year, uint256 month, uint256 day) = _daysToDate(timestamp / SECONDS_PER_DAY);
+        month += _months;
+        year += (month - 1) / 12;
+        month = ((month - 1) % 12) + 1;
+        uint256 daysInMonth = _getDaysInMonth(year, month);
+        if (day > daysInMonth) {
+            day = daysInMonth;
+        }
+        newTimestamp = _daysFromDate(year, month, day) * SECONDS_PER_DAY + SECONDS_PER_DAY - 1;
+        require(newTimestamp >= timestamp);
+    }
+
     function addDays(uint256 timestamp, uint256 _days) internal pure returns (uint256 newTimestamp) {
         newTimestamp = timestamp + _days * SECONDS_PER_DAY;
         require(newTimestamp >= timestamp);

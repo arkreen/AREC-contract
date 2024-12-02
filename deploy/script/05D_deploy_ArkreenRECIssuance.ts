@@ -8,7 +8,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(100_000_000_000)
+  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(3_000_000_000) : BigNumber.from(40_000_000_000)
 
   console.log("Deploying: ", CONTRACTS.RECIssuance, deployer);  
 
@@ -59,6 +59,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/04/20: Deployed on Polygon Amoy testnet 
 // yarn deploy:matic_test:RECIssueD
 // 0xB8663EdC9929D9135E7f6D50f7d3A97862554a72
+
+// 2024/03/30: Update withdraw interface to allow specifying the amount
+// yarn deploy:matic:RECIssueD
+// 0xE7B61e130856f953199Bc0bEFfaE8E67709d6287
 
 func.tags = ["RECIssueD"];
 

@@ -42,5 +42,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // Deployed on Polygon main to upgrade to support for Miner Pro
 // 0x3CC572812faEDE06D1BEBf1F5CCECaA03BB2d65d
 
+// 2024/11/28: yarn deploy:matic:AMinerProD 
+// Deployed on Polygon main to upgrade to fix the bug in checkListener
+// 0xc6f4ee41384c4B006a5224123860dFa4a4419922
+
 export default func;
 func.tags = ["AMinerProD"];

@@ -430,12 +430,14 @@ contract ArkreenRECIssuance is
      * @dev Withdraw all the REC certification fee
      * @param token address of the token to withdraw, USDC/ARKE
      */
-    function withdraw(address token, address receiver) public whenNotPaused onlyOwner {
+    function withdraw(address token, address receiver, uint256 amount) public whenNotPaused onlyOwner {
         if(receiver == address(0)) {
             receiver = _msgSender();
         }
-        uint256 balance = IERC20(token).balanceOf(address(this));
-        TransferHelper.safeTransfer(token, receiver, balance);
+        if(amount == 0) {
+            amount = IERC20(token).balanceOf(address(this));
+        }
+        TransferHelper.safeTransfer(token, receiver, amount);
     }
 
     /**

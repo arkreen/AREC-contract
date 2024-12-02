@@ -22,7 +22,7 @@ export interface AssetType {
   investQuota:          number
   valuePerInvest:       number
   amountRepayMonthly:   number
-  amountGainPerInvest:  number
+  amountRepayPerInvest:  number
   amountDeposit:        number
   numSoldAssets:        number
   investTokenType:      number
@@ -131,7 +131,7 @@ describe("GreenPower Test Campaign", ()=>{
           investQuota:          800,
           valuePerInvest:       1_000_000,
           amountRepayMonthly:   150_000_000,
-          amountGainPerInvest:  75_000_000,
+          amountRepayPerInvest:  75_000_000,
           amountDeposit:        1_500_000,
           numSoldAssets:        0,
           investTokenType:      1,
@@ -197,11 +197,14 @@ describe("GreenPower Test Campaign", ()=>{
           numQuotaTotal:    0,
           amountDeposit:    assetType.amountDeposit,
           deliverProofId:   0,
-          onboardTimestamp: 0
+          onboardTimestamp: 0,
+          sumAmountRepaid: 0,
+          amountForInvestWithdarw: 0,
+          amountInvestWithdarwed: 0
         }
         expect(await rwAsset.assetList(1)).to.deep.eq(Object.values(assetDetails));
         expect(await rwAsset.globalStatus()).to.deep.eq([1, 1, 0, 0, 0, 4, 0]);
-        expect(await rwAsset.userOrderList(user1.address, 0)).to.deep.eq(1);
+        expect(await rwAsset.userAssetList(user1.address, 0)).to.deep.eq(1);
 
         await expect(rwAsset.connect(user1).depositForAsset(3, 1))
             .to.be.revertedWith("RWA: Asset type not defined")
@@ -243,7 +246,10 @@ describe("GreenPower Test Campaign", ()=>{
           numQuotaTotal:    0,
           amountDeposit:    assetType.amountDeposit,
           deliverProofId:   0,
-          onboardTimestamp: 0
+          onboardTimestamp: 0,
+          sumAmountRepaid: 0,
+          amountForInvestWithdarw: 0,
+          amountInvestWithdarwed: 0
         }
         expect(await rwAsset.assetList(1)).to.deep.eq(Object.values(assetDetails));
         expect(await AKREToken.balanceOf(user1.address)).to.eq(balanceBefore.add(amountDeposit))
@@ -277,7 +283,10 @@ describe("GreenPower Test Campaign", ()=>{
           numQuotaTotal:      0,
           amountDeposit:    assetType.amountDeposit,
           deliverProofId:   1,
-          onboardTimestamp: 0
+          onboardTimestamp: 0,
+          sumAmountRepaid: 0,
+          amountForInvestWithdarw: 0,
+          amountInvestWithdarwed: 0
         }
 
         expect(await rwAsset.assetList(1)).to.deep.eq(Object.values(assetDetails));
@@ -316,7 +325,10 @@ describe("GreenPower Test Campaign", ()=>{
           numQuotaTotal:      0,
           amountDeposit:    assetType.amountDeposit,
           deliverProofId:   1,
-          onboardTimestamp: lastBlock.timestamp
+          onboardTimestamp: lastBlock.timestamp,
+          sumAmountRepaid: 0,
+          amountForInvestWithdarw: 0,
+          amountInvestWithdarwed: 0
         }
 
         expect(await rwAsset.assetList(1)).to.deep.eq(Object.values(assetDetails));
@@ -364,7 +376,10 @@ describe("GreenPower Test Campaign", ()=>{
           numQuotaTotal:      150,
           amountDeposit:    assetType.amountDeposit,
           deliverProofId:   1,
-          onboardTimestamp: 0
+          onboardTimestamp: 0,
+          sumAmountRepaid: 0,
+          amountForInvestWithdarw: 0,
+          amountInvestWithdarwed: 0
         }
         expect(await rwAsset.assetList(1)).to.deep.eq(Object.values(assetDetails));
 
@@ -422,15 +437,13 @@ describe("GreenPower Test Campaign", ()=>{
         await ethers.provider.send("evm_increaseTime", [assetType.maxInvestOverdue * 3600 * 24])
         await expect(rwAsset.investAsset(1, 15))
                 .to.be.revertedWith("RWA: Invest overdued")
-
-/*                
-        // test case: All quotas are invested.
-        await rwAsset.investAsset(1, 85)
-
-        assetDetails.numInvestings = 4
-        assetDetails.numQuotaTotal = 150 + 550 + 15 + 85
-        expect(await rwAsset.assetList(1)).to.deep.eq(Object.values(assetDetails));
-*/
+                  
+  //      // test case: All quotas are invested.
+  //      await rwAsset.investAsset(1, 85)
+  //
+  //      assetDetails.numInvestings = 4
+  //      assetDetails.numQuotaTotal = 150 + 550 + 15 + 85
+  //      expect(await rwAsset.assetList(1)).to.deep.eq(Object.values(assetDetails));
       })
 
       it("RWAsset Test: investExit", async function () {
@@ -480,7 +493,10 @@ describe("GreenPower Test Campaign", ()=>{
           numQuotaTotal:    150 - 150,            // Aborted
           amountDeposit:    assetType.amountDeposit,
           deliverProofId:   1,
-          onboardTimestamp: 0
+          onboardTimestamp: 0,
+          sumAmountRepaid: 0,
+          amountForInvestWithdarw: 0,
+          amountInvestWithdarwed: 0
         }
         expect(await rwAsset.assetList(1)).to.deep.eq(Object.values(assetDetails));                
 
@@ -511,6 +527,32 @@ describe("GreenPower Test Campaign", ()=>{
                 .to.be.revertedWith("RWA: Status not allowed")
 
       })
+
+      it("RWAsset Test: rpow", async function () {
+
+        let rate = BigNumber.from("1000000593415115246806684338")
+        let seconds = 3600 *24
+        let base27 = BigNumber.from("10").pow(27)
+
+        let result = await rwAsset.rpow(rate, seconds, base27 )
+
+        console.log("QQQQQQQQQQ", rate.toString(), result.toString())
+
+        
+        rate = BigNumber.from("79228209529453526788445080146")
+        let base96 = BigNumber.from("2").pow(96)
+        result = await rwAsset.rpow(rate, seconds, base96)
+
+        console.log("PPPPPPPPPPPPPPPPPPP", rate.toString(), result.toString(), result.mul(base27).div(base96).toString())
+
+        // Yeaely 20% : 1000000006341958396752917301    //
+        rate = BigNumber.from("20").mul(base27).div(100).div(3600 *24 *365).add(base27)
+        result = await rwAsset.rpow(rate, 3600 * 24 * 365, base27)
+
+        console.log("PPPPPPPPPPPPPPPPPPP", rate.toString(), result.toString())
+
+      })
+
 
   })
 })

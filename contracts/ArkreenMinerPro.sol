@@ -123,7 +123,7 @@ contract ArkreenMinerPro is
         if (allListenApps == 0) return;
         while (allListenApps != 0) {
             address appToCall = listenApps[uint8(allListenApps)];
-            IArkreenMinerListener(appToCall).minerOnboarded(owner, quantity);
+            if(appToCall != address(0)) IArkreenMinerListener(appToCall).minerOnboarded(owner, quantity);
             allListenApps = allListenApps >> 8;
         }
     }

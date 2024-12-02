@@ -8,6 +8,7 @@ import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 import "../libraries/TransferHelper.sol";
+import "../libraries/DateTime.sol";
 import "../interfaces/IERC20.sol";
 import "../interfaces/IERC20Permit.sol";
 
@@ -23,7 +24,7 @@ contract RWAsset is
       Withdrawed,           // 2
       Delivered,            // 3
       Onboarded,            // 4
-      Repaying,             // 5
+      Clearing,             // 5
       Cleared,              // 6
       Completed             // 7
     }
@@ -39,17 +40,21 @@ contract RWAsset is
     struct AssetType {
         uint16    typeAsset;                  // asset type of specific device asset
         uint16    tenure;                     // asset funding effective duration in days
+
         uint16    remoteQuota;                // number of the remote sub-assets linked to one asset
         uint16    investQuota;                // quota of the fixed-gain investment unit
         uint32    valuePerInvest;             // price per investing unit in USDC/USDT
         uint48    amountRepayMonthly;         // amount in USDC/USDT needed to repay monthly to this contract
-        uint32    amountRepayPerInvest;       // amount in USDC/USDT repaid to the investers per investing unit
+        uint32    amountYieldPerInvest;       // amount of the yield in USDC/USDT paid to the investers per investing unit
         uint32    amountDeposit;              // amount of AKRE to deposit, in unit of 10**18, subject to change; subject to change. 
         uint16    numSoldAssets;              // Number of assess of this asset type that have been sold
         uint8     investTokenType;            // token type accepted for the investing, should be stable coin; =1 USD, =2, EURO
         uint8     maxInvestOverdue;           // Max days after date the asset is onboared when the investing is still acceppted  
         uint8     minInvestExit;              // Minimum days before the investing can exit  
+        uint8     interestId;                 // id of the interest rate
+        // Full
     }
+
 
     struct GlobalStatus {
         uint16  numAssetType;               // Number of the asset type that have been defined
@@ -80,9 +85,23 @@ contract RWAsset is
         uint48          sumAmountRepaid;          // sum of the amount repaid to the contract
         uint48          amountForInvestWithdarw;  // amount available for invest withdraw  
         uint48          amountInvestWithdarwed;   // amount withdrawed by investing
+    }
+
+    struct RepayDetails {
+        uint8           nextDueMonth;             // the next month id to repay the due
+        uint32          timestampNextDue;         // the timestamp of to repay the next due monthly
+        uint48          amountRepayDue;           // amount to repay on the due timestamp
         uint48          amountDebt;               // amount of the debt of asset owner
         uint32          timestampDebt;            // timestamp of the debt starting         
+        uint48          amountDebtRepaid;         // the amount of the debt that are repaid and can be claimed
+        uint48          amountRepayReady;         // the amount ready to repay the due monthly
+        uint48          amountPrePay;             // the amount of Pre-Pay for next months
+        uint48          amountRepayTaken;         // the amount of monthly repayment tha has been taken
+    }
 
+    struct ClearanceDetails {
+        uint80          amountTrigerClearance;    // threshold triggering clearance
+        uint80          amountDebtOverdueProduct; // sum of the product of debt and overdue duration
     }
 
     struct Invest {
@@ -91,11 +110,16 @@ contract RWAsset is
         uint32          timestamp;                // the timestamp investing
         uint8           status;                   // invest Status
         uint16          numQuota;                 // number of quota invested
+        uint8           monthTaken;               // the last month the yeild has been taken
     }
 
     struct InvestToken {
-        uint8           tokenType;                   // type of the stabel coin, = 1, USD, =2 EURO
+        uint8           tokenType;                    // type of the stabel coin, = 1, USD, =2 EURO
         address         tokenAddress;                    // Address of the token erc20
+    }
+
+    struct InterestRate {
+        uint96          ratePerSecond;                // Interest rate per second, on the base of (10^27)
     }
 
     struct Sig {
@@ -112,16 +136,21 @@ contract RWAsset is
     bytes32 public DOMAIN_SEPARATOR;
     address public tokenAKRE;                           // Token adddress of AKRE
     address public assetAuthority;                      // The entity doing authorization
-    address public assetManager;                        // The enity managing the asset operating process on blockchain        
+    address public assetManager;                        // The enity managing the asset operating process on blockchain
+    address public fundReceiver;                        // The enity address receiving the asset repayment monthly
 
     GlobalStatus public globalStatus;                           // Global asset status
     mapping(uint16 => AssetType) public assetTypes;             // All asset type that have been defined,  type -> type info
     mapping(address => AssetStatus) public userInfo;            // user information, user address -> user info
     mapping(uint32 => AssetDetails) public assetList;           // All asset list, asset id -> asset details
+    mapping(uint32 => RepayDetails) public assetRepayStatus;    // All asset repaymnet status, asset id -> asset details
+    mapping(uint32 => ClearanceDetails) public assetClearance;  // All asset clearance information, asset id -> asset clearance information
+
     mapping(address => uint32[]) public userAssetList;          // user asset list, user -> asset list, assuming the list is not long
     mapping(uint256 => bytes32) public deliveryProofList;       // all delivery proof list, proof id -> delivery proof 
 
     mapping(uint16 => InvestToken) public allInvestTokens;      // all tokens accepted for investing
+    mapping(uint8 => InterestRate) public allInterestRates;    // all interest rates
 
     mapping(address => uint48[]) public userInvestList;         // user invest list, user -> investing index list, assuming the list is not long
 
@@ -138,6 +167,9 @@ contract RWAsset is
     event OnboardAsset(uint256 assetId);
     event InvestAsset(address indexed user, uint256 assetId, address token, uint256 amount);
     event InvestExit(address indexed user, uint256 investIndex, address tokenInvest, uint256 amountToken);
+    event RepayMonthly(address indexed user, uint256 assetId, address tokenInvest, uint256 amountToken);
+    event InvestTakeYield(address indexed user, uint256 investIndex, uint256 months, address tokenInvest, uint256 amountToken); 
+    event TakeRepayment(uint256 assetId, address tokenInvest, uint256 amountToken); 
 
     modifier ensure(uint256 deadline) {
         require(block.timestamp <= deadline, "RWA: EXPIRED");
@@ -185,6 +217,19 @@ contract RWAsset is
         override
         onlyOwner
     {}
+
+    /**
+     * @dev Set the asset manager
+     */
+    function setAssetManager(address manager) external onlyOwner {
+        require (manager != address(0), "RWA: Zero address");
+        assetManager = manager;
+    }
+
+    function setFundReceiver(address receiver) external onlyOwner {
+        require (receiver != address(0), "RWA: Zero address");
+        fundReceiver = receiver;
+    }
 
     /**
      * @dev Add new accepted investment tokens
@@ -307,6 +352,12 @@ contract RWAsset is
         globalStatus.numOnboarded += 1;
         assetList[assetId].onboardTimestamp = uint32(block.timestamp);
 
+        uint16 typeAsset = assetList[assetId].typeAsset;
+
+        assetRepayStatus[assetId].nextDueMonth = 1; 
+        assetRepayStatus[assetId].timestampNextDue = uint32(DateTime.addMonthsEnd(block.timestamp, 1));
+        assetRepayStatus[assetId].amountRepayDue = assetTypes[typeAsset].amountRepayMonthly;
+        
         emit OnboardAsset(assetId);
     }
 
@@ -400,7 +451,7 @@ contract RWAsset is
     function queryRepay(
         uint32 assetId,
         uint32 timeToPay
-    ) external view returns (uint256, uint256) {
+    ) external pure returns (uint256, uint256) {
 
     //        AssetStatus statusAsset = assetList[assetId].status;
     //        require (statusAsset == AssetStatus.Onboarded, "RWA: Status not allowed");
@@ -410,12 +461,217 @@ contract RWAsset is
          
     
         // 1704067200: 2024/01/01
-      return (0, 0);
+      return (assetId, timeToPay);
 
     }
 
+    function checkRepayMonthly (uint32 assetId) internal returns (uint256 interestRate) {
+        RepayDetails storage assetRepayStatusRef = assetRepayStatus[assetId];
+        AssetDetails storage assetStatuseRef = assetList[assetId];
+        ClearanceDetails storage assetClearanceRef = assetClearance[assetId];
 
-    function rpow(uint x, uint n, uint base) public pure returns (uint z) {
+        uint16 typeAsset = assetList[assetId].typeAsset;
+        interestRate = allInterestRates[assetTypes[typeAsset].interestId].ratePerSecond;
+
+        if (uint32(block.timestamp) > assetRepayStatusRef.timestampNextDue) {
+            uint48 debtWithInterest = 0;
+            if (assetRepayStatusRef.amountDebt != 0) {
+                uint256 debtDuration = assetRepayStatusRef.timestampNextDue - assetRepayStatusRef.timestampDebt;
+                debtWithInterest = uint48(rpow(interestRate, debtDuration) * uint256(assetRepayStatusRef.amountDebt) / (10 ** 27));
+                assetClearanceRef.amountDebtOverdueProduct += uint80(debtDuration * assetRepayStatusRef.amountDebt);
+            }
+
+            assetRepayStatusRef.amountDebt = debtWithInterest + assetRepayStatusRef.amountRepayDue;
+            assetRepayStatusRef.timestampDebt = assetRepayStatusRef.timestampNextDue;
+
+            assetRepayStatusRef.amountRepayDue = assetTypes[assetStatuseRef.typeAsset].amountRepayMonthly;
+            uint8 nextMonth = assetRepayStatusRef.nextDueMonth + 1;
+            assetRepayStatusRef.nextDueMonth = nextMonth;
+            assetRepayStatusRef.timestampNextDue = uint32(DateTime.addMonthsEnd(assetStatuseRef.onboardTimestamp, nextMonth));
+        }
+        
+        // Check if need to clear the asset
+        // To do
+        if (assetRepayStatusRef.amountDebt != 0) {
+            uint256 debtDuration = uint32(block.timestamp) - assetRepayStatusRef.timestampDebt;
+            uint256 amountDebtOverdueProduct = assetClearanceRef.amountDebtOverdueProduct;
+            amountDebtOverdueProduct += uint80(debtDuration * assetRepayStatusRef.amountDebt);
+            if (amountDebtOverdueProduct >= assetClearanceRef.amountTrigerClearance) {
+              assetStatuseRef.status = AssetStatus.Clearing;
+            }
+        }
+    }
+
+    /**
+     * @dev Repay the asset installment monthly
+     * @param assetId index of the asset investment
+     * @param amountToken amount of the repay
+     */
+    function repayMonthly(
+        uint32 assetId,
+        uint48 amountToken
+    ) external nonReentrant {
+
+        AssetDetails storage assetStatuseRef = assetList[assetId];
+        require (assetStatuseRef.status == AssetStatus.Onboarded, "RWA: Status not allowed");
+
+        uint256 interestRate = checkRepayMonthly(assetId);
+
+        // Transfer repay token
+        address tokenInvest = allInvestTokens[assetStatuseRef.tokenId].tokenAddress;
+        TransferHelper.safeTransferFrom(tokenInvest, msg.sender, address(this), amountToken);
+
+        assetStatuseRef.sumAmountRepaid += amountToken;
+        uint48 amountTokenNet = amountToken;
+
+        RepayDetails storage assetRepayStatusRef = assetRepayStatus[assetId];
+
+        // Check if there is debt pending
+        if (assetRepayStatusRef.amountDebt != 0) {
+            uint256 debtDuration = block.timestamp - assetRepayStatusRef.timestampDebt;
+            uint48 debtWithInterest = uint48(rpow(interestRate, debtDuration) * uint256(assetRepayStatusRef.amountDebt) / (10 ** 27));
+
+            if (amountTokenNet >= debtWithInterest) {
+                // amount of the repay is enough to pay back the debt
+                assetRepayStatusRef.amountDebt = 0;
+                assetRepayStatusRef.timestampDebt = 0;
+                assetRepayStatusRef.amountDebtRepaid += debtWithInterest;
+                amountTokenNet -= debtWithInterest;
+            } else {
+                // amount of the repay is NOT enough to pay back the debt, pay the debt first
+                assetRepayStatusRef.amountDebt = debtWithInterest - amountTokenNet;    // Use the debt with interest to update
+                assetRepayStatusRef.timestampDebt = uint32(block.timestamp);       // New debt calculation time
+                assetRepayStatusRef.amountDebtRepaid += amountTokenNet;
+                amountTokenNet = 0;
+            }
+        }
+
+        // check if the repay is overdued
+        if (uint32(block.timestamp) <= assetRepayStatusRef.timestampNextDue) {
+            if ((assetRepayStatusRef.amountRepayDue != 0) && (amountTokenNet != 0)) {
+                if (assetRepayStatusRef.amountRepayDue > amountTokenNet) {
+                    assetRepayStatusRef.amountRepayDue -= amountTokenNet;
+                    amountTokenNet = 0;
+                } else {
+                    assetRepayStatusRef.amountRepayDue = 0;
+                    amountTokenNet -= assetRepayStatusRef.amountRepayDue;
+                }
+            }
+
+            if (amountTokenNet != 0) {
+                // Update the repay amount available to pay the due monthly 
+                assetRepayStatusRef.amountRepayReady += amountTokenNet;         // amountTokenNet not checked here just for optim
+            }
+        } else {
+            if ((assetRepayStatusRef.amountRepayDue != 0) && (amountTokenNet != 0)) {
+                uint256 overdueDuration = block.timestamp - assetRepayStatusRef.timestampNextDue;
+                uint48 overdueWithInterest = uint48(rpow(interestRate, overdueDuration) * uint256(assetRepayStatusRef.amountRepayDue) / (10 ** 27));
+                
+                if (amountTokenNet >= overdueWithInterest) {
+                    // amount of the repay is enough to pay back the overdue
+                    assetRepayStatusRef.amountRepayDue = assetTypes[assetStatuseRef.typeAsset].amountRepayMonthly;
+                    uint8 nextMonth = assetRepayStatusRef.nextDueMonth + 1;
+                    assetRepayStatusRef.nextDueMonth = nextMonth;
+                    assetRepayStatusRef.timestampNextDue = uint32(DateTime.addMonthsEnd(assetStatuseRef.onboardTimestamp, nextMonth));
+
+                    assetRepayStatusRef.amountRepayReady += overdueWithInterest;         // ????????????
+                    amountTokenNet -= overdueWithInterest;
+                } else {
+                    // amount of the repay is NOT enough to pay back the due, pay partially
+                    uint48 overdueSubstract = uint48(uint256(assetRepayStatusRef.amountRepayDue) * uint256(amountTokenNet) / uint256(overdueWithInterest));
+                    assetRepayStatusRef.amountRepayDue -= overdueSubstract;
+                    assetRepayStatusRef.amountRepayReady += amountTokenNet;
+                    amountTokenNet = 0;
+                }
+            }
+            
+            if (amountTokenNet != 0) {
+                assetRepayStatusRef.amountPrePay = amountTokenNet;
+            }
+        }
+      
+        emit RepayMonthly(msg.sender, assetId, tokenInvest, amountToken);
+    }
+
+    function takeRepayment(
+        uint32 assetId
+    ) external onlyManager {
+
+        AssetDetails storage assetStatuseRef = assetList[assetId];
+        require (assetStatuseRef.status == AssetStatus.Onboarded, "RWA: Status not allowed");
+
+        RepayDetails storage assetRepayStatusRef = assetRepayStatus[assetId];
+        require (assetRepayStatusRef.nextDueMonth >= 2, "RWA: Not available" ); 
+
+        checkRepayMonthly(assetId);
+
+        uint16 typeAsset = assetStatuseRef.typeAsset;
+        uint48 amountTotalYield = assetTypes[typeAsset].investQuota * uint48(assetTypes[typeAsset].amountYieldPerInvest);
+        amountTotalYield = amountTotalYield * uint48(assetRepayStatusRef.nextDueMonth);         // All yield up to date
+
+        uint48 deductAmount = assetRepayStatusRef.amountRepayTaken +                // Allready taken away
+                              amountTotalYield +                                    // All amount of invest yield should be kept
+                              assetRepayStatusRef.amountRepayReady +                // Repay not mature
+                              assetRepayStatusRef.amountPrePay;                     // Prepay for next monthly
+
+        require (assetStatuseRef.sumAmountRepaid > deductAmount, "RWA: No repayment matured");
+
+        uint48 amountRepayAvailable = assetStatuseRef.sumAmountRepaid - deductAmount;
+
+        assetRepayStatusRef.amountRepayTaken += amountRepayAvailable;
+        address tokenInvest = allInvestTokens[assetList[assetId].tokenId].tokenAddress;
+
+        address receiver = fundReceiver;
+        if (fundReceiver == address(0)) receiver = msg.sender;
+
+        TransferHelper.safeTransfer(tokenInvest, receiver, amountRepayAvailable);
+
+        emit TakeRepayment(assetId, tokenInvest, amountRepayAvailable);
+    }
+
+    
+    function executeClearance(
+        uint32 _assetId
+    ) external {
+        return;
+    }
+        
+
+    function takeYield(
+        uint48 investIndex
+    ) external {
+
+        Invest memory investToTake = investList[investIndex];
+
+        require (investToTake.invester == msg.sender, "RWA: Not owner");
+        require (investToTake.status == uint8(InvestStatus.InvestNormal), "RWA: Wrong status");
+
+        uint32 assetId = investToTake.assetId;
+        AssetDetails storage assetStatuseRef = assetList[assetId];
+        require (assetStatuseRef.status == AssetStatus.Onboarded, "RWA: Status not allowed");
+       
+        checkRepayMonthly(assetId);
+
+        uint8 monthWithYield = assetRepayStatus[assetId].nextDueMonth - investToTake.monthTaken;    // ??? nextDueMonth is always correct while cross the due time ??
+        if (uint32(block.timestamp) < assetRepayStatus[assetId].timestampNextDue) monthWithYield -= 1;      // Not mature for current month
+
+        require (monthWithYield > 0, "RWA: Not mature");
+
+        investList[investIndex].monthTaken += monthWithYield;
+
+        uint256 amountToken = uint256(investToTake.numQuota) * uint256(assetTypes[assetStatuseRef.typeAsset].amountYieldPerInvest);
+        address tokenInvest = allInvestTokens[assetList[assetId].tokenId].tokenAddress;
+
+        TransferHelper.safeTransfer(tokenInvest, msg.sender, amountToken);
+
+        emit InvestTakeYield(msg.sender, investIndex, monthWithYield, tokenInvest, amountToken);
+    }
+
+    /**
+     * @dev calcuate x^n on the basis of 10^27
+     */
+    function rpow(uint256 x, uint256 n) public pure returns (uint256 z) {
+        uint256 base = 10 ** 27;
         assembly {
             switch x case 0 {switch n case 0 {z := base} default {z := 0}}
             default {
@@ -438,6 +694,5 @@ contract RWAsset is
             }
         }
     }
-
 
 }

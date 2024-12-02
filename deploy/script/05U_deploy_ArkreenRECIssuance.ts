@@ -10,7 +10,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const [deployer] = await ethers.getSigners();
     console.log("Updating ArkreenRECIssuance: ", CONTRACTS.RECIssuance, deployer.address);  
 
-    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6_000_000_000) : BigNumber.from(120_000_000_000)
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(6_000_000_000) : BigNumber.from(50_000_000_000)
 
 //    Cannot be verified in this way    
 //    const ArkreenRECIssuanceFactory = await ethers.getContractFactory("ArkreenRECIssuance");
@@ -68,7 +68,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       // const NEW_IMPLEMENTATION = "0xEf06990Ee1c2F2694acd87b189d0EbA84DdB7124"  // 2. Upgrade to support solidify and offset traceback
       // const NEW_IMPLEMENTATION = "0x966721720dC732464D2C5594AfF9b0Aa52E1b0e8"  // 3. 2023/04/02: Add "setTokenAKRE"
       // const NEW_IMPLEMENTATION = "0x7a6Bba59bcA319071da51631518228c10e2CFc8d"  // 4. 2024/02/22: Add "setARECImage"
-      const NEW_IMPLEMENTATION = "0xb1A63E6335950Ae6563b309b308c80b910ED4047"     // 5. 2024/03/30: Update "updateRECData" to allow data update while its pending.
+      // const NEW_IMPLEMENTATION = "0xb1A63E6335950Ae6563b309b308c80b910ED4047"  // 5. 2024/03/30: Update "updateRECData" to allow data update while its pending.
+      const NEW_IMPLEMENTATION = "0xE7B61e130856f953199Bc0bEFfaE8E67709d6287"     // 6. 2024/11/29: Update withdraw interface to allow specifying the amount
 
       const [deployer] = await ethers.getSigners();
       const ArkreenRECIssuanceFactory = ArkreenRECIssuance__factory.connect(REC_ISSUANCE_ADDRESS, deployer);
@@ -101,6 +102,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:RECIssueU
 
 // 2024/03/30: Update "updateRECData" to allow data update while its pending
+// yarn deploy:matic:RECIssueU
+
+// 2024/11/29: Update withdraw interface to allow specifying the amount
 // yarn deploy:matic:RECIssueU
 
 func.tags = ["RECIssueU"];
