@@ -22,12 +22,13 @@ export interface AssetType {
   investQuota:          number
   valuePerInvest:       number
   amountRepayMonthly:   number
-  amountRepayPerInvest:  number
+  amountYieldPerInvest:  number
   amountDeposit:        number
   numSoldAssets:        number
   investTokenType:      number
   maxInvestOverdue:     number
   minInvestExit:        number
+  interestId:           number
 }
 
 export interface GlobalStatus {
@@ -131,12 +132,13 @@ describe("GreenPower Test Campaign", ()=>{
           investQuota:          800,
           valuePerInvest:       1_000_000,
           amountRepayMonthly:   150_000_000,
-          amountRepayPerInvest:  75_000_000,
+          amountYieldPerInvest: 75_000_000,
           amountDeposit:        1_500_000,
           numSoldAssets:        0,
           investTokenType:      1,
           maxInvestOverdue:     15,
           minInvestExit:        7,
+          interestId:           0
         }
       });
 
@@ -389,7 +391,8 @@ describe("GreenPower Test Campaign", ()=>{
           assetId: 1,
           timestamp: lastBlock.timestamp,
           status: 1,
-          numQuota: 150
+          numQuota: 150,
+          monthTaken: 0
         }
 
         let indexInvesting = (1<<16) +1
@@ -410,7 +413,8 @@ describe("GreenPower Test Campaign", ()=>{
           assetId: 1,
           timestamp: lastBlock.timestamp,
           status: 1,
-          numQuota: 550
+          numQuota: 550,
+          monthTaken: 0
         }
 
         indexInvesting = (1<<16) + 2
@@ -505,7 +509,8 @@ describe("GreenPower Test Campaign", ()=>{
           assetId: 1,
           timestamp: lastBlock.timestamp,
           status: 2,                      // InvestAborted
-          numQuota: 150
+          numQuota: 150,
+          monthTaken: 0
         }
 
         expect(await rwAsset.investList(indexInvesting)).to.deep.eq(Object.values(investing));   
@@ -534,20 +539,18 @@ describe("GreenPower Test Campaign", ()=>{
         let seconds = 3600 *24
         let base27 = BigNumber.from("10").pow(27)
 
-        let result = await rwAsset.rpow(rate, seconds, base27 )
+        let result = await rwAsset.rpow(rate, seconds )
 
         console.log("QQQQQQQQQQ", rate.toString(), result.toString())
-
         
-        rate = BigNumber.from("79228209529453526788445080146")
-        let base96 = BigNumber.from("2").pow(96)
-        result = await rwAsset.rpow(rate, seconds, base96)
-
-        console.log("PPPPPPPPPPPPPPPPPPP", rate.toString(), result.toString(), result.mul(base27).div(base96).toString())
+//        rate = BigNumber.from("79228209529453526788445080146")
+//        let base96 = BigNumber.from("2").pow(96)
+//        result = await rwAsset.rpow(rate, seconds, base96)
+//        console.log("PPPPPPPPPPPPPPPPPPP", rate.toString(), result.toString(), result.mul(base27).div(base96).toString())
 
         // Yeaely 20% : 1000000006341958396752917301    //
         rate = BigNumber.from("20").mul(base27).div(100).div(3600 *24 *365).add(base27)
-        result = await rwAsset.rpow(rate, 3600 * 24 * 365, base27)
+        result = await rwAsset.rpow(rate, 3600 * 24 * 365)
 
         console.log("PPPPPPPPPPPPPPPPPPP", rate.toString(), result.toString())
 
