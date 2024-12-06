@@ -307,6 +307,7 @@
     "hardhat-deploy": "^0.11.15",
     "hardhat-gas-reporter": "^1.0.8",
     "hardhat-storage-layout": "^0.1.7",
+    "hardhat-ignore-warnings": "^0.2.12",
     "jsbi": "^4.3.0",
     "luxon": "^1.25.0",
     "mocha-chai-jest-snapshot": "^1.1.0",

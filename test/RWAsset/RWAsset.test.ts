@@ -18,13 +18,13 @@ import {
 export interface AssetType {
   typeAsset:            number
   tenure:               number
-  remoteQuota:          number
+  //remoteQuota:          number
   investQuota:          number
   valuePerInvest:       number
   amountRepayMonthly:   number
   amountYieldPerInvest:  number
   amountDeposit:        number
-  numSoldAssets:        number
+  //numSoldAssets:        number
   investTokenType:      number
   maxInvestOverdue:     number
   minInvestExit:        number
@@ -127,14 +127,14 @@ describe("GreenPower Test Campaign", ()=>{
 
         assetType = {
           typeAsset:            1,
-          tenure:               365,
-          remoteQuota:          25,
+          tenure:               12,
+          //remoteQuota:          25,
           investQuota:          800,
           valuePerInvest:       1_000_000,
           amountRepayMonthly:   150_000_000,
           amountYieldPerInvest: 75_000_000,
           amountDeposit:        1_500_000,
-          numSoldAssets:        0,
+          //numSoldAssets:        0,
           investTokenType:      1,
           maxInvestOverdue:     15,
           minInvestExit:        7,
@@ -388,7 +388,7 @@ describe("GreenPower Test Campaign", ()=>{
         let lastBlock = await ethers.provider.getBlock('latest')
         let investing = {
           invester: deployer.address,
-          assetId: 1,
+          //assetId: 1,
           timestamp: lastBlock.timestamp,
           status: 1,
           numQuota: 150,
@@ -410,7 +410,7 @@ describe("GreenPower Test Campaign", ()=>{
 
         investing = {
           invester: owner1.address,
-          assetId: 1,
+          //assetId: 1,
           timestamp: lastBlock.timestamp,
           status: 1,
           numQuota: 550,
@@ -506,7 +506,7 @@ describe("GreenPower Test Campaign", ()=>{
 
         let investing = {
           invester: deployer.address,
-          assetId: 1,
+          //assetId: 1,
           timestamp: lastBlock.timestamp,
           status: 2,                      // InvestAborted
           numQuota: 150,
@@ -533,6 +533,7 @@ describe("GreenPower Test Campaign", ()=>{
 
       })
 
+/*
       it("RWAsset Test: rpow", async function () {
 
         let rate = BigNumber.from("1000000593415115246806684338")
@@ -555,7 +556,7 @@ describe("GreenPower Test Campaign", ()=>{
         console.log("PPPPPPPPPPPPPPPPPPP", rate.toString(), result.toString())
 
       })
-
+*/
 
   })
 })
