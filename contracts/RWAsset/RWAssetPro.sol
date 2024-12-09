@@ -22,6 +22,8 @@ import "../interfaces/IERC20Permit.sol";
 import "./RWAssetType.sol";
 import "./RWAssetStorage.sol";
 
+// Import this file to use console.log
+import "hardhat/console.sol";
 
 contract RWAssetPro is 
     OwnableUpgradeable,
@@ -31,7 +33,7 @@ contract RWAssetPro is
 {
    // Events
     event InvestExit(address indexed user, uint256 investIndex, address tokenInvest, uint256 amountToken);
-    event RepayMonthly(address indexed user, uint256 assetId, address tokenInvest, uint256 amountToken);
+    event RepayMonthly(address indexed user, uint256 assetId, address tokenInvest, uint256 amountToken, AssetStatus assetStatus);
     event InvestTakeYield(address indexed user, uint256 investIndex, uint256 months, address tokenInvest, uint256 amountToken, uint256 amountAKRE); 
     event TakeRepayment(uint256 assetId, address tokenInvest, uint256 amountToken); 
     event InvestClearance(uint256 assetId, uint256 months, uint256 amountAKRE);
@@ -73,23 +75,31 @@ contract RWAssetPro is
                         // May be more accuratly, to calculate the product, should use: (assetRepayStatusRef.amountDebt + debtWithInterest) / 2 
                         // Not possble to calcuate the product in compound way
                     }
+                        
+                    uint48 amountDebtNew = debtWithInterest + assetRepayStatusRef.amountRepayDue;
+                    assetRepayStatusRef.amountDebt = amountDebtNew;                                         // RepayDue becomes new debt
+                    if (amountDebtNew != 0) assetRepayStatusRef.timestampDebt = assetRepayStatusRef.timestampNextDue;
 
-                    assetRepayStatusRef.amountDebt = debtWithInterest + assetRepayStatusRef.amountRepayDue;         // RepayDue becomes new debt
-                    assetRepayStatusRef.timestampDebt = assetRepayStatusRef.timestampNextDue;
-
-                    assetRepayStatusRef.amountRepayDue = assetTypesRef.amountRepayMonthly;
-
-                    monthDue += 1;                                                          // allow skip to the month tenure + 1 
+                    monthDue += 1;                                                                          // allow skip to the month tenure + 1 
                     assetRepayStatusRef.monthDueRepay = monthDue;
                     assetRepayStatusRef.timestampNextDue = uint32(DateTime.addMonthsEnd(assetStatuseRef.onboardTimestamp, monthDue));
+
+                    if (assetRepayStatusRef.amountPrePay >= assetTypesRef.amountRepayMonthly) {
+                        assetRepayStatusRef.amountRepayDue = 0;                                             //Repay all the monthly due with Prepay
+                        assetRepayStatusRef.amountPrePay -= assetTypesRef.amountRepayMonthly;
+                    } else {
+                        assetRepayStatusRef.amountRepayDue = assetTypesRef.amountRepayMonthly - assetRepayStatusRef.amountPrePay;
+                        assetRepayStatusRef.amountPrePay = 0;                                               // All prepay are used
+                    }
                 }
             }
         }
     }
 
-    function checkClearanceStatus (uint32 assetId) internal returns (bool){
+    function checkClearanceStatus (uint32 assetId) internal returns (AssetStatus assetStatus){
         AssetDetails storage assetStatuseRef = assetList[assetId];
-        if (assetStatuseRef.status == AssetStatus.Clearing) return true;
+        assetStatus = assetStatuseRef.status;
+        if (assetStatus >= AssetStatus.Clearing) return assetStatus;
 
         RepayDetails storage assetRepayStatusRef = assetRepayStatus[assetId];
         if (assetRepayStatusRef.amountDebt != 0) {
@@ -99,10 +109,10 @@ contract RWAssetPro is
             amountDebtOverdueProduct += uint80(debtDuration * assetRepayStatusRef.amountDebt);
             if (amountDebtOverdueProduct >= assetClearanceRef.productToTriggerClearance) {
               assetStatuseRef.status = AssetStatus.Clearing;
-              return true;
+              return AssetStatus.Clearing;
             }
         }
-        return false;
+        return assetStatus;
     }
    
     /**
@@ -116,13 +126,13 @@ contract RWAssetPro is
     ) external nonReentrant {
 
         AssetDetails storage assetStatuseRef = assetList[assetId];
-        require (assetStatuseRef.status == AssetStatus.Onboarded, "RWA: Status not allowed");
         require (msg.sender == assetStatuseRef.assetOwner, "RWA: Not asset owner");
+        require (assetStatuseRef.status == AssetStatus.Onboarded, "RWA: Status not allowed");
 
         uint256 interestRate = checkIfSkipMonth(assetId);
 
         RepayDetails storage assetRepayStatusRef = assetRepayStatus[assetId];
-        require (uint32(block.timestamp) < assetRepayStatusRef.timestampNextDue, "RWA: Repay too late");    // Repay cannoy skip to next month
+        require (uint32(block.timestamp) < assetRepayStatusRef.timestampNextDue, "RWA: Repay too late");    // ???Repay cannoy skip to next month
 
         // Transfer repay token
         address tokenInvest = allInvestTokens[assetStatuseRef.tokenId].tokenAddress;
@@ -131,23 +141,25 @@ contract RWAssetPro is
         assetStatuseRef.sumAmountRepaid += amountToken;
         uint48 amountTokenNet = amountToken;
 
-
         // Check if there is debt pending
-        if (assetRepayStatusRef.amountDebt != 0) {
+        uint256 amountDebtPre = assetRepayStatusRef.amountDebt;
+        if (amountDebtPre != 0) {
             uint256 debtDuration = block.timestamp - assetRepayStatusRef.timestampDebt;
-            uint48 debtWithInterest = uint48(SafeMath.rpow(interestRate, debtDuration) * uint256(assetRepayStatusRef.amountDebt) / (10 ** 27));
+            uint48 debtWithInterest = uint48(SafeMath.rpow(interestRate, debtDuration) * amountDebtPre / (10 ** 27));
 
             if (amountTokenNet >= debtWithInterest) {
                 // amount of the repay is enough to pay back the debt
+                // Clear the overdue debt product
+                assetClearance[assetId].amountDebtOverdueProduct = 0;
                 assetRepayStatusRef.amountDebt = 0;
                 assetRepayStatusRef.timestampDebt = 0;
-                //assetRepayStatusRef.amountDebtRepaid += debtWithInterest;
                 amountTokenNet -= debtWithInterest;
             } else {
-                // amount of the repay is NOT enough to pay back the debt, pay the debt first
+                // Amount of the repay is NOT enough to pay back the debt, pay the debt first
+                // Recalcute the amountDebtOverdueProduct. The debt product accumulated unless all debt are repaid 
+                assetClearance[assetId].amountDebtOverdueProduct += uint80(debtDuration * amountDebtPre);
                 assetRepayStatusRef.amountDebt = debtWithInterest - amountTokenNet;     // Use the debt with interest to update
-                assetRepayStatusRef.timestampDebt = uint32(block.timestamp);            // New debt calculation time ??????
-                //assetRepayStatusRef.amountDebtRepaid += amountTokenNet;
+                assetRepayStatusRef.timestampDebt = uint32(block.timestamp);
                 amountTokenNet = 0;
             }
         }
@@ -157,16 +169,19 @@ contract RWAssetPro is
                 assetRepayStatusRef.amountRepayDue -= amountTokenNet;
                 amountTokenNet = 0;
             } else {
-                assetRepayStatusRef.amountRepayDue = 0;
                 amountTokenNet -= assetRepayStatusRef.amountRepayDue;
+                assetRepayStatusRef.amountRepayDue = 0;
             }
         }
+
         if (amountTokenNet != 0) {
             // Update the repay amount available to pay the due monthly 
             assetRepayStatusRef.amountPrePay += amountTokenNet;         // amountTokenNet not checked here just for optim
         }
      
-        emit RepayMonthly(msg.sender, assetId, tokenInvest, amountToken);
+        AssetStatus assetStatus = checkClearanceStatus(assetId);
+
+        emit RepayMonthly(msg.sender, assetId, tokenInvest, amountToken, assetStatus);
     }
 
     function takeRepayment(
@@ -209,7 +224,7 @@ contract RWAssetPro is
 
     function executeInvestClearance(uint32 assetId) public {
         checkIfSkipMonth(assetId);
-        require (checkClearanceStatus(assetId), "RWA: Not feasible");
+        require (checkClearanceStatus(assetId) == AssetStatus.Clearing, "RWA: Not feasible");
 
         uint32[] memory secondsAgos = new uint32[](2);
         secondsAgos[0] = 600;                                           // 10 minutes

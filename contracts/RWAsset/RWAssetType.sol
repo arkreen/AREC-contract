@@ -34,6 +34,8 @@ struct AssetType {
     uint8     maxInvestOverdue;           // Max days after date the asset is onboared when the investing is still acceppted  
     uint8     minInvestExit;              // Minimum days before the investing can exit  
     uint8     interestId;                 // id of the interest rate
+    uint16    daysToTriggerClearance;     // maximum days dalaying repayment when clearance will be triggered
+    uint8     timesSlashTop;              // Top of the times of slashing
     // Full
 }
 
@@ -52,25 +54,19 @@ struct GlobalStatus {
     uint32  numInvest;                  // Total number of investing transactions
 }
 
-//    struct AssetStatus {
-//        uint16  typeID;                     // type number of the asset
-//        uint16  remoteSubSold;
-//        uint32  investSold;
-//    }
-
 struct AssetDetails {
-    address         assetOwner;               // Address of user owning the asset
-    AssetStatus     status;
-    uint16          tokenId;
-    uint16          typeAsset;                // type number of the asset
-    uint16          numInvestings;            // number of investing transactions 
-    uint16          numQuotaTotal;            // total number of quota that have been invested
-    uint32          amountDeposit;            // amount of AKRE that has been deposited by the owner, in unit of 10**18 
-    uint32          deliverProofId;           // proof id delivering the asset
-    uint32          onboardTimestamp;         // onboarding timestamp of the asset
-    uint48          sumAmountRepaid;          // sum of the amount repaid to the contract
-    uint48          amountForInvestWithdarw;  // amount available for invest withdraw  
-    uint48          amountInvestWithdarwed;   // amount withdrawed by investing
+    address         assetOwner;                 // Address of user owning the asset
+    AssetStatus     status;                     // Status of the asset
+    uint16          tokenId;                    // Id of the token used to invest/repay for the asset
+    uint16          typeAsset;                  // type number of the asset
+    uint16          numInvestings;              // number of investing transactions 
+    uint16          numQuotaTotal;              // total number of quota that have been invested
+    uint32          amountDeposit;              // amount of AKRE that has been deposited by the owner, in unit of 10**18 
+    uint32          deliverProofId;             // proof id delivering the asset
+    uint32          onboardTimestamp;           // onboarding timestamp of the asset
+    uint48          sumAmountRepaid;            // sum of the amount repaid to the contract
+    uint48          amountForInvestWithdarw;    // amount available for invest withdraw  
+    uint48          amountInvestWithdarwed;     // amount withdrawed by investing
 }
 
 struct RepayDetails {
@@ -79,8 +75,6 @@ struct RepayDetails {
     uint48          amountRepayDue;             // amount to repay on the due timestamp
     uint48          amountDebt;                 // amount of the debt of asset owner
     uint32          timestampDebt;              // timestamp of the debt starting         
-    //uint48          amountDebtRepaid;         // the amount of the debt that are repaid and can be claimed
-    //uint48          amountRepayReady;         // the amount ready to repay the due monthly
     uint48          amountPrePay;               // the amount of Pre-Pay for next months
     uint48          amountRepayTaken;           // the amount of monthly repayment tha has been taken
 }

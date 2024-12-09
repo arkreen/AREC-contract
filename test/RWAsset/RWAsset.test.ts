@@ -5,9 +5,10 @@ const {ethers, upgrades} =  require("hardhat");
 import hre from 'hardhat'
 import { ecsign, fromRpcSig, ecrecover, zeroAddress } from 'ethereumjs-util'
 import { getApprovalDigest, expandTo18Decimals, randomAddresses, expandTo9Decimals } from '../utils/utilities'
-import { PlugActionInfo, OffsetActionBatch, getWithdrawDepositDigest } from '../utils/utilities'
+import { PlugActionInfo, OffsetActionBatch, getWithdrawDepositDigest, rpow } from '../utils/utilities'
 
 import { constants, BigNumber, utils} from 'ethers'
+import { DateTime } from 'luxon'
 
 import {
     ArkreenToken,
@@ -16,19 +17,21 @@ import {
 } from "../../typechain";
 
 export interface AssetType {
-  typeAsset:            number
-  tenure:               number
+  typeAsset:              number
+  tenure:                 number
   //remoteQuota:          number
-  investQuota:          number
-  valuePerInvest:       number
-  amountRepayMonthly:   number
-  amountYieldPerInvest:  number
-  amountDeposit:        number
+  investQuota:            number
+  valuePerInvest:         number
+  amountRepayMonthly:     number
+  amountYieldPerInvest:   number
+  amountDeposit:          number
   //numSoldAssets:        number
-  investTokenType:      number
-  maxInvestOverdue:     number
-  minInvestExit:        number
-  interestId:           number
+  investTokenType:        number
+  maxInvestOverdue:       number
+  minInvestExit:          number
+  interestId:             number
+  daysToTriggerClearance: number
+  timesSlashTop:          number
 }
 
 export interface GlobalStatus {
@@ -93,6 +96,10 @@ describe("GreenPower Test Campaign", ()=>{
         const RWAssetFactory = await ethers.getContractFactory("RWAsset");
         const rwAsset = await upgrades.deployProxy(RWAssetFactory, [AKREToken.address, authority.address, manager.address]);
         await rwAsset.deployed();
+
+        const RWAssetProFactory = await ethers.getContractFactory("RWAssetPro")
+        const rwaPro = await RWAssetProFactory.deploy()
+        await rwAsset.setRWAPro(rwaPro.address);
      
         await AKREToken.transfer(owner1.address, expandTo18Decimals(300_000_000))
         await AKREToken.transfer(user1.address, expandTo18Decimals(300_000_000))
@@ -128,7 +135,7 @@ describe("GreenPower Test Campaign", ()=>{
         assetType = {
           typeAsset:            1,
           tenure:               12,
-          //remoteQuota:          25,
+          //remoteQuota:        25,
           investQuota:          800,
           valuePerInvest:       1_000_000,
           amountRepayMonthly:   150_000_000,
@@ -138,7 +145,9 @@ describe("GreenPower Test Campaign", ()=>{
           investTokenType:      1,
           maxInvestOverdue:     15,
           minInvestExit:        7,
-          interestId:           0
+          interestId:           1,
+          daysToTriggerClearance: 20,
+          timesSlashTop:          20
         }
       });
 
@@ -336,6 +345,21 @@ describe("GreenPower Test Campaign", ()=>{
         expect(await rwAsset.assetList(1)).to.deep.eq(Object.values(assetDetails));
         expect(await rwAsset.deliveryProofList(1)).to.deep.eq(deliveryProof);
         expect(await rwAsset.globalStatus()).to.deep.eq([1, 1, 0, 1, 1, 4, 0]);
+
+        const timestampNextDue = DateTime.fromMillis(Math.floor(lastBlock.timestamp /(3600*24)) * 3600 * 24 * 1000)
+              .plus({"months": 1}).toSeconds() + 3600 * 24 -1
+
+        let assetRepayStatusTarget =  {
+          monthDueRepay:      1,
+          timestampNextDue:   timestampNextDue,
+          amountRepayDue:     150_000_000,
+          amountDebt:         0,
+          timestampDebt:      0,
+          amountPrePay:       0,
+          amountRepayTaken:   0
+        }
+
+        expect(await rwAsset.assetRepayStatus(1)).to.deep.eq(Object.values(assetRepayStatusTarget));
        
         await expect(rwAsset.connect(manager).onboardAsset(1))
                 .to.be.revertedWith("RWA: Not allowed")
@@ -346,6 +370,8 @@ describe("GreenPower Test Campaign", ()=>{
 
         await rwAsset.connect(manager).addNewInvestToken(tokenType, [usdc.address, usdt.address, usdp.address, dai.address])
         await rwAsset.connect(manager).addNewAssetType(assetType)
+
+        // depositForAsset (uint16 typeAsset, uint16 tokenId)
         await rwAsset.connect(user1).depositForAsset(1, 1)
 
         // Test case 1:  revert "RWA: Status not allowed" before "Delivered" state
@@ -533,30 +559,237 @@ describe("GreenPower Test Campaign", ()=>{
 
       })
 
-/*
+      it("RWAsset Test: repayMonthly", async function () {
+
+        await rwAsset.connect(manager).addNewInvestToken(tokenType, [usdc.address, usdt.address, usdp.address, dai.address])
+        await rwAsset.connect(manager).addNewAssetType(assetType)
+
+        await rwAsset.connect(manager).setInterestRate(1, BigNumber.from("1000000006341958396752917301"))
+        const ratePerSecond = BigNumber.from("1000000006341958396752917301")
+        const rateBase = BigNumber.from("10").pow(27)
+        
+        // depositForAsset (uint16 typeAsset, uint16 tokenId)
+        await rwAsset.connect(user1).depositForAsset(1, 1)
+
+        const deliveryProof = "0x7120dcbcda0d9da55bc291bf4aaee8f691a0dcfbd4ad634017bb6f5686d92d74"     // Just for test
+        await rwAsset.connect(manager).deliverAsset(1, deliveryProof)
+
+        await usdc.transfer(user1.address, 10000 * 1000_000)
+        await usdc.transfer(user2.address, 10000 * 1000_000)
+        await usdc.transfer(user3.address, 10000 * 1000_000)
+
+        await usdc.approve(rwAsset.address, constants.MaxUint256)
+        await usdc.connect(user1).approve(rwAsset.address, constants.MaxUint256)
+        await usdc.connect(user2).approve(rwAsset.address, constants.MaxUint256)
+        await usdc.connect(user3).approve(rwAsset.address, constants.MaxUint256)
+
+        // Test case: Normal investing
+        await rwAsset.investAsset(1, 150)
+        await rwAsset.connect(user2).investAsset(1, 350)
+        await rwAsset.connect(user3).investAsset(1, 300)
+
+        const amountRepayMonthly = BigNumber.from("150000000")
+
+        // Abnormal: Not Onboarded
+        await expect(rwAsset.connect(user1).repayMonthly(1, amountRepayMonthly))
+                .to.be.revertedWith("RWA: Status not allowed")
+
+        await rwAsset.connect(manager).onboardAsset(1)
+
+        let lastBlock = await ethers.provider.getBlock('latest')
+        const timeOnboarding = Math.floor(lastBlock.timestamp /(3600*24)) * 3600 * 24
+
+        // Check timestampNextDue to be same day in next month 
+        let timestampNextDue1 = DateTime.fromMillis(timeOnboarding * 1000).plus({"months": 1}).toSeconds() + 3600 * 24 -1
+
+        let assetRepayStatusTarget =  {
+          monthDueRepay:      1,
+          timestampNextDue:   timestampNextDue1,
+          amountRepayDue:     150_000_000,
+          amountDebt:         0,
+          timestampDebt:      0,
+          amountPrePay:       0,
+          amountRepayTaken:   0
+        }
+
+        expect(await rwAsset.assetRepayStatus(1)).to.deep.eq(Object.values(assetRepayStatusTarget));
+
+        await expect(rwAsset.repayMonthly(1, amountRepayMonthly))
+                .to.be.revertedWith("RWA: Not asset owner")
+
+        // First month repay                
+        await expect(rwAsset.connect(user1).repayMonthly(1, amountRepayMonthly))
+                .to.emit(usdc, 'Transfer')
+                .withArgs(user1.address, rwAsset.address, amountRepayMonthly)
+                .to.emit(rwAsset, 'RepayMonthly')
+                .withArgs(user1.address, 1, usdc.address, amountRepayMonthly, 4)
+
+        assetRepayStatusTarget.amountRepayDue = 0;
+        expect(await rwAsset.assetRepayStatus(1)).to.deep.eq(Object.values(assetRepayStatusTarget));
+
+        let assetDetails =  {
+          assetOwner:       user1.address,
+          status:           4,  //Onboarded,
+          tokenId:          1,
+          typeAsset:        1,
+          numInvestings:    3,
+          numQuotaTotal:    800,
+          amountDeposit:    assetType.amountDeposit,
+          deliverProofId:   1,
+          onboardTimestamp: lastBlock.timestamp,
+          sumAmountRepaid:  amountRepayMonthly,
+          amountForInvestWithdarw: 0,
+          amountInvestWithdarwed: 0
+        }
+
+        expect(await rwAsset.assetList(1)).to.deep.eq(Object.values(assetDetails));
+
+        ////////////// 2nd Month //////////////////                                  
+        // Second month, partially repayment 
+        // Move to 2 month 
+        let timestampNextDue2 = DateTime.fromMillis(timeOnboarding * 1000).plus({"months": 2}).toSeconds() + 3600 * 24 -1         // 2nd month
+        await ethers.provider.send("evm_increaseTime", [timestampNextDue1 - timeOnboarding + 100 ])
+
+        // 10 days later
+        await ethers.provider.send("evm_increaseTime", [3600 * 24 * 10 ])
+
+        // Repay half
+        await rwAsset.connect(user1).repayMonthly(1, amountRepayMonthly.div(2))
+
+        assetRepayStatusTarget =  {
+                                    monthDueRepay:      2,
+                                    timestampNextDue:   timestampNextDue2,
+                                    amountRepayDue:     150_000_000,
+                                    amountDebt:         0,
+                                    timestampDebt:      0,
+                                    amountPrePay:       0,
+                                    amountRepayTaken:   0
+                                  }
+
+        assetRepayStatusTarget.amountRepayDue -= amountRepayMonthly.div(2).toNumber()
+        expect(await rwAsset.assetRepayStatus(1)).to.deep.eq(Object.values(assetRepayStatusTarget));
+
+        // Repay again
+        await rwAsset.connect(user1).repayMonthly(1, amountRepayMonthly.div(4))       // amountRepayMonthly.div(4) unpaid
+        assetRepayStatusTarget.amountRepayDue -= amountRepayMonthly.div(4).toNumber()
+        expect(await rwAsset.assetRepayStatus(1)).to.deep.eq(Object.values(assetRepayStatusTarget));
+
+        ////////////// 3rd Month //////////////////                    
+        // Set timestampNextDue to be same day in next month 
+        let timestampNextDue3 = DateTime.fromMillis(timeOnboarding * 1000).plus({"months": 3}).toSeconds() + 3600 * 24 -1         // 3rd month
+
+        // Move to 3rd month 
+        lastBlock = await ethers.provider.getBlock('latest')
+        await ethers.provider.send("evm_increaseTime", [timestampNextDue2 - lastBlock.timestamp + 100 ])
+        await ethers.provider.send("evm_increaseTime", [3600 * 24 * 10 ])       // Skip 10 days
+
+        // Repay not cover debt
+        await rwAsset.connect(user1).repayMonthly(1, amountRepayMonthly.div(6))
+
+        lastBlock = await ethers.provider.getBlock('latest')
+
+        let interestRate = rpow(ratePerSecond, BigNumber.from(lastBlock.timestamp - timestampNextDue2))
+        let amountDebtWithInterest = amountRepayMonthly.div(4).mul(interestRate).div(rateBase)  // // amountRepayMonthly.div(4) unpaid last month
+        let amountDebtPending = amountDebtWithInterest.sub(amountRepayMonthly.div(6))
+        let amountDebtStartTime = lastBlock.timestamp
+
+        assetRepayStatusTarget =  {
+          monthDueRepay:      3,
+          timestampNextDue:   timestampNextDue3,
+          amountRepayDue:     150_000_000,
+          amountDebt:         amountDebtPending.toNumber(),
+          timestampDebt:      amountDebtStartTime,  
+          amountPrePay:       0,
+          amountRepayTaken:   0
+        }
+
+        expect(await rwAsset.assetRepayStatus(1)).to.deep.eq(Object.values(assetRepayStatusTarget));
+
+        // Repay all debts
+        await ethers.provider.send("evm_increaseTime", [3600 * 24 * 10 ])       // Skip 10 days
+        await rwAsset.connect(user1).repayMonthly(1, amountRepayMonthly.div(2))
+
+        lastBlock = await ethers.provider.getBlock('latest')
+        interestRate = rpow(ratePerSecond, BigNumber.from(lastBlock.timestamp - amountDebtStartTime))
+        amountDebtWithInterest = amountDebtPending.mul(interestRate).div(rateBase)
+        let amountRepayLeft = amountRepayMonthly.div(2).sub(amountDebtWithInterest)
+
+        assetRepayStatusTarget.amountRepayDue = amountRepayMonthly.sub(amountRepayLeft).toNumber()
+        assetRepayStatusTarget.amountDebt = 0
+        assetRepayStatusTarget.timestampDebt = 0
+        expect(await rwAsset.assetRepayStatus(1)).to.deep.eq(Object.values(assetRepayStatusTarget));
+
+        // Still some repay due pending
+        await rwAsset.connect(user1).repayMonthly(1, amountRepayMonthly.div(3))
+
+        assetRepayStatusTarget.amountRepayDue -= amountRepayMonthly.div(3).toNumber()
+        expect(await rwAsset.assetRepayStatus(1)).to.deep.eq(Object.values(assetRepayStatusTarget));
+
+        // Repay all due payment with some amount as pre-pay
+        await rwAsset.connect(user1).repayMonthly(1, amountRepayMonthly.div(2))
+
+        assetRepayStatusTarget.amountPrePay = amountRepayMonthly.div(2).sub(assetRepayStatusTarget.amountRepayDue).toNumber()
+        assetRepayStatusTarget.amountRepayDue = 0
+        expect(await rwAsset.assetRepayStatus(1)).to.deep.eq(Object.values(assetRepayStatusTarget));
+
+        // Repay more as prepay
+        await rwAsset.connect(user1).repayMonthly(1, amountRepayMonthly.div(3))
+
+        assetRepayStatusTarget.amountPrePay = amountRepayMonthly.div(3).add(assetRepayStatusTarget.amountPrePay).toNumber()
+        expect(await rwAsset.assetRepayStatus(1)).to.deep.eq(Object.values(assetRepayStatusTarget));
+
+        ////////////// 4th Month //////////////////                    
+        // Set timestampNextDue to be same day in next month 
+        let timestampNextDue4 = DateTime.fromMillis(timeOnboarding * 1000).plus({"months": 4}).toSeconds() + 3600 * 24 -1         // 3rd month
+
+        // Move to 4th month 
+        lastBlock = await ethers.provider.getBlock('latest')
+        await ethers.provider.send("evm_increaseTime", [timestampNextDue3 - lastBlock.timestamp + 100 ])
+        await ethers.provider.send("evm_increaseTime", [3600 * 24 * 10 ])       // Skip 10 days
+
+        // Repay not cover debt
+        await rwAsset.connect(user1).repayMonthly(1, amountRepayMonthly.div(2))
+        let amountPrePay = amountRepayMonthly.div(2).add(assetRepayStatusTarget.amountPrePay).sub(amountRepayMonthly)
+
+        assetRepayStatusTarget =  {
+          monthDueRepay:      4,
+          timestampNextDue:   timestampNextDue4,
+          amountRepayDue:     0,
+          amountDebt:         0,
+          timestampDebt:      0,  
+          amountPrePay:       amountPrePay.toNumber(),
+          amountRepayTaken:   0
+        }
+
+        expect(await rwAsset.assetRepayStatus(1)).to.deep.eq(Object.values(assetRepayStatusTarget));
+      })
+
       it("RWAsset Test: rpow", async function () {
 
         let rate = BigNumber.from("1000000593415115246806684338")
-        let seconds = 3600 *24
+        let seconds = BigNumber.from(3600 *24)
         let base27 = BigNumber.from("10").pow(27)
 
-        let result = await rwAsset.rpow(rate, seconds )
+        let result = await rwAsset.rpow(rate, seconds)
+        let resultA = rpow(rate, seconds)
 
-        console.log("QQQQQQQQQQ", rate.toString(), result.toString())
+        //console.log("QQQQQQQQQQ", rate.toString(), result.toString(), resultA.toString())
+        expect(result).to.deep.eq(resultA)
         
-//        rate = BigNumber.from("79228209529453526788445080146")
-//        let base96 = BigNumber.from("2").pow(96)
-//        result = await rwAsset.rpow(rate, seconds, base96)
-//        console.log("PPPPPPPPPPPPPPPPPPP", rate.toString(), result.toString(), result.mul(base27).div(base96).toString())
+        //        rate = BigNumber.from("79228209529453526788445080146")
+        //        let base96 = BigNumber.from("2").pow(96)
+        //        result = await rwAsset.rpow(rate, seconds, base96)
+        //        console.log("PPPPPPPPPPPPPPPPPPP", rate.toString(), result.toString(), result.mul(base27).div(base96).toString())
 
-        // Yeaely 20% : 1000000006341958396752917301    //
+        // Yearly 20% : 1000000006341958396752917301    //
         rate = BigNumber.from("20").mul(base27).div(100).div(3600 *24 *365).add(base27)
         result = await rwAsset.rpow(rate, 3600 * 24 * 365)
+        resultA = rpow(rate, BigNumber.from(3600 * 24 * 365))
+        expect(result).to.deep.eq(resultA)
 
-        console.log("PPPPPPPPPPPPPPPPPPP", rate.toString(), result.toString())
+        // console.log("PPPPPPPPPPPPPPPPPPP", rate.toString(), result.toString(), resultA.toString())
 
       })
-*/
 
   })
 })

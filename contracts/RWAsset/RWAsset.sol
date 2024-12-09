@@ -38,13 +38,15 @@ contract RWAsset is
     event OnboardAsset(uint256 assetId);
     event InvestAsset(address indexed user, uint256 assetId, address token, uint256 amount);
     event InvestExit(address indexed user, uint256 investIndex, address tokenInvest, uint256 amountToken);
-
-    event RepayMonthly(address indexed user, uint256 assetId, address tokenInvest, uint256 amountToken);
+    event SetInterestRate(uint8 rateId, uint96 ratePerSecond);
+    event RepayMonthly(address indexed user, uint256 assetId, address tokenInvest, uint256 amountToken, AssetStatus assetStatus);
     event InvestTakeYield(address indexed user, uint256 investIndex, uint256 months, address tokenInvest, uint256 amountToken, uint256 amountAKRE); 
     event TakeRepayment(uint256 assetId, address tokenInvest, uint256 amountToken); 
     event InvestClearance(uint256 assetId, uint256 months, uint256 amountAKRE);
     event ExecuteFinalClearance(uint256 assetId, uint256 amountAKRE, uint256 amountFund);
     event ExecuteSlash(uint256 assetId, uint256 amountAKRE);
+
+
 
     modifier ensure(uint256 deadline) {
         require(block.timestamp <= deadline, "RWA: EXPIRED");
@@ -93,7 +95,7 @@ contract RWAsset is
         onlyOwner
     {}
 
-    function callRWAssetPro (address rwaPro) internal virtual {
+    function callRWAssetPro (address assetPro) internal virtual {
         assembly {
             // Copy msg.data. We take full control of memory in this inline assembly
             // block because it will not return to Solidity code. We overwrite the
@@ -102,7 +104,7 @@ contract RWAsset is
 
             // Call the implementation.
             // out and outsize are 0 because we don't know the size yet.
-            let result := delegatecall(gas(), rwaPro, 0, calldatasize(), 0, 0)
+            let result := delegatecall(gas(), assetPro, 0, calldatasize(), 0, 0)
 
             // Copy the returned data.
             returndatacopy(0, 0, returndatasize())
@@ -127,13 +129,18 @@ contract RWAsset is
         fundReceiver = receiver;
     }
 
+    function setRWAPro (address pro) external onlyOwner {
+        require (pro != address(0), "RWA: Zero address");
+        assetPro = pro;
+    }
+
     /**
      * @dev Add new accepted investment tokens
      * @param tokenType type of the tokens.
      * @param newTokens new token list. should avoid repeation, which is not checked.
      */
     function addNewInvestToken(
-        uint8 tokenType,
+        uint8 tokenType, 
         address[] memory newTokens
     ) external onlyManager {
 
@@ -160,6 +167,15 @@ contract RWAsset is
         require(globalStatus.numAssetType == newAssetType.typeAsset,  "RWA: Wrong asset type");
         assetTypes[newAssetType.typeAsset] = newAssetType;
         emit AddNewAssetType(newAssetType);
+    }
+
+    /**
+     * @dev Set interest rate
+     */
+    function setInterestRate(uint8 rateId, uint96 ratePerSecond) external onlyManager {
+        require(rateId != 0,  "RWA: Wrong rate id");
+        allInterestRates[rateId].ratePerSecond = ratePerSecond;
+        emit SetInterestRate(rateId, ratePerSecond);
     }
 
     function depositForAsset (uint16 typeAsset, uint16 tokenId) external {
@@ -253,6 +269,13 @@ contract RWAsset is
         assetRepayStatus[assetId].monthDueRepay = 1; 
         assetRepayStatus[assetId].timestampNextDue = uint32(DateTime.addMonthsEnd(block.timestamp, 1));
         assetRepayStatus[assetId].amountRepayDue = assetTypes[typeAsset].amountRepayMonthly;
+
+        assetClearance[assetId].productToTriggerClearance = uint80(assetTypes[typeAsset].amountRepayMonthly) * 
+                                                            uint80(assetTypes[typeAsset].daysToTriggerClearance) *
+                                                            3600 * 24;
+
+        assetClearance[assetId].amountAKREAvailable = assetTypes[typeAsset].amountDeposit;
+        assetClearance[assetId].timesSlashTop = assetTypes[typeAsset].timesSlashTop;
         
         emit OnboardAsset(assetId);
     }
@@ -392,5 +415,9 @@ contract RWAsset is
     // solc-ignore-next-line unused-param
     function takeYield(uint48 investIndex) external {
         callRWAssetPro (assetPro);
+    }
+
+    function rpow(uint256 rate, uint256 exp) external pure returns (uint256){
+      return SafeMath.rpow(rate, exp);
     }
 }
