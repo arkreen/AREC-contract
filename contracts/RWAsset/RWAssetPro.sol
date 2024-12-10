@@ -83,6 +83,7 @@ contract RWAssetPro is
                     monthDue += 1;                                                                          // allow skip to the month tenure + 1 
                     assetRepayStatusRef.monthDueRepay = monthDue;
                     assetRepayStatusRef.timestampNextDue = uint32(DateTime.addMonthsEnd(assetStatuseRef.onboardTimestamp, monthDue));
+                    assetStatuseRef.amountForInvestWithdarw += assetStatuseRef.numQuotaTotal * assetTypesRef.amountYieldPerInvest;
 
                     if (assetRepayStatusRef.amountPrePay >= assetTypesRef.amountRepayMonthly) {
                         assetRepayStatusRef.amountRepayDue = 0;                                             //Repay all the monthly due with Prepay
@@ -314,7 +315,7 @@ contract RWAssetPro is
 
     function takeYield(uint48 investIndex) external nonReentrant {
 
-        Invest memory investToTake = investList[investIndex];
+        Invest storage investToTake = investList[investIndex];
 
         require (investToTake.invester == msg.sender, "RWA: Not owner");
         require (investToTake.status == InvestStatus.InvestNormal, "RWA: Wrong status");
@@ -330,7 +331,8 @@ contract RWAssetPro is
        
         uint8 monthWithYield = assetRepayStatus[assetId].monthDueRepay - investToTake.monthTaken - 1;
         
-        if (assetStatus <= AssetStatus.Clearing) {
+        // For status after AssetStatus.Clearing, may be allowed to take AKRE clearance
+        if (assetStatus <= AssetStatus.Clearing) {            
             require (monthWithYield > 0, "RWA: Not mature");
         }
 
@@ -340,16 +342,17 @@ contract RWAssetPro is
 
         // Send monthly yield, in one batch if several mature months available
         if (monthWithYield > 0) {
-            investList[investIndex].monthTaken += monthWithYield;
+            investToTake.monthTaken += monthWithYield;
             amountToken = uint256(monthWithYield) *                                                     // Duration in month
                                   uint256(investToTake.numQuota) *                                      // Quota of investment
                                   uint256(assetTypesRef.amountYieldPerInvest);                          // Value per investment
 
+            assetStatuseRef.amountInvestWithdarwed += uint48(amountToken);
             TransferHelper.safeTransfer(tokenInvest, msg.sender, amountToken);
 
             // Invest completed if all month yield have been taken
-            if (investList[investIndex].monthTaken == assetTypesRef.tenure) {
-                investToTake.status = InvestStatus.InvestCompleted;                                                     
+            if (investToTake.monthTaken == assetTypesRef.tenure) {
+                investToTake.status = InvestStatus.InvestCompleted;
             }
         }
 

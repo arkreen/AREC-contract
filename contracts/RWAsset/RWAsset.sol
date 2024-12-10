@@ -335,7 +335,7 @@ contract RWAsset is
      */
     function investExit(uint48 investIndex) external {
 
-        Invest memory investToAbort = investList[investIndex];
+        Invest storage investToAbort = investList[investIndex];
 
         require (investToAbort.invester == msg.sender, "RWA: Not owner");
         require (investToAbort.status == InvestStatus.InvestNormal, "RWA: Wrong status");

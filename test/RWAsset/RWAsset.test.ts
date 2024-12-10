@@ -139,7 +139,7 @@ describe("GreenPower Test Campaign", ()=>{
           investQuota:          800,
           valuePerInvest:       1_000_000,
           amountRepayMonthly:   150_000_000,
-          amountYieldPerInvest: 75_000_000,
+          amountYieldPerInvest: 80_000,
           amountDeposit:        1_500_000,
           //numSoldAssets:        0,
           investTokenType:      1,
@@ -258,7 +258,7 @@ describe("GreenPower Test Campaign", ()=>{
           amountDeposit:    assetType.amountDeposit,
           deliverProofId:   0,
           onboardTimestamp: 0,
-          sumAmountRepaid: 0,
+          sumAmountRepaid:  0,
           amountForInvestWithdarw: 0,
           amountInvestWithdarwed: 0
         }
@@ -506,11 +506,15 @@ describe("GreenPower Test Campaign", ()=>{
         await ethers.provider.send("evm_increaseTime", [assetType.minInvestExit * 3600 * 24])
         const usdcBalanceBefore = await usdc.balanceOf(deployer.address)
 
-        await expect(rwAsset.investExit(indexInvesting))
+        let investExitTrx 
+        await expect(investExitTrx = await rwAsset.investExit(indexInvesting))
                 .to.emit(usdc, 'Transfer')
                 .withArgs(rwAsset.address, deployer.address, amountToken)
                 .to.emit(rwAsset, 'InvestExit')
                 .withArgs(deployer.address, indexInvesting, usdc.address, amountToken)
+
+        const receipt = await investExitTrx.wait()
+        console.log("investExit Gas fee Usage:",  receipt.gasUsed)
 
         expect(await usdc.balanceOf(deployer.address)).to.eq(usdcBalanceBefore.add(amountToken))
 
