@@ -66,7 +66,7 @@ contract RWAssetPro is
             if (uint32(block.timestamp) > assetRepayStatusRef.timestampNextDue) {
                 uint8 monthDue = assetRepayStatusRef.monthDueRepay;
                 // Check if asset tenure finished
-                if (monthDue <= assetTypesRef.tenure) {
+                if (monthDue <= assetTypesRef.tenure)) {
                     uint48 debtWithInterest = 0;
                     if (assetRepayStatusRef.amountDebt != 0) {
                         uint256 debtDuration = assetRepayStatusRef.timestampNextDue - assetRepayStatusRef.timestampDebt;
@@ -78,19 +78,29 @@ contract RWAssetPro is
                         
                     uint48 amountDebtNew = debtWithInterest + assetRepayStatusRef.amountRepayDue;
                     assetRepayStatusRef.amountDebt = amountDebtNew;                                         // RepayDue becomes new debt
-                    if (amountDebtNew != 0) assetRepayStatusRef.timestampDebt = assetRepayStatusRef.timestampNextDue;
+                    if (amountDebtNew == 0) {
+                        if (monthDue == assetTypesRef.tenure) {
+                            assetStatuseRef.status = AssetStatus.Completed;
+                        }
+                    } else {
+                        assetRepayStatusRef.timestampDebt = assetRepayStatusRef.timestampNextDue;
+                    } 
 
                     monthDue += 1;                                                                          // allow skip to the month tenure + 1 
                     assetRepayStatusRef.monthDueRepay = monthDue;
                     assetRepayStatusRef.timestampNextDue = uint32(DateTime.addMonthsEnd(assetStatuseRef.onboardTimestamp, monthDue));
-                    assetStatuseRef.amountForInvestWithdarw += assetStatuseRef.numQuotaTotal * assetTypesRef.amountYieldPerInvest;
+                    assetStatuseRef.amountForInvestWithdraw += assetStatuseRef.numQuotaTotal * assetTypesRef.amountYieldPerInvest;
 
-                    if (assetRepayStatusRef.amountPrePay >= assetTypesRef.amountRepayMonthly) {
-                        assetRepayStatusRef.amountRepayDue = 0;                                             //Repay all the monthly due with Prepay
-                        assetRepayStatusRef.amountPrePay -= assetTypesRef.amountRepayMonthly;
+                    if (monthDue <= assetTypesRef.tenure) {
+                        if (assetRepayStatusRef.amountPrePay >= assetTypesRef.amountRepayMonthly) {
+                            assetRepayStatusRef.amountRepayDue = 0;                                             //Repay all the monthly due with Prepay
+                            assetRepayStatusRef.amountPrePay -= assetTypesRef.amountRepayMonthly;
+                        } else {
+                            assetRepayStatusRef.amountRepayDue = assetTypesRef.amountRepayMonthly - assetRepayStatusRef.amountPrePay;
+                            assetRepayStatusRef.amountPrePay = 0;                                               // All prepay are used
+                        }
                     } else {
-                        assetRepayStatusRef.amountRepayDue = assetTypesRef.amountRepayMonthly - assetRepayStatusRef.amountPrePay;
-                        assetRepayStatusRef.amountPrePay = 0;                                               // All prepay are used
+                        assetRepayStatusRef.amountRepayDue = 0;     // Passed last month, no more repayment except debt
                     }
                 }
             }
@@ -192,14 +202,14 @@ contract RWAssetPro is
         AssetDetails storage assetStatuseRef = assetList[assetId];
         require (assetStatuseRef.status == AssetStatus.Onboarded, "RWA: Status not allowed");
 
+        checkIfSkipMonth(assetId);
+
         RepayDetails storage assetRepayStatusRef = assetRepayStatus[assetId];
         require (assetRepayStatusRef.monthDueRepay >= 2, "RWA: Not available" ); 
 
-        checkIfSkipMonth(assetId);
-
         uint16 typeAsset = assetStatuseRef.typeAsset;
-        uint48 amountTotalYield = uint48(assetTypes[typeAsset].investQuota) * uint48(assetTypes[typeAsset].amountYieldPerInvest);
-        amountTotalYield = amountTotalYield * uint48(assetRepayStatusRef.monthDueRepay);         // All yield up to date
+        uint48 amountTotalYield = uint48(assetStatuseRef.numQuotaTotal) * uint48(assetTypes[typeAsset].amountYieldPerInvest);
+        amountTotalYield = amountTotalYield * uint48(assetRepayStatusRef.monthDueRepay);    // All yield up to date, one as backup
 
         uint48 repayCurrentMonth = assetTypes[typeAsset].amountRepayMonthly - assetRepayStatusRef.amountRepayDue;
 
@@ -211,7 +221,6 @@ contract RWAssetPro is
         require (assetStatuseRef.sumAmountRepaid > deductAmount, "RWA: No mature repayment");
 
         uint48 amountRepayAvailable = assetStatuseRef.sumAmountRepaid - deductAmount;
-
         assetRepayStatusRef.amountRepayTaken += amountRepayAvailable;
         address tokenInvest = allInvestTokens[assetList[assetId].tokenId].tokenAddress;
 

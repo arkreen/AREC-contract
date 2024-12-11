@@ -65,7 +65,7 @@ struct AssetDetails {
     uint32          deliverProofId;             // proof id delivering the asset
     uint32          onboardTimestamp;           // onboarding timestamp of the asset
     uint48          sumAmountRepaid;            // sum of the amount repaid to the contract
-    uint48          amountForInvestWithdarw;    // amount available for invest withdraw  
+    uint48          amountForInvestWithdraw;    // amount available for invest withdraw  
     uint48          amountInvestWithdarwed;     // amount withdrawed by investing
 }
 

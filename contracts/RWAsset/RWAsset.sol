@@ -39,14 +39,13 @@ contract RWAsset is
     event InvestAsset(address indexed user, uint256 assetId, address token, uint256 amount);
     event InvestExit(address indexed user, uint256 investIndex, address tokenInvest, uint256 amountToken);
     event SetInterestRate(uint8 rateId, uint96 ratePerSecond);
+    
     event RepayMonthly(address indexed user, uint256 assetId, address tokenInvest, uint256 amountToken, AssetStatus assetStatus);
     event InvestTakeYield(address indexed user, uint256 investIndex, uint256 months, address tokenInvest, uint256 amountToken, uint256 amountAKRE); 
     event TakeRepayment(uint256 assetId, address tokenInvest, uint256 amountToken); 
     event InvestClearance(uint256 assetId, uint256 months, uint256 amountAKRE);
     event ExecuteFinalClearance(uint256 assetId, uint256 amountAKRE, uint256 amountFund);
     event ExecuteSlash(uint256 assetId, uint256 amountAKRE);
-
-
 
     modifier ensure(uint256 deadline) {
         require(block.timestamp <= deadline, "RWA: EXPIRED");
