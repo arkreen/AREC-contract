@@ -39,7 +39,8 @@ contract RWAsset is
     event InvestAsset(address indexed user, uint256 assetId, address token, uint256 amount);
     event InvestExit(address indexed user, uint256 investIndex, address tokenInvest, uint256 amountToken);
     event SetInterestRate(uint8 rateId, uint96 ratePerSecond);
-    
+    event ClaimtDeposit(address indexed user, uint256 assetId, uint256 amountDeposit);
+
     event RepayMonthly(address indexed user, uint256 assetId, address tokenInvest, uint256 amountToken, AssetStatus assetStatus);
     event InvestTakeYield(address indexed user, uint256 investIndex, uint256 months, address tokenInvest, uint256 amountToken, uint256 amountAKRE); 
     event TakeRepayment(uint256 assetId, address tokenInvest, uint256 amountToken); 
@@ -227,6 +228,21 @@ contract RWAsset is
         emit WithdrawDeposit(msg.sender, assetId, amountDeposit);
     }
 
+    function claimtDeposit(uint32 assetId) external  {
+
+        require (assetList[assetId].assetOwner == msg.sender, "RWA: Not Owner");
+        require (assetList[assetId].status == AssetStatus.Completed, "RWA: Not allowed");
+
+        ClearanceDetails storage assetClearanceRef = assetClearance[assetId];
+        uint256 amountDeposit = uint256(assetClearanceRef.amountAKREAvailable); 
+        require (amountDeposit > 0, "RWA: No more deposit");
+
+        assetClearanceRef.amountAKREAvailable = 0;
+  
+        TransferHelper.safeTransfer(tokenAKRE, msg.sender, amountDeposit);
+        emit ClaimtDeposit(msg.sender, assetId, amountDeposit);
+    }
+
     /**
      * @dev Declare the asset has been delivered 
      * @param assetId the asset id that has been delivered
@@ -273,7 +289,7 @@ contract RWAsset is
                                                             uint80(assetTypes[typeAsset].daysToTriggerClearance) *
                                                             3600 * 24;
 
-        assetClearance[assetId].amountAKREAvailable = assetTypes[typeAsset].amountDeposit;
+        assetClearance[assetId].amountAKREAvailable = uint96(assetTypes[typeAsset].amountDeposit) * (1 ether);
         assetClearance[assetId].timesSlashTop = assetTypes[typeAsset].timesSlashTop;
         
         emit OnboardAsset(assetId);

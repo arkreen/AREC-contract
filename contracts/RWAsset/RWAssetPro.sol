@@ -66,7 +66,7 @@ contract RWAssetPro is
             if (uint32(block.timestamp) > assetRepayStatusRef.timestampNextDue) {
                 uint8 monthDue = assetRepayStatusRef.monthDueRepay;
                 // Check if asset tenure finished
-                if (monthDue <= assetTypesRef.tenure)) {
+                if (monthDue <= assetTypesRef.tenure) {
                     uint48 debtWithInterest = 0;
                     if (assetRepayStatusRef.amountDebt != 0) {
                         uint256 debtDuration = assetRepayStatusRef.timestampNextDue - assetRepayStatusRef.timestampDebt;
@@ -102,7 +102,10 @@ contract RWAssetPro is
                     } else {
                         assetRepayStatusRef.amountRepayDue = 0;     // Passed last month, no more repayment except debt
                     }
+                } else {                // being in last month
+                    // to-do
                 }
+
             }
         }
     }
@@ -122,7 +125,13 @@ contract RWAssetPro is
               assetStatuseRef.status = AssetStatus.Clearing;
               return AssetStatus.Clearing;
             }
+        } else {
+            if (assetRepayStatusRef.monthDueRepay > assetTypes[assetStatuseRef.typeAsset].tenure) {
+                 assetStatuseRef.status = AssetStatus.Completed;
+                 assetClearance[assetId].amountDebtOverdueProduct = 0;
+            }
         }
+
         return assetStatus;
     }
    
@@ -200,18 +209,24 @@ contract RWAssetPro is
     ) external onlyManager {
 
         AssetDetails storage assetStatuseRef = assetList[assetId];
-        require (assetStatuseRef.status == AssetStatus.Onboarded, "RWA: Status not allowed");
+        require ( assetStatuseRef.status == AssetStatus.Onboarded || 
+                  assetStatuseRef.status == AssetStatus.Completed, "RWA: Status not allowed");
 
         checkIfSkipMonth(assetId);
 
         RepayDetails storage assetRepayStatusRef = assetRepayStatus[assetId];
         require (assetRepayStatusRef.monthDueRepay >= 2, "RWA: Not available" ); 
 
-        uint16 typeAsset = assetStatuseRef.typeAsset;
-        uint48 amountTotalYield = uint48(assetStatuseRef.numQuotaTotal) * uint48(assetTypes[typeAsset].amountYieldPerInvest);
-        amountTotalYield = amountTotalYield * uint48(assetRepayStatusRef.monthDueRepay);    // All yield up to date, one as backup
+        AssetType storage assetTypesRef = assetTypes[assetStatuseRef.typeAsset];
+        uint48 amountTotalYield = uint48(assetStatuseRef.numQuotaTotal) * uint48(assetTypesRef.amountYieldPerInvest);
 
-        uint48 repayCurrentMonth = assetTypes[typeAsset].amountRepayMonthly - assetRepayStatusRef.amountRepayDue;
+        uint48 repayCurrentMonth = 0;
+        if (assetRepayStatusRef.monthDueRepay > assetTypesRef.tenure) {
+            amountTotalYield = amountTotalYield * uint48(assetTypesRef.tenure);                 
+        } else {
+            amountTotalYield = amountTotalYield * uint48(assetRepayStatusRef.monthDueRepay);    // All yield up to date, one as backup
+            repayCurrentMonth = assetTypesRef.amountRepayMonthly - assetRepayStatusRef.amountRepayDue;
+        }
 
         uint48 deductAmount = assetRepayStatusRef.amountRepayTaken +                // Amount allready taken away the table
                               amountTotalYield +                                    // All amount of invest yield should be kept

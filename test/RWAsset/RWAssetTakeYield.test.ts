@@ -422,6 +422,8 @@ describe("GreenPower Test Campaign", ()=>{
 
       it("RWAsset Test: takeYield: Clearance Test", async function () {
 
+        console.log("to-do")
+
         await rwAsset.connect(manager).addNewInvestToken(tokenType, [usdc.address, usdt.address, usdp.address, dai.address])
         await rwAsset.connect(manager).addNewAssetType(assetType)
 

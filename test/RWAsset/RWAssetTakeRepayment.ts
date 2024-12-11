@@ -556,8 +556,8 @@ describe("GreenPower Test Campaign", ()=>{
         assetDetails.amountForInvestWithdraw = amountYieldPerInvest * totalInvestQuota * 12
         assetDetails.amountInvestWithdarwed = amountYieldPerInvest * totalInvestQuota * 12
 
-        const assetDetailsChain =  await rwAsset.assetList(1)
-        console.log("QQQQQQQQQQQQQQ", assetDetailsChain)
+        //const assetDetailsChain =  await rwAsset.assetList(1)
+        //console.log("QQQQQQQQQQQQQQ", assetDetailsChain)
 
         expect(await rwAsset.assetList(1)).to.deep.eq(Object.values(assetDetails));
 
@@ -566,13 +566,9 @@ describe("GreenPower Test Campaign", ()=>{
                                       amountTakableFirst - 
                                       amountTakableSecond -
                                       amountTakable3 -
-//                                    amountDebtWithInterest.toNumber() -           // DebtWithInterest is the additional value
                                       amountYieldPerInvest * totalInvestQuota * 12  // one extra month is kept
 
-//        await rwAsset.connect(manager).takeRepayment(1)
-        const assetStatus = await rwAsset.assetRepayStatus(1)
-        console.log("SSSSSSSSSSSSSSSS",  amountRepayAll.toNumber(), amountTakableFirst, amountTakableSecond,  
-                amountTakable3, amountDebtWithInterest.toNumber(), amountYieldPerInvest * totalInvestQuota * 12, assetStatus)
+        const assetStatus1 = await rwAsset.assetRepayStatus(1)
         
         await expect(rwAsset.connect(manager).takeRepayment(1))
                 .to.emit(usdc, 'Transfer')
@@ -580,6 +576,59 @@ describe("GreenPower Test Campaign", ()=>{
                 .to.emit(rwAsset, 'TakeRepayment')
                 .withArgs(1, usdc.address, amountTakableAll)
 
+        await ethers.provider.send("evm_increaseTime", [3600 * 24 * 10 ])       // Skip 10 days
+
+        // Test case: Cannot take Repayment again
+        await expect(rwAsset.connect(manager).takeRepayment(1)).to.be.revertedWith("RWA: No mature repayment")
+
+        // Test case: Cannot take Repayment again
+        await expect(rwAsset.connect(user1).claimtDeposit(1)).to.be.revertedWith("RWA: Not allowed")
+
+        await rwAsset.connect(user1).repayMonthly(1, amountRepayMonthly.div(2))
+
+        lastBlock = await ethers.provider.getBlock('latest')
+        let interestRate = rpow(ratePerSecond, BigNumber.from(lastBlock.timestamp - assetStatus1.timestampDebt))
+        amountDebtWithInterest = interestRate.mul(assetStatus1.amountDebt).div(rateBase)
+
+        await expect(rwAsset.connect(manager).takeRepayment(1))
+                .to.emit(usdc, 'Transfer')
+                .withArgs(rwAsset.address, manager.address, amountDebtWithInterest)
+                .to.emit(rwAsset, 'TakeRepayment')
+                .withArgs(1, usdc.address, amountDebtWithInterest)
+
+        let timestampNextDue13 = DateTime.fromMillis(timeOnboarding * 1000).plus({"months": 13}).toSeconds() + 3600 * 24 -1         // 3rd month
+        assetRepayStatusTarget.monthDueRepay = 13
+        assetRepayStatusTarget.timestampNextDue = timestampNextDue13
+        assetRepayStatusTarget.amountRepayDue = 0
+        assetRepayStatusTarget.amountDebt = 0
+        assetRepayStatusTarget.timestampDebt = 0
+        assetRepayStatusTarget.amountPrePay = amountRepayMonthly.div(2).sub(amountDebtWithInterest)
+        assetRepayStatusTarget.amountRepayTaken = amountTakableFirst + amountTakableSecond + 
+                                                  amountTakable3 + amountTakableAll + amountDebtWithInterest.toNumber()
+
+        expect(await rwAsset.assetRepayStatus(1)).to.deep.eq(Object.values(assetRepayStatusTarget));
+
+        // const  assetStatus = await rwAsset.assetList(1)
+        // console.log("DDDDDDDDDDDDDDDD", assetStatus)
+
+        assetDetails.sumAmountRepaid = amountRepayMonthly.mul(12 + 6 + 3 + 2 + 24 + 12*8 + 1 + 6).div(12)
+        assetDetails.status = 5
+
+        expect(await rwAsset.assetList(1)).to.deep.eq(Object.values(assetDetails));
+        
+      })
+
+      it("RWAsset Test: ClaimDeposit while asset repayment is completed", async function () {
+        // Test case: Not owner
+        await expect(rwAsset.connect(manager).claimtDeposit(1)).to.be.revertedWith("RWA: Not Owner")
+
+        //*********************************************//
+        // Test case: ClaimDeposit
+        await expect(rwAsset.connect(user1).claimtDeposit(1))
+                .to.emit(AKREToken, 'Transfer')
+                .withArgs(rwAsset.address, user1.address, expandTo18Decimals(assetType.amountDeposit) )
+                .to.emit(rwAsset, 'ClaimtDeposit')
+                .withArgs(user1.address, 1, expandTo18Decimals(assetType.amountDeposit))
       })
   })
 })
