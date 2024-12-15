@@ -31,7 +31,7 @@ export interface AssetType {
   maxInvestOverdue:       number
   minInvestExit:          number
   interestId:             number
-  daysToTriggerClearance: number
+  paramsClearance:        number
   timesSlashTop:          number
 }
 
@@ -187,7 +187,7 @@ describe("GreenPower Test Campaign", ()=>{
           maxInvestOverdue:     15,
           minInvestExit:        7,
           interestId:           1,
-          daysToTriggerClearance: 20,
+          paramsClearance:      20 + (20<<8), 
           timesSlashTop:          20 + (10<<8)
         }
 
@@ -521,7 +521,7 @@ describe("GreenPower Test Campaign", ()=>{
           maxInvestOverdue:     15,
           minInvestExit:        7,
           interestId:           1,
-          daysToTriggerClearance: 20,
+          paramsClearance:      20 + (20<<8), 
           timesSlashTop:          20 + (10<<8)
         }
 
@@ -715,6 +715,7 @@ describe("GreenPower Test Campaign", ()=>{
                                             .div(BigNumber.from(2).pow(192)) 
                                             
         const amountAKREClearedAll = amountAKREClearedPerInvest.mul(600).mul(13 - assetRepayStatus.monthDueRepay)
+        const amountAKREClearFee = sqrtPriceX96.mul(sqrtPriceX96).mul(20_000_000).div(BigNumber.from(2).pow(192)) 
 
         await rwAsset.takeYield(indexInvesting1)  
 
@@ -722,15 +723,17 @@ describe("GreenPower Test Campaign", ()=>{
 
         let executeInvestClearanceTx 
         await expect(executeInvestClearanceTx = await rwAsset.connect(user2).executeInvestClearance(1))
+                .to.emit(AKREToken, 'Transfer')
+                .withArgs(rwAsset.address, user2.address, amountAKREClearFee)
                 .to.emit(rwAsset, 'InvestClearance')
-                .withArgs(1, 13 - assetRepayStatus.monthDueRepay, amountAKREClearedAll)      // No usdc, only AKRE
+                .withArgs(1, 13 - assetRepayStatus.monthDueRepay, amountAKREClearedAll, amountAKREClearFee)      // No usdc, only AKRE
 
         const receipt = await executeInvestClearanceTx.wait()
         console.log("executeInvestClearance Gas fee Usage:",  receipt.gasUsed)
 
         lastBlock = await ethers.provider.getBlock('latest')
 
-        assetClearance.amountAKREAvailable = assetClearance.amountAKREAvailable.sub(amountAKREClearedAll)
+        assetClearance.amountAKREAvailable = assetClearance.amountAKREAvailable.sub(amountAKREClearedAll).sub(amountAKREClearFee)
         assetClearance.amountAKREForInvester = amountAKREClearedAll
         assetClearance.amountDebtOverdueProduct = amountRepayMonthly.div(4).mul((timestampNextDue3 - timestampNextDue2))
         assetClearance.priceTickOnClearance = BigNumber.from(tickTest)
@@ -841,7 +844,7 @@ describe("GreenPower Test Campaign", ()=>{
           maxInvestOverdue:     15,
           minInvestExit:        7,
           interestId:           1,
-          daysToTriggerClearance: 20,
+          paramsClearance:      20 + (20<<8), 
           timesSlashTop:          20 + (10<<8)
         }
 
@@ -1038,14 +1041,18 @@ describe("GreenPower Test Campaign", ()=>{
                                             .div(BigNumber.from(2).pow(192)) 
                                             
         const amountAKREClearedAll = amountAKREClearedPerInvest.mul(600).mul(13 - assetRepayStatus.monthDueRepay)
+        const amountAKREClearFee = sqrtPriceX96.mul(sqrtPriceX96).mul(20_000_000).div(BigNumber.from(2).pow(192)) 
 
         // substract 3 parts
-        const amountAKREReturnBack = assetClearance.amountAKREAvailable.sub(amountAKREClearedAll).sub(amountAKRESlash).sub(amountAKREFund)
+        const amountAKREReturnBack = assetClearance.amountAKREAvailable.sub(amountAKREClearFee).sub(amountAKREClearedAll)
+                                      .sub(amountAKRESlash).sub(amountAKREFund)
 
         let executeFinalClearanceTx: any
         await expect(executeFinalClearanceTx = await rwAsset.connect(manager).executeFinalClearance(1, amountAKRESlash, amountAKREFund ))
+                .to.emit(AKREToken, 'Transfer')
+                .withArgs(rwAsset.address, manager.address, amountAKREClearFee)
                 .to.emit(rwAsset, 'InvestClearance')
-                .withArgs(1, 13 - assetRepayStatus.monthDueRepay, amountAKREClearedAll)      // No usdc, only AKRE
+                .withArgs(1, 13 - assetRepayStatus.monthDueRepay, amountAKREClearedAll, amountAKREClearFee)      // No usdc, only AKRE
                 .to.emit(AKREToken, 'Transfer')
                 .withArgs(rwAsset.address, fund_receiver.address, amountAKRESlash)
                 .to.emit(AKREToken, 'Transfer')

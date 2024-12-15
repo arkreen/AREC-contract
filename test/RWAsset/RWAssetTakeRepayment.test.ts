@@ -30,7 +30,7 @@ export interface AssetType {
   maxInvestOverdue:       number
   minInvestExit:          number
   interestId:             number
-  daysToTriggerClearance: number
+  paramsClearance:        number
   timesSlashTop:          number
 }
 
@@ -176,7 +176,7 @@ describe("GreenPower Test Campaign", ()=>{
           maxInvestOverdue:     15,
           minInvestExit:        7,
           interestId:           1,
-          daysToTriggerClearance: 20,
+          paramsClearance:      20 + (20<<8), 
           timesSlashTop:          20
         }
 

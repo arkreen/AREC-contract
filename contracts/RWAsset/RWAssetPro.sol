@@ -35,7 +35,7 @@ contract RWAssetPro is
     event RepayMonthly(address indexed user, uint256 assetId, address tokenInvest, uint256 amountToken, AssetStatus assetStatus);
     event InvestTakeYield(address indexed user, uint256 investIndex, uint256 months, address tokenInvest, uint256 amountToken, uint256 amountAKRE); 
     event TakeRepayment(uint256 assetId, address tokenInvest, uint256 amountToken); 
-    event InvestClearance(uint256 assetId, uint256 months, uint256 amountAKRE);
+    event InvestClearance(uint256 assetId, uint256 monthBeCleared, uint256 amountAKREBeCleared, uint256 amountClearFee);
     event ExecuteFinalClearance(uint256 assetId, uint256 amountAKRE, uint256 amountFund, uint256 amountOwner);
     event ExecuteSlash(uint256 assetId, uint256 amountAKRE);
 
@@ -261,26 +261,29 @@ contract RWAssetPro is
         uint256 price = uint256(sqrtPriceX96) * uint256(sqrtPriceX96) / (1 << 128);         // Multipled by 2**64
 
         uint16 typeAsset = assetList[assetId].typeAsset;
-        uint256 monthToClear = assetTypes[typeAsset].tenure + 1 - assetRepayStatus[assetId].monthDueRepay;
+        uint256 amountAKREClearFee = price * uint8(assetTypes[typeAsset].paramsClearance) * assetTypes[typeAsset].valuePerInvest / (1<<64);
+        TransferHelper.safeTransfer(tokenAKRE, msg.sender, amountAKREClearFee);
+
+        uint256 monthBeCleared = assetTypes[typeAsset].tenure + 1 - assetRepayStatus[assetId].monthDueRepay;
         uint256 amountAKREToClearPerInvest = price * uint256(assetTypes[typeAsset].amountYieldPerInvest) / (1<<64);
 
         // To avoid round-down later
-        uint256 cleatUnit = monthToClear * uint256(assetList[assetId].numQuotaTotal); 
-        uint256 amountAKREToClear = amountAKREToClearPerInvest * cleatUnit;  
+        uint256 cleatUnit = monthBeCleared * uint256(assetList[assetId].numQuotaTotal); 
+        uint256 amountAKREBeCleared = amountAKREToClearPerInvest * cleatUnit;  
 
         ClearanceDetails storage assetClearanceRef = assetClearance[assetId];
 
-        if (assetClearanceRef.amountAKREAvailable < amountAKREToClear) {
-            amountAKREToClear = (uint256(assetClearanceRef.amountAKREAvailable) / cleatUnit) * cleatUnit;
+        if (assetClearanceRef.amountAKREAvailable < amountAKREBeCleared) {
+            amountAKREBeCleared = (uint256(assetClearanceRef.amountAKREAvailable) / cleatUnit) * cleatUnit;
         }
 
         assetClearanceRef.priceTickOnClearance = arithmeticMeanTick;
-        assetClearanceRef.amountAKREAvailable -= uint96(amountAKREToClear);
-        assetClearanceRef.amountAKREForInvester = uint96(amountAKREToClear);
+        assetClearanceRef.amountAKREAvailable -= uint96(amountAKREBeCleared) + uint96(amountAKREClearFee);
+        assetClearanceRef.amountAKREForInvester = uint96(amountAKREBeCleared);
         assetClearanceRef.timestampClearance = uint32(block.timestamp);
 
         assetList[assetId].status = AssetStatus.ClearedInvester;
-        emit InvestClearance(assetId, monthToClear, amountAKREToClear);
+        emit InvestClearance(assetId, monthBeCleared, amountAKREBeCleared, amountAKREClearFee);
     }
 
     /**

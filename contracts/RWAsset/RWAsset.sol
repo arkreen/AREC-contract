@@ -44,7 +44,7 @@ contract RWAsset is
     event RepayMonthly(address indexed user, uint256 assetId, address tokenInvest, uint256 amountToken, AssetStatus assetStatus);
     event InvestTakeYield(address indexed user, uint256 investIndex, uint256 months, address tokenInvest, uint256 amountToken, uint256 amountAKRE); 
     event TakeRepayment(uint256 assetId, address tokenInvest, uint256 amountToken); 
-    event InvestClearance(uint256 assetId, uint256 months, uint256 amountAKRE);
+    event InvestClearance(uint256 assetId, uint256 monthBeCleared, uint256 amountAKREBeCleared, uint256 amountClearFee);
     event ExecuteFinalClearance(uint256 assetId, uint256 amountAKRE, uint256 amountFund, uint256 amountOwner);
     event ExecuteSlash(uint256 assetId, uint256 amountAKRE);
 
@@ -171,7 +171,7 @@ contract RWAsset is
      * @param newAssetType add a new asset type
      */
     function addNewAssetType(
-        AssetType memory newAssetType
+        AssetType calldata newAssetType
     ) external onlyManager {
         globalStatus.numAssetType += 1;
         require(globalStatus.numAssetType == newAssetType.typeAsset,  "RWA: Wrong asset type");
@@ -298,7 +298,7 @@ contract RWAsset is
         assetRepayStatus[assetId].amountRepayDue = assetTypesRef.amountRepayMonthly;
 
         assetClearance[assetId].productToTriggerClearance = uint80(assetTypesRef.amountRepayMonthly) * 
-                                                            uint80(assetTypesRef.daysToTriggerClearance) *
+                                                            uint80(assetTypesRef.paramsClearance >> 8) *
                                                             3600 * 24;
         assetClearance[assetId].amountAKREAvailable = uint96(assetTypesRef.amountDeposit) * (1 ether);
         assetClearance[assetId].timesSlashTop = assetTypesRef.timesSlashTop;

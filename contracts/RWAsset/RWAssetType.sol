@@ -34,9 +34,8 @@ struct AssetType {
     uint8     maxInvestOverdue;           // Max days after date the asset is onboared when the investing is still acceppted  
     uint8     minInvestExit;              // Minimum days before the investing can exit  
     uint8     interestId;                 // id of the interest rate
-    uint16    daysToTriggerClearance;     // maximum days delaying repayment when clearance will be triggered
-    uint16    timesSlashTop;             // Top of the times of slashing (LSB) and top of the times of slashing consecutively (MSB)
-    //uint8     timesLineSlashTop;          // Top of the times of slashing consecutively
+    uint16    paramsClearance;            // MSB: maximum days delaying repayment when clearance will be triggered (MSB), LSB: Clearenace fee
+    uint16    timesSlashTop;              // MSB: Top of the times of consecutive slashing , LSB: Top of the times of slashing sum 
     // Full
 }
 
