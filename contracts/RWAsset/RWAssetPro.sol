@@ -260,16 +260,17 @@ contract RWAssetPro is
         uint160 sqrtPriceX96 = TickMath.getSqrtRatioAtTick(arithmeticMeanTick);  
         uint256 price = uint256(sqrtPriceX96) * uint256(sqrtPriceX96) / (1 << 128);         // Multipled by 2**64
 
-        uint16 typeAsset = assetList[assetId].typeAsset;
-        uint256 amountAKREClearFee = price * uint8(assetTypes[typeAsset].paramsClearance) * assetTypes[typeAsset].valuePerInvest / (1<<64);
+        AssetDetails storage assetStatuseRef = assetList[assetId];
+        AssetType storage assetTypesRef = assetTypes[assetStatuseRef.typeAsset];
+
+        uint256 amountAKREClearFee = price * uint8(assetTypesRef.paramsClearance) * assetTypesRef.valuePerInvest / (1<<64);
         TransferHelper.safeTransfer(tokenAKRE, msg.sender, amountAKREClearFee);
 
-        uint256 monthBeCleared = assetTypes[typeAsset].tenure + 1 - assetRepayStatus[assetId].monthDueRepay;
-        uint256 amountAKREToClearPerInvest = price * uint256(assetTypes[typeAsset].amountYieldPerInvest) / (1<<64);
+        uint256 monthBeCleared = assetTypesRef.tenure + 1 - assetRepayStatus[assetId].monthDueRepay;
 
         // To avoid round-down later
-        uint256 cleatUnit = monthBeCleared * uint256(assetList[assetId].numQuotaTotal); 
-        uint256 amountAKREBeCleared = amountAKREToClearPerInvest * cleatUnit;  
+        uint256 cleatUnit = monthBeCleared * uint256(assetStatuseRef.numQuotaTotal); 
+        uint256 amountAKREBeCleared = cleatUnit * (price * uint256(assetTypesRef.amountYieldPerInvest) / (1<<64));
 
         ClearanceDetails storage assetClearanceRef = assetClearance[assetId];
 
