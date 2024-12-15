@@ -45,7 +45,7 @@ contract RWAsset is
     event InvestTakeYield(address indexed user, uint256 investIndex, uint256 months, address tokenInvest, uint256 amountToken, uint256 amountAKRE); 
     event TakeRepayment(uint256 assetId, address tokenInvest, uint256 amountToken); 
     event InvestClearance(uint256 assetId, uint256 months, uint256 amountAKRE);
-    event ExecuteFinalClearance(uint256 assetId, uint256 amountAKRE, uint256 amountFund);
+    event ExecuteFinalClearance(uint256 assetId, uint256 amountAKRE, uint256 amountFund, uint256 amountOwner);
     event ExecuteSlash(uint256 assetId, uint256 amountAKRE);
 
     modifier ensure(uint256 deadline) {
@@ -132,6 +132,16 @@ contract RWAsset is
     function setRWAPro (address pro) external onlyOwner {
         require (pro != address(0), "RWA: Zero address");
         assetPro = pro;
+    }
+
+    function setSlashReceiver (address receiver) external onlyOwner {
+        require (receiver != address(0), "RWA: Zero address");
+        slashReceiver = receiver;
+    }
+
+    function setOracleSwapPair (address oracle) external onlyOwner {
+        require (oracle != address(0), "RWA: Zero address");
+        oracleSwapPair = oracle;
     }
 
     /**
@@ -279,22 +289,22 @@ contract RWAsset is
         globalStatus.numOnboarded += 1;
         assetList[assetId].onboardTimestamp = uint32(block.timestamp);
 
-        uint16 typeAsset = assetList[assetId].typeAsset;
+        //uint16 typeAsset = assetList[assetId].typeAsset;
+
+        AssetType storage assetTypesRef = assetTypes[assetList[assetId].typeAsset];
 
         assetRepayStatus[assetId].monthDueRepay = 1; 
         assetRepayStatus[assetId].timestampNextDue = uint32(DateTime.addMonthsEnd(block.timestamp, 1));
-        assetRepayStatus[assetId].amountRepayDue = assetTypes[typeAsset].amountRepayMonthly;
+        assetRepayStatus[assetId].amountRepayDue = assetTypesRef.amountRepayMonthly;
 
-        assetClearance[assetId].productToTriggerClearance = uint80(assetTypes[typeAsset].amountRepayMonthly) * 
-                                                            uint80(assetTypes[typeAsset].daysToTriggerClearance) *
+        assetClearance[assetId].productToTriggerClearance = uint80(assetTypesRef.amountRepayMonthly) * 
+                                                            uint80(assetTypesRef.daysToTriggerClearance) *
                                                             3600 * 24;
-
-        assetClearance[assetId].amountAKREAvailable = uint96(assetTypes[typeAsset].amountDeposit) * (1 ether);
-        assetClearance[assetId].timesSlashTop = assetTypes[typeAsset].timesSlashTop;
+        assetClearance[assetId].amountAKREAvailable = uint96(assetTypesRef.amountDeposit) * (1 ether);
+        assetClearance[assetId].timesSlashTop = assetTypesRef.timesSlashTop;
         
         emit OnboardAsset(assetId);
     }
-
 
     /**
      * @dev Investing the asset
@@ -418,7 +428,7 @@ contract RWAsset is
     }
 
     // solc-ignore-next-line unused-param
-    function executeFinalClearance(uint32 assetId, uint96 amountAKRE) external onlyManager {
+    function executeFinalClearance(uint32 assetId, uint96 amountAKRE, uint96 amountAKREFund) external onlyManager {
         callRWAssetPro (assetPro);
     }
 

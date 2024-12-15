@@ -31,13 +31,12 @@ contract RWAssetPro is
     ReentrancyGuardUpgradeable,
     RWAssetStorage
 {
-   // Events
-    event InvestExit(address indexed user, uint256 investIndex, address tokenInvest, uint256 amountToken);
+    // Events
     event RepayMonthly(address indexed user, uint256 assetId, address tokenInvest, uint256 amountToken, AssetStatus assetStatus);
     event InvestTakeYield(address indexed user, uint256 investIndex, uint256 months, address tokenInvest, uint256 amountToken, uint256 amountAKRE); 
     event TakeRepayment(uint256 assetId, address tokenInvest, uint256 amountToken); 
     event InvestClearance(uint256 assetId, uint256 months, uint256 amountAKRE);
-    event ExecuteFinalClearance(uint256 assetId, uint256 amountAKRE, uint256 amountFund);
+    event ExecuteFinalClearance(uint256 assetId, uint256 amountAKRE, uint256 amountFund, uint256 amountOwner);
     event ExecuteSlash(uint256 assetId, uint256 amountAKRE);
 
     modifier onlyManager() {
@@ -240,7 +239,7 @@ contract RWAssetPro is
         address tokenInvest = allInvestTokens[assetList[assetId].tokenId].tokenAddress;
 
         address receiver = fundReceiver;
-        if (fundReceiver == address(0)) receiver = msg.sender;
+        if (receiver == address(0)) receiver = msg.sender;
 
         TransferHelper.safeTransfer(tokenInvest, receiver, amountRepayAvailable);
 
@@ -256,47 +255,65 @@ contract RWAssetPro is
         secondsAgos[1] = 0;
 
         (int56[] memory tickCumulatives, ) = IUniswapV3Pool(oracleSwapPair).observe(secondsAgos);
-
         int24 arithmeticMeanTick = int24((tickCumulatives[1] - tickCumulatives[0]) / 600);
-        uint160 sqrtPriceX96 = TickMath.getSqrtRatioAtTick(arithmeticMeanTick);  
 
-        ClearanceDetails storage assetClearanceRef = assetClearance[assetId];
-        assetClearanceRef.priceClearance = sqrtPriceX96;
-        uint256 price = sqrtPriceX96 * sqrtPriceX96 / (1 << 128);         // Multipled by 2**64
+        uint160 sqrtPriceX96 = TickMath.getSqrtRatioAtTick(arithmeticMeanTick);  
+        uint256 price = uint256(sqrtPriceX96) * uint256(sqrtPriceX96) / (1 << 128);         // Multipled by 2**64
 
         uint16 typeAsset = assetList[assetId].typeAsset;
         uint256 monthToClear = assetTypes[typeAsset].tenure + 1 - assetRepayStatus[assetId].monthDueRepay;
-        uint256 amountAKREToClear = price * assetTypes[typeAsset].amountYieldPerInvest / (1<<64);
-        amountAKREToClear = amountAKREToClear * monthToClear * assetTypes[typeAsset].investQuota;   // To avoid round-down later
+        uint256 amountAKREToClearPerInvest = price * uint256(assetTypes[typeAsset].amountYieldPerInvest) / (1<<64);
+
+        // To avoid round-down later
+        uint256 cleatUnit = monthToClear * uint256(assetList[assetId].numQuotaTotal); 
+        uint256 amountAKREToClear = amountAKREToClearPerInvest * cleatUnit;  
+
+        ClearanceDetails storage assetClearanceRef = assetClearance[assetId];
 
         if (assetClearanceRef.amountAKREAvailable < amountAKREToClear) {
-            amountAKREToClear = assetClearanceRef.amountAKREAvailable / monthToClear / assetTypes[typeAsset].investQuota;
-            amountAKREToClear = amountAKREToClear * monthToClear * assetTypes[typeAsset].investQuota;
+            amountAKREToClear = (uint256(assetClearanceRef.amountAKREAvailable) / cleatUnit) * cleatUnit;
         }
 
+        assetClearanceRef.priceTickOnClearance = arithmeticMeanTick;
         assetClearanceRef.amountAKREAvailable -= uint96(amountAKREToClear);
         assetClearanceRef.amountAKREForInvester = uint96(amountAKREToClear);
+        assetClearanceRef.timestampClearance = uint32(block.timestamp);
 
         assetList[assetId].status = AssetStatus.ClearedInvester;
         emit InvestClearance(assetId, monthToClear, amountAKREToClear);
     }
 
+    /**
+     * @dev Execute the final clearance 
+     * @param amountAKRESlash The amount of the AKRE been used to compesate the virtual asset miner
+     * @param amountAKREFund Amount of the AKRE paid for value of the asset
+     */
     function executeFinalClearance(
         uint32 assetId,
         uint96 amountAKRESlash,
         uint96 amountAKREFund
     ) external onlyManager {
+        AssetDetails storage assetStatuseRef = assetList[assetId];
+        if (assetStatuseRef.status == AssetStatus.Onboarded) {
+            checkIfSkipMonth(assetId);
+            checkClearanceStatus(assetId);
+        }
 
-        executeInvestClearance(assetId);
+        if (assetStatuseRef.status == AssetStatus.Clearing) {
+            executeInvestClearance(assetId);
+        }
 
+        require (assetStatuseRef.status == AssetStatus.ClearedInvester , "RWA: Not feasible");
         ClearanceDetails storage assetClearanceRef = assetClearance[assetId];
-        require (assetList[assetId].status == AssetStatus.ClearedInvester, "RWA: Status not allowed");
 
         uint96 amountAKRERemove = amountAKREFund + amountAKRESlash;
         require (assetClearanceRef.amountAKREAvailable >= amountAKRERemove, "RWA: Wrong amount");
 
         TransferHelper.safeTransfer(tokenAKRE, slashReceiver, amountAKRESlash);
-        TransferHelper.safeTransfer(tokenAKRE, fundReceiver, amountAKREFund);
+
+        address receiver = fundReceiver;
+        if (receiver == address(0)) receiver = msg.sender;
+        TransferHelper.safeTransfer(tokenAKRE, receiver, amountAKREFund);
 
         uint96 amountAKREUnlockForOwner = assetClearanceRef.amountAKREAvailable - amountAKRERemove;
         if ( amountAKREUnlockForOwner > 0) {
@@ -306,7 +323,7 @@ contract RWAssetPro is
         assetClearanceRef.amountAKREAvailable = 0;
         assetList[assetId].status  = AssetStatus.ClearedFinal;
 
-        emit ExecuteFinalClearance(assetId, amountAKRESlash, amountAKREFund);
+        emit ExecuteFinalClearance(assetId, amountAKRESlash, amountAKREFund, amountAKREUnlockForOwner);
     }
 
     /**
@@ -318,20 +335,37 @@ contract RWAssetPro is
         uint32 assetId,
         uint96 amountAKRE
     ) external onlyManager {
-
+        checkIfSkipMonth(assetId);
+        
         ClearanceDetails storage assetClearanceRef = assetClearance[assetId];
-
         require (assetList[assetId].status == AssetStatus.Onboarded, "RWA: Status not allowed");
         require (assetClearanceRef.amountAKREAvailable >= amountAKRE, "RWA: Amount not enough");
-        require (assetClearanceRef.timesSlashed < assetClearanceRef.timesSlashTop, "RWA: Reach slash top");
+
+        uint256 daysLast = assetClearanceRef.timestampLastSlash / (3600 * 24);
+        uint256 today = block.timestamp / (3600 * 24);
+        require (today > daysLast, "RWA: Cannot slash twice");
+        
+        uint16 timesSlashTop = assetClearanceRef.timesSlashTop;
+        uint8 timesLineSlashTop = uint8(timesSlashTop >> 8);
+
+        if (today == (daysLast + 1)) {
+            assetClearanceRef.timesLineSlashed  += 1;
+            if (assetClearanceRef.timesLineSlashed == timesLineSlashTop) {
+                assetList[assetId].status = AssetStatus.Clearing;
+            }
+        } else {
+            // Always set to 1 if not consecutive
+            assetClearanceRef.timesLineSlashed = 1;       
+        }
 
         assetClearanceRef.timesSlashed  += 1;
-        assetClearanceRef.amountSlashed += amountAKRE;
-        assetClearanceRef.amountAKREAvailable -= amountAKRE;
-
-        if (assetClearanceRef.timesSlashed == assetClearanceRef.timesSlashTop) {
+        if (assetClearanceRef.timesSlashed == uint8(timesSlashTop)) {
             assetList[assetId].status = AssetStatus.Clearing;
         }
+
+        assetClearanceRef.amountSlashed += amountAKRE;
+        assetClearanceRef.amountAKREAvailable -= amountAKRE;
+        assetClearanceRef.timestampLastSlash = uint32(block.timestamp);
 
         TransferHelper.safeTransfer(tokenAKRE, slashReceiver, amountAKRE);
         emit ExecuteSlash(assetId, amountAKRE);
@@ -387,7 +421,7 @@ contract RWAssetPro is
         if (assetList[assetId].status >= AssetStatus.ClearedInvester) {
             amountAKRECleared = uint256(investToTake.numQuota) * 
                               uint256(assetClearance[assetId].amountAKREForInvester) / 
-                              uint256(assetTypesRef.investQuota);
+                              uint256(assetStatuseRef.numQuotaTotal);
 
             TransferHelper.safeTransfer(tokenAKRE, msg.sender, amountAKRECleared);
             investToTake.status = InvestStatus.InvestCleared;

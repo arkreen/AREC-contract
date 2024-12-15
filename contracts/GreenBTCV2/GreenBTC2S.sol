@@ -163,7 +163,7 @@ contract GreenBTC2S is
         boxSteps = (boxSteps<<16) >> 16;                            // Remove Flag
 
         // boxSteps cannot be too big, boxSteps = 10000 will use more than 10,000,000 GWei for checkIfShot
-        require ((domainID < 0x10000) && (boxSteps <= 10000), "GBC2: Over Limit");   
+        // require ((domainID < 0x10000) && (boxSteps <= 10000), "GBC2: Over Limit");   
 
         uint256 domainInfo = uint256(domains[domainID]);
         require ( domainInfo != 0 , "GBC2: Empty Domain");
@@ -207,7 +207,7 @@ contract GreenBTC2S is
         boxSteps = (boxSteps<<16) >> 16;                            // Remove Flag
 
         // boxSteps cannot be too big, boxSteps = 10000 will use more than 10,000,000 GWei for checkIfShot
-        require ((domainID < 0x10000) && (boxSteps <= 10000), "GBC2: Over Limit");   
+        // require ((domainID < 0x10000) && (boxSteps <= 10000), "GBC2: Over Limit");   
 
         uint256 domainInfo = uint256(domains[domainID]);
         require ( domainInfo != 0 , "GBC2: Empty Domain");

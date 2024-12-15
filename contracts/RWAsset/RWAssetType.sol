@@ -34,8 +34,9 @@ struct AssetType {
     uint8     maxInvestOverdue;           // Max days after date the asset is onboared when the investing is still acceppted  
     uint8     minInvestExit;              // Minimum days before the investing can exit  
     uint8     interestId;                 // id of the interest rate
-    uint16    daysToTriggerClearance;     // maximum days dalaying repayment when clearance will be triggered
-    uint8     timesSlashTop;              // Top of the times of slashing
+    uint16    daysToTriggerClearance;     // maximum days delaying repayment when clearance will be triggered
+    uint16    timesSlashTop;             // Top of the times of slashing (LSB) and top of the times of slashing consecutively (MSB)
+    //uint8     timesLineSlashTop;          // Top of the times of slashing consecutively
     // Full
 }
 
@@ -83,11 +84,14 @@ struct ClearanceDetails {
     uint80          productToTriggerClearance;  // threshold of the product triggering clearance
     uint80          amountDebtOverdueProduct;   // sum of the product of debt and overdue duration
     uint96          amountAKREAvailable;        // amount of AKRE staked as collateral
-    uint160         priceClearance;             // AKRE price for clearance on the basis of token defined by tokenId
     uint96          amountAKREForInvester;      // AKRE amount cleared for all investers.
-    uint8           timesSlashTop;              // Top of the times of slashing
-    uint8           timesSlashed;               // Times of being slashed
+    uint16          timesSlashTop;              // Top of the times of slashing (LSB) and top of the times of slashing consecutively (MSB)
+    uint8           timesSlashed;               // Times of slash accumulated
+    uint8           timesLineSlashed;           // Times of being slashed consecutively 
+    uint32          timestampLastSlash;         // Timestamp of last slashing
     uint96          amountSlashed;              // AKRE amount being slashed totally
+    int24           priceTickOnClearance;       // price tick on clearance. tick might be negtive, define as in UniV3
+    uint32          timestampClearance;
 }
 
 struct Invest {
