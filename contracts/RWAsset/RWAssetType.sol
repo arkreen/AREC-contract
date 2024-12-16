@@ -36,7 +36,6 @@ struct AssetType {
     uint8     interestId;                 // id of the interest rate
     uint16    paramsClearance;            // MSB: maximum days delaying repayment when clearance will be triggered (MSB), LSB: Clearenace fee
     uint16    timesSlashTop;              // MSB: Top of the times of consecutive slashing , LSB: Top of the times of slashing sum 
-    // Full
 }
 
 struct AssetTypeMiner {

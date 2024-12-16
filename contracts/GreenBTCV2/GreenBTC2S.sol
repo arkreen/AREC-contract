@@ -212,6 +212,7 @@ contract GreenBTC2S is
         uint256 domainInfo = uint256(domains[domainID]);
         require ( domainInfo != 0 , "GBC2: Empty Domain");
         require (nonce == nonces[greener], "Nonce Not Match"); 
+        require (greener == msg.sender, "GBC2: Not allowed");
 
         {
           bytes32 stakeHash = keccak256(abi.encode(LUCKY_TYPEHASH, domainID, boxSteps, greener, nonce, deadline));

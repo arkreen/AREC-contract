@@ -58,11 +58,17 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const start = 1727164800
     const end = 1727424000
     const rewardTotal = expandTo18Decimals(10000)
-*/
+
     // 2024/09/24, Amoy testnet
     const start = 1727251200
     const end = 1727769600
     const rewardTotal = expandTo18Decimals(25000)
+*/
+
+    // 2024/12/16, Amoy testnet
+    const start = 1734363900
+    const end = 1734681600
+    const rewardTotal = expandTo18Decimals(30000)
 
     // Need to approve first
     const depolyRewardsTx = await stakingRewards.depolyRewards(start, end, rewardTotal, {gasPrice: defaultGasPrice})
@@ -205,6 +211,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/11/06: Call depolyRewards (Polygon mainnet)( 180D AKRE)
 // yarn deploy:matic:StakingRewardsI  (0xbD7A19cb00dCc449c1e190d36826103955962997)
 // call changeUnstakeLock and setStakeParameter, depolyRewards
+
+// 2024/12/16: Call depolyRewards (Amoy testnet)
+// yarn deploy:matic_test:StakingRewardsI
+// 0x8653e707071f45A25e348187F8236C9e71eF33d4
+// 0xa2c7FD9d6F9fCD50000DAaC552d931E0185D3Be6
 
 func.tags = ["StakingRewardsI"];
 
