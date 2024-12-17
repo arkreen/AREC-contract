@@ -32,6 +32,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:ArkreenPromotionD   : Amoy testnet: getPromotionConfig and getPromotionUserStatus
 // Implementaion:        0xC88535788B4e45966c529D8b3FAd027d1E2d5a0a
 
+// 2024/12/17
+// yarn deploy:matic_test:ArkreenPromotionD   : Amoy testnet: add calling RemoteMinerOnboardAuthority to Miner Contract
+// Implementaion:        0xC88535788B4e45966c529D8b3FAd027d1E2d5a0a
+
 func.tags = ["ArkreenPromotionD"];
 
 export default func;

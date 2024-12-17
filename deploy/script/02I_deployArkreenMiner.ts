@@ -43,6 +43,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       const stakingRewards5 = "0xa2c7FD9d6F9fCD50000DAaC552d931E0185D3Be6"
       await arkreenMiner.registerListenApps(appid5, stakingRewards5, {gasPrice: defaultGasPrice})
 */
+
+/*
       // 2024/09/25
       const appid4 = 6
       const stakingRewards4 = constants.AddressZero
@@ -54,6 +56,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
       console.log("New ArkreenMiner deployed to %s:", hre.network.name, MINER_PROXY_ADDRESS, 
                     stakingRewards4, stakingRewards5);
+*/
+      const arkreenPromotion = "0x2C870f4e1B716788bB7e75Ae990583A801564dF0"
+      await arkreenMiner.setManager(3, arkreenPromotion, {gasPrice: defaultGasPrice})
+
+      console.log("ArkreenMiner setManager %s:", hre.network.name, MINER_PROXY_ADDRESS, arkreenPromotion)
+
     }
     if(hre.network.name === 'matic')  {
       const MINER_PROXY_ADDRESS = "0xbf8eF5D950F78eF8edBB8674a48cDACa675831Ae"       // Miner Contract in production env
@@ -139,6 +147,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/11/26
 // yarn deploy:matic:AMinerI    : Polygon mainnet: Removing appid 1/2/3/4
 // call registerListenApps: Remove APPID 1/2/3/4
+
+// 2024/12/17
+// yarn deploy:matic_test:AMinerI    : Amoy testnet: setManager of arkreenPromotion as authority 
+// call setManager: (3, 0x2C870f4e1B716788bB7e75Ae990583A801564dF0)
 
 func.tags = ["AMinerI"];
 

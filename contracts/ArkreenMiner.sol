@@ -472,6 +472,15 @@ contract ArkreenMiner is
         emit MinerOnboardedBatch(owner, minersBatch);
     }
 
+    function RemoteMinerOnboardAuthority(address owner, uint256 remoteType, uint8 numMiners) external {
+        require( msg.sender == AllManagers[uint256(MinerManagerType.Airdrop_Authority)], "Not allowed");
+
+        // mint new remote miner
+        address[] memory minersBatch = _mintRemoteMinerBatch(remoteType, owner, numMiners);
+        checkListener(owner, numMiners);
+        emit MinerOnboardedBatch(owner, minersBatch);
+    }
+
     /**
      * @dev Onboarding standard miner
      * @param owner address receiving the standard miner
@@ -520,6 +529,10 @@ contract ArkreenMiner is
     }
 
     function checkListener(address owner, uint256 quantity) internal {
+    }
+
+/*
+    function checkListener(address owner, uint256 quantity) internal {
         uint256 allListenApps = listenUsers[owner]; 
         if (allListenApps == 0) return;
         while (allListenApps != 0) {
@@ -528,6 +541,7 @@ contract ArkreenMiner is
             allListenApps = allListenApps >> 8;
         }
     }
+*/
 
     function registerListener(address owner) external {
         uint256 appId = listenAppIds[msg.sender];

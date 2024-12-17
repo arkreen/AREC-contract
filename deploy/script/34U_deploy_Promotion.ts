@@ -18,8 +18,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       // 2024/12/17: Fix bug
       const arkreenPromotion = "0x2C870f4e1B716788bB7e75Ae990583A801564dF0"
       //const NEW_IMPLEMENTATION ="0xBB17d9b933F631024cA4cF45391E7302CD527489"      // 2024/12/17, Fix Bug
-      const NEW_IMPLEMENTATION ="0xC88535788B4e45966c529D8b3FAd027d1E2d5a0a"        // 2024/12/17, getPromotionConfig and getPromotionUserStatus
-     
+      //const NEW_IMPLEMENTATION ="0xC88535788B4e45966c529D8b3FAd027d1E2d5a0a"      // 2024/12/17, getPromotionConfig and getPromotionUserStatus
+      const NEW_IMPLEMENTATION ="0xBDf492DA550518eFEAB7d3C724110290923986b9"        // 2024/12/17, add calling RemoteMinerOnboardAuthority to Miner Contract
+
       console.log("Updating ArkreenPromotion: ", arkreenPromotion, defaultGasPrice.toString());  
 
       const [deployer] = await ethers.getSigners();
@@ -56,6 +57,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:ArkreenPromotionU:  Amoy testnet, add getPromotionConfig and getPromotionUserStatus
 // Proxy:                 0x2C870f4e1B716788bB7e75Ae990583A801564dF0
 // Implementaion:         0xC88535788B4e45966c529D8b3FAd027d1E2d5a0a
+
+// 2024/12/17
+// yarn deploy:matic_test:ArkreenPromotionU:  Amoy testnet, add calling RemoteMinerOnboardAuthority to Miner Contract
+// Proxy:                 0x2C870f4e1B716788bB7e75Ae990583A801564dF0
+// Implementaion:         0xBDf492DA550518eFEAB7d3C724110290923986b9
 
 func.tags = ["ArkreenPromotionU"];
 

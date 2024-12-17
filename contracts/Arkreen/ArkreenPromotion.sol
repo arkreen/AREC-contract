@@ -5,6 +5,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 import "../libraries/TransferHelper.sol";
 import "../interfaces/IStakingRewards.sol";
+import "../interfaces/IArkreenMiner.sol";
 
 contract ArkreenPromotion is OwnableUpgradeable, UUPSUpgradeable {
 
@@ -14,7 +15,7 @@ contract ArkreenPromotion is OwnableUpgradeable, UUPSUpgradeable {
     IStakingRewards public stakingPool;
     address public akreToken;
     address public artToken;
-    address public minerContract;
+    IArkreenMiner public minerContract;
 
     uint256 public amountAKREPerRM;                  // amount of staking AKRE qualified to buy one Remote Miner 
     uint256 public priceRemoteMiner;                 // price of one remote miner in promotion 
@@ -43,7 +44,7 @@ contract ArkreenPromotion is OwnableUpgradeable, UUPSUpgradeable {
         stakingPool = IStakingRewards(pool);
         akreToken = akre;
         artToken = art;
-        minerContract = miner;
+        minerContract = IArkreenMiner(miner);
     }   
 
     function postUpdate() external onlyProxy onlyOwner 
@@ -94,6 +95,7 @@ contract ArkreenPromotion is OwnableUpgradeable, UUPSUpgradeable {
             countRM += countBuy;
             amountAKREUsed[msg.sender] += countBuy * amountAKREPerRM ;
             amountAKREPayment = countBuy * priceRemoteMiner;
+            minerContract.RemoteMinerOnboardAuthority(msg.sender, 0, uint8(countBuy));
         } else {
             amountART += countBuy;
             amountAKREUsed[msg.sender] += countBuy * amountAKREPerART;

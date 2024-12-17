@@ -72,7 +72,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //  const NEW_IMPLEMENTATION =  "0x0463729B34a867B3fD155943E0AAe9790cb7bfeF"        // 2024/05/11: Upgrade to support removing miner from white list
 //  const NEW_IMPLEMENTATION =  "0x3b4BAf0aE0D209c3F774d4f4592948450f80293b"        // 2024/05/11: Miner is splitted to upgrade to support staking feature
 //  const NEW_IMPLEMENTATION =  "0xd1348Bb43DbF51a2446DB6e40DE5F6c178cb2D47"        // 2024/05/22: registerListenApps is changed
-    const NEW_IMPLEMENTATION =  "0x6Aca9D31e467a1DdA381aBaA250Fcb1388618F42"        // 2024/10/21: Upgrade to support MinerPro
+//  const NEW_IMPLEMENTATION =  "0x6Aca9D31e467a1DdA381aBaA250Fcb1388618F42"        // 2024/10/21: Upgrade to support MinerPro
+    const NEW_IMPLEMENTATION =  "0x039a6f3f70e6ce71eccc001ed4136e6dfe5dbd49"        // 2024/12/17: Upgrade to add ABI RemoteMinerOnboardAuthority
 
     const [deployer] = await ethers.getSigners();
     const ArkreenMinerFactory = ArkreenMiner__factory.connect(MINER_PROXY_ADDRESS, deployer);
@@ -99,6 +100,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     await updateTx.wait()
     console.log("ArkreenMiner Updated to: ", hre.network.name, ArkreenMinerFactory.address, NEW_IMPLEMENTATION);
 
+/*    
     // 204/05/21
     // const arkreenMinerPro = "0xCf427e3E8B3717DE2d0d08Cc09F1A3c5853Dd90C"
     const arkreenMinerPro = "0xB17Bf7c2ccDe7604C8885AFCe18fE9f8805FE0e6"                  // 2024/10/21
@@ -107,6 +109,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     await setArkreenMinerProTx.wait()
     
     console.log("ArkreenMinerPro is Updated: ", hre.network.name, ArkreenMinerFactory.address, NEW_IMPLEMENTATION, arkreenMinerPro);
+*/
 
 /*
     // 204/05/21
@@ -307,6 +310,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2024/11/28: yarn deploy:matic:AMinerUV10: For Polygon mainnet, Upgrade to fix a bug in Miner Pro checkListener
 // And Call setArkreenMinerPro to update to 0xc6f4ee41384c4B006a5224123860dFa4a4419922
+
+// 2024/12/17: yarn deploy:matic_test:AMinerUV10: For Amoy Dev Env, Upgrade to support Airdrop by authority
+// immplementaion: 0x039a6f3f70E6Ce71EcCC001ED4136e6dFE5DBd49
 
 export default func;
 func.tags = ["AMinerUV10"];

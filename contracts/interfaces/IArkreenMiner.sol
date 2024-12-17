@@ -6,4 +6,5 @@ interface IArkreenMiner {
     function balanceOf(address owner) external view returns (uint256);
     function totalSupply() external view returns (uint256);
     function registerListener(address owner) external;
+    function RemoteMinerOnboardAuthority(address owner, uint256 remoteType, uint8 numMiners) external;
 }

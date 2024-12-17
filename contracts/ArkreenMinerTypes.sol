@@ -32,7 +32,8 @@ struct Miner {
 enum MinerManagerType {
     Miner_Manager,        // 0
     Register_Authority,   // 1
-    Payment_Receiver      // 2
+    Payment_Receiver,     // 2
+    Airdrop_Authority     // 3
 }
 
 struct Signature {
