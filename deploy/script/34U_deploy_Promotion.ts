@@ -17,7 +17,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     if(hre.network.name === 'matic_test')  {
       // 2024/12/17: Fix bug
       const arkreenPromotion = "0x2C870f4e1B716788bB7e75Ae990583A801564dF0"
-      const NEW_IMPLEMENTATION ="0xBB17d9b933F631024cA4cF45391E7302CD527489"        // 2024/12/17, Fix Bug
+      //const NEW_IMPLEMENTATION ="0xBB17d9b933F631024cA4cF45391E7302CD527489"      // 2024/12/17, Fix Bug
+      const NEW_IMPLEMENTATION ="0xC88535788B4e45966c529D8b3FAd027d1E2d5a0a"        // 2024/12/17, getPromotionConfig and getPromotionUserStatus
      
       console.log("Updating ArkreenPromotion: ", arkreenPromotion, defaultGasPrice.toString());  
 
@@ -50,6 +51,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:ArkreenPromotionU:  Amoy testnet, Fix Bug
 // Proxy:                 0x2C870f4e1B716788bB7e75Ae990583A801564dF0
 // Implementaion:         0xBB17d9b933F631024cA4cF45391E7302CD527489
+
+// 2024/12/17
+// yarn deploy:matic_test:ArkreenPromotionU:  Amoy testnet, add getPromotionConfig and getPromotionUserStatus
+// Proxy:                 0x2C870f4e1B716788bB7e75Ae990583A801564dF0
+// Implementaion:         0xC88535788B4e45966c529D8b3FAd027d1E2d5a0a
 
 func.tags = ["ArkreenPromotionU"];
 

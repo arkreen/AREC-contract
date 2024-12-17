@@ -28,6 +28,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:ArkreenPromotionD   : Amoy testnet: fix bug
 // Implementaion:        0xBB17d9b933F631024cA4cF45391E7302CD527489
 
+// 2024/12/17
+// yarn deploy:matic_test:ArkreenPromotionD   : Amoy testnet: getPromotionConfig and getPromotionUserStatus
+// Implementaion:        0xC88535788B4e45966c529D8b3FAd027d1E2d5a0a
+
 func.tags = ["ArkreenPromotionD"];
 
 export default func;

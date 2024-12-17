@@ -114,6 +114,34 @@ contract ArkreenPromotion is OwnableUpgradeable, UUPSUpgradeable {
         emit Deposit(token, msg.sender, amount);
     }
 
+    function getPromotionConfig() external view 
+        returns ( uint256 _amountAKREPerRM,
+                  uint256 _priceRemoteMiner, 
+                  uint256 _amountAKREPerART, 
+                  uint256 _priceARTToken,
+                  uint256 _startTime,
+                  uint256 _endTime
+                ) {
+      _amountAKREPerRM = amountAKREPerRM;
+      _priceRemoteMiner = priceRemoteMiner;
+      _amountAKREPerART = amountAKREPerART;
+      _priceARTToken = priceARTToken;
+      _startTime = startTime;
+      _endTime = endTime;       
+    }
+
+    function getPromotionUserStatus(address user) external view 
+        returns ( uint256 userStakes,
+                  uint256 stakesUsed,
+                  uint256 countRMCanBuy, 
+                  uint256 countARTCanBuy
+                ) {
+        (,  userStakes, , , ,)  = stakingPool.getUserStakeStatus(user);
+        stakesUsed = amountAKREUsed[user];
+        countRMCanBuy = (userStakes - stakesUsed) / priceRemoteMiner;
+        countARTCanBuy = (userStakes - stakesUsed) / priceARTToken;
+    }
+   
     /**
      * @dev Withdraw sales income
      * @param token Address of the token to withdraw
