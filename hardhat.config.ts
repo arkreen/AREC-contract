@@ -74,7 +74,7 @@ function getURL(network:string): string {
   } else if(network === 'celo_test') {
     url = `https://celo-alfajores.infura.io/v3/` + projectID
   } else if(network === 'matic') {
-    url = `https://polygon-rpc.com/`
+    url = `https://polygon-mainnet.infura.io/v3/` + projectID
   } else if(network === 'matic_test') {
     url = `https://rpc-amoy.polygon.technology/`
   } else if(network === 'goerli') {

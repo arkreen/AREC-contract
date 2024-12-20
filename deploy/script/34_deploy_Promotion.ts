@@ -11,7 +11,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const { deploy } = deployments;
     const { deployer } = await getNamedAccounts();
 
-    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(32_000_000_000) : BigNumber.from(50_000_000_000)
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(32_000_000_000) : BigNumber.from(800_000_000_000)
 
     let stakingPool : string = ''
     let akreToken: string = ''
@@ -29,11 +29,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       stakingPool = "0xDfD05Fcd3d330E17151F362AB551D89CAEb40916"
       akreToken = "0xE9c21De62C5C5d0cEAcCe2762bF655AfDcEB7ab3"
       artToken = "0x58E4D14ccddD1E993e6368A8c5EAa290C95caFDF"
-      minerContract = "	0xbf8eF5D950F78eF8edBB8674a48cDACa675831Ae"
+      minerContract = "0xbf8eF5D950F78eF8edBB8674a48cDACa675831Ae"
     } 
 
     console.log("Deploying: ", "ArkreenPromotion", deployer);  
-    
+  /*  
     const arkreenPromotion = await deploy("ArkreenPromotion", {
         from: deployer,
         proxy: {
@@ -49,10 +49,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         skipIfAlreadyDeployed: false,
         gasPrice: defaultGasPrice
     });
+*/
 
-/*
-    // 2024/12/16
-    const IMPLEMENTATION_ADDRESS ="0x92B3B82c322BAC3dF00F68B93C61F5B69A8dfBfa"
+    // 2024/12/19
+    const IMPLEMENTATION_ADDRESS ="0x66f3762739E7303Ec87805CC11f4FAecB35283a3"
         
     const callData = ArkreenPromotion__factory.createInterface().encodeFunctionData("initialize", [stakingPool, akreToken, artToken, minerContract])
     const arkreenPromotion = await deploy(CONTRACTS.UUPSProxy, {
@@ -62,8 +62,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
             skipIfAlreadyDeployed: false,
             gasPrice: defaultGasPrice
     });
-  */
-
+  
     console.log("arkreenPromotion deployed to %s: ", hre.network.name, arkreenPromotion.address);
 };
 
@@ -71,6 +70,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:ArkreenPromotion    : Amoy testnet (Dev Anv)
 // Proxy:                 0x2C870f4e1B716788bB7e75Ae990583A801564dF0
 // Implementaion:         0x9031550a0aE38337a19E4eFA372B3e6b0FE94D3f
+
+// 2024/12/18
+// yarn deploy:matic:ArkreenPromotion    : Polygon mainnet
+// Proxy:                 0x66f3762739E7303Ec87805CC11f4FAecB35283a3
+// Implementaion:         0x88D1D2Ec7544Bc3Dede2956487B1Bf28E911F13C
 
 func.tags = ["ArkreenPromotion"];
 

@@ -40,28 +40,44 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       console.log("ArkreenPromotion changePromotionConfig", arkreenPromotion.address)
       
     } else if(hre.network.name === 'matic')  {
-      arkreenPromotionAddress   = "0x2C870f4e1B716788bB7e75Ae990583A801564dF0"
+      arkreenPromotionAddress   = "0x88D1D2Ec7544Bc3Dede2956487B1Bf28E911F13C"
 
+ /*     
       amountAKREPerRM = expandTo18Decimals(5000)      
       priceRemoteMiner = expandTo18Decimals(5000)      
       amountAKREPerART = expandTo18Decimals(5000)      
       priceARTToken = expandTo18Decimals(5000)      
-      startTime = 1734364200
-      endTime = 1734595200
+      startTime = 1766217600
+      endTime = 1766822400
+*/
+      amountAKREPerRM = expandTo18Decimals(5000)      
+      priceRemoteMiner = expandTo18Decimals(6000)      
+      amountAKREPerART = expandTo18Decimals(5000)      
+      priceARTToken = expandTo18Decimals(6000)      
+      startTime = 0
+      endTime = 0
 
       const arkreenPromotion = ArkreenPromotion__factory.connect(arkreenPromotionAddress, deployer);
     
       // 2024/09/2: Polygon mainnet
-      await arkreenPromotion.changePromotionConfig(
+      const changePromotionConfigTx = await arkreenPromotion.changePromotionConfig(
                 amountAKREPerRM, priceRemoteMiner, amountAKREPerART, priceARTToken, startTime, endTime,
                 {gasPrice: defaultGasPrice})
 
-      console.log("ArkreenPromotion changePromotionConfig", arkreenPromotion.address)
+      await changePromotionConfigTx.wait()                
+
+      console.log("ArkreenPromotion changePromotionConfig", arkreenPromotion.address, changePromotionConfigTx)
     } 
 };
 
-// 2024/09/02: Call changePromotionConfig
-// yarn deploy:matic_test:ArkreenPromotionI      : Amoy testnet (Dev Anv)
+// 2024/09/16: Call changePromotionConfig
+// yarn deploy:matic_test:ArkreenPromotionI       : Amoy testnet (Dev Anv)
+
+// 2024/12/19: Call changePromotionConfig
+// yarn deploy:matic:ArkreenPromotionI            : Polygon mainnet
+
+// 2024/12/19: Call changePromotionConfig         : Close Promotion
+// yarn deploy:matic:ArkreenPromotionI            : Polygon mainnet
 
 func.tags = ["ArkreenPromotionI"];
 

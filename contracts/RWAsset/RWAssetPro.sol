@@ -226,11 +226,13 @@ contract RWAssetPro is
             amountTotalYield = amountTotalYield * uint48(assetRepayStatusRef.monthDueRepay);    // All yield up to date, one as backup
             repayCurrentMonth = assetTypesRef.amountRepayMonthly - assetRepayStatusRef.amountRepayDue;
         }
-
+        
+        uint48 clearanceFee = uint48(assetTypesRef.paramsClearance) * assetTypesRef.valuePerInvest;
         uint48 deductAmount = assetRepayStatusRef.amountRepayTaken +                // Amount allready taken away the table
                               amountTotalYield +                                    // All amount of invest yield should be kept
                               repayCurrentMonth +                                   // Repay not mature
-                              assetRepayStatusRef.amountPrePay;                     // Prepay for next monthly
+                              assetRepayStatusRef.amountPrePay +                    // Prepay for next monthly
+                              clearanceFee;                                         // Always keep Clearance fee
 
         require (assetStatuseRef.sumAmountRepaid > deductAmount, "RWA: No mature repayment");
 
@@ -384,7 +386,7 @@ contract RWAssetPro is
 
         // Check if skipped to next month 
         uint32 assetId = uint32(investIndex >> 16);
-        checkIfSkipMonth(assetId);
+        uint256 interestRate = checkIfSkipMonth(assetId);
 
         // Even if during clearance, still possible to take yield, as monthDueRepay is locked during clearance.
         AssetDetails storage assetStatuseRef = assetList[assetId];
@@ -404,15 +406,23 @@ contract RWAssetPro is
 
         // Send monthly yield, in one batch if several mature months available
         if (monthWithYield > 0) {
-            investToTake.monthTaken += monthWithYield;
             amountToken = uint256(monthWithYield) *                                                     // Duration in month
                                   uint256(investToTake.numQuota) *                                      // Quota of investment
                                   uint256(assetTypesRef.amountYieldPerInvest);                          // Value per investment
 
-            assetStatuseRef.amountInvestWithdarwed += uint48(amountToken);
+            uint48 delayInterest = 0;
+            if ((investToTake.monthTaken == 0) && (investToTake.timestamp > assetStatuseRef.onboardTimestamp)) {
+                uint256 delayDurationInvest = investToTake.timestamp - assetStatuseRef.onboardTimestamp;
+                delayInterest = uint48(SafeMath.rpow(interestRate, delayDurationInvest) * 
+                                    uint256(investToTake.numQuota) *
+                                    uint256(assetTypesRef.amountYieldPerInvest) / (10 ** 27));
+            }
+
+            assetStatuseRef.amountInvestWithdarwed += uint48(amountToken) - delayInterest;
             TransferHelper.safeTransfer(tokenInvest, msg.sender, amountToken);
 
             // Invest completed if all month yield have been taken
+            investToTake.monthTaken += monthWithYield;
             if (investToTake.monthTaken == assetTypesRef.tenure) {
                 investToTake.status = InvestStatus.InvestCompleted;
             }

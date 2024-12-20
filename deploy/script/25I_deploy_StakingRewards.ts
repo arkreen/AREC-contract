@@ -2,16 +2,15 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { CONTRACTS } from "../constants";
 import { ethers } from "hardhat";
-import { StakingRewards__factory } from "../../typechain";
+import { BigNumber, constants } from "ethers";
+import { StakingRewards__factory, ArkreenToken__factory } from "../../typechain";
 
 import { expandTo18Decimals } from "../../test/utils/utilities";
-
-import { BigNumber } from "ethers";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const [deployer] = await ethers.getSigners();
 
-  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(35_000_000_000) : BigNumber.from(3000_000_000_000)
+  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(35_000_000_000) : BigNumber.from(100_000_000_000)
   
   if(hre.network.name === 'matic_test') {
     // 2024/05/21
@@ -77,6 +76,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   }
   if(hre.network.name === 'matic') {
     // 2024/05/28
+    const arkreenTokenAddress       = "0xE9c21De62C5C5d0cEAcCe2762bF655AfDcEB7ab3"
     //const stakingRewardsAddress  = "0xa777d8855456eac0E3f1C64c148dabaf8e8CcC1F"         // 2024/05/28: Polygon Mainnet
     //const stakingRewardsAddress  = "0x4C15968df54B276dC06eF11Bcd3b3EfFbC577c59"         // 2024/006/25(XXX): Polygon Mainnet, with lock
     //const stakingRewardsAddress  = "0xc1dCE2f17362C2De4ab4F104f6f88223e0c28B95"         // 2024/006/25: Polygon Mainnet, with lock
@@ -85,27 +85,30 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     //const stakingRewardsAddress  = "0x39c518133a60a7517eed15EA21E8A0Cf1AB66D46"         // 2024/09/29: Polygon Mainnet, 30 days AKRE lock
     //const stakingRewardsAddress   = "0xDA6E63C0be2DE7FAA29a4E8a7ca0d14F280636e5"        // 2024/09/29: Polygon Mainnet, 60 days AKRE lock
     //const stakingRewardsAddress   = "0x1ea66a305b763ef50a16842be27Cd68Ec7F69e68"        // 2024/10/25: Polygon Mainnet, 90 days AKRE lock
-    const stakingRewardsAddress   = "0xbD7A19cb00dCc449c1e190d36826103955962997"          // 2024/11/06: Polygon Mainnet, 180 days AKRE lock
+    //const stakingRewardsAddress   = "0xbD7A19cb00dCc449c1e190d36826103955962997"        // 2024/11/06: Polygon Mainnet, 180 days AKRE lock
+    const stakingRewardsAddress     = "0xDfD05Fcd3d330E17151F362AB551D89CAEb40916"        // 2024/12/18: Polygon Mainnet, 365D days AKRE lock
 
     const stakingRewards = StakingRewards__factory.connect(stakingRewardsAddress, deployer);
 
-    // 2024/06/25: Polygon Mainnet， 2024/07/25A、2024/07/25B, 2024/09/29A, 2024/10/25, 2024/11/06
+/*    
+    // 2024/06/25: Polygon Mainnet，2024/07/25A、2024/07/25B, 2024/09/29A, 2024/10/25, 2024/11/06, 2024/12/18
 //  const changeUnstakeLockTx = await stakingRewards.changeUnstakeLock(true, {gasPrice: defaultGasPrice})
-    const changeUnstakeLockTx = await stakingRewards.changeUnstakeLock(true)
+    const changeUnstakeLockTx = await stakingRewards.changeUnstakeLock(true, {gasPrice: defaultGasPrice})
     await changeUnstakeLockTx.wait()
 
     // 2024/05/28, 2024/06/25: Polygon Mainnet, 2024/07/25A、2024/07/25B, 2024/09/29A, 2024/10/25, 2024/11/06
+    // 2024/12/18
     const capMinerPremium = expandTo18Decimals(5000)
     const ratePremium = 200
 
 //  const setStakeParameterTx = await stakingRewards.setStakeParameter(capMinerPremium, ratePremium, {gasPrice: defaultGasPrice})
-    const setStakeParameterTx = await stakingRewards.setStakeParameter(capMinerPremium, ratePremium)
-
+    const setStakeParameterTx = await stakingRewards.setStakeParameter(capMinerPremium, ratePremium, {gasPrice: defaultGasPrice})
     await setStakeParameterTx.wait()
 
     console.log("StakingRewards setStakeParameter Tx:", changeUnstakeLockTx, setStakeParameterTx)
     console.log("Set StakeParameter: ", hre.network.name, 
                     stakingRewardsAddress, capMinerPremium.toString(), ratePremium);
+*/
 
 /*
     // 2024/09/30A, Polygon mainnet
@@ -133,14 +136,26 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const end = 1733299200      // 2024/12/04
     const rewardTotal = expandTo18Decimals(75000)
 */
+/*
     // 2024/11/06, Polygon mainnet: 0xbD7A19cb00dCc449c1e190d36826103955962997
     const start = 1731398400    // 2024/11/12
     const end = 1746950400      // 2024/05/11
     const rewardTotal = expandTo18Decimals(1800000)
+*/
+
+    const ArkreenTokenFactory = ArkreenToken__factory.connect(arkreenTokenAddress, deployer);
+    const approveTrx = await ArkreenTokenFactory.approve(stakingRewardsAddress, 
+                                          constants.MaxUint256, {gasPrice: defaultGasPrice} ) 
+    await approveTrx.wait()
+
+    // 2024/12/18, Polygon mainnet: 0xDfD05Fcd3d330E17151F362AB551D89CAEb40916
+    const start = 1734681600    // 2024/12/20
+    const end = 1766217600      // 2025/12/20
+    const rewardTotal = expandTo18Decimals(4000000)
 
     // Need to approve first
 //  const depolyRewardsTx = await stakingRewards.depolyRewards(start, end, rewardTotal, {gasPrice: defaultGasPrice})
-    const depolyRewardsTx = await stakingRewards.depolyRewards(start, end, rewardTotal)
+    const depolyRewardsTx = await stakingRewards.depolyRewards(start, end, rewardTotal, {gasPrice: defaultGasPrice})
     console.log("Depoly Rewards: ", hre.network.name, depolyRewardsTx);
 
   }
@@ -216,6 +231,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:StakingRewardsI
 // 0x8653e707071f45A25e348187F8236C9e71eF33d4
 // 0xa2c7FD9d6F9fCD50000DAaC552d931E0185D3Be6
+
+// 2024/12/18: Call depolyRewards (Polygon mainnet)( 365D AKRE)
+// yarn deploy:matic:StakingRewardsI  (0xDfD05Fcd3d330E17151F362AB551D89CAEb40916)
+// call changeUnstakeLock and setStakeParameter
 
 func.tags = ["StakingRewardsI"];
 

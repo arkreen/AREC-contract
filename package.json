@@ -221,6 +221,11 @@
     "deploy:matic:GreenBTC2SU": "hardhat --network matic deploy --tags GreenBTC2SU",
     "deploy:matic:UniToolD": "hardhat --network matic deploy --tags UniToolD",
     "deploy:matic:PlugMinerSales": "hardhat --network matic deploy --tags PlugMinerSales",
+    "deploy:matic:ArkreenPromotion": "hardhat --network matic deploy --tags ArkreenPromotion",
+    "deploy:matic:ArkreenPromotionI": "hardhat --network matic deploy --tags ArkreenPromotionI",
+    "deploy:matic:ArkreenPromotionD": "hardhat --network matic deploy --tags ArkreenPromotionD",
+    "deploy:matic:ArkreenPromotionU": "hardhat --network matic deploy --tags ArkreenPromotionU",
+
     "storageExplorerGreenBTC:matic": "hardhat run --network matic ./deploy/storageExplorerGreenBTC.ts",
     "GreenBTCTest:matic": "hardhat run --network matic ./deploy/GreenBTCTest.ts",
     "GreenBTCTList:matic": "hardhat run --network matic ./deploy/GreenBTCTList.ts",
