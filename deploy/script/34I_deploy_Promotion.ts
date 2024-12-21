@@ -10,7 +10,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     const [deployer] = await ethers.getSigners();
 
-    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(32_000_000_000) : BigNumber.from(50_000_000_000)
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(32_000_000_000) : BigNumber.from(750_000_000_000)
 
     let arkreenPromotionAddress
     let amountAKREPerRM 
@@ -51,11 +51,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       endTime = 1766822400
 */
       amountAKREPerRM = expandTo18Decimals(5000)      
-      priceRemoteMiner = expandTo18Decimals(6000)      
+      priceRemoteMiner = expandTo18Decimals(5000)      
       amountAKREPerART = expandTo18Decimals(5000)      
-      priceARTToken = expandTo18Decimals(6000)      
-      startTime = 0
-      endTime = 0
+      priceARTToken = expandTo18Decimals(5000)      
+      startTime = 1734739200
+      endTime = 1735344000
 
       const arkreenPromotion = ArkreenPromotion__factory.connect(arkreenPromotionAddress, deployer);
     

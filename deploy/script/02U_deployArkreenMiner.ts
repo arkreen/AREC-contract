@@ -143,7 +143,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 //  const NEW_IMPLEMENTATION =  "0x4bfE8d12b01756A04AB9762D28ebCF4210E9A59B"       // 2024/04/12: Update to correct according audit result and prepare for upgrading on mainnet
 //  const NEW_IMPLEMENTATION =  "0xeCAac43Ef76a7c76613986FaaAd26707a3BFF59a"       // 2024/05/28: Upgrade to support StakingRewards (App register/listen)
 //  const NEW_IMPLEMENTATION =  "0x0b25c74b5FF36d290320e73b1aFf14ff150C84E8"       // 2024/07/26: Upgrade to fix a small bug that RemoteMinerOnboardNative did not call checkListener
-    const NEW_IMPLEMENTATION =  "0x7E2c63928392a7C928A442eefb488D17b1c5Fc4d"       // 2024/10/22: Upgrade to support MinerPro
+//  const NEW_IMPLEMENTATION =  "0x7E2c63928392a7C928A442eefb488D17b1c5Fc4d"       // 2024/10/22: Upgrade to support MinerPro
+    const NEW_IMPLEMENTATION =  "0x20015F4cc12Eb3DfB1Fdfb1eE50aC29488f9F038"       // 2024/12/21: Upgrade to add ABI RemoteMinerOnboardAuthority
 
     const [deployer] = await ethers.getSigners();
     const ArkreenMinerFactory = ArkreenMiner__factory.connect(MINER_PROXY_ADDRESS, deployer);
@@ -173,18 +174,18 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   
     // const updateTx = await ArkreenMinerFactory.upgradeToAndCall(NEW_IMPLEMENTATION, callData)
 
-/*    
-    // 2024/07/26
+    // 2024/07/26,  2024/12/21  
     const updateTx = await ArkreenMinerFactory.upgradeTo(NEW_IMPLEMENTATION, {gasPrice: defaultGasPrice})
     await updateTx.wait()
 
     console.log("Update Trx:", updateTx)
     console.log("Remote miner Updated: ", hre.network.name, ArkreenMinerFactory.address, NEW_IMPLEMENTATION);
-*/
+
     // 2024/10/22
     // const arkreenMinerPro = "0xB6701746312304F9f751bEe707fa0ca51Ec6724c"
     // const arkreenMinerPro = "0x3CC572812faEDE06D1BEBf1F5CCECaA03BB2d65d"
 
+    /*
     // 2024/11/28
     const arkreenMinerPro = "0xc6f4ee41384c4B006a5224123860dFa4a4419922"
 
@@ -192,7 +193,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     await setArkreenMinerProTx.wait()
 
     console.log("ArkreenMinerPro is Updated: ", hre.network.name, ArkreenMinerFactory.address, NEW_IMPLEMENTATION, arkreenMinerPro);
-
+    */
   } 
 };
 
@@ -313,6 +314,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2024/12/17: yarn deploy:matic_test:AMinerUV10: For Amoy Dev Env, Upgrade to support Airdrop by authority
 // immplementaion: 0x039a6f3f70E6Ce71EcCC001ED4136e6dFE5DBd49
+
+// 2024/12/21: yarn deploy:matic:AMinerUV10: For Polygon mainnet, Upgrade to support Airdrop by authority
+// immplementaion: 0x20015F4cc12Eb3DfB1Fdfb1eE50aC29488f9F038
 
 export default func;
 func.tags = ["AMinerUV10"];

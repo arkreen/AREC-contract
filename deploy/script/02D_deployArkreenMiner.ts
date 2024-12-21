@@ -10,7 +10,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   let MANAGER_ADDRESS
   let REGISTER_ADDRESS
 
-  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(32_000_000_000) : BigNumber.from(100_000_000_000)
+  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(32_000_000_000) : BigNumber.from(80_000_000_000)
 
   if(hre.network.name === 'localhost') {
     AKREToken_ADDRESS = "0xa0cE9DC3d93F4c84aAACd8DA3f66Cd6dA9D5b1F8"
@@ -184,6 +184,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2024/12/17: yarn deploy:matic_test:AMinerV10D 
 // Deployed on Polygon Amoy testnet to Support Airdrop by authority
+// 0x039a6f3f70E6Ce71EcCC001ED4136e6dFE5DBd49
+
+// 2024/12/17: yarn deploy:matic:AMinerV10D 
+// Deployed on Polygon mainnet to Support Airdrop by authority
 // 0x039a6f3f70E6Ce71EcCC001ED4136e6dFE5DBd49
 
 export default func;
