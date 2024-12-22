@@ -2,8 +2,15 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { ethers } from "hardhat";
 import { ArkreenRECBank__factory } from "../../typechain";
+import { BigNumber } from "ethers";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
+
+  const defaultGasPrice = (hre.network.name === 'matic_test') 
+                              ? BigNumber.from(32_000_000_000) 
+                              : (hre.network.name === 'celo')
+                              ? BigNumber.from(6_000_000_000) 
+                              : BigNumber.from(230_000_000_000)
   
   if(hre.network.name === 'matic_test') {
     // const RECBANK_PROXY_ADDRESS   = "0x7ee6D2A14d6Db71339a010d44793B27895B36d50" // 2023/3/14 Arkreen REC bank proxy
@@ -32,13 +39,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const RECBANK_PROXY_ADDRESS   = "0xab65900A52f1DcB722CaB2e5342bB6b128630A28"    // 2023/04/05: Arkreen REC bank proxy
     // const NEW_IMPLEMENTATION = "0xF845c843DaEa0cE08d2184CC1eDfe2b998B2d565"      // 2024/01/11: Upgrade to add new event
     // const NEW_IMPLEMENTATION = "0xED673Af2CD4eAEb2687DcB34e013335437463A31"      // 2024/04/03: Fix the withdraw bug
-    const NEW_IMPLEMENTATION = "0x5DbF34752CeBAeA2386337f5ea23c1dCaD48EE6A"         // 2024/04/03: support return value while buying ART
+    // const NEW_IMPLEMENTATION = "0x5DbF34752CeBAeA2386337f5ea23c1dCaD48EE6A"      // 2024/04/03: support return value while buying ART
+    const NEW_IMPLEMENTATION = "0xBa9d6d00AB8e2937644225400F5C861eb5E18554"         // 2024/12/21: support removing ART deposit
 
     console.log("Updating Arkreen REC Bank: ", RECBANK_PROXY_ADDRESS);  
 
     const [deployer] = await ethers.getSigners();
     const ArkreenBankFactory = ArkreenRECBank__factory.connect(RECBANK_PROXY_ADDRESS, deployer);
-    const updateTx = await ArkreenBankFactory.upgradeTo(NEW_IMPLEMENTATION)
+    const updateTx = await ArkreenBankFactory.upgradeTo(NEW_IMPLEMENTATION, {gasPrice: defaultGasPrice})
     await updateTx.wait()
 
     console.log("Update Trx:", updateTx)
@@ -79,6 +87,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/11/20: Upgrade to support return value while buying ART
 // yarn deploy:celo:ArtBankU  (0x92131f116dC4653e1fCF9E3FdC543827105101fE)
 
+// 2024/11/21: Upgrade to support withdrawing ART from bank
+// yarn deploy:matic:ArtBankU  (0xBa9d6d00AB8e2937644225400F5C861eb5E18554)
 
 export default func;
 func.tags = ["ArtBankU"];

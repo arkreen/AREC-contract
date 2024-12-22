@@ -246,6 +246,14 @@ describe("GreenPower Test Campaign", ()=>{
         lastBlock = await ethers.provider.getBlock('latest')
         timestampOnboarding = lastBlock.timestamp
         timeOnboarding = Math.floor(lastBlock.timestamp /(3600*24)) * 3600 * 24
+
+        const amountToken = (600 - 20) * (assetType.valuePerInvest)
+        await expect(rwAsset.connect(manager).takeInvest(1))
+                .to.emit(usdc, 'Transfer')
+                .withArgs(rwAsset.address, manager.address, amountToken)
+                .to.emit(rwAsset, 'TakeInvest')
+                .withArgs(manager.address, 1, usdc.address, amountToken)
+
       })
 
       it("RWAsset Test: takeRepayment (1-2 month)", async function () {
@@ -330,7 +338,8 @@ describe("GreenPower Test Campaign", ()=>{
                                     amountDebt:         0,
                                     timestampDebt:      0,
                                     amountPrePay:       0,
-                                    amountRepayTaken:   amountTakableFirst
+                                    amountRepayTaken:   amountTakableFirst,
+                                    numInvestTaken:     (600 - 20)
                                   }
 
         assetRepayStatusTarget.amountRepayDue -= amountRepayMonthly.div(2).toNumber()
@@ -374,7 +383,8 @@ describe("GreenPower Test Campaign", ()=>{
                                     amountDebt:         amountRepayMonthly.mul(12-6-3).div(12).toNumber(),
                                     timestampDebt:      timestampNextDue2,
                                     amountPrePay:       0,
-                                    amountRepayTaken:   amountTakableFirst
+                                    amountRepayTaken:   amountTakableFirst,
+                                    numInvestTaken:     (600 - 20)
                                   }
 
         expect(await rwAsset.assetRepayStatus(1)).to.deep.eq(Object.values(assetRepayStatusTarget));

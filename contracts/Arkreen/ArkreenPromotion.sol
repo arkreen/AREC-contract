@@ -26,7 +26,8 @@ contract ArkreenPromotion is OwnableUpgradeable, UUPSUpgradeable {
     uint32 public startTime;
     uint32 public endTime;
 
-    mapping(address => uint256) public amountAKREUsed;     // user -> amount of staking AKRE that has been used              
+    // user -> amount of staking AKRE that has been used, and how many RM/ART have bought               
+    mapping(address => uint256) amountAKREUsed;     
 
     event PromoteBuy(address indexed user, uint256 promoteType, uint256 amount, uint256 count);
     event Deposit(address indexed token, address indexed depositor, uint256 amount);
@@ -73,7 +74,7 @@ contract ArkreenPromotion is OwnableUpgradeable, UUPSUpgradeable {
         require((block.timestamp >= startTime) && (block.timestamp <endTime), "Not during promotion");
 
         (, uint256 userStakes, , , ,)  = stakingPool.getUserStakeStatus(msg.sender);
-        uint256 amountAKREReady = userStakes - amountAKREUsed[msg.sender];
+        uint256 amountAKREReady = userStakes - uint128(amountAKREUsed[msg.sender]);       // Remove the RM/ART count
 
         uint256 countMax;
         uint256 countBuy;
@@ -93,12 +94,12 @@ contract ArkreenPromotion is OwnableUpgradeable, UUPSUpgradeable {
 
         if (typePromotion == PROMOT_RM) {
             countRM += countBuy;
-            amountAKREUsed[msg.sender] += countBuy * amountAKREPerRM ;
+            amountAKREUsed[msg.sender] += countBuy * amountAKREPerRM + (countBuy << 240);
             amountAKREPayment = countBuy * priceRemoteMiner;
             minerContract.RemoteMinerOnboardAuthority(msg.sender, 0, uint8(countBuy));
         } else {
             amountART += countBuy;
-            amountAKREUsed[msg.sender] += countBuy * amountAKREPerART;
+            amountAKREUsed[msg.sender] += countBuy * amountAKREPerART + (countBuy << 224);
             amountAKREPayment = countBuy * priceARTToken;
             TransferHelper.safeTransfer(artToken, msg.sender, countBuy * (10**9) );
         }
@@ -129,19 +130,23 @@ contract ArkreenPromotion is OwnableUpgradeable, UUPSUpgradeable {
       _amountAKREPerART = amountAKREPerART;
       _priceARTToken = priceARTToken;
       _startTime = startTime;
-      _endTime = endTime;       
+      _endTime = endTime;
     }
 
     function getPromotionUserStatus(address user) external view 
         returns ( uint256 userStakes,
                   uint256 stakesUsed,
                   uint256 countRMCanBuy, 
-                  uint256 countARTCanBuy
+                  uint256 countARTCanBuy,
+                  uint256 countRMHaveBought, 
+                  uint256 countARTHaveBought
                 ) {
         (,  userStakes, , , ,)  = stakingPool.getUserStakeStatus(user);
-        stakesUsed = amountAKREUsed[user];
+        stakesUsed = uint128(amountAKREUsed[user]);
         countRMCanBuy = (userStakes - stakesUsed) / priceRemoteMiner;
         countARTCanBuy = (userStakes - stakesUsed) / priceARTToken;
+        countRMHaveBought = uint16(amountAKREUsed[user] >> 240);
+        countARTHaveBought = uint16(amountAKREUsed[user] >> 224);
     }
    
     /**

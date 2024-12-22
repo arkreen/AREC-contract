@@ -226,6 +226,13 @@ describe("GreenPower Test Campaign", ()=>{
         // Check timestampNextDue to be same day in next month 
         let timestampNextDue1 = DateTime.fromMillis(timeOnboarding * 1000).plus({"months": 1}).toSeconds() + 3600 * 24 -1
 
+        const amountToken = (800 - 20) * (assetType.valuePerInvest)
+        await expect(rwAsset.connect(manager).takeInvest(1))
+                .to.emit(usdc, 'Transfer')
+                .withArgs(rwAsset.address, manager.address, amountToken)
+                .to.emit(rwAsset, 'TakeInvest')
+                .withArgs(manager.address, 1, usdc.address, amountToken)
+
         // First month repay                
         await rwAsset.connect(user1).repayMonthly(1, amountRepayMonthly)
 
@@ -281,7 +288,8 @@ describe("GreenPower Test Campaign", ()=>{
                                     amountDebt:         0,
                                     timestampDebt:      0,
                                     amountPrePay:       0,
-                                    amountRepayTaken:   0
+                                    amountRepayTaken:   0,
+                                    numInvestTaken:     800 - 20 
                                   }
 
         assetRepayStatusTarget.amountRepayDue -= amountRepayMonthly.div(2).toNumber()
@@ -496,6 +504,13 @@ describe("GreenPower Test Campaign", ()=>{
 
         // Check timestampNextDue to be same day in next month 
         let timestampNextDue1 = DateTime.fromMillis(timeOnboarding * 1000).plus({"months": 1}).toSeconds() + 3600 * 24 -1
+
+        const amountToken = (800 - 20) * (assetType.valuePerInvest)
+        await expect(rwAsset.connect(manager).takeInvest(1))
+                .to.emit(usdc, 'Transfer')
+                .withArgs(rwAsset.address, manager.address, amountToken)
+                .to.emit(rwAsset, 'TakeInvest')
+                .withArgs(manager.address, 1, usdc.address, amountToken)
 
         // First month repay                
         await rwAsset.connect(user1).repayMonthly(1, amountRepayMonthly)

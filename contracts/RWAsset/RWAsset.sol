@@ -38,6 +38,7 @@ contract RWAsset is
     event OnboardAsset(uint256 assetId);
     event InvestAsset(address indexed user, uint256 assetId, address token, uint256 amount);
     event InvestExit(address indexed user, uint256 investIndex, address tokenInvest, uint256 amountToken);
+    event TakeInvest(address indexed manager, uint256 assetId, address tokenInvest, uint256 amountToken);
     event SetInterestRate(uint8 rateId, uint96 ratePerSecond);
     event ClaimtDeposit(address indexed user, uint256 assetId, uint256 amountDeposit);
 
@@ -384,6 +385,33 @@ contract RWAsset is
 
         emit InvestExit(msg.sender, investIndex, tokenInvest, amountToken);
     }
+
+    /**
+     * @dev Take the asset investment, but keep the clearance fee for clearance
+     * @param assetId the index of the asset investment
+     */
+    function takeInvest(uint32 assetId) external onlyManager {
+
+        AssetDetails storage assetStatuseRef = assetList[assetId];
+        require (assetStatuseRef.status >= AssetStatus.Onboarded, "RWA: Status not allowed");
+
+        AssetType storage assetTypesRef = assetTypes[assetStatuseRef.typeAsset];
+
+        uint16 numQuota = assetRepayStatus[assetId].numInvestTaken + uint8(assetTypesRef.paramsClearance);
+        require(assetStatuseRef.numQuotaTotal > numQuota, "RWA: Low investment");
+
+        numQuota = assetStatuseRef.numQuotaTotal - numQuota;
+        assetRepayStatus[assetId].numInvestTaken += numQuota;
+
+        uint256 amountToken = uint256(numQuota) * uint256(assetTypesRef.valuePerInvest);
+        address tokenInvest = allInvestTokens[assetStatuseRef.tokenId].tokenAddress;
+
+        address receiver = fundReceiver;
+        if (receiver == address(0)) receiver = msg.sender;
+        TransferHelper.safeTransfer(tokenInvest, receiver, amountToken);
+
+        emit TakeInvest(msg.sender, assetId, tokenInvest, amountToken);
+    }
    
     /**
      * @dev Exit the asset investment before onboarding
@@ -394,18 +422,8 @@ contract RWAsset is
         uint32 assetId,
         uint32 timeToPay
     ) external pure returns (uint256, uint256) {
-
-    //        AssetStatus statusAsset = assetList[assetId].status;
-    //        require (statusAsset == AssetStatus.Onboarded, "RWA: Status not allowed");
-
-    //        assetList[assetId].sumAmountRepaid += 
-
-         
-    
-        // 1704067200: 2024/01/01
       //return (assetId, timeToPay);
     }
-
 
     /**
      * @dev Repay the asset installment monthly

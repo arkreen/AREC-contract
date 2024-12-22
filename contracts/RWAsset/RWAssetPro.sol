@@ -145,7 +145,13 @@ contract RWAssetPro is
     ) external nonReentrant {
 
         AssetDetails storage assetStatuseRef = assetList[assetId];
-        require (msg.sender == assetStatuseRef.assetOwner, "RWA: Not asset owner");
+
+        // Allow assetManager to repay on behalf of the owner to avoid some special cases
+        // Sush as: all investment and repayment not enough payinng for clearance fee,
+        // or the asset owner is not able to repay the due monthly (wallet be hacked)
+        // and the manager agree to help pay for the owner.
+        require ( msg.sender == assetStatuseRef.assetOwner ||
+                  msg.sender == assetManager, "RWA: Not asset owner");   
         require (assetStatuseRef.status == AssetStatus.Onboarded, "RWA: Status not allowed");
 
         uint256 interestRate = checkIfSkipMonth(assetId);
@@ -227,7 +233,17 @@ contract RWAssetPro is
             repayCurrentMonth = assetTypesRef.amountRepayMonthly - assetRepayStatusRef.amountRepayDue;
         }
         
-        uint48 clearanceFee = uint48(assetTypesRef.paramsClearance) * assetTypesRef.valuePerInvest;
+        uint48 clearanceFee = 0;
+        
+        // Check if either Invest not be taken, or invest is not enough for clearance fee
+        if (assetRepayStatus[assetId].numInvestTaken == 0 ) {   
+            uint8 quotaClearance = uint8(assetTypesRef.paramsClearance);          // Mask the high byte
+            if (assetStatuseRef.numQuotaTotal < quotaClearance) {
+                // Use monthly repayment to make up the clearance fee
+                clearanceFee = uint48(quotaClearance - assetStatuseRef.numQuotaTotal) * assetTypesRef.valuePerInvest;
+            }                  
+        }
+
         uint48 deductAmount = assetRepayStatusRef.amountRepayTaken +                // Amount allready taken away the table
                               amountTotalYield +                                    // All amount of invest yield should be kept
                               repayCurrentMonth +                                   // Repay not mature

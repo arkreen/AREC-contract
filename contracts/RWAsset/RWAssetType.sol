@@ -76,6 +76,7 @@ struct RepayDetails {
     uint32          timestampDebt;              // timestamp of the debt starting         
     uint48          amountPrePay;               // the amount of Pre-Pay for next months
     uint48          amountRepayTaken;           // the amount of monthly repayment tha has been taken
+    uint16          numInvestTaken;             // The number of quota of the invest that has been taken
 }
 
 struct ClearanceDetails {

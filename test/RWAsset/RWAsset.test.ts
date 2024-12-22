@@ -356,7 +356,8 @@ describe("GreenPower Test Campaign", ()=>{
           amountDebt:         0,
           timestampDebt:      0,
           amountPrePay:       0,
-          amountRepayTaken:   0
+          amountRepayTaken:   0,
+          numInvestTaken:     0
         }
 
         expect(await rwAsset.assetRepayStatus(1)).to.deep.eq(Object.values(assetRepayStatusTarget));
@@ -563,6 +564,83 @@ describe("GreenPower Test Campaign", ()=>{
 
       })
 
+      it("RWAsset Test: takeInvest", async function () {
+
+        await rwAsset.connect(manager).addNewInvestToken(tokenType, [usdc.address, usdt.address, usdp.address, dai.address])
+        await rwAsset.connect(manager).addNewAssetType(assetType)
+        await rwAsset.connect(user1).depositForAsset(1, 1)
+
+        const deliveryProof = "0x7120dcbcda0d9da55bc291bf4aaee8f691a0dcfbd4ad634017bb6f5686d92d74"     // Just for test
+        await rwAsset.connect(manager).deliverAsset(1, deliveryProof)
+
+        await usdc.transfer(user1.address, 10000 * 1000_000)
+        await usdc.transfer(user2.address, 10000 * 1000_000)
+        await usdc.transfer(user3.address, 10000 * 1000_000)
+
+        await usdc.approve(rwAsset.address, constants.MaxUint256)
+        await usdc.connect(user1).approve(rwAsset.address, constants.MaxUint256)
+        await usdc.connect(user2).approve(rwAsset.address, constants.MaxUint256)
+        await usdc.connect(user3).approve(rwAsset.address, constants.MaxUint256)
+
+        await rwAsset.investAsset(1, 15)
+
+        // Abnormal Test case: Not manager
+        await expect(rwAsset.takeInvest(1))
+                  .to.be.revertedWith("RWA: Not manager")
+
+        // Abnormal Test case: Status not allowed
+        await expect(rwAsset.connect(manager).takeInvest(1))
+                  .to.be.revertedWith("RWA: Status not allowed")
+
+        await rwAsset.connect(manager).onboardAsset(1)
+
+        let lastBlock = await ethers.provider.getBlock('latest')
+        const timeOnboarding = Math.floor(lastBlock.timestamp /(3600*24)) * 3600 * 24
+
+        // Abnormal Test case: Low investment
+        await expect(rwAsset.connect(manager).takeInvest(1))
+                  .to.be.revertedWith("RWA: Low investment")
+
+        await rwAsset.investAsset(1, 160)
+
+        const amountToken = (15 + 160 - 20) * (assetType.valuePerInvest)
+
+        await expect(rwAsset.connect(manager).takeInvest(1))
+                .to.emit(usdc, 'Transfer')
+                .withArgs(rwAsset.address, manager.address, amountToken)
+                .to.emit(rwAsset, 'TakeInvest')
+                .withArgs(manager.address, 1, usdc.address, amountToken)
+
+        await rwAsset.connect(user2).investAsset(1, 350)
+
+        let takeInvestTrx
+        await expect(takeInvestTrx = await rwAsset.connect(manager).takeInvest(1))
+                .to.emit(usdc, 'Transfer')
+                .withArgs(rwAsset.address, manager.address, 350 * (assetType.valuePerInvest) )
+                .to.emit(rwAsset, 'TakeInvest')
+                .withArgs(manager.address, 1, usdc.address, 350 * (assetType.valuePerInvest) )
+
+        const receipt = await takeInvestTrx.wait()
+        console.log("takeInvest Gas fee Usage:",  receipt.gasUsed)                
+
+        // Check timestampNextDue to be same day in next month 
+        let timestampNextDue1 = DateTime.fromMillis(timeOnboarding * 1000).plus({"months": 1}).toSeconds() + 3600 * 24 -1
+
+        let assetRepayStatusTarget =  {
+          monthDueRepay:      1,
+          timestampNextDue:   timestampNextDue1,
+          amountRepayDue:     150_000_000,
+          amountDebt:         0,
+          timestampDebt:      0,
+          amountPrePay:       0,
+          amountRepayTaken:   0,
+          numInvestTaken:     15 + 160 + 350 - 20
+        }
+
+        expect(await rwAsset.assetRepayStatus(1)).to.deep.eq(Object.values(assetRepayStatusTarget));
+
+      })
+
       it("RWAsset Test: repayMonthly", async function () {
 
         await rwAsset.connect(manager).addNewInvestToken(tokenType, [usdc.address, usdt.address, usdp.address, dai.address])
@@ -613,7 +691,8 @@ describe("GreenPower Test Campaign", ()=>{
           amountDebt:         0,
           timestampDebt:      0,
           amountPrePay:       0,
-          amountRepayTaken:   0
+          amountRepayTaken:   0,
+          numInvestTaken:     0
         }
 
         expect(await rwAsset.assetRepayStatus(1)).to.deep.eq(Object.values(assetRepayStatusTarget));
@@ -667,7 +746,8 @@ describe("GreenPower Test Campaign", ()=>{
                                     amountDebt:         0,
                                     timestampDebt:      0,
                                     amountPrePay:       0,
-                                    amountRepayTaken:   0
+                                    amountRepayTaken:   0,
+                                    numInvestTaken:     0
                                   }
 
         assetRepayStatusTarget.amountRepayDue -= amountRepayMonthly.div(2).toNumber()
@@ -704,7 +784,8 @@ describe("GreenPower Test Campaign", ()=>{
           amountDebt:         amountDebtPending.toNumber(),
           timestampDebt:      amountDebtStartTime,  
           amountPrePay:       0,
-          amountRepayTaken:   0
+          amountRepayTaken:   0,
+          numInvestTaken:     0
         }
 
         expect(await rwAsset.assetRepayStatus(1)).to.deep.eq(Object.values(assetRepayStatusTarget));
@@ -762,7 +843,8 @@ describe("GreenPower Test Campaign", ()=>{
           amountDebt:         0,
           timestampDebt:      0,  
           amountPrePay:       amountPrePay.toNumber(),
-          amountRepayTaken:   0
+          amountRepayTaken:   0,
+          numInvestTaken:     0
         }
 
         expect(await rwAsset.assetRepayStatus(1)).to.deep.eq(Object.values(assetRepayStatusTarget));
