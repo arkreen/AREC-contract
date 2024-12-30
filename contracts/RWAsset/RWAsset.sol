@@ -22,14 +22,15 @@ import "../interfaces/IERC20Permit.sol";
 import "./RWAssetType.sol";
 import "./RWAssetStorage.sol";
 
-
 contract RWAsset is 
     OwnableUpgradeable,
     UUPSUpgradeable,
     ReentrancyGuardUpgradeable,
     RWAssetStorage
 {
-   // Events
+    uint32 constant SECONDS_PER_DAY = 3600;                       // 3600 for testnet, 3600 *24 for mainnet
+
+    // Events
     event AddNewInvestToken(uint8 tokenType, address[] tokens);
     event DepositForAsset(address indexed user, uint256 typeAsset, uint256 tokenId, uint256 assetId, uint256 amountDeposit);
     event AddNewAssetType(AssetType newAssetType);
@@ -295,12 +296,15 @@ contract RWAsset is
         AssetType storage assetTypesRef = assetTypes[assetList[assetId].typeAsset];
 
         assetRepayStatus[assetId].monthDueRepay = 1; 
-        assetRepayStatus[assetId].timestampNextDue = uint32(DateTime.addMonthsEnd(block.timestamp, 1));
+        //assetRepayStatus[assetId].timestampNextDue = uint32(DateTime.addMonthsEnd(block.timestamp, 1));
+        assetRepayStatus[assetId].timestampNextDue = uint32((block.timestamp / 3600 * 24) * (3600 * 24) +  3600 * 24 - 1);
+
         assetRepayStatus[assetId].amountRepayDue = assetTypesRef.amountRepayMonthly;
 
         assetClearance[assetId].productToTriggerClearance = uint80(assetTypesRef.amountRepayMonthly) * 
                                                             uint80(assetTypesRef.paramsClearance >> 8) *
-                                                            3600 * 24;
+                                                            SECONDS_PER_DAY;
+
         assetClearance[assetId].amountAKREAvailable = uint96(assetTypesRef.amountDeposit) * (1 ether);
         assetClearance[assetId].timesSlashTop = assetTypesRef.timesSlashTop;
         
@@ -324,7 +328,7 @@ contract RWAsset is
 
         if (statusAsset == AssetStatus.Onboarded) {
             uint32 onboardTimestamp = assetList[assetId].onboardTimestamp;
-            uint32 overdueTime = onboardTimestamp + uint32(assetTypes[typeAsset].maxInvestOverdue) * 3600 * 24;
+            uint32 overdueTime = onboardTimestamp + uint32(assetTypes[typeAsset].maxInvestOverdue) * SECONDS_PER_DAY;
             require (uint32(block.timestamp) < overdueTime, "RWA: Invest overdued");
         }
 
@@ -372,7 +376,7 @@ contract RWAsset is
         AssetStatus statusAsset = assetList[assetId].status;
         require ((statusAsset <= AssetStatus.Delivered) , "RWA: Status not allowed");   // Not allowed after onboarding
 
-        uint32 minStay = investToAbort.timestamp + uint32(assetTypes[typeAsset].minInvestExit) * 3600 * 24;
+        uint32 minStay = investToAbort.timestamp + uint32(assetTypes[typeAsset].minInvestExit) * SECONDS_PER_DAY;
         require (uint32(block.timestamp) >= minStay, "RWA: Need to stay");
 
         investList[investIndex].status = InvestStatus.InvestAborted;

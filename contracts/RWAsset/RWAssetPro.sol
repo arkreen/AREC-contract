@@ -23,7 +23,7 @@ import "./RWAssetType.sol";
 import "./RWAssetStorage.sol";
 
 // Import this file to use console.log
-import "hardhat/console.sol";
+// import "hardhat/console.sol";
 
 contract RWAssetPro is 
     OwnableUpgradeable,
@@ -31,6 +31,8 @@ contract RWAssetPro is
     ReentrancyGuardUpgradeable,
     RWAssetStorage
 {
+    uint32 constant SECONDS_PER_DAY = 3600;                       // 3600 for testnet, 3600 *24 for mainnet
+
     // Events
     event RepayMonthly(address indexed user, uint256 assetId, address tokenInvest, uint256 amountToken, AssetStatus assetStatus);
     event InvestTakeYield(address indexed user, uint256 investIndex, uint256 months, address tokenInvest, uint256 amountToken, uint256 amountAKRE); 
@@ -87,7 +89,9 @@ contract RWAssetPro is
 
                     monthDue += 1;                                                                          // allow skip to the month tenure + 1 
                     assetRepayStatusRef.monthDueRepay = monthDue;
-                    assetRepayStatusRef.timestampNextDue = uint32(DateTime.addMonthsEnd(assetStatuseRef.onboardTimestamp, monthDue));
+//                  assetRepayStatusRef.timestampNextDue = uint32(DateTime.addMonthsEnd(assetStatuseRef.onboardTimestamp, monthDue));
+                    assetRepayStatusRef.timestampNextDue = uint32((assetStatuseRef.onboardTimestamp / 3600 * 24) * (3600 * 24) +
+                                                                    monthDue * 3600 * 24 - 1);
                     assetStatuseRef.amountForInvestWithdraw += assetStatuseRef.numQuotaTotal * assetTypesRef.amountYieldPerInvest;
 
                     if (monthDue <= assetTypesRef.tenure) {
@@ -153,6 +157,10 @@ contract RWAssetPro is
         require ( msg.sender == assetStatuseRef.assetOwner ||
                   msg.sender == assetManager, "RWA: Not asset owner");   
         require (assetStatuseRef.status == AssetStatus.Onboarded, "RWA: Status not allowed");
+
+        ////////// To Simply testing /////////
+        require (amountToken == assetTypes[assetStatuseRef.typeAsset].amountRepayMonthly, "RWA: Wrong repay");
+        //////////////////////////////////////
 
         uint256 interestRate = checkIfSkipMonth(assetId);
 
@@ -363,8 +371,8 @@ contract RWAssetPro is
         require (assetList[assetId].status == AssetStatus.Onboarded, "RWA: Status not allowed");
         require (assetClearanceRef.amountAKREAvailable >= amountAKRE, "RWA: Amount not enough");
 
-        uint256 daysLast = assetClearanceRef.timestampLastSlash / (3600 * 24);
-        uint256 today = block.timestamp / (3600 * 24);
+        uint256 daysLast = assetClearanceRef.timestampLastSlash / SECONDS_PER_DAY;
+        uint256 today = block.timestamp / SECONDS_PER_DAY;
         require (today > daysLast, "RWA: Cannot slash twice");
         
         uint16 timesSlashTop = assetClearanceRef.timesSlashTop;

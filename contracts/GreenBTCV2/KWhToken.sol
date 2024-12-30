@@ -36,6 +36,7 @@ contract KWhToken is
     event KWhMinted(address indexed tokenPayemnt, uint256 amountPayment, uint256 amountKWh);
     event ARTConverted(address indexed user, address indexed tokenPayemnt, uint256 amountPayment, uint256 amountKWh);
     event SwapPriceChanged(address indexed payToken, uint256 newPrice);
+    event RemoveReserve(address indexed reserveToken, uint256 amountRemove);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -130,6 +131,16 @@ contract KWhToken is
         emit ARTConverted(msg.sender, tokenToPay, amountPayment, amountKWh);
         return amountKWh;
     }
+
+    /**
+     * @dev Remove the reserve token of the given amount
+     * @param reserveToken The reserve token address to remove. 
+     * @param amountRemove Amount of the reserve token to remove.
+     */
+    function removeReserve(address reserveToken, uint256 amountRemove) external onlyOwnerOrManager {
+        TransferHelper.safeTransfer(reserveToken, msg.sender, amountRemove);
+        emit RemoveReserve(reserveToken, amountRemove);
+    }  
 
     /// @dev Receive climate badge
     function onERC721Received(

@@ -514,7 +514,7 @@ describe("GreenPower Test Campaign", ()=>{
 
         // First month repay                
         await rwAsset.connect(user1).repayMonthly(1, amountRepayMonthly)
-
+        
         // Abnormal: Status not mature
         await expect(rwAsset.takeYield(indexInvesting1)).to.be.revertedWith("RWA: Not mature")
         await ethers.provider.send("evm_increaseTime", [timestampNextDue1 - timeOnboarding + 100 ])
