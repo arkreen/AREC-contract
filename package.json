@@ -150,6 +150,11 @@
     "deploy:matic_test:RWAssetD": "hardhat --network matic_test deploy --tags RWAssetD",
     "deploy:matic_test:RWAssetProD": "hardhat --network matic_test deploy --tags RWAssetProD",
     "deploy:matic_test:RWAssetU": "hardhat --network matic_test deploy --tags RWAssetU",
+
+    "deploy:matic_test:RwaCSP": "hardhat --network matic_test deploy --tags RwaCSP",
+    "deploy:matic_test:RwaCSPI": "hardhat --network matic_test deploy --tags RwaCSPI",
+    "deploy:matic_test:RwaCSPD": "hardhat --network matic_test deploy --tags RwaCSPD",
+    "deploy:matic_test:RwaCSPU": "hardhat --network matic_test deploy --tags RwaCSPU",
     
     "deploy:matic:gAKRE": "hardhat --network matic deploy --tags gAKRE",
     "deploy:matic:arkReward": "hardhat --network matic deploy --tags arkReward",
@@ -277,6 +282,9 @@
 
     "gnosis_wallet:celo": "hardhat run --network celo ./deploy/gnosis_celo.ts",
     "etherscan:celo": "hardhat --network celo etherscan-verify --api-url https://api.celoscan.io --api-key",
+
+    "deploy:dione_test:WrapToken": "hardhat --network dione_test deploy --tags WrapToken",
+
     "test": "hardhat test",
     "gas": "set REPORT_GAS=true && hardhat test",
     "coverage": "HARDHAT_DEPLOY_FIXTURE=true hardhat coverage",

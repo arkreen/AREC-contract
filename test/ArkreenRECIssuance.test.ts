@@ -520,8 +520,8 @@ describe("ArkreenRECIssuance", () => {
         await expect(arkreenRECIssuanceExt.connect(owner2).cancelRECRequest(tokenID ))
                 .to.be.revertedWith("AREC: Not Owner") 
 
-        await expect(arkreenRECIssuanceExt.connect(owner1).cancelRECRequest(tokenID))
-                .to.be.revertedWith("AREC: Wrong Status") 
+//        await expect(arkreenRECIssuanceExt.connect(owner1).cancelRECRequest(tokenID))
+//                .to.be.revertedWith("AREC: Wrong Status") 
      
       })
 
@@ -1035,7 +1035,7 @@ describe("ArkreenRECIssuance", () => {
     })
 
     it("ArkreenRECIssuance: Withdraw: zero address", async () => {
-      const amount = expandTo18Decimals(100)
+      const amount = expandTo18Decimals(50000)
       await expect(arkreenRECIssuance.connect(owner1).withdraw(AKREToken.address, owner1.address, amount))
               .to.be.revertedWith("Ownable: caller is not the owner")    
 
@@ -1045,7 +1045,7 @@ describe("ArkreenRECIssuance", () => {
     })
 
     it("ArkreenRECIssuance: withdraw: given address", async () => {
-      const amount = expandTo18Decimals(100)
+      const amount = expandTo18Decimals(50000)
       await arkreenRECIssuance.withdraw(AKREToken.address, owner2.address, amount)
       expect(await AKREToken.balanceOf(owner2.address)).to.equal(mintFee)
     })

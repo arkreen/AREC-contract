@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.5.0;
+pragma solidity ^0.8.9;
 pragma experimental ABIEncoderV2;
 
 /// @title Multicall - Aggregate results from multiple read-only function calls
@@ -61,9 +61,6 @@ contract Multicall {
     }
     function getCurrentBlockTimestamp() public view returns (uint256 timestamp) {
         timestamp = block.timestamp;
-    }
-    function getCurrentBlockDifficulty() public view returns (uint256 difficulty) {
-        difficulty = block.difficulty;
     }
     function getCurrentBlockGasLimit() public view returns (uint256 gaslimit) {
         gaslimit = block.gaslimit;

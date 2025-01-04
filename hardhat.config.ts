@@ -66,6 +66,7 @@ function getAPIKey(network: string): string {
 // https://80002.rpc.thirdweb.com       （NOK）
 // https://api-amoy.polygonscan.com/api
 
+
 function getURL(network:string): string {
   let url: string
   let projectID = process.env.PROJECT_ID
@@ -73,6 +74,11 @@ function getURL(network:string): string {
     url = `https://celo-mainnet.infura.io/v3/` + projectID
   } else if(network === 'celo_test') {
     url = `https://celo-alfajores.infura.io/v3/` + projectID
+  } else if(network === 'dione') {
+    // url = `https://odyssey.storyrpc.io`
+    url = `https://node.dioneprotocol.com/ext/bc/D/rpc`
+  } else if(network === 'dione_test') {
+    url = `https://testnode.dioneprotocol.com/ext/bc/D/rpc`
   } else if(network === 'matic') {
     url = `https://polygon-mainnet.infura.io/v3/` + projectID
   } else if(network === 'matic_test') {
@@ -111,6 +117,16 @@ const config: HardhatUserConfig = {
     celo: {
       url: getURL("celo"),
       chainId: 42220,
+      accounts: [process.env.MATIC_PRIVATE_KEY as string, process.env.MATIC_CONTROLLER_KEY as string],
+    },
+    dione_test: {
+      url: getURL("dione_test"),
+      chainId: 131313,
+      accounts: [process.env.MATIC_TESTNET_PRIVATE_KEY as string, process.env.MATIC_TESTNET_CONFIRM_KEY as string],
+    },
+    dione: {
+      url: getURL("dione"),
+      chainId: 153153,
       accounts: [process.env.MATIC_PRIVATE_KEY as string, process.env.MATIC_CONTROLLER_KEY as string],
     },
     matic_test: {
@@ -172,6 +188,18 @@ const config: HardhatUserConfig = {
       },
       {
         version: "0.8.9",
+        settings: {
+          metadata: {
+            bytecodeHash: "none",
+          },
+          optimizer: {
+            enabled: true,
+            runs: 500,
+          },
+        },
+      },
+      {
+        version: "0.8.18",
         settings: {
           metadata: {
             bytecodeHash: "none",
@@ -258,6 +286,22 @@ const config: HardhatUserConfig = {
       kovan:        getAPIKey("kovan"),
     },
     customChains: [
+      {
+        network: "dione",
+        chainId: 153153,
+        urls: {
+          apiURL: "https://odyssey.storyrpc.io",
+          browserURL: "https://odysseyscan.com/"
+        }
+      },
+      {
+        network: "dione_test",
+        chainId: 131313,
+        urls: {
+          apiURL: "https://testnode.dioneprotocol.com/ext/bc/D/rpc",
+          browserURL: "https://testnet.odysseyscan.com"
+        }
+      },
       {
         network: "celo",
         chainId: 42220,

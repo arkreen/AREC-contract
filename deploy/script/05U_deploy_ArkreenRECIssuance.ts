@@ -69,7 +69,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       // const NEW_IMPLEMENTATION = "0x966721720dC732464D2C5594AfF9b0Aa52E1b0e8"  // 3. 2023/04/02: Add "setTokenAKRE"
       // const NEW_IMPLEMENTATION = "0x7a6Bba59bcA319071da51631518228c10e2CFc8d"  // 4. 2024/02/22: Add "setARECImage"
       // const NEW_IMPLEMENTATION = "0xb1A63E6335950Ae6563b309b308c80b910ED4047"  // 5. 2024/03/30: Update "updateRECData" to allow data update while its pending.
-      const NEW_IMPLEMENTATION = "0xE7B61e130856f953199Bc0bEFfaE8E67709d6287"     // 6. 2024/11/29: Update withdraw interface to allow specifying the amount
+      // const NEW_IMPLEMENTATION = "0xE7B61e130856f953199Bc0bEFfaE8E67709d6287"  // 6. 2024/11/29: Update withdraw interface to allow specifying the amount
+      const NEW_IMPLEMENTATION = "0xb5Ec4A75805EDe3ba30E0d3C2e6851479BE72807"     // 7. 2025/01/04: Update to expose the ABI interface in Ext
 
       const [deployer] = await ethers.getSigners();
       const ArkreenRECIssuanceFactory = ArkreenRECIssuance__factory.connect(REC_ISSUANCE_ADDRESS, deployer);
@@ -105,6 +106,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:RECIssueU
 
 // 2024/11/29: Update withdraw interface to allow specifying the amount
+// yarn deploy:matic:RECIssueU
+
+// 2025/01/04: Update to expose the ABI interface in Ext
 // yarn deploy:matic:RECIssueU
 
 func.tags = ["RECIssueU"];

@@ -179,7 +179,7 @@ contract ArkreenRECIssuanceExt is
         require(ownerOf(tokenID) == _msgSender(), "AREC: Not Owner");
 
         // Only pending REC can be cancelled
-        require(allRECData[tokenID].status == uint8(RECStatus.Rejected), "AREC: Wrong Status");  
+        require(allRECData[tokenID].status <= uint8(RECStatus.Rejected), "AREC: Wrong Status");  
 
         allRECData[tokenID].status = uint8(RECStatus.Cancelled);
 

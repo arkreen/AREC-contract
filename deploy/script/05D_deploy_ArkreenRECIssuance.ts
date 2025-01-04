@@ -64,6 +64,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:RECIssueD
 // 0xE7B61e130856f953199Bc0bEFfaE8E67709d6287
 
+// 2025/01/04: Update to expose the ABI interface in Ext.
+// yarn deploy:matic:RECIssueD
+// 0xb5Ec4A75805EDe3ba30E0d3C2e6851479BE72807
+
 func.tags = ["RECIssueD"];
 
 export default func;

@@ -655,8 +655,8 @@ describe("ArkreenRECIssuanceExt", () => {
         await expect(arkreenRECIssuanceExt.connect(owner2).cancelRECRequest(tokenID ))
                 .to.be.revertedWith("AREC: Not Owner") 
 
-        await expect(arkreenRECIssuanceExt.connect(owner1).cancelRECRequest(tokenID))
-                .to.be.revertedWith("AREC: Wrong Status") 
+//        await expect(arkreenRECIssuanceExt.connect(owner1).cancelRECRequest(tokenID))
+//                .to.be.revertedWith("AREC: Wrong Status") 
      
       })
 

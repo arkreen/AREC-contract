@@ -59,6 +59,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:RECIssueExtD
 // 0xDCF44b641cA619b7070C9B8F9C80aF87D221060a
 
+// 2025/01/04: Deployed on Polygon mainnet to support cancelRequest in Pending and Reject state 
+// yarn deploy:matic:RECIssueExtD
+// 0x1639E024db1234a543bF70526974490b428C0E1f
+
 func.tags = ["RECIssueExtD"];
 
 export default func;

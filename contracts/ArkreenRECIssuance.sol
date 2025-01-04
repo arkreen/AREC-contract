@@ -82,8 +82,11 @@ contract ArkreenRECIssuance is
      * @dev Fallback function that delegates calls to the address returned by `_implementation()`. Will run if no other
      * function in the contract matches the call data.
      */
-    
     fallback () external payable virtual {
+      callExt();
+    }
+    
+    function callExt() internal virtual {
        // solhint-disable-next-line no-inline-assembly
         address addrESG = getESGExtAddress();
         assembly {
@@ -513,5 +516,35 @@ contract ArkreenRECIssuance is
     function setARECImage(address newImage) external virtual onlyOwner {
         require(newImage != address(0), "ARB: Zero Address");
         arkreenRECImage = IArkreenRECIssuanceImage(newImage);
-    }       
+    }  
+
+    // solc-ignore-next-line unused-param
+    function mintESGBatch(uint256 idAssetType, uint256 amountREC, Signature calldata permitToPay) external {
+        callExt();
+    }
+
+    // solc-ignore-next-line unused-param
+    function updateRECDataExt(uint256 tokenID, uint32 startTime, uint32 endTime, string calldata cID, 
+                              // solc-ignore-next-line unused-param
+                              string calldata region, string calldata url, string calldata memo) external {
+        callExt();
+    }
+
+    // solc-ignore-next-line unused-param
+    function cancelRECRequest(uint256 tokenID) external {
+        callExt();
+    }
+
+    /*
+    // solc-ignore-next-line unused-param
+    function allARECMintPrice() external view virtual returns (RECMintPrice[] memory) {
+        callExt();
+    }
+  
+
+    // solc-ignore-next-line unused-param
+    function manageMVPAddress(bool op, address[] calldata listMVP) external  {
+        callExt();
+    }
+    */
 }
