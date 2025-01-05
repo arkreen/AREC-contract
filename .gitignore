@@ -13,6 +13,7 @@ yarn-error.log
 /artifacts
 /docs
 /storageLayout
+/flatten
 /deployments
 /.cspell
 /.vscode

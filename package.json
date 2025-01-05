@@ -284,7 +284,8 @@
     "etherscan:celo": "hardhat --network celo etherscan-verify --api-url https://api.celoscan.io --api-key",
 
     "deploy:dione_test:WrapToken": "hardhat --network dione_test deploy --tags WrapToken",
-
+    "deploy:dione:WrapToken": "hardhat --network dione deploy --tags WrapToken",
+    
     "test": "hardhat test",
     "gas": "set REPORT_GAS=true && hardhat test",
     "coverage": "HARDHAT_DEPLOY_FIXTURE=true hardhat coverage",

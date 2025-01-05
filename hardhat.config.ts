@@ -206,7 +206,7 @@ const config: HardhatUserConfig = {
           },
           optimizer: {
             enabled: true,
-            runs: 500,
+            runs: 200,
           },
         },
       },
@@ -290,7 +290,7 @@ const config: HardhatUserConfig = {
         network: "dione",
         chainId: 153153,
         urls: {
-          apiURL: "https://odyssey.storyrpc.io",
+          apiURL: "https://node.dioneprotocol.com/ext/bc/D/rpc",
           browserURL: "https://odysseyscan.com/"
         }
       },
