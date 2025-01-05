@@ -21,14 +21,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     // function initialize(address kWh, address manager)
     if(hre.network.name === 'dione_test')  {
       // 2025/01/05
-      //const name = "Wrapped Arkreen Token"   
-      //const symbol = "wAKRE"
-      name = "Wrapped Arkreen REC Token"   
-      symbol = "wART"
-      bridge = "0x8310f622b6144d909ba6c86d665bf2ad364881a2"         // dione_test
+      name = "Wrapped Arkreen Token"   
+      symbol = "wAKRE"
+      //name = "Wrapped Arkreen REC Token"   
+      //symbol = "wART"
+      bridge = "0x8310f622b6144d909ba6c86d665bf2ad364881a2"           // dione_test
     } else if(hre.network.name === 'dione')  {
-      name = "Wrapped Arkreen REC Token"   
-      symbol = "wART"
+      name = "Wrapped Arkreen Token"   
+      symbol = "wAKRE"
+      // name = "Wrapped Arkreen REC Token"   
+      // symbol = "wART"
       bridge = "0xfce056220CDD2AE23b1C986DCaecF6086673AD53"           // dione mainnet
     } else {
       console.log('Wrong Network')
@@ -47,7 +49,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 };
 
 // 2025/01/05
-// yarn deploy:dione_test:WrapToken         // dione testnet, Wrapped AKRE
+// yarn deploy:dione_test:WrapToken         // dione testnet, Wrapped AKRE (Wrong bridge address)
 // Implementaion:       0xd83C9743B17426C28Cf3FD12966cc9873D009ABF  
 
 // 2025/01/05
@@ -57,6 +59,15 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2025/01/05
 // yarn deploy:dione:WrapToken              // dione mainnet, Wrapped ART
 // Implementaion:       0x953AAc5A0205CCdD6E0b4107ffB0a0ef7155F5bE
+
+// 2025/01/05
+// yarn deploy:dione_test:WrapToken         // dione testnet, Wrapped AKRE
+// Implementaion:       0xeb0a8d25cc479825e6Ca942D516a1534C32dFBe4
+
+// 2025/01/05
+// yarn deploy:dione:WrapToken              // dione mainnet, Wrapped AKRE
+// Implementaion:       0x960C67B8526E6328b30Ed2c2fAeA0355BEB62A83
+
 
 func.tags = ["WrapToken"];
 
