@@ -59,6 +59,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     // 0x00 14 04 04 000a37ab 028e 028f 0a3d 0a3d 0a3d 199a 6148 6149 0700000000000000
 */
 
+/*
     // 2024/08/29: Polygon mainnet
     const domainId = 2
 
@@ -96,6 +97,46 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     console.log("domainInfoBigInt: ", domainInfoBigInt.toHexString(), domainInfo)
     // 0x04140404000a408b00410083028f03d707ae33334ccd71270700000000000000
     // 0x04 14 04 04 000a408b 0041 0083 028f 03d7 07ae 3333 4ccd 7127 0700000000000000
+
+*/
+
+    // 2025/01/06: Polygon testnet
+    const domainId = 3
+
+    const domainInfoJson = {
+                            x: 384,  y: 256, w:  16, h: 16,
+                            boxTop: 172584,
+                            chance1: 66,   chance2: 131, chance3: 655, chance4: 983,
+                            ratio1: 1966,   ratio2: 13107, ratio3: 19661, ratio4: 28967,
+                            decimal: 7
+                          }
+
+    const checkValue =  domainInfoJson.chance1 + domainInfoJson.chance2 + domainInfoJson.chance3 + domainInfoJson.chance4 +
+                        domainInfoJson.ratio1 + domainInfoJson.ratio2 + domainInfoJson.ratio3 + domainInfoJson.ratio4
+    if (checkValue != 65536) {
+      console.log("Wrong ratio!!!!")
+      return
+    }
+
+    const domainInfoBigInt= BigNumber.from(domainInfoJson.x / 16).shl(248)
+                              .add(BigNumber.from(domainInfoJson.y / 16).shl(240))
+                              .add(BigNumber.from(domainInfoJson.w / 16).shl(232))
+                              .add(BigNumber.from(domainInfoJson.h / 16).shl(224))
+                              .add(BigNumber.from(domainInfoJson.boxTop).shl(192))
+                              .add(BigNumber.from(domainInfoJson.chance1 - 1).shl(176))     // !!!!!!!!!!
+                              .add(BigNumber.from(domainInfoJson.chance2).shl(160))
+                              .add(BigNumber.from(domainInfoJson.chance3).shl(144))
+                              .add(BigNumber.from(domainInfoJson.chance4).shl(128))
+                              .add(BigNumber.from(domainInfoJson.ratio1).shl(112))
+                              .add(BigNumber.from(domainInfoJson.ratio2).shl(96))
+                              .add(BigNumber.from(domainInfoJson.ratio3).shl(80))
+                              .add(BigNumber.from(domainInfoJson.ratio4).shl(64))
+                              .add(BigNumber.from(domainInfoJson.decimal).shl(56))
+
+    const domainInfo = utils.defaultAbiCoder.encode(['uint256'], [domainInfoBigInt])
+    console.log("domainInfoBigInt: ", domainInfoBigInt.toHexString(), domainInfo)
+    // 0x181001010002a22800410083028f03d707ae33334ccd71270700000000000000
+    // 0x18 10 01 01 0002a228 0041 0083 028f 03d7 07ae 3333 4ccd 7127 0700000000000000
 
     const registerDomainTx = await GreenBTC2S.registerDomain(domainId, domainInfo, {gasPrice: defaultGasPrice})
     await registerDomainTx.wait()
@@ -215,6 +256,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:GreenBTC2SI
 // call: registerDomain
 
+// 2025/01/06: Call registerDomain (Amoy testnet): 0x6729b2956e8Cf3d863517E4618C3d8722548D5C4
+// yarn deploy:matic_test:GreenBTC2SI
+// call: registerDomain to register domain 3
 
 func.tags = ["GreenBTC2SI"];
 
