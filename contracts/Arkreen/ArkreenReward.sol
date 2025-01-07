@@ -21,6 +21,8 @@ contract ArkreenReward is
     string  private constant _NAME = "Arkreen Reward";
     string  private constant _VERSION = "1";
     bytes32 private constant _REWARD_TYPEHASH = keccak256("Reward(address receiver,uint256 value,uint256 nonce)");
+    bytes32 private constant _REWARD_EXT_TYPEHASH = keccak256("Reward(address owner,address receiver,uint256 value,uint256 nonce)");
+
     
     bytes32                     private _DOMAIN_SEPARATOR;
     address                     public validationAddress;
@@ -29,7 +31,8 @@ contract ArkreenReward is
 
     //events
     event UserWithdraw(address indexed receiver, uint256 indexed value, uint256  indexed nonce);
-
+    event UserWithdrawExt(address indexed owner, address indexed receiver, uint256 value, uint256 nonce);
+   
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
@@ -100,6 +103,30 @@ contract ArkreenReward is
         ERC20Contract.transfer(receiver, value);
 
         emit UserWithdraw(receiver, value, nonce);
+    }
+
+    function withdrawExt(
+        address receiver,
+        uint256 value,
+        uint256 nonce,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) public virtual whenNotPaused{
+
+        address owner = _msgSender();
+        require(validationAddress != address(0) && address(ERC20Contract) != address(0), "address error");
+        require(nonce == nonces[owner], "nonce does not macth");
+
+        bytes32 withdrawHash = keccak256(abi.encode(_REWARD_EXT_TYPEHASH, owner, receiver, value, nonce));
+        bytes32 digest = keccak256(abi.encodePacked('\x19\x01', _DOMAIN_SEPARATOR, withdrawHash));
+        address recoveredAddress = ECDSAUpgradeable.recover(digest, v, r, s);
+
+        require(recoveredAddress == validationAddress, "signer doesn't not match or singature error");
+        nonces[owner] += 1;
+        ERC20Contract.transfer(receiver, value);
+
+        emit UserWithdrawExt(owner, receiver, value, nonce);
     }
 
     function _authorizeUpgrade(address newImplementation)

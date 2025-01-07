@@ -5,7 +5,7 @@ const {ethers, upgrades} =  require("hardhat");
 import { providers, utils, BigNumber, Signer, Wallet} from 'ethers'
 import hre from 'hardhat'
 import { ecsign, fromRpcSig, ecrecover } from 'ethereumjs-util'
-import { getWithdrawDigest } from "../utils/utilities";
+import { getWithdrawDigest, getWithdrawDigestExt } from "../utils/utilities";
 import { constants } from 'ethers'
 
 import {
@@ -164,6 +164,124 @@ describe("Test ArkreenReward Contract ", () => {
 
     })
 
+    describe("withdrawExt test", ()=>{
+
+      it("foundation sign & user withdrawExt", async ()=>{
+          const {AKREToken, ArkreenReward, deployer, foundation, user2} = await loadFixture(deployFixture) 
+          const digest = getWithdrawDigestExt(
+              deployer.address,
+              user2.address,
+              ethers.BigNumber.from(100*10**8),
+              ethers.BigNumber.from(0),
+              ArkreenReward.address,
+              'Arkreen Reward'
+            )
+
+            const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))
+
+            expect(await ArkreenReward.withdrawExt(
+              user2.address, 
+              ethers.BigNumber.from(100*10**8), 
+              ethers.BigNumber.from(0), 
+              v,r,s)).to.be.ok
+
+            expect(await ArkreenReward.nonces(deployer.address)).to.be.equal(1)
+            expect(await AKREToken.balanceOf(user2.address)).to.be.equal(100*10**8)
+            expect(await AKREToken.balanceOf(ArkreenReward.address)).to.be.equal((10000-100)*10**8)           
+      
+      })
+
+/*      
+      it("receiver error should be reverted", async ()=>{
+          const {AKREToken, ArkreenReward, deployer, foundation, user2} = await loadFixture(deployFixture) 
+
+          const digest = getWithdrawDigestExt(
+              deployer.address,
+              user2.address,
+              ethers.BigNumber.from(100*10**8),
+              ethers.BigNumber.from(0),
+              ArkreenReward.address,
+              'Arkreen Reward'
+            )
+
+            const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))
+
+            await expect( ArkreenReward.connect(deployer).withdrawExt(
+              user2.address, 
+              ethers.BigNumber.from(100*10**8), 
+              ethers.BigNumber.from(0), 
+              v,r,s)).to.be.revertedWith('only receiver can withdraw token')        
+
+      })
+*/      
+      it("nonce error should be reverted", async ()=>{
+          const {AKREToken, ArkreenReward, deployer, foundation, user2} = await loadFixture(deployFixture) 
+
+          const digest = getWithdrawDigestExt(
+              deployer.address,
+              user2.address,
+              ethers.BigNumber.from(100*10**8),
+              ethers.BigNumber.from(0),
+              ArkreenReward.address,
+              'Arkreen Reward'
+            )
+
+            const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))
+
+            await expect( ArkreenReward.withdrawExt(
+              user2.address, 
+              ethers.BigNumber.from(100*10**8), 
+              ethers.BigNumber.from(99), 
+              v,r,s)).to.be.revertedWith('nonce does not macth')        
+
+      })
+
+      it("sig error should be reverted", async ()=>{
+          const {AKREToken, ArkreenReward, deployer, foundation, user2} = await loadFixture(deployFixture) 
+
+          const digest = getWithdrawDigestExt(
+              deployer.address,
+              user2.address,
+              ethers.BigNumber.from(100*10**8),
+              ethers.BigNumber.from(1),
+              ArkreenReward.address,
+              'Arkreen RewardX'         // Wrong Name 
+            )
+
+            const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))
+
+            await expect( ArkreenReward.withdrawExt(
+              user2.address, 
+              ethers.BigNumber.from(100*10**8), 
+              ethers.BigNumber.from(0), 
+              v,r,s)).to.be.revertedWith('signer doesn\'t not match or singature error')        
+      })
+
+      it("when paused , user can not withdrawExt", async ()=>{
+          const {AKREToken, ArkreenReward, deployer, foundation, user2} = await loadFixture(deployFixture) 
+
+          await ArkreenReward.connect(deployer).pause()//set pause
+
+          const digest = getWithdrawDigestExt(
+              deployer.address,
+              user2.address,
+              ethers.BigNumber.from(100*10**8),
+              ethers.BigNumber.from(1),
+              ArkreenReward.address,
+              'Arkreen Reward'
+            )
+
+            const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))
+
+            await expect(ArkreenReward.withdrawExt(
+              user2.address, 
+              ethers.BigNumber.from(100*10**8), 
+              ethers.BigNumber.from(0), 
+              v,r,s)).to.be.rejectedWith('Pausable: paused')   
+      })
+  })
+
+
     describe("ownerable test" , ()=>{
 
         it('only owner could call pause',async () => {
@@ -309,4 +427,32 @@ describe("Test ArkreenReward Contract ", () => {
                 .withArgs(user2.address, ethers.BigNumber.from(100*10**8), ethers.BigNumber.from(0))
         })
     })
+
+    describe('event test',async () => {
+
+      it("withdrawExt should emit event",async () => {
+          const {ArkreenReward, deployer, foundation, user2} = await loadFixture(deployFixture)
+
+          const digest = getWithdrawDigestExt(
+              deployer.address,
+              user2.address,
+              ethers.BigNumber.from(100*10**8),
+              ethers.BigNumber.from(0),
+              ArkreenReward.address,
+              'Arkreen Reward'
+            )
+
+            const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))
+
+            await expect(ArkreenReward.withdrawExt(
+                user2.address, 
+                ethers.BigNumber.from(100*10**8), 
+                ethers.BigNumber.from(0), 
+                v,r,s)
+              )
+              .to.emit(ArkreenReward, 'UserWithdrawExt')
+              .withArgs(deployer.address, user2.address, ethers.BigNumber.from(100*10**8), ethers.BigNumber.from(0))
+      })
+  })
+
 })

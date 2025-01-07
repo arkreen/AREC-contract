@@ -59,6 +59,8 @@
     "deploy:matic_test:Notary": "hardhat --network matic_test deploy --tags Notary",
     "deploy:matic_test:RECBadgeD": "hardhat --network matic_test deploy --tags RECBadgeD",
     "deploy:matic_test:arkReward": "hardhat --network matic_test deploy --tags arkReward",
+    "deploy:matic_test:ARewardD": "hardhat --network matic_test deploy --tags ARewardD",
+    "deploy:matic_test:ARewardU": "hardhat --network matic_test deploy --tags ARewardU",
     "deploy:matic_test:RECBadge": "hardhat --network matic_test deploy --tags RECBadge --reset",
     "deploy:matic_test:ABuilder": "hardhat --network matic_test deploy --tags ABuilder",
     "deploy:matic_test:HskBTC": "hardhat --network matic_test deploy --tags HskBTC --reset",

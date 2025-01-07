@@ -38,6 +38,10 @@ const REWARD_TYPEHASH = utils.keccak256(
   utils.toUtf8Bytes('Reward(address receiver,uint256 value,uint256 nonce)')
 )
 
+const REWARD_EXT_TYPEHASH = utils.keccak256(
+  utils.toUtf8Bytes('Reward(address owner,address receiver,uint256 value,uint256 nonce)')
+)
+
 // keccak256("GreenBitCoin(uint256 height,string energyStr,uint256 artCount,string blockTime,address minter,uint8 greenType)");
 // 0xE645798FE54DB29ED50FD7F01A05DE6D1C5A65FAC8902DCFD7427B30FBD87C24
 const GREEN_BTC_TYPEHASH = utils.keccak256(
@@ -1079,6 +1083,35 @@ export function getWithdrawDigest(
           utils.defaultAbiCoder.encode(
             ['bytes32', 'address', 'uint256', 'uint256'],
             [REWARD_TYPEHASH , receiver, value, nonce]
+          )
+        )
+      ]
+    )
+  )
+}
+
+export function getWithdrawDigestExt( 
+  owner: string,
+  receiver: string,
+  value: BigNumber,
+  nonce: BigNumber,
+  contractAddr: string,
+  domainName: string
+): string {
+
+  const DOMAIN_SEPARATOR = getDomainSeparator(domainName, contractAddr)
+
+  return utils.keccak256(
+    utils.solidityPack(
+      ['bytes1', 'bytes1', 'bytes32', 'bytes32'],
+      [
+        '0x19',
+        '0x01',
+        DOMAIN_SEPARATOR,
+        utils.keccak256(
+          utils.defaultAbiCoder.encode(
+            ['bytes32', 'address', 'address', 'uint256', 'uint256'],
+            [REWARD_EXT_TYPEHASH, owner, receiver, value, nonce]
           )
         )
       ]
