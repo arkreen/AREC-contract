@@ -13,7 +13,7 @@ import { config as dotEnvConfig } from "dotenv"
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const [deployer, signer] = await ethers.getSigners();
 
-  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(32_000_000_000) : BigNumber.from(50_000_000_000)
+  const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(32_000_000_000) : BigNumber.from(36_000_000_000)
 
    
   if(hre.network.name === 'matic_test') {
@@ -190,12 +190,27 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     // 0x00140404000a37ab000c00340148028f0a3d24dd3333999b0700000000000000
     // 0x00 14 04 04 000a37ab 000c 0034 0148 028f 0a3d 24dd 3333 999b 0700000000000000
 */
+
+/*
     // 2024/08/29: Polygon mainnet
     const domainId = 2
 
     const domainInfoJson = {
                             x: 64,  y: 320, w:  64, h: 64,
                             boxTop: 671883,
+                            chance1: 66,   chance2: 131, chance3: 655, chance4: 983,
+                            ratio1: 1966,   ratio2: 13107, ratio3: 19661, ratio4: 28967,
+                            decimal: 7
+                          }
+
+*/
+
+    // 2025/01/07: Polygon mainnet
+    const domainId = 3
+
+    const domainInfoJson = {
+                            x: 384,  y: 256, w:  16, h: 16,
+                            boxTop: 172584,
                             chance1: 66,   chance2: 131, chance3: 655, chance4: 983,
                             ratio1: 1966,   ratio2: 13107, ratio3: 19661, ratio4: 28967,
                             decimal: 7
@@ -228,6 +243,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     // 0x04140404000a408b00410083028f03d707ae33334ccd71270700000000000000
     // 0x04 14 04 04 000a408b 0041 0083 028f 03d7 07ae 3333 4ccd 7127 0700000000000000
 
+    // 0x181001010002a22800410083028f03d707ae33334ccd71270700000000000000
+    // 0x18 10 01 01 0002a228 0041 0083 028f 03d7 07ae 3333 4ccd 7127 0700000000000000
+
     const registerDomainTx = await GreenBTC2S.registerDomain(domainId, domainInfo, {gasPrice: defaultGasPrice})
     await registerDomainTx.wait()
 
@@ -258,6 +276,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2025/01/06: Call registerDomain (Amoy testnet): 0x6729b2956e8Cf3d863517E4618C3d8722548D5C4
 // yarn deploy:matic_test:GreenBTC2SI
+// call: registerDomain to register domain 3
+
+// 2025/01/07: Call registerDomain (Ploygon Mainnet): 0x3221F5818A5CF99e09f5BE0E905d8F145935e3E0
+// yarn deploy:matic:GreenBTC2SI
 // call: registerDomain to register domain 3
 
 func.tags = ["GreenBTC2SI"];

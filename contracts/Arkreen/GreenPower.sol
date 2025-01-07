@@ -24,6 +24,9 @@ contract GreenPower is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
     // keccak256("claimReward(uint256 txid,address greener,uint256 rewardAmount,uint256 nonce,uint256 deadline)");
     bytes32 public constant  REWARD_TYPEHASH  = 0x9A6CE8C7C5EDCB1EAA7313523B253F809B5AC0E3EC4A56F23B411D538FE25B11;
 
+    // keccak256("claimRewardExt(uint256 txid,address greener,address receiver,uint256 rewardAmount,uint256 nonce,uint256 deadline)");
+    bytes32 public constant  REWARD_EXT_TYPEHASH  = 0xC7A88F1CA971FF53DAB58C413AF193738A9538AD0C8A3B5DC1CD27D35AF859C9;
+
     uint256 public constant OFFSET_UNIT = 10**5;                    // 0.1 kWh 
 
     struct StakeInfo {
@@ -86,6 +89,7 @@ contract GreenPower is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
     event Stake(address indexed txid, address indexed greener, address plugMiner, uint256 amount, uint256 period, uint256 nonce);
     event Unstake(address indexed txid, address indexed greener, address plugMiner, uint256 amount, uint256 nonce);
     event Reward(address indexed txid, address indexed greener, uint256 amount, uint256 nonce);
+    event ClaimRewardExt(address indexed txid, address indexed greener, address indexed receiver, uint256 amount, uint256 nonce);
     event Deposit(address indexed user, address tokenToPay, uint256 amount, uint256 amountART);
     event Withdraw(address indexed user, uint256 amountART);
     event AutoOffsetChanged(address indexed user, bool ifAuto);
@@ -423,6 +427,33 @@ contract GreenPower is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgra
         TransferHelper.safeTransfer(akreToken, msg.sender, amount);
         emit Reward(txid, msg.sender, amount, nonce);
     }
+
+    function claimRewardExt(
+            address txid,
+            address receiver,
+            uint256 amount,
+            uint256 nonce,
+            uint256 deadline,
+            Sig calldata signature
+        ) external nonReentrant ensure(deadline) {
+
+        uint256 userStakeInfo = stakerInfo[msg.sender];
+        require (nonce == uint32(userStakeInfo >> 32), "Nonce Not Match"); 
+
+        bytes32 offsetHash = keccak256(abi.encode(REWARD_EXT_TYPEHASH, txid, msg.sender, receiver, amount, nonce, deadline));
+        bytes32 digest = keccak256(abi.encodePacked('\x19\x01', _DOMAIN_SEPARATOR, offsetHash));
+        address managerAddress = ECDSAUpgradeable.recover(digest, signature.v, signature.r, signature.s);
+
+        require(managerAddress == manager, "Wrong Signature");
+
+        userOffsetInfo[msg.sender] += (amount << 160);
+        stakerInfo[msg.sender] += (1 << 32);
+        totalReward += uint96(amount);
+
+        TransferHelper.safeTransfer(akreToken, receiver, amount);
+        emit ClaimRewardExt(txid, msg.sender, receiver, amount, nonce);
+    }
+
 
     function getUserInfo(address greener) external view 
         returns (uint256 stakeAmount, uint256 offsetAmount, uint256 rewardAmount, 

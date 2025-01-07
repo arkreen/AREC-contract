@@ -5,8 +5,8 @@ const {ethers, upgrades} =  require("hardhat");
 import hre from 'hardhat'
 import { ecsign, fromRpcSig, ecrecover, zeroAddress } from 'ethereumjs-util'
 import { getGreenPowerStakingDigest, getApprovalDigest, expandTo6Decimals, expandTo18Decimals, randomAddresses, expandTo9Decimals } from '../utils/utilities'
-import { getGreenPowerUnstakingDigest, OffsetAction, OffsetActionAgent, OffsetActionBatch, getGreenPowerOffsetDigest, getGreenPowerRewardDigest } from '../utils/utilities'
-
+import { getGreenPowerUnstakingDigest, OffsetAction, OffsetActionAgent, OffsetActionBatch, getGreenPowerOffsetDigest } from '../utils/utilities'
+import { getGreenPowerRewardDigest, getGreenPowerRewardDigestExt  } from '../utils/utilities'
 
 import { constants, BigNumber, utils} from 'ethers'
 import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
@@ -1274,5 +1274,56 @@ describe("GreenPower Test Campaign", ()=>{
                     .to.be.revertedWith("Wrong Signature")
         
       });
+
+      it("GreenPower claimRewardTxt Test", async function () {
+        // Normal
+        await AKREToken.transfer(user1.address, expandTo18Decimals(100_000_000))
+        await AKREToken.transfer(user2.address, expandTo18Decimals(100_000_000))
+        await AKREToken.transfer(user3.address, expandTo18Decimals(100_000_000))
+
+        await walletStake(user1, expandTo18Decimals(23456))
+
+        const {nonce}  = await greenPower.getUserInfo(user1.address)
+
+        const txid = randomAddresses(1)[0]
+        const amount = expandTo18Decimals(12345)
+  
+        const digest = getGreenPowerRewardDigestExt(
+            'Green Power',
+            greenPower.address,
+            { txid, greener: user1.address, receiver: user2.address, amount, nonce},
+            constants.MaxUint256
+          )
+
+        const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))   
+        const signature: GreenPower.SigStruct = { v, r, s }  
+
+        const balanceBefore = await AKREToken.balanceOf(greenPower.address)
+        const {stakeAmount: stakeAmountA, rewardAmount: rewardAmountA, nonce: nonceA} = await greenPower.getUserInfo(user1.address)
+        const totalReward = await greenPower.totalReward()
+        const balanceAKRE = await AKREToken.balanceOf(user2.address)
+
+        await expect(greenPower.connect(user1).claimRewardExt(txid, user2.address, amount, nonce, constants.MaxUint256, signature))
+                      .to.emit(greenPower, 'ClaimRewardExt')
+                      .withArgs(txid, user1.address, user2.address, amount,  nonce)
+
+        // Check totalStake
+        expect(await greenPower.totalReward()).to.eq(totalReward.add(expandTo18Decimals(12345)))
+
+        const {rewardAmount: rewardAmountB, nonce: nonceB} = await greenPower.getUserInfo(user1.address)
+        expect(nonceB).to.eq(nonceA.add(1))
+        expect(rewardAmountB).to.eq(rewardAmountA.add(expandTo18Decimals(12345)))
+        expect(await AKREToken.balanceOf(user2.address)).to.eq(balanceAKRE.add(expandTo18Decimals(12345)))
+        expect(await AKREToken.balanceOf(greenPower.address)).to.eq(balanceBefore.sub(expandTo18Decimals(12345)))
+
+        // Abnormal
+        await expect(greenPower.connect(user1).claimRewardExt(txid, user2.address, amount, nonce.add(2), constants.MaxUint256, signature))
+                    .to.be.revertedWith("Nonce Not Match")
+
+        await expect(greenPower.connect(user1).claimRewardExt(txid, user2.address, amount, nonce.add(1), constants.MaxUint256, signature))
+                    .to.be.revertedWith("Wrong Signature")
+        
+      });
+
     })
 })

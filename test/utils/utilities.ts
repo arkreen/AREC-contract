@@ -487,6 +487,44 @@ export function getGreenPowerRewardDigest(
   )
 }
 
+export function getGreenPowerRewardDigestExt(
+  contractName: string,
+  contractAddress: string,
+  approve: {
+    txid:       string
+    greener:    string
+    receiver:   string
+    amount:     BigNumber
+    nonce:      BigNumber
+  },
+  deadline:     BigNumber
+): string {
+  const DOMAIN_SEPARATOR = getDomainSeparator(contractName, contractAddress)
+
+  // keccak256("claimRewardExt(uint256 txid,address greener,address receiver,uint256 rewardAmount,uint256 nonce,uint256 deadline)")
+  // 0xC7A88F1CA971FF53DAB58C413AF193738A9538AD0C8A3B5DC1CD27D35AF859C9
+  const STAKE_TYPEHASH = utils.keccak256(
+    utils.toUtf8Bytes('claimRewardExt(uint256 txid,address greener,address receiver,uint256 rewardAmount,uint256 nonce,uint256 deadline)')
+  )
+
+  return utils.keccak256(
+    utils.solidityPack(
+      ['bytes1', 'bytes1', 'bytes32', 'bytes32'],
+      [
+        '0x19',
+        '0x01',
+        DOMAIN_SEPARATOR,
+        utils.keccak256(
+          utils.defaultAbiCoder.encode(
+            ['bytes32', 'address', 'address', 'address', 'uint256', 'uint256', 'uint256'],
+            [STAKE_TYPEHASH, approve.txid, approve.greener, approve.receiver, approve.amount, approve.nonce, deadline]
+          )
+        )
+      ]
+    )
+  )
+}
+
 export function getGreenPowerStakingDigest(
   contractName: string,
   contractAddress: string,

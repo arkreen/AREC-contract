@@ -57,7 +57,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     console.log("arkreenPromotion deployed to %s: ", hre.network.name, rwaAsset.address);
 };
 
-// 2024/12/18
+// 2025/01/04
 // yarn deploy:matic_test:RwaCSP    : Amoy testnet
 // Proxy:                 0xDd0597927E27d5870198Be48C594F7155D3904EB
 // Implementaion:         0x7BC7a7610408fC45d89677598BC3CC292591550d

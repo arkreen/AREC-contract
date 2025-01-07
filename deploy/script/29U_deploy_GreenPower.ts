@@ -29,9 +29,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       // const NEW_IMPLEMENTATION       = "0x3EB5789Ef5EAcC0dD4Bd314A88CBF34E14A23407"  // 2024/08/22: Amoy testnet (Dev Anv): add deposit amount
       // const NEW_IMPLEMENTATION       = "0x6c066d8Df405c5409f9264c56afDc19f355e4ec7"  // 2024/08/22: Amoy testnet (Dev Anv): remove upgrade timestamp
       // const NEW_IMPLEMENTATION       = "0x9AfF9c1EC4EC62ac0463DdEea75A216C5c7Af708"  // 2024/08/23: Amoy testnet (Dev Anv): fix bug in getUserInfo
-      const NEW_IMPLEMENTATION          = "0x54B055F9F398C99064A1276c68962426D7ccE546"  // 2024/09/24: Amoy testnet (Dev Anv): Allow auto-offset within 24 hours even if it is closed.
+      // const NEW_IMPLEMENTATION       = "0x54B055F9F398C99064A1276c68962426D7ccE546"  // 2024/09/24: Amoy testnet (Dev Anv): Allow auto-offset within 24 hours even if it is closed.
+      const NEW_IMPLEMENTATION          = "0x39AEeb209dd31c7Ea30E6aFD42994F75526994E5"  // 2025/01/07: Amoy testnet (Dev Anv): Support withdrawing to diffrent receiver
 
-      console.log("Updating greenPower: ", greenPowerAddress, defaultGasPrice.toString());  
+      console.log("Updating greenPower: ", greenPowerAddress, defaultGasPrice.toString());
 
       const greenPowerFactory = GreenPower__factory.connect(greenPowerAddress, deployer);
       const updateTx = await greenPowerFactory.upgradeTo(NEW_IMPLEMENTATION, {gasPrice: defaultGasPrice})
@@ -136,6 +137,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2024/09/24: upgrade:  Allow auto-offset within 24 hours even if it is closed.
 // yarn deploy:matic:GreenPowerU
 // 0xEaa11898B68b868579c1d6883EcDCD95cD523F3c
+
+// 2025/01/07: upgrade:  Support withdrawing to diffrent receiver
+// yarn deploy:matic_test:GreenPowerU
+// 0x39AEeb209dd31c7Ea30E6aFD42994F75526994E5
 
 func.tags = ["GreenPowerU"];
 

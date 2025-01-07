@@ -5,7 +5,7 @@ const {ethers, upgrades} =  require("hardhat");
 import hre from 'hardhat'
 import { ecsign, } from 'ethereumjs-util'
 import { expandTo18Decimals, randomAddresses } from '../utils/utilities'
-import { OffsetActionBatch, getGreenPowerRewardDigest } from '../utils/utilities'
+import { OffsetActionBatch, getGreenPowerRewardDigest, getGreenPowerRewardDigestExt } from '../utils/utilities'
 
 
 import { constants, BigNumber, utils} from 'ethers'
@@ -126,5 +126,55 @@ describe("RwaCSP Test Campaign", ()=>{
                     .to.be.revertedWith("Wrong Signature")
         
       });
+
+      it("RwaCSP claimRewardExt Test", async function () {
+        // Normal
+        await AKREToken.transfer(user1.address, expandTo18Decimals(100_000_000))
+        await AKREToken.transfer(user2.address, expandTo18Decimals(100_000_000))
+        await AKREToken.transfer(user3.address, expandTo18Decimals(100_000_000))
+        await AKREToken.transfer(rwaCsp.address, expandTo18Decimals(100_000_000))
+
+        const {nonce}  = await rwaCsp.getUserInfo(user1.address)
+
+        const txid = randomAddresses(1)[0]
+        const amount = expandTo18Decimals(12345)
+  
+        const digest = getGreenPowerRewardDigestExt(
+            'RWA CSP',
+            rwaCsp.address,
+            { txid, greener: user1.address, receiver: user2.address, amount, nonce},
+            constants.MaxUint256
+          )
+
+        const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))   
+        const signature: RwaCSP.SigStruct = { v, r, s }
+
+        const balanceBefore = await AKREToken.balanceOf(rwaCsp.address)
+        const {amountClaimed: rewardAmountA, nonce: nonceA} = await rwaCsp.getUserInfo(user1.address)
+        const totalReward = await rwaCsp.totalReward()
+        const balanceAKRE = await AKREToken.balanceOf(user2.address)
+
+        await expect(rwaCsp.connect(user1).claimRewardExt(txid, user2.address, amount, nonce, constants.MaxUint256, signature))
+                      .to.emit(rwaCsp, 'ClaimRewardExt')
+                      .withArgs(txid, user1.address, user2.address, amount,  nonce)
+
+        // Check totalStake
+        expect(await rwaCsp.totalReward()).to.eq(totalReward.add(expandTo18Decimals(12345)))
+
+        const {amountClaimed: rewardAmountB, nonce: nonceB} = await rwaCsp.getUserInfo(user1.address)
+        expect(nonceB).to.eq(nonceA.add(1))
+        expect(rewardAmountB).to.eq(rewardAmountA.add(expandTo18Decimals(12345)))
+        expect(await AKREToken.balanceOf(user2.address)).to.eq(balanceAKRE.add(expandTo18Decimals(12345)))
+        expect(await AKREToken.balanceOf(rwaCsp.address)).to.eq(balanceBefore.sub(expandTo18Decimals(12345)))
+
+        // Abnormal
+        await expect(rwaCsp.connect(user1).claimRewardExt(txid, user2.address, amount, nonce.add(2), constants.MaxUint256, signature))
+                    .to.be.revertedWith("Nonce Not Match")
+
+        await expect(rwaCsp.connect(user1).claimRewardExt(txid, user2.address, amount, nonce.add(1), constants.MaxUint256, signature))
+                    .to.be.revertedWith("Wrong Signature")
+        
+      });
+
     })
 })

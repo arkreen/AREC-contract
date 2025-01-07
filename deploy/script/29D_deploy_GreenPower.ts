@@ -118,6 +118,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic_test:GreenPowerD     : Amoy testnet (Dev Anv): Allow auto-offset within 24 hours even if it is closed.
 // Implementaion:        0x54B055F9F398C99064A1276c68962426D7ccE546
 
+// 2025/01/07
+// yarn deploy:matic_test:GreenPowerD     : Amoy testnet (Dev Anv): Support withdrawing to diffrent receiver
+// Implementaion:        0x39AEeb209dd31c7Ea30E6aFD42994F75526994E5
+
 func.tags = ["GreenPowerD"];
 
 export default func;
