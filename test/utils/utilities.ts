@@ -337,6 +337,48 @@ export function getOnboardingStandardMinerDigest(
   )
 }
 
+export function getGreenBTC2SBuyNodeDigest(
+  contractName: string,
+  contractAddress: string,
+  owner: string,
+  nodeId: BigNumber,
+  percentage: BigNumber,
+  amountEnergy: BigNumber
+): string {
+  const version = "2"
+  const DOMAIN_SEPARATOR = getDomainSeparator(contractName, contractAddress, version)
+
+  // keccak256("buyNode(address owner,uint256 nodeId,uint256 percentage,uint256 amountEnergy)");
+  // 0x47A3904864FF6B34A8BCB4F45B53B6B67C65606D703B12BDE7C0F91117646454;  
+  const BUY_NODE_TYPEHASH = utils.keccak256(
+    utils.toUtf8Bytes('buyNode(address owner,uint256 nodeId,uint256 percentage,uint256 amountEnergy)')
+  )
+ 
+  //47a3904864ff6b34a8bcb4f45b53b6b67c65606d703b12bde7c0f91117646454
+  //00000000000000000000000015d34aaf54267db7d7c367839aaf71a00a2c6a65
+  //0000000000000000000000000000000000000000000000000000000000012abc
+  //0000000000000000000000000000000000000000000000000000000000000014
+  //000000000000000000000000000000000000000000000000000000e8d4a51000
+
+  return utils.keccak256(
+    utils.solidityPack(
+      ['bytes1', 'bytes1', 'bytes32', 'bytes32'],
+      [
+        '0x19',
+        '0x01',
+        DOMAIN_SEPARATOR,
+        utils.keccak256(
+          utils.defaultAbiCoder.encode(
+            ['bytes32', 'address', 'uint24', 'uint8', 'uint64'],
+            [BUY_NODE_TYPEHASH, owner, nodeId, percentage, amountEnergy]
+          )
+        )
+      ]
+    )
+  )
+}
+
+
 export function getGreenBTC2SLuckyDigest(
   contractName: string,
   contractAddress: string,

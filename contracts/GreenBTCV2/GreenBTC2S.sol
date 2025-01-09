@@ -46,7 +46,7 @@ contract GreenBTC2S is
     bytes32 public constant LUCKY_TYPEHASH = 0x6A10D25EB5A7B84EB21D26AF2DB8C23A1FB80647769A40DA523EDDCFFC172A10;  
 
     // keccak256("buyNode(address owner,uint256 nodeId,uint256 percentage,uint256 amountEnergy)");
-    bytes32 public constant BUY_NODE_TYPEHASH = 0x6A10D25EB5A7B84EB21D26AF2DB8C23A1FB80647769A40DA523EDDCFFC172A10;  
+    bytes32 public constant BUY_NODE_TYPEHASH = 0x47A3904864FF6B34A8BCB4F45B53B6B67C65606D703B12BDE7C0F91117646454;  
 
     address public kWhToken;
     address public domainManager;
@@ -248,7 +248,6 @@ contract GreenBTC2S is
 
             uint256 kWhAmountOwner = kWhAmount * nodeInfo[nodeId].percentage / 100;
             IkWhToken(kWhToken).burn(kWhAmountOwner);
-
             IkWhToken(kWhToken).burnFrom(msg.sender, kWhAmount - kWhAmountOwner);
         }
     }

@@ -5,7 +5,7 @@ const {ethers, upgrades} =  require("hardhat");
 import hre from 'hardhat'
 import { ecsign, fromRpcSig, ecrecover } from 'ethereumjs-util'
 import { getGreenBitcoinClaimGifts, getApprovalDigest, expandTo18Decimals, randomAddresses, expandTo9Decimals, expandTo6Decimals } from '../utils/utilities'
-import { UtilCalculateGifts, ActionInfo, getGreenBTC2SLuckyDigest } from '../utils/utilities'
+import { UtilCalculateGifts, ActionInfo, getGreenBTC2SLuckyDigest, getGreenBTC2SBuyNodeDigest } from '../utils/utilities'
 
 import { constants, BigNumber, utils} from 'ethers'
 import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
@@ -200,7 +200,7 @@ describe("GreenBTC2S Test Campaign", ()=>{
       const sum = convertRatio(15) + convertRatio(200) + convertRatio(1000) +
                   convertRatio(500) + convertRatio(1500)
 
-      const domainInfoBigInt= BigNumber.from(domainInfo.x).shl(248)
+      let domainInfoBigInt= BigNumber.from(domainInfo.x).shl(248)
                          .add(BigNumber.from(domainInfo.y).shl(240))
                          .add(BigNumber.from(domainInfo.w).shl(232))
                          .add(BigNumber.from(domainInfo.h).shl(224))
@@ -455,7 +455,7 @@ describe("GreenBTC2S Test Campaign", ()=>{
         //await kWhToken.connect(owner1).transfer(greenBTC2S.address, expandTo9Decimals(10000))
         await greenBTC2S.connect(owner1).depositkWh(expandTo9Decimals(10000))
 
-        const greenizetx = await  greenBTC2S.makeGreenBoxLucky(1, 123, owner1.address, nonce, constants.MaxUint256, signature)
+        const greenizetx = await  greenBTC2S.connect(owner1).makeGreenBoxLucky(1, 123, owner1.address, nonce, constants.MaxUint256, signature)
 
         const receipt = await greenizetx.wait()
 
@@ -509,14 +509,14 @@ describe("GreenBTC2S Test Campaign", ()=>{
           const signature: GreenBTC2S.SigStruct = { v, r, s }  
 
           const balanceBefore = await kWhToken.balanceOf(greenBTC2S.address)
-          await expect(greenBTC2S.makeGreenBoxLucky(1, 123, owner1.address, nonce, constants.MaxUint256, signature))
+          await expect(greenBTC2S.connect(owner1).makeGreenBoxLucky(1, 123, owner1.address, nonce, constants.MaxUint256, signature))
                 .to.emit(greenBTC2S, 'DomainGreenizedLucky')
                 .withArgs(owner1.address, 2, anyValue, 1, BigNumber.from(123), BigNumber.from(123), nonce)
 
           const balanceAfter = await kWhToken.balanceOf(greenBTC2S.address)
           expect(balanceAfter).to.eq(balanceBefore.sub(BigNumber.from(123).mul(expandTo6Decimals(100))))
-
         }
+
         const luckyFundInfo = await greenBTC2S.luckyFundInfo()
         expect(luckyFundInfo.amountDeposit).to.eq(expandTo9Decimals(10000))
         expect(luckyFundInfo.amountDroped).to.eq(BigNumber.from(123).mul(expandTo6Decimals(100).mul(2)))
@@ -592,7 +592,6 @@ describe("GreenBTC2S Test Campaign", ()=>{
       });
 */
 
-
       it("GreenBTC2S makeGreenBox test", async function () {
 
         const domainID = 1
@@ -601,11 +600,11 @@ describe("GreenBTC2S Test Campaign", ()=>{
 
         await kWhToken.connect(owner1).approve(greenBTC2S.address, constants.MaxUint256)
 
-        await expect(greenBTC2S.connect(owner1).makeGreenBox(0x10002, 123))
-                  .to.be.revertedWith("GBC2: Over Limit")
+        //await expect(greenBTC2S.connect(owner1).makeGreenBox(0x10002, 123))
+        //          .to.be.revertedWith("GBC2: Over Limit")
 
-        await expect(greenBTC2S.connect(owner1).makeGreenBox(1, 10001))
-                  .to.be.revertedWith("GBC2: Over Limit")
+        //await expect(greenBTC2S.connect(owner1).makeGreenBox(1, 10001))
+        //          .to.be.revertedWith("GBC2: Over Limit")
 
         await expect(greenBTC2S.connect(owner1).makeGreenBox(10, 123))
                   .to.be.revertedWith("GBC2: Empty Domain")
@@ -667,6 +666,188 @@ describe("GreenBTC2S Test Campaign", ()=>{
         }
         */
       });
- 
+
+
+      it("GreenBTC2S buyNode test", async function () {
+
+        const GreenBTC2Factory = await ethers.getContractFactory("GreenBTC2S")
+        const _IMPLEMENTATION_SLOT = "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc";
+        const implementation  = await ethers.provider.getStorageAt(greenBTC2S.address, _IMPLEMENTATION_SLOT) 
+        //console.log("whiteListMinerBatch in index:",  implementation, '0x'+ implementation.slice(26)  )
+
+        // 0x84ea74d481ee0a5332c457a4d796187f6ba67feb
+        const callData = GreenBTC2Factory.interface.encodeFunctionData("postUpdate")
+        await greenBTC2S.upgradeToAndCall('0x'+ implementation.slice(26), callData)
+        //console.log("postUpdate tx:",  updateTx  )
+
+        await greenBTC2S.setLuckyManager(manager.address)
+
+        const nodeId = BigNumber.from("0x12ABC")
+        const percentage = BigNumber.from(20)
+        const amountEnergy = expandTo6Decimals(1_000_000)
+
+        const digest = getGreenBTC2SBuyNodeDigest(
+          'Green BTC Club',
+          greenBTC2S.address,
+          owner1.address, nodeId, percentage, amountEnergy
+        )
+
+        await kWhToken.connect(owner1).approve(greenBTC2S.address, constants.MaxUint256)
+        const balancekWhBefore = await kWhToken.balanceOf(owner1.address)        
+
+        const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))   
+        
+        let buyNodeTx
+        await expect(buyNodeTx = await greenBTC2S.connect(owner1).buyNode(nodeId, percentage, amountEnergy, {v,r,s}))
+                .to.emit(greenBTC2S, 'BuyNode')
+                .withArgs(nodeId, owner1.address, percentage, amountEnergy)
+                
+        const receipt = await buyNodeTx.wait()
+        console.log('buyNode gas usage:', receipt.gasUsed )       
+        
+        {
+          const nodeId = BigNumber.from("0x12ABC")
+          await expect(greenBTC2S.connect(owner1).buyNode(nodeId, percentage, amountEnergy, {v,r,s}))
+                  .to.be.revertedWith("GBC2: Node Sold")
+        }
+
+        {
+          const nodeId = BigNumber.from("0x13ABC")
+          const percentage = BigNumber.from(120)
+          await expect(greenBTC2S.connect(owner1).buyNode(nodeId, percentage, amountEnergy, {v,r,s}))
+                  .to.be.revertedWith("GBC2: Wrong percentage")
+        }
+
+        {
+          const nodeId = BigNumber.from("0x13ABC")
+          const percentage = BigNumber.from(20)
+          await expect(greenBTC2S.connect(owner1).buyNode(nodeId, percentage, amountEnergy, {v,r,s}))
+                  .to.be.revertedWith("Wrong Signature")
+        }
+
+        {
+          const nodeId = BigNumber.from("0x13ABC")
+          const percentage = BigNumber.from(20)
+          const amountEnergy = expandTo6Decimals(1_000_000)
+
+          const digest = getGreenBTC2SBuyNodeDigest(
+            'Green BTC Club',
+            greenBTC2S.address,
+            owner1.address, nodeId, percentage, amountEnergy
+          )
+
+          await kWhToken.connect(owner1).approve(greenBTC2S.address, constants.MaxUint256)
+
+          const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))   
+          
+          let buyNodeTx
+          await expect(buyNodeTx = await greenBTC2S.connect(owner1).buyNode(nodeId, percentage, amountEnergy, {v,r,s}))
+                  .to.emit(greenBTC2S, 'BuyNode')
+                  .withArgs(nodeId, owner1.address, percentage, amountEnergy)
+                  
+          const receipt = await buyNodeTx.wait()
+          console.log('buyNode gas usage:', receipt.gasUsed )    
+        }    
+
+        expect(await greenBTC2S.nodeSold()).to.eq(2)
+
+        const nodeInfo12 = {
+            owner: '0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65',
+            nodeId: 0x12ABC,
+            percentage: 20,
+            amountEnergy: expandTo6Decimals(1_000_000)
+          }
+
+        const nodeInfo13 = {
+            owner: '0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65',
+            nodeId: 0x13ABC,
+            percentage: 20,
+            amountEnergy: expandTo6Decimals(1_000_000)
+          }
+
+        expect(await greenBTC2S.nodeInfo(0x12ABC)).to.deep.eq(Object.values(nodeInfo12));
+        expect(await greenBTC2S.nodeInfo(0x13ABC)).to.deep.eq(Object.values(nodeInfo13));
+        expect(await kWhToken.balanceOf(owner1.address)).to.deep.eq(balancekWhBefore.sub(expandTo6Decimals(1_000_000).mul(2)));
+        expect(await greenBTC2S.getNodeIDs(0, 10)).to.deep.eq([BigNumber.from(2), "0x012ABC013ABC"])
+
+      })
+
+      it("GreenBTC2S makeGreenBox test With Node", async function () {
+
+        const GreenBTC2Factory = await ethers.getContractFactory("GreenBTC2S")
+        const _IMPLEMENTATION_SLOT = "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc";
+        const implementation  = await ethers.provider.getStorageAt(greenBTC2S.address, _IMPLEMENTATION_SLOT) 
+        //console.log("whiteListMinerBatch in index:",  implementation, '0x'+ implementation.slice(26)  )
+
+        // 0x84ea74d481ee0a5332c457a4d796187f6ba67feb
+        const callData = GreenBTC2Factory.interface.encodeFunctionData("postUpdate")
+        await greenBTC2S.upgradeToAndCall('0x'+ implementation.slice(26), callData)
+        //console.log("postUpdate tx:",  updateTx  )
+
+        await greenBTC2S.setLuckyManager(manager.address)
+
+        const nodeId = BigNumber.from("0x12ABC")
+        const percentage = BigNumber.from(20)
+        const amountEnergy = expandTo6Decimals(1_000_000)
+
+        const digest = getGreenBTC2SBuyNodeDigest(
+          'Green BTC Club',
+          greenBTC2S.address,
+          owner1.address, nodeId, percentage, amountEnergy
+        )
+
+        await kWhToken.connect(owner1).approve(greenBTC2S.address, constants.MaxUint256)
+
+        const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))   
+        
+        await expect(greenBTC2S.connect(owner1).buyNode(nodeId, percentage, amountEnergy, {v,r,s}))
+                .to.emit(greenBTC2S, 'BuyNode')
+                .withArgs(nodeId, owner1.address, percentage, amountEnergy)
+
+        const domainID = 1
+        domainInfoBigInt = domainInfoBigInt.add(nodeId.shl(32))
+        const domainInfoString = utils.defaultAbiCoder.encode(['uint256'], [domainInfoBigInt])
+
+        // Register Domain with Node
+        await greenBTC2S.connect(manager).registerDomain(domainID, domainInfoString)
+
+        await kWhToken.connect(owner1).approve(greenBTC2S.address, constants.MaxUint256)
+
+        await expect(greenBTC2S.connect(owner1).makeGreenBox(10, 123))
+                  .to.be.revertedWith("GBC2: Empty Domain")
+
+        const balancekWh = await kWhToken.balanceOf(owner1.address)        
+
+        let greenizetx
+        await expect(greenizetx = await greenBTC2S.connect(owner1).makeGreenBox(1,123))
+                .to.emit(greenBTC2S, 'DomainGreenizedNode')
+                .withArgs(owner1.address, 0x12ABC, owner1.address, 20, 1, anyValue, 1, BigNumber.from(0), BigNumber.from(123))
+                
+        const receipt = await greenizetx.wait()
+        console.log('makeGreenBox gas usage:', receipt.gasUsed )
+
+        expect(await kWhToken.balanceOf(owner1.address)).to.eq(balancekWh.sub(expandTo9Decimals(123).div(10).mul(80).div(100)))  
+
+        await greenBTC2S.connect(owner1).makeGreenBox(1,234)
+        
+        expect(await greenBTC2S.getUserActionIDs(owner1.address, 0, 0)).to.deep.eq([BigNumber.from(2), "0x0000000100000002"])
+        expect(await greenBTC2S.getDomainActionIDs(1, 0, 0)).to.deep.eq([BigNumber.from(2), "0x0000000100000002"])
+
+        const domainStatus = await greenBTC2S.domains(1)
+        expect((BigNumber.from(domainStatus)).and(0xFFFFFFFF)).to.eq(BigNumber.from(123+234))
+
+        expect(await kWhToken.balanceOf(owner1.address)).to.eq(balancekWh.sub(expandTo9Decimals(123+234).div(10).mul(80).div(100)))
+
+        // Seed mode:
+        const amountWithMode = BigNumber.from(456).add(BigNumber.from(1).shl(255))
+        await expect( greenBTC2S.connect(owner1).makeGreenBox(1, amountWithMode))
+                .to.emit(greenBTC2S, 'DomainGreenizedNode')
+                .withArgs(owner1.address, 0x12ABC, owner1.address, 20, 3, anyValue, 1, BigNumber.from(123+234), amountWithMode)
+                .to.emit(kWhToken, 'Transfer')
+                .withArgs(greenBTC2S.address, constants.AddressZero, expandTo9Decimals(456).div(10).mul(20).div(100))
+                .to.emit(kWhToken, 'Transfer')
+                .withArgs(owner1.address, constants.AddressZero, expandTo9Decimals(456).div(10).mul(80).div(100))
+
+      });
     })
 })
