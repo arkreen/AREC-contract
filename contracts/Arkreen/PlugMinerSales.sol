@@ -13,6 +13,9 @@ contract PlugMinerSales is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardU
     // keccak256("ActionPlugMiner(address txid,(address owner,address tokenPay,uint256 amountPay,address tokenGet,uint256 amountGet,bytes32 actionType,uint256 action),uint256 nonce,uint256 deadline)");
     bytes32 public constant  ACTION_PLUG = 0x64A18406540DF9EECF4B948EEAA4A0A8B9F9FB7421B7756B9E38A22656D64CEF;
 
+    // keccak256("ActionCspMiner(address txid,(address owner,address tokenPay,uint256 amountPay,address tokenGet,uint256 amountGet,bytes32 actionType,uint256 action),uint256 nonce,uint256 deadline)");
+    bytes32 public constant  ACTION_CSP = 0x71DA2AA7B96FEC98E3D7F21F1A93BF6C84209CCACCC3991C9A403EA7D0D0E652;
+
     struct ActionInfo {
         address owner; 	
         address tokenPay; 	
@@ -47,6 +50,9 @@ contract PlugMinerSales is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardU
 
     // Mapping from user address to user's nonce
     mapping(address => uint256) public nonces; 
+
+    // Quantity of CSP miner sold
+    uint32 internal quantityCspSold;
     
     modifier ensure(uint256 deadline) {
         require(block.timestamp <= deadline, "Deadline Expired!");
@@ -54,6 +60,7 @@ contract PlugMinerSales is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardU
     }
 
     event ActionPlugMiner(address indexed txid, address indexed user, bytes32 actionType, uint256 action, uint256 number);
+    event ActionCspMiner(address indexed txid, address indexed user, bytes32 actionType, uint256 action, uint256 number);
     event Deposit(address indexed token, uint256 amount);
     event Remove(address indexed token, uint256 amount);
     event Withdraw(address indexed token, uint256 amount);
@@ -149,6 +156,7 @@ contract PlugMinerSales is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardU
         } else if (action == 2) {
             uint256 idPlug = actionData;
             uint256 counter = number;
+            require(number <= 4, "Too much refund");
             while (counter > 0) {
                 uint32 tokenId = uint32(idPlug);
                 require (tokenId != 0 , "Wrong ID");
@@ -163,6 +171,75 @@ contract PlugMinerSales is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardU
         }
 
         emit ActionPlugMiner(txid, actionInfo.owner, actionInfo.actionType, action, number);
+    }
+
+    function actionCspMiner(address txid, ActionInfo calldata actionInfo, uint256 nonce, uint256 deadline, Sig calldata signature)
+            payable external nonReentrant ensure(deadline) {
+        {
+            bytes32 offsetHash = keccak256(abi.encode(ACTION_CSP, txid, actionInfo, nonce, deadline));
+            bytes32 digest = keccak256(abi.encodePacked('\x19\x01', _DOMAIN_SEPARATOR, offsetHash));
+            address managerAddress = ECDSAUpgradeable.recover(digest, signature.v, signature.r, signature.s);
+
+            require(managerAddress == manager, "Wrong Signature");
+        }
+
+        require (nonces[msg.sender] == nonce, "Wrong Nonce");
+        require (actionInfo.owner == msg.sender, "Wrong Sender");         // Control temporarily in this way
+
+        nonces[msg.sender] += 1;
+        if (actionInfo.tokenPay != address(0)) {
+            if (actionInfo.tokenPay == nativeToken) {
+                require (actionInfo.amountPay == msg.value, "Pay low!");
+            } else {
+                TransferHelper.safeTransferFrom(actionInfo.tokenPay, msg.sender, address(this), actionInfo.amountPay);
+            }
+        }
+
+        receiveInfo[actionInfo.tokenPay] += (actionInfo.amountPay << 128) + actionInfo.amountPay;   // add two amounts
+
+        if (actionInfo.tokenGet != address(0)) {
+            if (actionInfo.tokenGet == nativeToken) {
+                TransferHelper.safeTransferETH(msg.sender, actionInfo.amountGet);
+            }
+            else {
+                TransferHelper.safeTransfer(actionInfo.tokenGet, msg.sender, actionInfo.amountGet);
+            }
+        }
+
+        sendInfo[actionInfo.tokenGet] += actionInfo.amountGet;
+
+        uint256 actionData = actionInfo.action;
+        uint256 action = (actionData >> 248);                     // get the action type
+        uint256 number = uint256((uint8)(actionData >> 240));     // get the NFT number
+        if (number == 0) number =1;
+
+        if (action == 1) {
+            uint256 tokenId = totalSupply() + 1;
+            uint256 counter = number;
+            while (counter > 0) {
+                _safeMint(actionInfo.owner, tokenId);
+                tokenId += 1;
+                counter -= 1;
+            }
+            quantityCspSold += uint32(number);
+        } else if (action == 2) {
+            uint256 idPlug = actionData;
+            uint256 counter = number;
+            require(number <= 4, "Too much refund");
+            while (counter > 0) {
+                uint32 tokenId = uint32(idPlug);
+                require (tokenId != 0 , "Wrong ID");
+                require(msg.sender == ownerOf(tokenId), "Not Owner");
+                require (statusPlugMiner[tokenId] == 0 , "Pay back not allowed" );
+                statusPlugMiner[tokenId] = 2;
+                idPlug = (idPlug >> 32);
+                counter -= 1;
+            }
+        } else {
+          revert("Wrong Action!");
+        }
+
+        emit ActionCspMiner(txid, actionInfo.owner, actionInfo.actionType, action, number);
     }
 
     /**
@@ -217,4 +294,9 @@ contract PlugMinerSales is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardU
         totalDelivery = uint256(uint128(depositInfo));
     }
 
+    function getSalesQuantity(uint256 minerType) external view returns (uint256 quantity) {
+        if(minerType == 0) return totalSupply() - quantityCspSold;      // Plug Miner Sold quantity
+        if(minerType == 1) return quantityCspSold;                      // Csp Miner Sold quantity     
+        return 0;
+    }
 }

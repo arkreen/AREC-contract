@@ -127,6 +127,25 @@ contract AKREVesting is ConfirmedOwner, ReentrancyGuard {
         emit Released(beneficiary, amount);
     }
 
+    /// @notice Release all vested amount of tokens till current time
+    /// @param beneficiary address of the beneficiary to whom vested tokens are transferred
+    function releaseAll(address beneficiary) external nonReentrant
+            onlyIfVestingScheduleNotRevoked(beneficiary)
+    {
+        require(msg.sender == beneficiary || msg.sender == owner(), 
+                "Only beneficiary and owner can release vested tokens");
+
+        VestingSchedule storage vestingSchedule = vestingSchedules[beneficiary];
+        uint256 releasableAmount = _computeReleasableAmount(vestingSchedule);
+
+        vestingSchedule.released += releasableAmount;
+        vestingSchedulesTotalAmount -= releasableAmount;
+
+        _token.safeTransfer(beneficiary, releasableAmount);
+
+        emit Released(beneficiary, releasableAmount);
+    }
+
     /// @notice Withdraw the specified amount if possible
     /// @param amount the amount to withdraw
     function withdraw(uint256 amount) external onlyOwner nonReentrant {

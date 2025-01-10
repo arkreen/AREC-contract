@@ -5,7 +5,7 @@ const {ethers, upgrades} =  require("hardhat");
 import hre from 'hardhat'
 import { ecsign, fromRpcSig, ecrecover, zeroAddress } from 'ethereumjs-util'
 import { getApprovalDigest, expandTo18Decimals, randomAddresses, expandTo9Decimals } from '../utils/utilities'
-import { PlugActionInfo, OffsetActionBatch, getPlugActionInfoHash } from '../utils/utilities'
+import { PlugActionInfo, OffsetActionBatch, getPlugActionInfoHash, getCspActionInfoHash } from '../utils/utilities'
 
 import { constants, BigNumber, utils} from 'ethers'
 
@@ -684,5 +684,471 @@ describe("GreenPower Test Campaign", ()=>{
                   .to.be.revertedWith("Not Owner")
         }
       })
+
+      it("plugMinerSales actionCspMiner Test: Basic Mint and abnormal", async function () {
+        // Normal
+        let plugActionInfo: PlugActionInfo = {
+          owner:          user1.address,
+          tokenPay:       AKREToken.address,              // Used as USDC
+          amountPay:      expandTo18Decimals(99),
+          tokenGet:       arkreenRECToken.address,
+          amountGet:      expandTo9Decimals(1),
+          actionType:     utils.hexlify(utils.toUtf8Bytes("Buy in 99")).padEnd(66, '0'),
+          action:         BigNumber.from(1).shl(248)
+        }
+
+        let txid = randomAddresses(1)[0]
+        let nonce = BigNumber.from(0)
+
+        const digest = getCspActionInfoHash(
+            'Plug Miner Action',
+            plugMinerSales.address,
+            txid,
+            plugActionInfo,
+            nonce,
+            constants.MaxUint256
+        )
+
+        await arkreenRECToken.connect(owner1).approve(plugMinerSales.address, constants.MaxUint256)
+        await plugMinerSales.connect(owner1).depositToken(arkreenRECToken.address, expandTo9Decimals(10000))
+
+        await AKREToken.transfer(user1.address, expandTo18Decimals(1_000_000))
+
+        await AKREToken.connect(user1).approve(plugMinerSales.address, constants.MaxUint256)
+        await arkreenRECToken.connect(user1).approve(plugMinerSales.address, constants.MaxUint256)
+        
+        const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))   
+        const signature: PlugMinerSales.SigStruct = { v, r, s }  
+
+        const balanceAKREBeore = await AKREToken.balanceOf(plugMinerSales.address)
+        const balanceARTBeore = await arkreenRECToken.balanceOf(plugMinerSales.address)
+
+        await expect(plugMinerSales.connect(user1).actionCspMiner(txid, plugActionInfo, nonce, constants.MaxUint256, signature))
+                .to.emit(AKREToken, 'Transfer')
+                .withArgs(user1.address, plugMinerSales.address, expandTo18Decimals(99))    
+                .to.emit(arkreenRECToken, 'Transfer')
+                .withArgs(plugMinerSales.address, user1.address, expandTo9Decimals(1))
+                .to.emit(plugMinerSales, 'Transfer')
+                .withArgs(zeroAddress(), user1.address, 1)    
+                .to.emit(plugMinerSales, 'ActionCspMiner')
+                .withArgs(txid, plugActionInfo.owner, plugActionInfo.actionType, 1, 1)  
+                
+        expect(await plugMinerSales.getIncomeInfo(AKREToken.address)).to.deep.eq([expandTo18Decimals(99), expandTo18Decimals(99)])
+        expect(await plugMinerSales.getDepositInfo(arkreenRECToken.address)).to.deep.eq([expandTo9Decimals(10000), expandTo9Decimals(1)])
+                
+        expect(await AKREToken.balanceOf(plugMinerSales.address)).to.eq(balanceAKREBeore.add(expandTo18Decimals(99)))
+        expect(await arkreenRECToken.balanceOf(plugMinerSales.address)).to.eq(balanceARTBeore.sub(expandTo9Decimals(1)))
+        expect(await plugMinerSales.balanceOf(user1.address)).to.eq(1)
+
+        // Abnormal test 
+        nonce = BigNumber.from(1)
+        {               
+          await expect(plugMinerSales.connect(user1).actionCspMiner(txid, plugActionInfo, nonce, constants.MaxUint256, signature))
+                .to.be.revertedWith("Wrong Signature")
+        }
+        
+        {        
+          let txid = randomAddresses(1)[0]
+          nonce = BigNumber.from(2)
+          const digest = getCspActionInfoHash(
+                  'Plug Miner Action',
+                  plugMinerSales.address,
+                  txid,
+                  plugActionInfo,
+                  nonce,
+                  constants.MaxUint256
+              )
+      
+          const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))   
+          const signature: PlugMinerSales.SigStruct = { v, r, s }  
+          await expect(plugMinerSales.connect(user1).actionCspMiner(txid, plugActionInfo, nonce, constants.MaxUint256, signature))
+                .to.be.revertedWith("Wrong Nonce")
+        }
+        {
+          let txid = randomAddresses(1)[0]
+          nonce = BigNumber.from(1)
+          plugActionInfo.owner = user2.address
+          const digest = getCspActionInfoHash(
+                  'Plug Miner Action',
+                  plugMinerSales.address,
+                  txid,
+                  plugActionInfo,
+                  nonce,
+                  constants.MaxUint256
+              )
+          
+          const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))   
+          const signature: PlugMinerSales.SigStruct = { v, r, s }  
+    
+          await expect(plugMinerSales.connect(user1).actionCspMiner(txid, plugActionInfo, nonce, constants.MaxUint256, signature))
+                .to.be.revertedWith("Wrong Sender")
+        }
+        {
+          let txid = randomAddresses(1)[0]
+          nonce = BigNumber.from(1)
+          plugActionInfo.owner = user1.address
+          plugActionInfo.action =  BigNumber.from(3).shl(248)
+          const digest = getCspActionInfoHash(
+                  'Plug Miner Action',
+                  plugMinerSales.address,
+                  txid,
+                  plugActionInfo,
+                  nonce,
+                  constants.MaxUint256
+              )
+          const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))   
+          const signature: PlugMinerSales.SigStruct = { v, r, s }  
+    
+          await expect(plugMinerSales.connect(user1).actionCspMiner(txid, plugActionInfo, nonce, constants.MaxUint256, signature))
+                .to.be.revertedWith("Wrong Action!")
+          
+        }
+
+      })
+
+      it("plugMinerSales actionCspMiner Test: Multiple Mint", async function () {
+        // Normal
+        let plugActionInfo: PlugActionInfo = {
+          owner:          user1.address,
+          tokenPay:       AKREToken.address,              // Used as USDC
+          amountPay:      expandTo18Decimals(99).mul(4),
+          tokenGet:       arkreenRECToken.address,
+          amountGet:      expandTo9Decimals(1).mul(4),
+          actionType:     utils.hexlify(utils.toUtf8Bytes("Buy in 99")).padEnd(66, '0'),
+          action:         BigNumber.from(1).shl(248).add(BigNumber.from(4).shl(240))
+        }
+
+        let txid = randomAddresses(1)[0]
+        let nonce = BigNumber.from(0)
+
+        const digest = getCspActionInfoHash(
+            'Plug Miner Action',
+            plugMinerSales.address,
+            txid,
+            plugActionInfo,
+            nonce,
+            constants.MaxUint256
+        )
+
+        await arkreenRECToken.connect(owner1).approve(plugMinerSales.address, constants.MaxUint256)
+        await plugMinerSales.connect(owner1).depositToken(arkreenRECToken.address, expandTo9Decimals(10000))
+
+        await AKREToken.transfer(user1.address, expandTo18Decimals(1_000_000))
+
+        await AKREToken.connect(user1).approve(plugMinerSales.address, constants.MaxUint256)
+        await arkreenRECToken.connect(user1).approve(plugMinerSales.address, constants.MaxUint256)
+        
+        const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))   
+        const signature: PlugMinerSales.SigStruct = { v, r, s }  
+
+        const balanceAKREBeore = await AKREToken.balanceOf(plugMinerSales.address)
+        const balanceARTBeore = await arkreenRECToken.balanceOf(plugMinerSales.address)
+
+        await expect(plugMinerSales.connect(user1).actionCspMiner(txid, plugActionInfo, nonce, constants.MaxUint256, signature))
+                .to.emit(AKREToken, 'Transfer')
+                .withArgs(user1.address, plugMinerSales.address, expandTo18Decimals(99).mul(4))    
+                .to.emit(arkreenRECToken, 'Transfer')
+                .withArgs(plugMinerSales.address, user1.address, expandTo9Decimals(1).mul(4))    
+                .to.emit(plugMinerSales, 'Transfer')
+                .withArgs(zeroAddress(), user1.address, 1)    
+                .to.emit(plugMinerSales, 'Transfer')
+                .withArgs(zeroAddress(), user1.address, 2)    
+                .to.emit(plugMinerSales, 'Transfer')
+                .withArgs(zeroAddress(), user1.address, 3)    
+                .to.emit(plugMinerSales, 'Transfer')
+                .withArgs(zeroAddress(), user1.address, 4)    
+                .to.emit(plugMinerSales, 'ActionCspMiner')
+                .withArgs(txid, plugActionInfo.owner, plugActionInfo.actionType, 1, 4)   
+
+        expect(await plugMinerSales.getIncomeInfo(AKREToken.address)).to.deep.eq([expandTo18Decimals(99).mul(4), expandTo18Decimals(99).mul(4)])
+        expect(await plugMinerSales.getDepositInfo(arkreenRECToken.address)).to.deep.eq([expandTo9Decimals(10000), expandTo9Decimals(4)])
+                
+        expect(await AKREToken.balanceOf(plugMinerSales.address)).to.eq(balanceAKREBeore.add(expandTo18Decimals(99).mul(4)))
+        expect(await arkreenRECToken.balanceOf(plugMinerSales.address)).to.eq(balanceARTBeore.sub(expandTo9Decimals(1).mul(4)))
+        expect(await plugMinerSales.balanceOf(user1.address)).to.eq(4)
+        expect(await plugMinerSales.totalSupply()).to.eq(4)
+
+        // test withdraw
+        await expect(plugMinerSales.connect(user1).withdraw(AKREToken.address, expandTo18Decimals(99).mul(4)))
+                .to.be.revertedWith("Ownable: caller is not the owner")
+
+        await expect(plugMinerSales.withdraw(AKREToken.address, expandTo18Decimals(100).mul(4)))
+                .to.be.revertedWith("Withdraw More")
+
+        const balanceBefore = await AKREToken.balanceOf(fund_receiver.address)
+
+        await plugMinerSales.withdraw(AKREToken.address, expandTo18Decimals(99).mul(4))
+        expect(await plugMinerSales.getIncomeInfo(AKREToken.address)).to.deep.eq([expandTo18Decimals(99).mul(4), expandTo18Decimals(0)])
+        expect(await AKREToken.balanceOf(fund_receiver.address)).to.eq(balanceBefore.add(expandTo18Decimals(99).mul(4)))
+
+      })
+    
+      it("plugMinerSales actionCspMiner Test: Multiple Mint with native Token ", async function () {
+        // Normal
+        let plugActionInfo: PlugActionInfo = {
+          owner:          user1.address,
+          tokenPay:       tokenA.address,              // Used as USDC
+          amountPay:      expandTo18Decimals(99).mul(4),
+          tokenGet:       arkreenRECToken.address,
+          amountGet:      expandTo9Decimals(1).mul(4),
+          actionType:     utils.hexlify(utils.toUtf8Bytes("Buy in 99")).padEnd(66, '0'),
+          action:         BigNumber.from(1).shl(248).add(BigNumber.from(4).shl(240))
+        }
+
+        let txid = randomAddresses(1)[0]
+        let nonce = BigNumber.from(0)
+
+        const digest = getCspActionInfoHash(
+            'Plug Miner Action',
+            plugMinerSales.address,
+            txid,
+            plugActionInfo,
+            nonce,
+            constants.MaxUint256
+        )
+
+        await arkreenRECToken.connect(owner1).approve(plugMinerSales.address, constants.MaxUint256)
+        await plugMinerSales.connect(owner1).depositToken(arkreenRECToken.address, expandTo9Decimals(10000))
+        await AKREToken.transfer(user1.address, expandTo18Decimals(1_000_000))
+
+        await AKREToken.connect(user1).approve(plugMinerSales.address, constants.MaxUint256)
+        await arkreenRECToken.connect(user1).approve(plugMinerSales.address, constants.MaxUint256)
+        
+        const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))   
+        const signature: PlugMinerSales.SigStruct = { v, r, s }  
+
+        const balanceMATICBefore = await ethers.provider.getBalance(plugMinerSales.address)
+        const balanceARTBeore = await arkreenRECToken.balanceOf(plugMinerSales.address)
+
+        await expect(plugMinerSales.connect(user1).actionCspMiner(txid, plugActionInfo, nonce, constants.MaxUint256, signature, {value: expandTo18Decimals(99)}))
+                .to.be.revertedWith("Pay low!")
+
+        await expect(plugMinerSales.connect(user1).actionCspMiner(txid, plugActionInfo, nonce, constants.MaxUint256, signature, {value: expandTo18Decimals(99).mul(4)}))
+                .to.emit(arkreenRECToken, 'Transfer')
+                .withArgs(plugMinerSales.address, user1.address, expandTo9Decimals(1).mul(4))    
+                .to.emit(plugMinerSales, 'Transfer')
+                .withArgs(zeroAddress(), user1.address, 1)    
+                .to.emit(plugMinerSales, 'Transfer')
+                .withArgs(zeroAddress(), user1.address, 2)    
+                .to.emit(plugMinerSales, 'Transfer')
+                .withArgs(zeroAddress(), user1.address, 3)    
+                .to.emit(plugMinerSales, 'Transfer')
+                .withArgs(zeroAddress(), user1.address, 4)    
+                .to.emit(plugMinerSales, 'ActionCspMiner')
+                .withArgs(txid, plugActionInfo.owner, plugActionInfo.actionType, 1, 4)   
+                
+        expect(await plugMinerSales.getIncomeInfo(tokenA.address)).to.deep.eq([expandTo18Decimals(99).mul(4), expandTo18Decimals(99).mul(4)])
+        expect(await plugMinerSales.getDepositInfo(arkreenRECToken.address)).to.deep.eq([expandTo9Decimals(10000), expandTo9Decimals(4)])
+
+        expect(await ethers.provider.getBalance(plugMinerSales.address)).to.eq(balanceMATICBefore.add(expandTo18Decimals(99).mul(4)))
+        expect(await arkreenRECToken.balanceOf(plugMinerSales.address)).to.eq(balanceARTBeore.sub(expandTo9Decimals(1).mul(4)))
+        expect(await plugMinerSales.balanceOf(user1.address)).to.eq(4)
+        expect(await plugMinerSales.totalSupply()).to.eq(4)
+
+        // test withdraw
+        await expect(plugMinerSales.connect(user1).withdraw(tokenA.address, expandTo18Decimals(99).mul(4)))
+                .to.be.revertedWith("Ownable: caller is not the owner")
+
+        await expect(plugMinerSales.withdraw(tokenA.address, expandTo18Decimals(100).mul(4)))
+                .to.be.revertedWith("Withdraw More")
+
+        const balanceBefore = await ethers.provider.getBalance(fund_receiver.address)
+
+        await plugMinerSales.withdraw(tokenA.address, expandTo18Decimals(99).mul(4))
+        expect(await plugMinerSales.getIncomeInfo(tokenA.address)).to.deep.eq([expandTo18Decimals(99).mul(4), expandTo18Decimals(0)])
+        expect(await ethers.provider.getBalance(fund_receiver.address)).to.eq(balanceBefore.add(expandTo18Decimals(99).mul(4)))
+
+      })
+
+      it("plugMinerSales actionPlugMiner Test: Refund 2 Miner", async function () {
+        // Prepare 4 miners
+        {
+          let plugActionInfo: PlugActionInfo = {
+            owner:          user1.address,
+            tokenPay:       AKREToken.address,              // Used as USDC
+            amountPay:      expandTo18Decimals(99).mul(4),
+            tokenGet:       arkreenRECToken.address,
+            amountGet:      expandTo9Decimals(1).mul(4),
+            actionType:     utils.hexlify(utils.toUtf8Bytes("Buy in 99")).padEnd(66, '0'),
+            action:         BigNumber.from(1).shl(248).add(BigNumber.from(4).shl(240))
+          }
+
+          let txid = randomAddresses(1)[0]
+          let nonce = BigNumber.from(0)
+
+          const digest = getCspActionInfoHash(
+              'Plug Miner Action',
+              plugMinerSales.address,
+              txid,
+              plugActionInfo,
+              nonce,
+              constants.MaxUint256
+          )
+
+          await arkreenRECToken.connect(owner1).approve(plugMinerSales.address, constants.MaxUint256)
+          await plugMinerSales.connect(owner1).depositToken(arkreenRECToken.address, expandTo9Decimals(10000))
+
+          await AKREToken.transfer(user1.address, expandTo18Decimals(1_000_000))
+          await AKREToken.connect(user1).approve(plugMinerSales.address, constants.MaxUint256)
+          
+          const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))   
+          const signature: PlugMinerSales.SigStruct = { v, r, s }  
+
+          await plugMinerSales.connect(user1).actionCspMiner(txid, plugActionInfo, nonce, constants.MaxUint256, signature)
+        }
+
+        let plugActionInfo: PlugActionInfo = {
+          owner:          user1.address,
+          tokenPay:       arkreenRECToken.address,              // Used as USDC AKREToken
+          amountPay:      expandTo9Decimals(1).mul(2),
+          tokenGet:       AKREToken.address,
+          amountGet:      expandTo18Decimals(99).mul(2),
+          actionType:     utils.hexlify(utils.toUtf8Bytes("Refund 99")).padEnd(66, '0'),
+          action:         BigNumber.from(2).shl(248).add(BigNumber.from(2).shl(240)).add(BigNumber.from(2).shl(32)).add(BigNumber.from(3))
+        }
+
+        let txid = randomAddresses(1)[0]
+        let nonce = BigNumber.from(1)
+
+        const digest = getCspActionInfoHash(
+            'Plug Miner Action',
+            plugMinerSales.address,
+            txid,
+            plugActionInfo,
+            nonce,
+            constants.MaxUint256
+        )
+       
+        const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))   
+        const signature: PlugMinerSales.SigStruct = { v, r, s }  
+
+        await arkreenRECToken.connect(owner1).transfer(user1.address, expandTo9Decimals(100))
+        await arkreenRECToken.connect(user1).approve(plugMinerSales.address, constants.MaxUint256)
+
+        const balanceARTEBefore = await arkreenRECToken.balanceOf(plugMinerSales.address)
+        const balanceAKREBefore = await AKREToken.balanceOf(plugMinerSales.address)
+
+        await expect(plugMinerSales.connect(user1).actionCspMiner(txid, plugActionInfo, nonce, constants.MaxUint256, signature))
+                  .to.emit(arkreenRECToken, 'Transfer')
+                  .withArgs(user1.address, plugMinerSales.address, expandTo9Decimals(1).mul(2))     
+                  .to.emit(AKREToken, 'Transfer')
+                  .withArgs(plugMinerSales.address, user1.address, expandTo18Decimals(99).mul(2))
+                  .to.emit(plugMinerSales, 'ActionCspMiner')
+                  .withArgs(txid, plugActionInfo.owner, plugActionInfo.actionType, 2, 2)   
+
+        expect(await plugMinerSales.getIncomeInfo(arkreenRECToken.address)).to.deep.eq([expandTo9Decimals(1).mul(2), expandTo9Decimals(1).mul(2)])
+        expect(await plugMinerSales.getDepositInfo(AKREToken.address)).to.deep.eq([expandTo9Decimals(0), expandTo18Decimals(99).mul(2)])
+                
+        expect(await arkreenRECToken.balanceOf(plugMinerSales.address)).to.eq(balanceARTEBefore.add(expandTo9Decimals(1).mul(2)))
+        expect(await AKREToken.balanceOf(plugMinerSales.address)).to.eq(balanceAKREBefore.sub(expandTo18Decimals(99).mul(2)))
+
+        expect(await plugMinerSales.balanceOf(user1.address)).to.eq(4)
+        expect(await plugMinerSales.totalSupply()).to.eq(4)
+
+        expect(await plugMinerSales.statusPlugMiner(1)).to.eq(0)
+        expect(await plugMinerSales.statusPlugMiner(2)).to.eq(2)
+        expect(await plugMinerSales.statusPlugMiner(3)).to.eq(2)
+        expect(await plugMinerSales.statusPlugMiner(4)).to.eq(0)
+
+        // Abnormal test
+        {
+          let plugActionInfo: PlugActionInfo = {
+            owner:          user1.address,
+            tokenPay:       arkreenRECToken.address,              // Used as USDC AKREToken
+            amountPay:      expandTo9Decimals(1).mul(2),
+            tokenGet:       AKREToken.address,
+            amountGet:      expandTo18Decimals(99).mul(2),
+            actionType:     utils.hexlify(utils.toUtf8Bytes("Refund 99")).padEnd(66, '0'),
+            action:         BigNumber.from(2).shl(248).add(BigNumber.from(2).shl(240)).add(BigNumber.from(4).shl(32)).add(BigNumber.from(0))
+          }
+  
+          let txid = randomAddresses(1)[0]
+          let nonce = BigNumber.from(2)
+  
+          const digest = getCspActionInfoHash(
+              'Plug Miner Action',
+              plugMinerSales.address,
+              txid,
+              plugActionInfo,
+              nonce,
+              constants.MaxUint256
+          )
+
+          await arkreenRECToken.connect(owner1).transfer(user1.address, expandTo9Decimals(100))
+          await arkreenRECToken.connect(user1).approve(plugMinerSales.address, constants.MaxUint256)
+         
+          const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))   
+          const signature: PlugMinerSales.SigStruct = { v, r, s }  
+ 
+          await expect(plugMinerSales.connect(user1).actionCspMiner(txid, plugActionInfo, nonce, constants.MaxUint256, signature))
+                  .to.be.revertedWith("Wrong ID")
+        }
+        {
+          let plugActionInfo: PlugActionInfo = {
+            owner:          user1.address,
+            tokenPay:       arkreenRECToken.address,              // Used as USDC AKREToken
+            amountPay:      expandTo9Decimals(1).mul(2),
+            tokenGet:       AKREToken.address,
+            amountGet:      expandTo18Decimals(99).mul(2),
+            actionType:     utils.hexlify(utils.toUtf8Bytes("Refund 99")).padEnd(66, '0'),
+            action:         BigNumber.from(2).shl(248).add(BigNumber.from(2).shl(240)).add(BigNumber.from(1).shl(32)).add(BigNumber.from(3))
+          }
+  
+          let txid = randomAddresses(1)[0]
+          let nonce = BigNumber.from(2)
+  
+          const digest = getCspActionInfoHash(
+              'Plug Miner Action',
+              plugMinerSales.address,
+              txid,
+              plugActionInfo,
+              nonce,
+              constants.MaxUint256
+          )
+
+          await arkreenRECToken.connect(owner1).transfer(user1.address, expandTo9Decimals(100))
+          await arkreenRECToken.connect(user1).approve(plugMinerSales.address, constants.MaxUint256)
+         
+          const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))   
+          const signature: PlugMinerSales.SigStruct = { v, r, s }  
+ 
+          await expect(plugMinerSales.connect(user1).actionCspMiner(txid, plugActionInfo, nonce, constants.MaxUint256, signature))
+                  .to.be.revertedWith("Pay back not allowed")
+        }
+        {
+          let plugActionInfo: PlugActionInfo = {
+            owner:          user2.address,
+            tokenPay:       arkreenRECToken.address,              // Used as USDC AKREToken
+            amountPay:      expandTo9Decimals(1).mul(2),
+            tokenGet:       AKREToken.address,
+            amountGet:      expandTo18Decimals(99).mul(2),
+            actionType:     utils.hexlify(utils.toUtf8Bytes("Refund 99")).padEnd(66, '0'),
+            action:         BigNumber.from(2).shl(248).add(BigNumber.from(2).shl(240)).add(BigNumber.from(1).shl(32)).add(BigNumber.from(4))
+          }
+  
+          let txid = randomAddresses(1)[0]
+          let nonce = BigNumber.from(0)
+  
+          const digest = getCspActionInfoHash(
+              'Plug Miner Action',
+              plugMinerSales.address,
+              txid,
+              plugActionInfo,
+              nonce,
+              constants.MaxUint256
+          )
+
+          await arkreenRECToken.connect(owner1).transfer(user2.address, expandTo9Decimals(100))
+          await arkreenRECToken.connect(user2).approve(plugMinerSales.address, constants.MaxUint256)
+         
+          const {v,r,s} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKeyManager.slice(2), 'hex'))   
+          const signature: PlugMinerSales.SigStruct = { v, r, s }  
+ 
+          await expect(plugMinerSales.connect(user2).actionCspMiner(txid, plugActionInfo, nonce, constants.MaxUint256, signature))
+                  .to.be.revertedWith("Not Owner")
+        }
+      })
+
+
   })
 })

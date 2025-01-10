@@ -978,6 +978,42 @@ export function getPlugActionInfoHash(
   )
 }
 
+export function getCspActionInfoHash(
+  contractName:     string,
+  contractAddress:  string,
+  txid:             string,
+  plugActionInfo:   PlugActionInfo,
+  nonce:            BigNumber,
+  deadline:         BigNumber
+): string {
+
+  const DOMAIN_SEPARATOR = getDomainSeparator(contractName, contractAddress, '1')
+
+  // keccak256("ActionCspMiner(address txid,(address owner,address tokenPay,uint256 amountPay,address tokenGet,uint256 amountGet,bytes32 actionType,uint256 action),uint256 nonce,uint256 deadline)");
+  //bytes32 public constant  ACTION_CSP = 0x71DA2AA7B96FEC98E3D7F21F1A93BF6C84209CCACCC3991C9A403EA7D0D0E652;
+
+  const ACTION_PLUG = utils.keccak256(
+    utils.toUtf8Bytes("ActionCspMiner(address txid,(address owner,address tokenPay,uint256 amountPay,address tokenGet,uint256 amountGet,bytes32 actionType,uint256 action),uint256 nonce,uint256 deadline)")
+  )
+ 
+  return utils.keccak256( 
+    utils.solidityPack(
+      ['bytes1', 'bytes1', 'bytes32', 'bytes32'],
+      [
+        '0x19',
+        '0x01',
+        DOMAIN_SEPARATOR,
+        utils.keccak256(
+          utils.defaultAbiCoder.encode(
+            ['bytes32', 'address', '(address owner,address tokenPay,uint256 amountPay,address tokenGet,uint256 amountGet,bytes32 actionType,uint256 action)', 'uint256', 'uint256'],
+            [ACTION_PLUG, txid, plugActionInfo, nonce, deadline]
+          )
+        )
+      ]
+    )
+  )
+}
+
 export interface ActionInfo {
   actionID:             BigNumber,
   domainID:             BigNumber,

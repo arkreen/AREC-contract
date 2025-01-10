@@ -8,6 +8,7 @@ import { createSnapshot, revertToSnapshot } from "../utils/snapshot"
 import { expandTo18Decimals } from "../utils/utilities"
 
 import { BigNumber } from "ethers"
+import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 
 export type VestingSchedule = {
   initialized: boolean
@@ -412,6 +413,33 @@ describe("akreVesting", function () {
         await expect(akreVesting.release(beneficiary1, amountToVestCliff))
           .to.emit(akreVesting, "Released")
           .withArgs(beneficiary1, amountToVestCliff)
+      })
+    })
+
+    context("releaseAll: When only the cliff amount is released", () => {
+      it("Should update vesting schedule released amount", async () => {
+        const vestingScheduleBefore: VestingSchedule =
+          await akreVesting.getVestingSchedule(beneficiary1)
+
+        expect(vestingScheduleBefore.released).to.equal(0)
+
+        await ethers.provider.send("evm_increaseTime", [cliff + 100])
+
+        await akreVesting.releaseAll(beneficiary1)
+        const lastBlock = await ethers.provider.getBlock('latest')
+        const amountToVestCliff = (amount * (lastBlock.timestamp - startTime) / duration) | 0
+
+        const vestingScheduleAfter: VestingSchedule =
+          await akreVesting.getVestingSchedule(beneficiary1)
+
+        expect(vestingScheduleAfter.released).to.equal(amountToVestCliff)
+      })
+      it("Should emit Released event with correct params", async () => {
+        await ethers.provider.send("evm_increaseTime", [cliff + 100])
+
+        await expect(akreVesting.releaseAll(beneficiary1))
+          .to.emit(akreVesting, "Released")
+          .withArgs(beneficiary1, anyValue)
       })
     })
 
