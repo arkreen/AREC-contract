@@ -32,6 +32,11 @@ contract PlugMinerSales is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardU
         bytes32     s;              
     }
 
+    struct Nonces {
+        uint32  noncePgp;
+        uint32  nonceCsp;
+    }  
+
     bytes32 public _DOMAIN_SEPARATOR;
     address public nativeToken;
     address public manager;
@@ -49,7 +54,7 @@ contract PlugMinerSales is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardU
     mapping(uint256 => uint256) public statusPlugMiner; 
 
     // Mapping from user address to user's nonce
-    mapping(address => uint256) public nonces; 
+    mapping(address => Nonces) internal userNonces; 
 
     // Quantity of CSP miner sold
     uint32 internal quantityCspSold;
@@ -115,10 +120,10 @@ contract PlugMinerSales is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardU
             require(managerAddress == manager, "Wrong Signature");
         }
 
-        require (nonces[msg.sender] == nonce, "Wrong Nonce");
+        require (userNonces[msg.sender].noncePgp == nonce, "Wrong Nonce");
         require (actionInfo.owner == msg.sender, "Wrong Sender");         // Control temporarily in this way
 
-        nonces[msg.sender] += 1;
+        userNonces[msg.sender].noncePgp += 1;
         if (actionInfo.tokenPay != address(0)) {
             if (actionInfo.tokenPay == nativeToken) {
                 require (actionInfo.amountPay == msg.value, "Pay low!");
@@ -183,10 +188,10 @@ contract PlugMinerSales is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardU
             require(managerAddress == manager, "Wrong Signature");
         }
 
-        require (nonces[msg.sender] == nonce, "Wrong Nonce");
+        require (userNonces[msg.sender].nonceCsp == nonce, "Wrong Nonce");
         require (actionInfo.owner == msg.sender, "Wrong Sender");         // Control temporarily in this way
 
-        nonces[msg.sender] += 1;
+        userNonces[msg.sender].nonceCsp += 1;
         if (actionInfo.tokenPay != address(0)) {
             if (actionInfo.tokenPay == nativeToken) {
                 require (actionInfo.amountPay == msg.value, "Pay low!");
@@ -298,5 +303,13 @@ contract PlugMinerSales is OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardU
         if(minerType == 0) return totalSupply() - quantityCspSold;      // Plug Miner Sold quantity
         if(minerType == 1) return quantityCspSold;                      // Csp Miner Sold quantity     
         return 0;
+    }
+
+    function nonces(address user) external view returns (uint256) {
+        return userNonces[user].noncePgp;
+    }
+
+    function noncesCsp(address user) external view returns (uint256) {
+        return userNonces[user].nonceCsp;
     }
 }

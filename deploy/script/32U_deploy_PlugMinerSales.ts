@@ -13,7 +13,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     if(hre.network.name === 'matic_test')  {
       // 2025/01/10: Update actionCspMiner
       const plugMinerSales = "0x1C326496695cFE4Dde70dd188F87Dc6c069778Af"
-      const NEW_IMPLEMENTATION ="0x1b6209dFb258ba757066CC8BDa987d592962b375"      // 2025/01/10: Update actionCspMiner
+      //const NEW_IMPLEMENTATION ="0x1b6209dFb258ba757066CC8BDa987d592962b375"    // 2025/01/10: Update actionCspMiner
+      const NEW_IMPLEMENTATION ="0xfA99FD9C58AF9dCBCe4019c0F5227b7263a31C08"      // 2025/01/13: add nonceCsp 
 
       console.log("Updating plugMinerSales: ", plugMinerSales, defaultGasPrice.toString());  
 
@@ -46,11 +47,18 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 // 2025/01/10
 // yarn deploy:matic_test:PlugMinerSalesU    : Amoy testnet (Dev Anv)
+// Proxy:                 0x1C326496695cFE4Dde70dd188F87Dc6c069778Af
 // Implementaion:         0x1b6209dFb258ba757066CC8BDa987d592962b375
 
 // 2025/01/10
 // yarn deploy:matic:PlugMinerSalesU    : Polygon mainnet
+// Proxy:                 0x8E0b81E8400FF35B7A1af36A2031AeaD166D1594
 // Implementaion:         0x23D224309983ce2fC02535729420FED9462c3f63
+
+// 2025/01/13
+// yarn deploy:matic_test:PlugMinerSalesU    : Amoy testnet (Dev Anv)
+// Proxy:                 0x1C326496695cFE4Dde70dd188F87Dc6c069778Af
+// Implementaion:         0xfA99FD9C58AF9dCBCe4019c0F5227b7263a31C08
 
 func.tags = ["PlugMinerSalesU"];
 

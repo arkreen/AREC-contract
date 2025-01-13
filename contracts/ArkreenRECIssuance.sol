@@ -42,6 +42,8 @@ contract ArkreenRECIssuance is
     event RECCanceled(address owner, uint256 tokenId);    
     event RECLiquidized(address owner, uint256 tokenId, uint256 amountREC);
     event RedeemFinished(address redeemEntity, uint256 tokenId, uint256 offsetActionId);
+    event ESGBatchMinted(address owner, uint256 tokenId);
+    event ESGBatchDataUpdated(address owner, uint256 tokenId);
 
     // Modifiers
     modifier ensure(uint deadline) {

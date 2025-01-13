@@ -49,6 +49,8 @@ function getAPIKey(network: string): string {
     apiKey = process.env.POLYGONSCAN_API_KEY as string
   } else if((network === 'celo')||(network ==='celo_test')) {
     apiKey = process.env.CELOSCAN_API_KEY as string
+  } else if((network === 'dione')||(network ==='dione_test')) {
+    apiKey = process.env.CELOSCAN_API_KEY as string
   } else {
     apiKey = process.env.ETHERSCAN_API_KEY as string
   }
@@ -76,9 +78,9 @@ function getURL(network:string): string {
     url = `https://celo-alfajores.infura.io/v3/` + projectID
   } else if(network === 'dione') {
     // url = `https://odyssey.storyrpc.io`
-    url = `https://node.dioneprotocol.com/ext/bc/D/rpc`
+    url = `https://api.odysseyscan.com//api/v1/`
   } else if(network === 'dione_test') {
-    url = `https://testnode.dioneprotocol.com/ext/bc/D/rpc`
+    url = `https://api-testnet.odysseyscan.com//api/v1/`
   } else if(network === 'matic') {
     url = `https://polygon-mainnet.infura.io/v3/` + projectID
   } else if(network === 'matic_test') {
@@ -123,6 +125,9 @@ const config: HardhatUserConfig = {
       url: getURL("dione_test"),
       chainId: 131313,
       accounts: [process.env.MATIC_TESTNET_PRIVATE_KEY as string, process.env.MATIC_TESTNET_CONFIRM_KEY as string],
+//      ignition: {
+//        maxFeePerGasLimit: 50_000_000_000_000_000n,
+//      },
     },
     dione: {
       url: getURL("dione"),
@@ -275,8 +280,10 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: {
-      celo:        getAPIKey("celo"),
-      celo_test:   getAPIKey("celo_test"),
+      celo:         getAPIKey("celo"),
+      celo_test:    getAPIKey("celo_test"),
+      dione:        getAPIKey("dione"),
+      dione_test:   getAPIKey("dione_test"),
       matic:        getAPIKey("matic"),
       matic_test:   getAPIKey("matic_test"),
       mainnet:      getAPIKey("mainnet"),
@@ -290,7 +297,7 @@ const config: HardhatUserConfig = {
         network: "dione",
         chainId: 153153,
         urls: {
-          apiURL: "https://node.dioneprotocol.com/ext/bc/D/rpc",
+          apiURL: "https://api.odysseyscan.com//api/v1/",
           browserURL: "https://odysseyscan.com/"
         }
       },
@@ -298,8 +305,8 @@ const config: HardhatUserConfig = {
         network: "dione_test",
         chainId: 131313,
         urls: {
-          apiURL: "https://testnode.dioneprotocol.com/ext/bc/D/rpc",
-          browserURL: "https://testnet.odysseyscan.com"
+          apiURL: "https://api-testnet.odysseyscan.com//api/v1/",
+          browserURL: "https://testnet.odysseyscan.com/"
         }
       },
       {
@@ -356,6 +363,14 @@ const config: HardhatUserConfig = {
     deploy: "./deploy/script",
     deployments: "./deployments",
   },
+//  ignition: {
+//    requiredConfirmations: 1,
+//    strategyConfig: {
+//      create2: {
+//        salt: "0x0000000000000000000000000000000000000000000000000000000000000000",
+//      },
+//    },
+//  },
 };
 
 export default config;

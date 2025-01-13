@@ -34,6 +34,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:PlugMinerSalesD    : Polygon mainnet
 // Implementaion:         0x23D224309983ce2fC02535729420FED9462c3f63
 
+// 2025/01/13
+// yarn deploy:matic_test:PlugMinerSalesD    : Amoy testnet (Dev Anv)
+// Implementaion:         0xfA99FD9C58AF9dCBCe4019c0F5227b7263a31C08
+
 func.tags = ["PlugMinerSalesD"];
 
 export default func;
