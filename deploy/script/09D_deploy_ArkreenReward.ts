@@ -23,13 +23,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   console.log("ArkreenReward deployed to %s: ", hre.network.name, ArkreenReward.address);
 };
 
-// 2025/01/17
+// 2025/01/07
 // yarn deploy:matic_test:ARewardD
 // 0x17F0a72D7cb4f24acee2824f79a0761E7d9fC6f6
 
-// 2025/01/17:    Polygon Mainnet
+// 2025/01/07:    Polygon Mainnet
 // yarn deploy:matic:ARewardD
 // 0x893B01da28FA4aB3E6445D25Ffe3F2c66D0bE256
+// Upgraded with hardware wallet: 0xb58ae956c45adf19b0bf3e353e79fc4bf3ed4c6654adb269403d354d2cb301a0
 
 func.tags = ["ARewardD"];
 
