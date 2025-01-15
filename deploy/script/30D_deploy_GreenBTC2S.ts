@@ -9,7 +9,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const { deploy } = deployments;
     const { deployer } = await getNamedAccounts();
 
-    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(32_000_000_000) : BigNumber.from(50_000_000_000)
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(32_000_000_000) : BigNumber.from(35_000_000_000)
    
     console.log("Deploying: ", "GreenBTC2S", deployer);  
 
@@ -59,6 +59,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // 2025/01/10
 // yarn deploy:matic_test:GreenBTC2SD   : Amoy testnet: Upgrade to support Node Feature
 // Implementaion:        0xaaD01c0431d832641708E8d288bd37e2FA91D9cD
+
+// 2025/01/15
+// yarn deploy:matic:GreenBTC2SD        : Polygon mainnet: Upgrade to support Node Feature
+// Implementaion:        0x86F6E189EFAe31747c6e3fE8A39D323958eC2680
+
 
 func.tags = ["GreenBTC2SD"];
 

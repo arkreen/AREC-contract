@@ -31,6 +31,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // yarn deploy:matic:ARewardD
 // 0x893B01da28FA4aB3E6445D25Ffe3F2c66D0bE256
 // Upgraded with hardware wallet: 0xb58ae956c45adf19b0bf3e353e79fc4bf3ed4c6654adb269403d354d2cb301a0
+// Function: upgradeTo(0x893B01da28FA4aB3E6445D25Ffe3F2c66D0bE256)
 
 func.tags = ["ARewardD"];
 

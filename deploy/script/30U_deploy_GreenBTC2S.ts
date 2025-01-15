@@ -12,7 +12,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const { deploy } = deployments;
     const { deployer } = await getNamedAccounts();
 
-    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(32_000_000_000) : BigNumber.from(50_000_000_000)
+    const defaultGasPrice = (hre.network.name === 'matic_test') ? BigNumber.from(32_000_000_000) : BigNumber.from(35_000_000_000)
 
     let gbtc : string = ''
     let akre: string = ''
@@ -48,7 +48,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       //const NEW_IMPLEMENTATION ="0x7ea0fE45cA251EB7aFe633D70361F7D5548475aB"
       //const NEW_IMPLEMENTATION ="0xa7181d53d4451973Adf130eB5a56DdA7C41B4b3D"                  // 2024/10/23
       //const NEW_IMPLEMENTATION ="0xC1C64F4e9627221deefab278107f8Ddea3B25Ab2"                  // 2024/11/13
-      const NEW_IMPLEMENTATION ="0x48DF869C1c8c1eecBFFbc6d2E62857D30bc83dAa"                    // 2024/12/12
+      //const NEW_IMPLEMENTATION ="0x48DF869C1c8c1eecBFFbc6d2E62857D30bc83dAa"                  // 2024/12/12
+      const NEW_IMPLEMENTATION ="0x86F6E189EFAe31747c6e3fE8A39D323958eC2680"                    // 2024/01/15
 
       console.log("Updating GreenBTC2S: ", greenBTC2S, defaultGasPrice.toString());  
 
@@ -108,9 +109,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 // Implementaion:         0x48DF869C1c8c1eecBFFbc6d2E62857D30bc83dAa
 
 // 2025/01/10
-// yarn deploy:matic_test:GreenBTC2SU:  Amoy testnet, DomainGreenizedLucky changed 
+// yarn deploy:matic_test:GreenBTC2SU:  Amoy testnet, add Buy node 
 // Proxy:                 0x6729b2956e8Cf3d863517E4618C3d8722548D5C4
 // Implementaion:         0xaaD01c0431d832641708E8d288bd37e2FA91D9cD
+
+// 2024/12/12
+// yarn deploy:matic:GreenBTC2SU:   Polygon mainnet, add Buy node
+// Proxy:                 0x3221F5818A5CF99e09f5BE0E905d8F145935e3E0
+// Implementaion:         0x86F6E189EFAe31747c6e3fE8A39D323958eC2680
 
 func.tags = ["GreenBTC2SU"];
 
